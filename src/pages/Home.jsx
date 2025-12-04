@@ -22,14 +22,14 @@ export default function Home() {
       icon: Users,
       href: '/IdentiteClient',
       color: 'bg-[#00AEEF]',
-      description: 'Signaler un problème'
+      description: t('signaler_probleme')
     },
     {
-      title: 'Suivi intervention',
+      title: t('suivi_intervention'),
       icon: Search,
       href: '/SuiviIntervention',
       color: 'bg-[#0077A8]',
-      description: 'Suivre votre demande'
+      description: t('suivre_demande')
     },
     {
       title: t('avis'),
@@ -37,21 +37,20 @@ export default function Home() {
       href: '/SatisfactionClient',
       color: 'bg-[#FFD700]',
       textColor: 'text-[#0077A8]',
-      description: 'Donner votre avis'
+      description: t('donner_avis')
     },
     {
       title: t('collaborateur'),
       icon: Briefcase,
       href: '/Collaborateur',
       color: 'bg-[#FFA500]',
-      description: 'Espace collaborateurs'
+      description: t('espace_collaborateurs')
     }
   ];
 
   return (
     <div className="min-h-screen px-6 py-8">
       <div className="max-w-lg mx-auto">
-        {/* Logo */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -61,7 +60,6 @@ export default function Home() {
           <Logo className="h-24 md:h-28" />
         </motion.div>
 
-        {/* Titre principal avec style Camping Paradis */}
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -69,18 +67,17 @@ export default function Home() {
           className="text-center mb-10"
         >
           <h1 className="font-handwritten text-4xl md:text-5xl text-[#00AEEF] leading-tight">
-            Camping Paradis
+            {t('camping_paradis')}
           </h1>
           <div className="flex items-center justify-center gap-2 mt-2">
             <span className="text-[#FFD700] text-xl">⭐</span>
             <p className="font-handwritten text-2xl text-[#0077A8]">
-              Le Domaine de Gaujac à votre service !
+              {t('slogan')}
             </p>
             <span className="text-[#FFD700] text-xl">⭐</span>
           </div>
         </motion.div>
 
-        {/* Menu principal */}
         <div className="space-y-4">
           {menuItems.map((item, index) => (
             <motion.div
@@ -116,7 +113,6 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Lien changer de langue */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -128,7 +124,7 @@ export default function Home() {
             className="inline-flex items-center gap-2 text-sm text-[#0077A8] hover:text-[#00AEEF] transition-colors font-body"
           >
             <span>🌐</span>
-            <span>Changer de langue / Change language</span>
+            <span>{t('changer_langue')}</span>
           </Link>
         </motion.div>
       </div>

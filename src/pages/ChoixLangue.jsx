@@ -15,7 +15,6 @@ export default function ChoixLangue() {
   return (
     <div className="min-h-screen flex flex-col px-6 py-12">
       <div className="flex-1 flex flex-col items-center justify-center max-w-lg mx-auto w-full">
-        {/* Logo */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -24,7 +23,6 @@ export default function ChoixLangue() {
           <Logo className="h-32 md:h-40 mb-8" />
         </motion.div>
 
-        {/* Titre */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -41,7 +39,6 @@ export default function ChoixLangue() {
           </div>
         </motion.div>
 
-        {/* Boutons de sélection de langue */}
         <div className="flex flex-col sm:flex-row gap-6 w-full">
           <motion.button
             initial={{ opacity: 0, x: -20 }}
@@ -91,7 +88,6 @@ export default function ChoixLangue() {
         </div>
       </div>
 
-      {/* Footer */}
       <footer className="py-6 text-center">
         <p className="font-body text-[#0077A8] text-sm">
           © {new Date().getFullYear()} Camping Paradis - Domaine de Gaujac

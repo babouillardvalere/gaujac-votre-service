@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getLanguage } from '../components/translations';
+import { getLanguage, useTranslation } from '../components/translations';
 import Logo from '../components/Logo';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,14 +8,12 @@ import { ArrowLeft, Tent, Home, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPageUrl } from '../utils';
 
-// Données des emplacements
 const emplacements = {
   "6A": [87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 226, 227, 228, 229, 230, 231, 239, 244, 245, 256, 257, 258, 259, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24],
   "10A": [183, 184, 185, 186, 218, 219, 220, 221, 222, 223],
   "Eau + 10A": [117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138]
 };
 
-// Données des logements
 const logements = {
   "Chalet Éco 1 ch": ["C1", "C2", "C3", "C4", "C5", "C6"],
   "Chalet Classique 1 ch": ["A1", "A2", "A3", "A4"],
@@ -34,7 +32,8 @@ const logements = {
 
 export default function ChoixHebergement() {
   const navigate = useNavigate();
-  const [step, setStep] = useState('type'); // type, categorie, numero
+  const { t } = useTranslation();
+  const [step, setStep] = useState('type');
   const [hebergementType, setHebergementType] = useState(null);
   const [categorie, setCategorie] = useState(null);
   const [numero, setNumero] = useState(null);
@@ -62,13 +61,9 @@ export default function ChoixHebergement() {
 
   const handleNumeroSelect = (num) => {
     setNumero(num);
-    
-    // Enregistrer dans sessionStorage
     sessionStorage.setItem('hebergement_type', hebergementType);
     sessionStorage.setItem('hebergement_categorie', categorie);
     sessionStorage.setItem('hebergement_numero', String(num));
-    
-    // Rediriger vers signalement
     navigate(createPageUrl('Signalement'));
   };
 
@@ -117,18 +112,17 @@ export default function ChoixHebergement() {
               className="flex items-center text-white/80 hover:text-white text-sm mb-2 font-body"
             >
               <ArrowLeft className="w-4 h-4 mr-1" />
-              Retour
+              {t('retour')}
             </button>
             <CardTitle className="text-xl font-heading text-white">
-              {step === 'type' && 'Type d\'hébergement'}
-              {step === 'categorie' && (hebergementType === 'Emplacement' ? 'Catégorie d\'emplacement' : 'Type de logement')}
-              {step === 'numero' && 'Votre numéro'}
+              {step === 'type' && t('choix_hebergement')}
+              {step === 'categorie' && (hebergementType === 'Emplacement' ? t('type_emplacement') : t('type_hebergement'))}
+              {step === 'numero' && t('choisir_numero')}
             </CardTitle>
           </CardHeader>
           
           <CardContent className="pt-6">
             <AnimatePresence mode="wait">
-              {/* Étape 1: Type */}
               {step === 'type' && (
                 <motion.div
                   key="type"
@@ -145,8 +139,8 @@ export default function ChoixHebergement() {
                       <Tent className="w-7 h-7 text-[#0077A8]" />
                     </div>
                     <div className="text-left">
-                      <h3 className="font-heading text-lg text-[#0077A8]">Emplacement nu</h3>
-                      <p className="font-body text-sm text-gray-500">Tente, caravane, camping-car</p>
+                      <h3 className="font-heading text-lg text-[#0077A8]">{t('emplacement')}</h3>
+                      <p className="font-body text-sm text-gray-500">{t('camping_tente')}</p>
                     </div>
                   </button>
 
@@ -158,14 +152,13 @@ export default function ChoixHebergement() {
                       <Home className="w-7 h-7 text-white" />
                     </div>
                     <div className="text-left">
-                      <h3 className="font-heading text-lg text-[#0077A8]">Mobil-home / Cottage</h3>
-                      <p className="font-body text-sm text-gray-500">Logement équipé</p>
+                      <h3 className="font-heading text-lg text-[#0077A8]">{t('logement')}</h3>
+                      <p className="font-body text-sm text-gray-500">{t('mobilhome_cottage')}</p>
                     </div>
                   </button>
                 </motion.div>
               )}
 
-              {/* Étape 2: Catégorie */}
               {step === 'categorie' && (
                 <motion.div
                   key="categorie"
@@ -186,7 +179,6 @@ export default function ChoixHebergement() {
                 </motion.div>
               )}
 
-              {/* Étape 3: Numéro */}
               {step === 'numero' && (
                 <motion.div
                   key="numero"
@@ -195,7 +187,7 @@ export default function ChoixHebergement() {
                   exit={{ opacity: 0, x: -20 }}
                 >
                   <p className="font-body text-[#0077A8] mb-4">
-                    Sélectionnez votre {hebergementType === 'Emplacement' ? 'emplacement' : 'logement'} :
+                    {t('select_numero')} :
                   </p>
                   <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-[350px] overflow-y-auto">
                     {getNumeros().map((num) => (
