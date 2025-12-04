@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import Logo from '../components/Logo';
 import NotificationBell from '../components/NotificationBell';
 import MettreEnAttenteDialog from '../components/MettreEnAttenteDialog';
+import { useTranslation } from '../components/translations';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -28,20 +29,21 @@ const categoryEmojis = {
   literie: '🛏', nettoyage: '🧽', vaisselle: '🍽', poubelle: '🗑', produit_manquant: '🧴'
 };
 
-const raisonLabels = {
-  materiel_manquant: 'Matériel manquant',
-  client_absent: 'Client absent',
-  intervention_impossible: 'Intervention impossible',
-  attente_fournisseur: 'Attente fournisseur',
-  autre: 'Autre'
-};
-
 export default function Attente() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   const [selectedIncident, setSelectedIncident] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState({});
+
+  const raisonLabels = {
+    materiel_manquant: t('raison_materiel_manquant'),
+    client_absent: t('raison_client_absent'),
+    intervention_impossible: t('raison_intervention_impossible'),
+    attente_fournisseur: t('raison_attente_fournisseur'),
+    autre: t('raison_autre')
+  };
 
   useEffect(() => {
     const auth = sessionStorage.getItem('collaborateur_authenticated');
@@ -60,7 +62,7 @@ export default function Attente() {
     mutationFn: ({ id, data }) => base44.entities.Incident.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['incidents-attente'] });
-      toast.success('Intervention mise à jour');
+      toast.success(t('intervention_mise_a_jour'));
       setSelectedIncident(null);
       setEditMode(false);
     }
@@ -101,7 +103,6 @@ export default function Attente() {
 
   return (
     <div className="min-h-screen pb-8">
-      {/* Header */}
       <div className="bg-[#FFA500] text-white px-4 py-4 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -109,8 +110,8 @@ export default function Attente() {
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
-              <h1 className="font-heading text-xl">Interventions en attente</h1>
-              <p className="text-white/80 text-sm font-body">{incidents.length} en attente</p>
+              <h1 className="font-heading text-xl">{t('interventions_en_attente')}</h1>
+              <p className="text-white/80 text-sm font-body">{incidents.length} {t('en_attente').toLowerCase()}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -128,7 +129,7 @@ export default function Attente() {
         ) : incidents.length === 0 ? (
           <div className="text-center py-12">
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-            <p className="font-heading text-[#0077A8]">Aucune intervention en attente</p>
+            <p className="font-heading text-[#0077A8]">{t('aucune_intervention_attente')}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -152,12 +153,12 @@ export default function Attente() {
                             </span>
                             <Badge className="bg-[#FFA500] text-white">
                               <Clock className="w-3 h-3 mr-1" />
-                              En attente
+                              {t('en_attente')}
                             </Badge>
                             {incident.attente_materiel && (
                               <Badge className="bg-red-500 text-white">
                                 <Package className="w-3 h-3 mr-1" />
-                                Matériel
+                                {t('menu_materiel')}
                               </Badge>
                             )}
                           </div>
@@ -185,8 +186,8 @@ export default function Attente() {
                         </p>
                       )}
                       <div className="flex items-center gap-4 text-xs text-gray-400">
-                        <span>Délai: {incident.attente_delai || 'Non défini'}</span>
-                        <span>Depuis: {incident.attente_date && format(new Date(incident.attente_date), 'dd/MM HH:mm', { locale: fr })}</span>
+                        <span>{t('delai_label')}: {incident.attente_delai || t('non_defini')}</span>
+                        <span>{t('depuis')}: {incident.attente_date && format(new Date(incident.attente_date), 'dd/MM HH:mm', { locale: fr })}</span>
                       </div>
                     </div>
 
@@ -197,7 +198,7 @@ export default function Attente() {
                         className="flex-1 bg-green-500 hover:bg-green-600 rounded-xl font-heading"
                       >
                         <Play className="w-4 h-4 mr-2" />
-                        Intervention prête
+                        {t('intervention_prete')}
                       </Button>
                       <Button
                         onClick={() => { setSelectedIncident(incident); openEditMode(incident); }}
@@ -205,7 +206,7 @@ export default function Attente() {
                         className="border-[#FFA500] text-[#FFA500] rounded-xl font-heading"
                       >
                         <Edit className="w-4 h-4 mr-2" />
-                        Modifier
+                        {t('modifier')}
                       </Button>
                     </div>
                   </CardContent>
@@ -216,26 +217,25 @@ export default function Attente() {
         )}
       </div>
 
-      {/* Dialog modification */}
       <Dialog open={editMode} onOpenChange={setEditMode}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="font-heading text-[#0077A8]">
-              Mettre à jour l'attente
+              {t('mettre_a_jour_attente')}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <label className="text-sm font-heading text-[#0077A8]">Matériel nécessaire</label>
+              <label className="text-sm font-heading text-[#0077A8]">{t('detail_materiel')}</label>
               <Input
                 value={editData.materielDetail}
                 onChange={(e) => setEditData({ ...editData, materielDetail: e.target.value })}
-                placeholder="Détail du matériel"
+                placeholder={t('detail_materiel_placeholder')}
                 className="border-[#00AEEF]/30 rounded-xl"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-heading text-[#0077A8]">Délai estimé</label>
+              <label className="text-sm font-heading text-[#0077A8]">{t('delai_estime_label')}</label>
               <Input
                 value={editData.delai}
                 onChange={(e) => setEditData({ ...editData, delai: e.target.value })}
@@ -244,7 +244,7 @@ export default function Attente() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-heading text-[#0077A8]">Commentaire</label>
+              <label className="text-sm font-heading text-[#0077A8]">{t('commentaire')}</label>
               <Textarea
                 value={editData.commentaire}
                 onChange={(e) => setEditData({ ...editData, commentaire: e.target.value })}
@@ -254,14 +254,14 @@ export default function Attente() {
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setEditMode(false)} className="flex-1 rounded-xl">
-              Annuler
+              {t('annuler')}
             </Button>
             <Button
               onClick={handleUpdateAttente}
               disabled={updateMutation.isPending}
               className="flex-1 bg-[#FFA500] hover:bg-[#e69500] rounded-xl font-heading"
             >
-              Enregistrer
+              {t('enregistrer')}
             </Button>
           </div>
         </DialogContent>
