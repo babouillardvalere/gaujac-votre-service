@@ -11,6 +11,8 @@ import Avis from './pages/Avis';
 import SignalementClient from './pages/SignalementClient';
 import Intervention from './pages/Intervention';
 import Dashboard from './pages/Dashboard';
+import Piscine from './pages/Piscine';
+import SatisfactionClient from './pages/SatisfactionClient';
 
 
 export const PAGES = {
@@ -27,6 +29,8 @@ export const PAGES = {
     "SignalementClient": SignalementClient,
     "Intervention": Intervention,
     "Dashboard": Dashboard,
+    "Piscine": Piscine,
+    "SatisfactionClient": SatisfactionClient,
 }
 
 export const pagesConfig = {
