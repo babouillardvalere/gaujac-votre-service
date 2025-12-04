@@ -314,7 +314,7 @@ export default function SuiviIntervention() {
   }
 
   return (
-    <div className="min-h-screen pb-8">
+    <div className="min-h-screen pb-24">
       {/* Header */}
       <div className="bg-[#00AEEF] text-white px-4 py-4 sticky top-0 z-10">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
@@ -444,10 +444,10 @@ export default function SuiviIntervention() {
               </div>
             ) : filteredIncidents.length === 0 ? (
               <div className="text-center py-12">
-                <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                <h3 className="font-heading text-xl text-[#0077A8] mb-2">Aucune intervention</h3>
+                <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="font-heading text-xl text-[#0077A8] mb-2">Aucun signalement trouvé</h3>
                 <p className="font-body text-gray-600">
-                  Aucune intervention n'est enregistrée pour cet hébergement pendant votre séjour.
+                  Aucun signalement n'est enregistré pour votre hébergement.
                 </p>
               </div>
             ) : (
@@ -585,6 +585,17 @@ export default function SuiviIntervention() {
             )}
           </motion.div>
         )}
+      </div>
+      {/* Bouton sticky "Revenir à l'accueil" - toujours visible */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-sm border-t border-gray-200 z-20">
+        <div className="max-w-2xl mx-auto">
+          <Link to={createPageUrl('Home')}>
+            <Button className="w-full h-12 bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading shadow-lg">
+              <Home className="w-5 h-5 mr-2" />
+              Revenir à l'accueil
+            </Button>
+          </Link>
+        </div>
       </div>
     </div>
   );
