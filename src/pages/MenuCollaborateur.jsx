@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
+import NotificationBell from '../components/NotificationBell';
 import { Wrench, Sparkles, Building2, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
@@ -58,6 +59,13 @@ export default function MenuCollaborateur() {
         >
           <Logo className="h-20" />
         </motion.div>
+
+        {/* Header avec notification */}
+        <div className="flex justify-end mb-4">
+          <div className="bg-[#00AEEF] rounded-xl p-1 text-white">
+            <NotificationBell />
+          </div>
+        </div>
 
         <motion.div
           initial={{ opacity: 0 }}

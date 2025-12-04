@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Logo from '../components/Logo';
 import OfflineBanner from '../components/OfflineBanner';
+import NotificationBell from '../components/NotificationBell';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -133,7 +134,10 @@ export default function Technique() {
               <p className="text-white/80 text-sm font-body">{filteredIncidents.length} intervention(s)</p>
             </div>
           </div>
-          <Wrench className="w-8 h-8" />
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <Wrench className="w-8 h-8" />
+          </div>
         </div>
       </div>
 

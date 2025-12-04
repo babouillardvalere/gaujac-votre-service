@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Logo from '../components/Logo';
 import OfflineBanner from '../components/OfflineBanner';
+import NotificationBell from '../components/NotificationBell';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -120,7 +121,10 @@ export default function Menage() {
               <p className="text-[#0077A8]/70 text-sm font-body">{filteredIncidents.length} demande(s)</p>
             </div>
           </div>
-          <Sparkles className="w-8 h-8" />
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <Sparkles className="w-8 h-8" />
+          </div>
         </div>
       </div>
 
