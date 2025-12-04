@@ -22,14 +22,16 @@ export default function Home() {
       icon: Users,
       href: '/IdentiteClient',
       color: 'bg-[#00AEEF]',
-      description: t('signaler_probleme')
+      description: t('signaler_probleme'),
+      ariaLabel: 'Signaler un problème - Accéder au formulaire client'
     },
     {
       title: t('suivi_intervention'),
       icon: Search,
       href: '/SuiviIntervention',
       color: 'bg-[#0077A8]',
-      description: t('suivre_demande')
+      description: t('suivre_demande'),
+      ariaLabel: 'Suivre votre demande - Voir le statut de votre intervention'
     },
     {
       title: t('avis'),
@@ -37,20 +39,23 @@ export default function Home() {
       href: '/SatisfactionClient',
       color: 'bg-[#FFD700]',
       textColor: 'text-[#0077A8]',
-      description: t('donner_avis')
+      description: t('donner_avis'),
+      ariaLabel: 'Donner votre avis - Noter une intervention'
     },
     {
       title: t('collaborateur'),
       icon: Briefcase,
       href: '/Collaborateur',
       color: 'bg-[#FFA500]',
-      description: t('espace_collaborateurs')
+      description: t('espace_collaborateurs'),
+      ariaLabel: 'Espace collaborateurs - Accès réservé au personnel'
     }
   ];
 
   return (
-    <div className="min-h-screen px-6 py-8">
+    <div className="min-h-screen px-6 py-8" role="main" aria-label="Page d'accueil Camping Paradis">
       <div className="max-w-lg mx-auto">
+        <h1 className="sr-only">Bienvenue au Camping Paradis - Domaine de Gaujac</h1>
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -78,7 +83,7 @@ export default function Home() {
           </div>
         </motion.div>
 
-        <div className="space-y-4">
+        <nav className="space-y-4" role="navigation" aria-label="Menu principal">
           {menuItems.map((item, index) => (
             <motion.div
               key={item.href}
@@ -88,12 +93,15 @@ export default function Home() {
             >
               <Link
                 to={createPageUrl(item.href.replace('/', ''))}
-                className="block group"
+                className="block group focus:outline-none focus:ring-4 focus:ring-[#FFD700] rounded-xl"
+                aria-label={item.ariaLabel}
+                role="button"
+                tabIndex={0}
               >
                 <div className="bg-white rounded-xl border-2 border-[#00AEEF] shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden">
-                  <div className="flex items-center p-5">
-                    <div className={`w-14 h-14 rounded-xl ${item.color} flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform`}>
-                      <item.icon className={`w-7 h-7 ${item.textColor || 'text-white'}`} />
+                  <div className="flex items-center p-5 min-h-[80px]">
+                    <div className={`w-14 h-14 rounded-xl ${item.color} flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform`} aria-hidden="true">
+                      <item.icon className={`w-7 h-7 ${item.textColor || 'text-white'}`} aria-hidden="true" />
                     </div>
                     <div className="ml-5 flex-1">
                       <h2 className="font-heading text-lg text-[#0077A8] group-hover:text-[#00AEEF] transition-colors">
@@ -101,7 +109,7 @@ export default function Home() {
                       </h2>
                       <p className="font-body text-sm text-gray-600">{item.description}</p>
                     </div>
-                    <div className="text-[#00AEEF] group-hover:translate-x-1 transition-all">
+                    <div className="text-[#00AEEF] group-hover:translate-x-1 transition-all" aria-hidden="true">
                       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
@@ -111,7 +119,7 @@ export default function Home() {
               </Link>
             </motion.div>
           ))}
-        </div>
+        </nav>
 
         <motion.div
           initial={{ opacity: 0 }}
