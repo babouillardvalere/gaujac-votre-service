@@ -4,6 +4,7 @@ import Logo from '../components/Logo';
 import OfflineBanner from '../components/OfflineBanner';
 import NotificationBell from '../components/NotificationBell';
 import MettreEnAttenteDialog from '../components/MettreEnAttenteDialog';
+import { useTranslation } from '../components/translations';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -23,15 +24,16 @@ import { fr } from 'date-fns/locale';
 import { createPageUrl } from '../utils';
 
 const categoryIcons = {
-  literie: { emoji: '🛏️', label: 'Literie' },
-  vaisselle: { emoji: '🍽️', label: 'Vaisselle/Cuisine' },
-  nettoyage: { emoji: '🧽', label: 'Nettoyage' },
-  materiel_menage: { emoji: '🧹', label: 'Matériel ménage' }
+  literie: { emoji: '🛏️', label: 'literie' },
+  vaisselle: { emoji: '🍽️', label: 'vaisselle' },
+  nettoyage: { emoji: '🧽', label: 'nettoyage' },
+  materiel_menage: { emoji: '🧹', label: 'menage' }
 };
 
 export default function Menage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   
   const [selectedIncident, setSelectedIncident] = useState(null);
   const [collaborateurNom, setCollaborateurNom] = useState('');
@@ -57,14 +59,14 @@ export default function Menage() {
     mutationFn: ({ id, data }) => base44.entities.Incident.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['incidents-menage'] });
-      toast.success('Intervention mise à jour');
+      toast.success(t('intervention_mise_a_jour'));
       setSelectedIncident(null);
     }
   });
 
   const handlePrendreEnCharge = (incident) => {
     if (!collaborateurNom.trim()) {
-      toast.error('Veuillez entrer votre nom');
+      toast.error(t('champs_obligatoires'));
       return;
     }
     updateMutation.mutate({
@@ -115,18 +117,21 @@ export default function Menage() {
     return i.statut === filter;
   });
 
-  const getCategoryInfo = (cat) => categoryIcons[cat] || { emoji: '🧹', label: cat };
+  const getCategoryInfo = (cat) => {
+    const info = categoryIcons[cat] || { emoji: '🧹', label: 'menage' };
+    return { ...info, label: t(info.label) };
+  };
 
   const getStatusBadge = (statut) => {
     switch (statut) {
       case 'en_attente':
-        return <Badge className="bg-[#FFA500] text-white">En attente</Badge>;
+        return <Badge className="bg-[#FFA500] text-white">{t('en_attente')}</Badge>;
       case 'en_cours':
-        return <Badge className="bg-[#FFD700] text-[#0077A8]">En cours</Badge>;
+        return <Badge className="bg-[#FFD700] text-[#0077A8]">{t('en_cours')}</Badge>;
       case 'en_attente_materiel':
-        return <Badge className="bg-gray-500 text-white"><Clock className="w-3 h-3 mr-1" />Reporté</Badge>;
+        return <Badge className="bg-gray-500 text-white"><Clock className="w-3 h-3 mr-1" />{t('en_attente_materiel')}</Badge>;
       case 'resolu':
-        return <Badge className="bg-green-500 text-white">Résolu</Badge>;
+        return <Badge className="bg-green-500 text-white">{t('resolu')}</Badge>;
       default:
         return <Badge>{statut}</Badge>;
     }
@@ -136,7 +141,6 @@ export default function Menage() {
     <div className="min-h-screen pb-8">
       <OfflineBanner />
       
-      {/* Header */}
       <div className="bg-[#FFD700] text-[#0077A8] px-4 py-4 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -144,8 +148,8 @@ export default function Menage() {
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
-              <h1 className="font-heading text-xl">Demandes Ménage</h1>
-              <p className="text-[#0077A8]/70 text-sm font-body">{filteredIncidents.length} demande(s)</p>
+              <h1 className="font-heading text-xl">{t('menu_menage')} - {t('demandes')}</h1>
+              <p className="text-[#0077A8]/70 text-sm font-body">{filteredIncidents.length} {t('demandes').toLowerCase()}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -156,22 +160,20 @@ export default function Menage() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6">
-        {/* Filtres */}
         <Tabs value={filter} onValueChange={setFilter} className="mb-6">
           <TabsList className="bg-[#FFF4B2] p-1 rounded-xl border border-[#FFD700]/50 w-full">
             <TabsTrigger value="en_attente" className="flex-1 rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              En attente ({incidents.filter(i => i.statut === 'en_attente').length})
+              {t('en_attente')} ({incidents.filter(i => i.statut === 'en_attente').length})
             </TabsTrigger>
             <TabsTrigger value="en_cours" className="flex-1 rounded-lg font-heading data-[state=active]:bg-[#FFD700] data-[state=active]:text-[#0077A8]">
-              En cours ({incidents.filter(i => i.statut === 'en_cours').length})
+              {t('en_cours')} ({incidents.filter(i => i.statut === 'en_cours').length})
             </TabsTrigger>
             <TabsTrigger value="resolu" className="flex-1 rounded-lg font-heading data-[state=active]:bg-green-500 data-[state=active]:text-white">
-              Résolus ({incidents.filter(i => i.statut === 'resolu').length})
+              {t('resolu')} ({incidents.filter(i => i.statut === 'resolu').length})
             </TabsTrigger>
           </TabsList>
         </Tabs>
 
-        {/* Liste */}
         {isLoading ? (
           <div className="flex justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-[#FFD700]" />
@@ -179,38 +181,27 @@ export default function Menage() {
         ) : filteredIncidents.length === 0 ? (
           <div className="text-center py-12">
             <CheckCircle className="w-16 h-16 text-[#FFD700] mx-auto mb-4" />
-            <p className="font-heading text-[#0077A8]">Aucune demande</p>
+            <p className="font-heading text-[#0077A8]">{t('aucun')}</p>
           </div>
         ) : (
           <div className="space-y-4">
             {filteredIncidents.map((incident) => {
               const catInfo = getCategoryInfo(incident.categorie);
               return (
-                <motion.div
-                  key={incident.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <Card 
-                    className="border-2 border-[#FFD700]/50 rounded-xl cursor-pointer hover:shadow-lg transition-all"
-                    onClick={() => setSelectedIncident(incident)}
-                  >
+                <motion.div key={incident.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                  <Card className="border-2 border-[#FFD700]/50 rounded-xl cursor-pointer hover:shadow-lg transition-all" onClick={() => setSelectedIncident(incident)}>
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
                           <span className="text-3xl">{catInfo.emoji}</span>
                           <div>
-                            <span className="font-heading text-[#0077A8]">
-                              {incident.logement || incident.emplacement}
-                            </span>
+                            <span className="font-heading text-[#0077A8]">{incident.logement || incident.emplacement}</span>
                             <p className="text-sm font-body text-gray-600">{catInfo.label}</p>
                           </div>
                         </div>
                         {getStatusBadge(incident.statut)}
                       </div>
-
                       <p className="font-body text-gray-700 mb-3 line-clamp-2">{incident.description}</p>
-
                       <div className="flex items-center justify-between text-xs text-gray-500 font-body">
                         <div className="flex items-center gap-1">
                           <User className="w-3 h-3" />
@@ -230,13 +221,12 @@ export default function Menage() {
         )}
       </div>
 
-      {/* Dialog détail */}
       <Dialog open={!!selectedIncident} onOpenChange={() => setSelectedIncident(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="font-heading text-[#0077A8] flex items-center gap-2">
               <span className="text-2xl">{selectedIncident && getCategoryInfo(selectedIncident.categorie).emoji}</span>
-              Demande #{selectedIncident?.logement || selectedIncident?.emplacement}
+              {t('demandes')} #{selectedIncident?.logement || selectedIncident?.emplacement}
             </DialogTitle>
           </DialogHeader>
 
@@ -244,11 +234,11 @@ export default function Menage() {
             <div className="space-y-4">
               <div className="bg-[#FFF4B2] rounded-xl p-4 space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-[#0077A8]/70 font-body">Client</span>
+                  <span className="text-[#0077A8]/70 font-body">{t('client_label')}</span>
                   <span className="font-heading text-[#0077A8]">{selectedIncident.client_prenom} {selectedIncident.client_nom}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#0077A8]/70 font-body">Signalé le</span>
+                  <span className="text-[#0077A8]/70 font-body">{t('date_signalement')}</span>
                   <span className="font-body text-[#0077A8]">
                     {selectedIncident.date_saisie && format(new Date(selectedIncident.date_saisie), 'dd/MM/yyyy HH:mm', { locale: fr })}
                   </span>
@@ -256,7 +246,7 @@ export default function Menage() {
               </div>
 
               <div>
-                <label className="text-sm font-heading text-[#0077A8]">Description</label>
+                <label className="text-sm font-heading text-[#0077A8]">{t('description')}</label>
                 <p className="font-body text-gray-700 bg-gray-50 p-3 rounded-xl mt-1">{selectedIncident.description}</p>
               </div>
 
@@ -265,7 +255,7 @@ export default function Menage() {
                   <Input
                     value={collaborateurNom}
                     onChange={(e) => setCollaborateurNom(e.target.value)}
-                    placeholder="Votre nom"
+                    placeholder={t('votre_nom')}
                     className="border-[#FFD700]/50 rounded-xl font-body"
                   />
                   <Button
@@ -274,38 +264,28 @@ export default function Menage() {
                     className="w-full bg-[#FFD700] hover:bg-[#FFA500] text-[#0077A8] rounded-xl font-heading"
                   >
                     <Play className="w-4 h-4 mr-2" />
-                    Prendre en charge
+                    {t('prendre_en_charge')}
                   </Button>
                 </div>
               )}
 
               {selectedIncident.statut === 'en_cours' && (
                 <div className="space-y-3 pt-4 border-t">
-                  <p className="text-sm font-body text-[#FFD700]">
-                    Pris en charge par: {selectedIncident.pris_par}
-                  </p>
+                  <p className="text-sm font-body text-[#FFD700]">{t('pris_en_charge_par')}: {selectedIncident.pris_par}</p>
                   <Textarea
                     value={commentaire}
                     onChange={(e) => setCommentaire(e.target.value)}
-                    placeholder="Commentaire interne (optionnel)"
+                    placeholder={t('commentaire_optionnel')}
                     className="border-[#FFD700]/50 rounded-xl font-body"
                   />
                   <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      onClick={() => handleMettreEnAttente(selectedIncident)}
-                      variant="outline"
-                      className="border-gray-400 text-gray-600 rounded-xl font-heading"
-                    >
+                    <Button onClick={() => handleMettreEnAttente(selectedIncident)} variant="outline" className="border-gray-400 text-gray-600 rounded-xl font-heading">
                       <Pause className="w-4 h-4 mr-2" />
-                      En attente
+                      {t('mettre_en_attente')}
                     </Button>
-                    <Button
-                      onClick={() => handleTerminer(selectedIncident)}
-                      disabled={updateMutation.isPending}
-                      className="bg-green-500 hover:bg-green-600 rounded-xl font-heading"
-                    >
+                    <Button onClick={() => handleTerminer(selectedIncident)} disabled={updateMutation.isPending} className="bg-green-500 hover:bg-green-600 rounded-xl font-heading">
                       <CheckCircle className="w-4 h-4 mr-2" />
-                      Terminer
+                      {t('terminer')}
                     </Button>
                   </div>
                 </div>
@@ -314,18 +294,15 @@ export default function Menage() {
               {selectedIncident.statut === 'resolu' && (
                 <div className="bg-green-50 p-3 rounded-xl">
                   <p className="text-sm font-body text-green-700">
-                    Résolu par {selectedIncident.pris_par} le {selectedIncident.date_resolution && format(new Date(selectedIncident.date_resolution), 'dd/MM/yyyy HH:mm')}
+                    {t('resolu')} - {selectedIncident.pris_par} - {selectedIncident.date_resolution && format(new Date(selectedIncident.date_resolution), 'dd/MM/yyyy HH:mm')}
                   </p>
-                  {selectedIncident.commentaire_interne && (
-                    <p className="text-sm font-body text-gray-600 mt-2">Note: {selectedIncident.commentaire_interne}</p>
-                  )}
                 </div>
               )}
             </div>
           )}
         </DialogContent>
       </Dialog>
-      {/* Dialog mise en attente */}
+
       <MettreEnAttenteDialog
         open={showAttenteDialog}
         onOpenChange={setShowAttenteDialog}
