@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
+import { useTranslation } from '../components/translations';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +14,7 @@ const PASSWORD = 'GAUJAC2025';
 
 export default function Collaborateur() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
@@ -21,7 +23,7 @@ export default function Collaborateur() {
       sessionStorage.setItem('collaborateur_authenticated', 'true');
       navigate(createPageUrl('MenuCollaborateur'));
     } else {
-      toast.error('Mot de passe incorrect');
+      toast.error(t('mot_de_passe_incorrect'));
     }
   };
 
@@ -42,16 +44,16 @@ export default function Collaborateur() {
               <Lock className="w-8 h-8 text-white" />
             </div>
             <CardTitle className="text-2xl font-heading text-white">
-              Espace Collaborateurs
+              {t('espace_collaborateurs')}
             </CardTitle>
             <p className="text-white/80 font-body text-sm mt-2">
-              Accès réservé au personnel
+              {t('acces_reserve')}
             </p>
           </CardHeader>
           
           <CardContent className="pt-6 space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-heading text-[#0077A8]">Mot de passe</label>
+              <label className="text-sm font-heading text-[#0077A8]">{t('mot_de_passe')}</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#00AEEF]" />
                 <Input
@@ -77,7 +79,7 @@ export default function Collaborateur() {
               disabled={!password}
               className="w-full h-12 bg-[#00AEEF] hover:bg-[#0077A8] text-white font-heading rounded-xl shadow-lg disabled:opacity-50"
             >
-              Se connecter
+              {t('se_connecter')}
             </Button>
           </CardContent>
         </Card>

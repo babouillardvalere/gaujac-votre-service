@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { getLanguage } from '../components/translations';
+import { useNavigate, Link } from 'react-router-dom';
+import { getLanguage, useTranslation } from '../components/translations';
 import Logo from '../components/Logo';
 import OfflineBanner from '../components/OfflineBanner';
 import { base44 } from '@/api/base44Client';
@@ -9,45 +9,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft, Send, AlertTriangle, CheckCircle, Loader2, Camera, Home, Search } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
 
-// Catégories avec urgence automatique
 const URGENT_CATEGORIES = ['gaz', 'eau', 'electricite'];
-
-// Problèmes techniques
-const problemesTechniques = [
-  { id: 'gaz', emoji: '🔥', label: 'Gaz' },
-  { id: 'eau', emoji: '💧', label: 'Eau / Fuite / Plomberie' },
-  { id: 'electricite', emoji: '⚡', label: 'Électricité' },
-  { id: 'divers_technique', emoji: '🛠', label: 'Problème technique divers' },
-  { id: 'espace_vert', emoji: '🌿', label: 'Espace vert' },
-  { id: 'mobilier', emoji: '🧰', label: 'Mobilier cassé / matériel' },
-  { id: 'structurel', emoji: '🏚', label: 'Problème structurel' }
-];
-
-// Problèmes ménage
-const problemesMenage = [
-  { id: 'literie', emoji: '🛏', label: 'Changer la literie' },
-  { id: 'nettoyage', emoji: '🧽', label: 'Ménage / nettoyage' },
-  { id: 'vaisselle', emoji: '🍽', label: 'Vaisselle / matériel cuisine' },
-  { id: 'poubelle', emoji: '🗑', label: 'Poubelle / odeur' },
-  { id: 'produit_manquant', emoji: '🧴', label: 'Produit manquant' }
-];
-
-// Nuisances
-const nuisances = [
-  { id: 'souris', emoji: '🐭', label: 'Souris' },
-  { id: 'guepes', emoji: '🐝', label: 'Guêpes' },
-  { id: 'frelons', emoji: '🐝', label: 'Frelons' },
-  { id: 'fourmis', emoji: '🐜', label: 'Fourmis' },
-  { id: 'moustiques', emoji: '🦟', label: 'Moustiques en intérieur' }
-];
 
 export default function Signalement() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   
   const [selectedProblems, setSelectedProblems] = useState([]);
   const [description, setDescription] = useState('');
@@ -58,8 +28,33 @@ export default function Signalement() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [lastIncidentId, setLastIncidentId] = useState(null);
 
-  // Données de session
   const [userData, setUserData] = useState({});
+
+  const problemesTechniques = [
+    { id: 'gaz', emoji: '🔥', label: t('gaz') },
+    { id: 'eau', emoji: '💧', label: t('eau_plomberie') },
+    { id: 'electricite', emoji: '⚡', label: t('electricite') },
+    { id: 'divers_technique', emoji: '🛠', label: t('probleme_technique_divers') },
+    { id: 'espace_vert', emoji: '🌿', label: t('espace_vert') },
+    { id: 'mobilier', emoji: '🧰', label: t('mobilier_casse') },
+    { id: 'structurel', emoji: '🏚', label: t('probleme_structurel') }
+  ];
+
+  const problemesMenage = [
+    { id: 'literie', emoji: '🛏', label: t('literie') },
+    { id: 'nettoyage', emoji: '🧽', label: t('nettoyage') },
+    { id: 'vaisselle', emoji: '🍽', label: t('vaisselle') },
+    { id: 'poubelle', emoji: '🗑', label: t('poubelle') },
+    { id: 'produit_manquant', emoji: '🧴', label: t('produit_manquant') }
+  ];
+
+  const nuisances = [
+    { id: 'souris', emoji: '🐭', label: t('souris') },
+    { id: 'guepes', emoji: '🐝', label: t('guepes') },
+    { id: 'frelons', emoji: '🐝', label: t('frelons') },
+    { id: 'fourmis', emoji: '🐜', label: t('fourmis') },
+    { id: 'moustiques', emoji: '🦟', label: t('moustiques') }
+  ];
 
   useEffect(() => {
     if (!getLanguage()) {
@@ -67,7 +62,6 @@ export default function Signalement() {
       return;
     }
     
-    // Vérifier les données de session
     const nom = sessionStorage.getItem('user_nom');
     const hebergement = sessionStorage.getItem('hebergement_numero');
     
@@ -87,14 +81,12 @@ export default function Signalement() {
     });
   }, [navigate]);
 
-  // Gérer la sélection de problèmes
   const toggleProblem = (problemId) => {
     setSelectedProblems(prev => {
       const newSelection = prev.includes(problemId)
         ? prev.filter(p => p !== problemId)
         : [...prev, problemId];
       
-      // Vérifier si une catégorie urgente est sélectionnée
       const hasUrgent = newSelection.some(p => URGENT_CATEGORIES.includes(p));
       if (hasUrgent && !urgent) {
         setUrgent(true);
@@ -114,11 +106,11 @@ export default function Signalement() {
 
   const handleSubmit = async () => {
     if (!description.trim()) {
-      toast.error('La description est obligatoire');
+      toast.error(t('description_obligatoire'));
       return;
     }
     if (selectedProblems.length === 0) {
-      toast.error('Veuillez sélectionner au moins un type de problème');
+      toast.error(t('selectionner_probleme'));
       return;
     }
 
@@ -131,14 +123,13 @@ export default function Signalement() {
         photoUrl = file_url;
       }
 
-      // Déterminer le type (technique ou menage)
       const isTechnique = selectedProblems.some(p => 
         problemesTechniques.some(pt => pt.id === p) || nuisances.some(n => n.id === p)
       );
 
       const newIncident = await base44.entities.Incident.create({
         type: isTechnique ? 'technique' : 'menage',
-        categorie: selectedProblems[0], // Catégorie principale
+        categorie: selectedProblems[0],
         sous_categorie: selectedProblems.join(', '),
         description: description,
         urgent: urgent,
@@ -153,12 +144,11 @@ export default function Signalement() {
         statut: 'en_attente'
       });
 
-      // Sauvegarder l'ID du dernier incident pour le suivi
       sessionStorage.setItem('last_incident_id', newIncident.id);
       setLastIncidentId(newIncident.id);
       setIsSuccess(true);
     } catch (error) {
-      toast.error('Erreur lors de l\'envoi');
+      toast.error(t('erreur_envoi'));
     } finally {
       setIsSubmitting(false);
     }
@@ -175,24 +165,23 @@ export default function Signalement() {
           <div className="w-24 h-24 bg-[#00AEEF] rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
             <CheckCircle className="w-12 h-12 text-white" />
           </div>
-          <h2 className="font-handwritten text-3xl text-[#0077A8] mb-4">🎉 Demande enregistrée !</h2>
+          <h2 className="font-handwritten text-3xl text-[#0077A8] mb-4">🎉 {t('signalement_envoye')}</h2>
           <p className="font-body text-gray-600 mb-8 leading-relaxed">
-            Nous avons bien pris en compte votre demande, notre équipe interviendra dans les plus brefs délais. 
-            Nous vous remercions de votre confiance chers clients !
+            {t('signalement_message')}
           </p>
           
           <div className="space-y-3">
             <Link to={createPageUrl('SuiviIntervention')} className="block">
               <Button className="w-full h-12 bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading">
                 <Search className="w-5 h-5 mr-2" />
-                Suivre mon intervention
+                {t('suivre_intervention')}
               </Button>
             </Link>
             
             <Link to={createPageUrl('Home')} className="block">
               <Button variant="outline" className="w-full h-12 border-2 border-[#00AEEF] text-[#0077A8] hover:bg-[#e6f7ff] rounded-xl font-heading">
                 <Home className="w-5 h-5 mr-2" />
-                Retour à l'accueil
+                {t('retour_accueil')}
               </Button>
             </Link>
           </div>
@@ -236,11 +225,11 @@ export default function Signalement() {
               className="flex items-center text-white/80 hover:text-white text-sm mb-2 font-body"
             >
               <ArrowLeft className="w-4 h-4 mr-1" />
-              Retour
+              {t('retour')}
             </button>
             <CardTitle className="text-xl font-heading text-white flex items-center gap-2">
               <Home className="w-5 h-5" />
-              Signaler un problème
+              {t('signalement_title')}
             </CardTitle>
             <p className="text-white/80 text-sm font-body">
               {userData.hebergementType} {userData.hebergementNumero} • {userData.prenom} {userData.nom}
@@ -248,11 +237,10 @@ export default function Signalement() {
           </CardHeader>
           
           <CardContent className="pt-4 space-y-6">
-            {/* Section Technique */}
             <div>
               <h3 className="font-heading text-[#0077A8] mb-3 flex items-center gap-2">
                 <span className="w-6 h-6 bg-[#00AEEF] rounded text-white text-xs flex items-center justify-center">1</span>
-                Problèmes techniques
+                {t('problemes_techniques')}
               </h3>
               <div className="grid grid-cols-3 gap-2">
                 {problemesTechniques.map(p => (
@@ -261,11 +249,10 @@ export default function Signalement() {
               </div>
             </div>
 
-            {/* Section Ménage */}
             <div>
               <h3 className="font-heading text-[#0077A8] mb-3 flex items-center gap-2">
                 <span className="w-6 h-6 bg-[#FFD700] rounded text-[#0077A8] text-xs flex items-center justify-center">2</span>
-                Ménage
+                {t('menage_section')}
               </h3>
               <div className="grid grid-cols-3 gap-2">
                 {problemesMenage.map(p => (
@@ -274,11 +261,10 @@ export default function Signalement() {
               </div>
             </div>
 
-            {/* Section Nuisances */}
             <div>
               <h3 className="font-heading text-[#0077A8] mb-3 flex items-center gap-2">
                 <span className="w-6 h-6 bg-[#FFA500] rounded text-white text-xs flex items-center justify-center">3</span>
-                Nuisances & Animaux
+                {t('nuisances_section')}
               </h3>
               <div className="grid grid-cols-3 gap-2">
                 {nuisances.map(p => (
@@ -287,12 +273,11 @@ export default function Signalement() {
               </div>
             </div>
 
-            {/* Urgence */}
             <div className={`p-4 rounded-xl ${urgent ? 'bg-[#FFA500]/20 border-2 border-[#FFA500]' : 'bg-gray-50 border-2 border-gray-200'}`}>
               <label className="flex items-center justify-between cursor-pointer">
                 <div className="flex items-center gap-3">
                   <AlertTriangle className={`w-5 h-5 ${urgent ? 'text-[#FFA500]' : 'text-gray-400'}`} />
-                  <span className="font-heading text-[#0077A8]">Problème urgent ?</span>
+                  <span className="font-heading text-[#0077A8]">{t('probleme_urgent')}</span>
                 </div>
                 <Checkbox
                   checked={urgent}
@@ -302,28 +287,26 @@ export default function Signalement() {
               </label>
               {urgent && (
                 <p className="text-xs font-body text-[#FFA500] mt-2">
-                  Une intervention prioritaire sera déclenchée.
+                  {t('intervention_prioritaire')}
                 </p>
               )}
             </div>
 
-            {/* Description */}
             <div>
               <label className="font-heading text-[#0077A8] mb-2 block">
-                Description du problème *
+                {t('description')} *
               </label>
               <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Décrivez votre problème en détail..."
+                placeholder={t('description_placeholder')}
                 className="min-h-28 border-[#00AEEF]/30 rounded-xl font-body"
               />
             </div>
 
-            {/* Photo */}
             <div>
               <label className="font-heading text-[#0077A8] mb-2 block">
-                Photo (facultatif)
+                {t('photo')}
               </label>
               <input
                 type="file"
@@ -338,7 +321,7 @@ export default function Signalement() {
                 className="flex items-center justify-center gap-3 p-4 border-2 border-dashed border-[#00AEEF]/50 rounded-xl cursor-pointer hover:border-[#00AEEF] hover:bg-[#e6f7ff] transition-all"
               >
                 <Camera className="w-6 h-6 text-[#00AEEF]" />
-                <span className="font-body text-[#0077A8]">Ajouter une photo</span>
+                <span className="font-body text-[#0077A8]">{t('ajouter_photo')}</span>
               </label>
               {photoPreview && (
                 <div className="relative mt-2">
@@ -353,7 +336,6 @@ export default function Signalement() {
               )}
             </div>
 
-            {/* Bouton envoi */}
             <Button
               onClick={handleSubmit}
               disabled={!description.trim() || selectedProblems.length === 0 || isSubmitting}
@@ -362,12 +344,12 @@ export default function Signalement() {
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Envoi en cours...
+                  {t('envoi_en_cours')}
                 </>
               ) : (
                 <>
                   <Send className="w-4 h-4 mr-2" />
-                  Envoyer le signalement
+                  {t('envoyer_signalement')}
                 </>
               )}
             </Button>

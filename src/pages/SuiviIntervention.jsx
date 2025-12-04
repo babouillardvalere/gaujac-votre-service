@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Logo from '../components/Logo';
+import { useTranslation } from '../components/translations';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   ArrowLeft, MapPin, Home, ChevronRight, Search, Clock, User, 
-  CheckCircle, AlertTriangle, Play, Pause, Send, Star, ChevronDown, ChevronUp,
+  CheckCircle, Play, Pause, Send, Star, ChevronDown, ChevronUp,
   Loader2, ShieldAlert
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,7 +18,6 @@ import { format, isWithinInterval, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { createPageUrl } from '../utils';
 
-// Données hébergements
 const emplacements = {
   '6A': Array.from({ length: 50 }, (_, i) => `E${i + 1}`),
   '10A': Array.from({ length: 30 }, (_, i) => `E${i + 51}`),
@@ -48,24 +48,16 @@ const categoryEmojis = {
   autre: '📝'
 };
 
-const raisonLabels = {
-  materiel_manquant: 'Matériel manquant',
-  client_absent: 'Client absent',
-  intervention_impossible: 'Intervention impossible',
-  attente_fournisseur: 'Attente fournisseur',
-  autre: 'Autre raison'
-};
-
 export default function SuiviIntervention() {
   const navigate = useNavigate();
-  const [step, setStep] = useState('type'); // type, categorie, numero, suivi
-  const [hebergementType, setHebergementType] = useState(null); // 'emplacement' ou 'logement'
+  const { t, lang } = useTranslation();
+  const [step, setStep] = useState('type');
+  const [hebergementType, setHebergementType] = useState(null);
   const [selectedCategorie, setSelectedCategorie] = useState(null);
   const [selectedNumero, setSelectedNumero] = useState(null);
   const [expandedIncidents, setExpandedIncidents] = useState({});
   const [accessDenied, setAccessDenied] = useState(false);
 
-  // Récupérer les données du séjour du client
   const userData = {
     nom: sessionStorage.getItem('user_nom'),
     prenom: sessionStorage.getItem('user_prenom'),
@@ -74,19 +66,17 @@ export default function SuiviIntervention() {
   };
 
   useEffect(() => {
-    const lang = sessionStorage.getItem('user_language');
-    if (!lang) {
+    const savedLang = sessionStorage.getItem('user_language');
+    if (!savedLang) {
       navigate(createPageUrl('ChoixLangue'));
       return;
     }
 
-    // Vérifier si des données d'hébergement existent en session
     const savedType = sessionStorage.getItem('hebergement_type');
     const savedCategorie = sessionStorage.getItem('hebergement_categorie');
     const savedNumero = sessionStorage.getItem('hebergement_numero');
 
     if (savedType && savedNumero) {
-      // Pré-remplir avec les données de session
       setHebergementType(savedType === 'Emplacement' ? 'emplacement' : 'logement');
       setSelectedCategorie(savedCategorie);
       setSelectedNumero(savedNumero);
@@ -94,45 +84,30 @@ export default function SuiviIntervention() {
     }
   }, [navigate]);
 
-  // Requête des incidents pour l'hébergement sélectionné
   const { data: incidents = [], isLoading, refetch } = useQuery({
     queryKey: ['suivi-incidents', selectedNumero, hebergementType],
     queryFn: async () => {
       if (!selectedNumero) return [];
-      
       const field = hebergementType === 'emplacement' ? 'emplacement' : 'logement';
-      const allIncidents = await base44.entities.Incident.filter(
-        { [field]: selectedNumero },
-        '-date_saisie',
-        100
-      );
-      
-      return allIncidents;
+      return await base44.entities.Incident.filter({ [field]: selectedNumero }, '-date_saisie', 100);
     },
     enabled: !!selectedNumero && step === 'suivi',
-    refetchInterval: 10000 // Mise à jour automatique toutes les 10 secondes
+    refetchInterval: 10000
   });
 
-  // Filtrer les incidents par dates de séjour
   const filteredIncidents = incidents.filter(incident => {
-    if (!userData.dateArrivee || !userData.dateDepart || !incident.date_saisie) {
-      return true; // Si pas de dates de séjour, afficher tout (mode admin/test)
-    }
-    
+    if (!userData.dateArrivee || !userData.dateDepart || !incident.date_saisie) return true;
     try {
       const incidentDate = parseISO(incident.date_saisie);
       const arrivee = parseISO(userData.dateArrivee);
       const depart = parseISO(userData.dateDepart);
-      
       return isWithinInterval(incidentDate, { start: arrivee, end: depart });
     } catch {
       return false;
     }
   });
 
-  // Vérification de sécurité
   const checkAccess = () => {
-    // Si le client a des données de séjour mais aucun incident correspondant
     if (userData.dateArrivee && userData.dateDepart && incidents.length > 0 && filteredIncidents.length === 0) {
       setAccessDenied(true);
       return false;
@@ -147,7 +122,6 @@ export default function SuiviIntervention() {
     }
   }, [incidents, step]);
 
-  // Séparer interventions en cours et résolues
   const activeIncidents = filteredIncidents.filter(i => i.statut !== 'resolu');
   const resolvedIncidents = filteredIncidents.filter(i => i.statut === 'resolu');
 
@@ -160,95 +134,94 @@ export default function SuiviIntervention() {
     setStep('suivi');
   };
 
+  const getRaisonLabel = (raison) => {
+    const labels = {
+      materiel_manquant: t('raison_materiel_manquant'),
+      client_absent: t('raison_client_absent'),
+      intervention_impossible: t('raison_intervention_impossible'),
+      attente_fournisseur: t('raison_attente_fournisseur'),
+      autre: t('raison_autre')
+    };
+    return labels[raison] || raison;
+  };
+
   const getStatusConfig = (statut) => {
     switch (statut) {
       case 'en_attente':
-        return { color: 'bg-yellow-500', icon: Send, label: 'Demande envoyée', textColor: 'text-yellow-600' };
+        return { color: 'bg-yellow-500', icon: Send, label: t('demande_envoyee') };
       case 'en_cours':
-        return { color: 'bg-blue-500', icon: Play, label: 'En cours', textColor: 'text-blue-600' };
+        return { color: 'bg-blue-500', icon: Play, label: t('en_cours') };
       case 'en_attente_materiel':
-        return { color: 'bg-purple-500', icon: Pause, label: 'En attente', textColor: 'text-purple-600' };
+        return { color: 'bg-purple-500', icon: Pause, label: t('en_attente') };
       case 'resolu':
-        return { color: 'bg-green-500', icon: CheckCircle, label: 'Résolu', textColor: 'text-green-600' };
+        return { color: 'bg-green-500', icon: CheckCircle, label: t('resolu') };
       default:
-        return { color: 'bg-gray-500', icon: Clock, label: statut, textColor: 'text-gray-600' };
+        return { color: 'bg-gray-500', icon: Clock, label: statut };
     }
   };
 
   const renderTimeline = (incident) => {
     const steps = [];
-    const status = getStatusConfig(incident.statut);
 
-    // Étape 1: Demande envoyée
     steps.push({
       status: 'completed',
       color: 'bg-yellow-500',
       icon: Send,
-      title: 'Demande envoyée',
+      title: t('demande_envoyee'),
       date: incident.date_saisie,
       details: (
         <div className="text-sm space-y-1">
-          <p><span className="font-medium">Client:</span> {incident.client_prenom} {incident.client_nom}</p>
-          <p><span className="font-medium">Description:</span> {incident.description}</p>
+          <p><span className="font-medium">{t('client_label')}:</span> {incident.client_prenom} {incident.client_nom}</p>
+          <p><span className="font-medium">{t('description')}:</span> {incident.description}</p>
           <div className="flex items-center gap-2">
             <span className="text-xl">{categoryEmojis[incident.categorie]}</span>
-            {incident.urgent && <Badge className="bg-red-500 text-white text-xs">⚠️ Urgent</Badge>}
+            {incident.urgent && <Badge className="bg-red-500 text-white text-xs">⚠️ {t('urgent_label')}</Badge>}
           </div>
         </div>
       )
     });
 
-    // Étape 2: Prise en charge
     if (incident.pris_par && incident.date_debut) {
       steps.push({
         status: 'completed',
         color: 'bg-orange-500',
         icon: User,
-        title: 'Prise en charge',
+        title: t('prise_en_charge'),
         date: incident.date_debut,
-        details: (
-          <p className="text-sm">Collaborateur: <span className="font-medium">{incident.pris_par}</span></p>
-        )
+        details: <p className="text-sm">{t('collaborateur_label')}: <span className="font-medium">{incident.pris_par}</span></p>
       });
     }
 
-    // Étape 3: En cours
     if (incident.statut === 'en_cours') {
       steps.push({
         status: 'active',
         color: 'bg-blue-500',
         icon: Play,
-        title: 'En cours',
+        title: t('en_cours'),
         date: null,
-        details: (
-          <p className="text-sm text-blue-600">L'intervention est en cours de traitement...</p>
-        )
+        details: <p className="text-sm text-blue-600">{t('intervention_en_cours')}</p>
       });
     }
 
-    // Étape 4: En attente
     if (incident.statut === 'en_attente_materiel') {
       steps.push({
         status: 'active',
         color: 'bg-purple-500',
         icon: Pause,
-        title: 'En attente',
+        title: t('en_attente'),
         date: incident.attente_date,
         details: (
           <div className="text-sm space-y-1">
-            <p><span className="font-medium">Raison:</span> {raisonLabels[incident.attente_raison] || incident.attente_raison}</p>
+            <p><span className="font-medium">{t('raison_attente')}:</span> {getRaisonLabel(incident.attente_raison)}</p>
             {incident.attente_materiel && (
-              <p className="text-red-600"><span className="font-medium">Matériel manquant:</span> {incident.attente_materiel_detail}</p>
+              <p className="text-red-600"><span className="font-medium">{t('materiel_manquant')}:</span> {incident.attente_materiel_detail}</p>
             )}
-            {incident.attente_delai && (
-              <p><span className="font-medium">Délai estimé:</span> {incident.attente_delai}</p>
-            )}
+            {incident.attente_delai && <p><span className="font-medium">{t('delai_estime')}:</span> {incident.attente_delai}</p>}
           </div>
         )
       });
     }
 
-    // Étape 5: Résolu
     if (incident.statut === 'resolu') {
       const duree = incident.date_debut && incident.date_resolution
         ? Math.round((new Date(incident.date_resolution) - new Date(incident.date_debut)) / 60000)
@@ -258,24 +231,21 @@ export default function SuiviIntervention() {
         status: 'completed',
         color: 'bg-green-500',
         icon: CheckCircle,
-        title: 'Résolu',
+        title: t('resolu'),
         date: incident.date_resolution,
         details: (
           <div className="text-sm space-y-2">
-            <p><span className="font-medium">Intervenant:</span> {incident.pris_par}</p>
-            {duree && <p><span className="font-medium">Temps de traitement:</span> {duree} min</p>}
+            <p><span className="font-medium">{t('intervenant')}:</span> {incident.pris_par}</p>
+            {duree && <p><span className="font-medium">{t('temps_traitement')}:</span> {duree} {t('min')}</p>}
             {!incident.note_client && (
-              <Link 
-                to={`${createPageUrl('Avis')}?id=${incident.id}`}
-                className="inline-flex items-center gap-1 text-[#00AEEF] hover:underline font-medium"
-              >
+              <Link to={`${createPageUrl('Avis')}?id=${incident.id}`} className="inline-flex items-center gap-1 text-[#00AEEF] hover:underline font-medium">
                 <Star className="w-4 h-4" />
-                Donner votre avis
+                {t('donner_avis_link')}
               </Link>
             )}
             {incident.note_client && (
               <div className="flex items-center gap-1">
-                <span className="font-medium">Votre note:</span>
+                <span className="font-medium">{t('votre_note')}:</span>
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star key={i} className={`w-4 h-4 ${i < incident.note_client ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />
                 ))}
@@ -289,33 +259,39 @@ export default function SuiviIntervention() {
     return steps;
   };
 
-  // Rendu de l'écran d'accès refusé
   if (accessDenied) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="min-h-screen flex items-center justify-center px-4 pb-24">
         <Card className="max-w-md border-2 border-red-300 rounded-xl">
           <CardContent className="p-6 text-center">
             <ShieldAlert className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h2 className="font-heading text-xl text-red-600 mb-2">Accès non autorisé</h2>
-            <p className="font-body text-gray-600 mb-4">
-              Vous ne pouvez pas accéder au suivi de cet hébergement.<br/>
-              Veuillez vérifier votre sélection ou contacter l'accueil.
-            </p>
+            <h2 className="font-heading text-xl text-red-600 mb-2">{t('acces_refuse')}</h2>
+            <p className="font-body text-gray-600 mb-4">{t('acces_refuse_detail')}</p>
             <Button
               onClick={() => { setStep('type'); setSelectedNumero(null); setAccessDenied(false); }}
               className="bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading"
             >
-              Retour à la sélection
+              {t('retour_selection')}
             </Button>
           </CardContent>
         </Card>
+        
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-sm border-t border-gray-200 z-20">
+          <div className="max-w-2xl mx-auto">
+            <Link to={createPageUrl('Home')}>
+              <Button className="w-full h-12 bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading shadow-lg">
+                <Home className="w-5 h-5 mr-2" />
+                {t('retour_accueil')}
+              </Button>
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen pb-24">
-      {/* Header */}
       <div className="bg-[#00AEEF] text-white px-4 py-4 sticky top-0 z-10">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -331,10 +307,8 @@ export default function SuiviIntervention() {
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="font-heading text-xl">Suivi d'intervention</h1>
-              {selectedNumero && (
-                <p className="text-white/80 text-sm font-body">{selectedNumero}</p>
-              )}
+              <h1 className="font-heading text-xl">{t('suivi_title')}</h1>
+              {selectedNumero && <p className="text-white/80 text-sm font-body">{selectedNumero}</p>}
             </div>
           </div>
           <Search className="w-8 h-8" />
@@ -342,66 +316,49 @@ export default function SuiviIntervention() {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-6">
-        {/* Étape 1: Choix du type */}
         {step === 'type' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
             <div className="text-center mb-8">
               <Logo className="h-20 mx-auto mb-4" />
-              <h2 className="font-handwritten text-3xl text-[#0077A8]">Suivre une intervention</h2>
-              <p className="font-body text-gray-600 mt-2">Sélectionnez votre type d'hébergement</p>
+              <h2 className="font-handwritten text-3xl text-[#0077A8]">{t('suivi_title')}</h2>
+              <p className="font-body text-gray-600 mt-2">{t('selectionner_hebergement')}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <Card
-                onClick={() => { setHebergementType('emplacement'); setStep('categorie'); }}
-                className="cursor-pointer border-2 border-[#00AEEF]/30 hover:border-[#00AEEF] hover:shadow-lg transition-all rounded-xl"
-              >
+              <Card onClick={() => { setHebergementType('emplacement'); setStep('categorie'); }} className="cursor-pointer border-2 border-[#00AEEF]/30 hover:border-[#00AEEF] hover:shadow-lg transition-all rounded-xl">
                 <CardContent className="p-6 text-center">
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <MapPin className="w-8 h-8 text-green-600" />
                   </div>
-                  <h3 className="font-heading text-[#0077A8]">Emplacement</h3>
-                  <p className="text-xs text-gray-500 font-body">Camping / Tente</p>
+                  <h3 className="font-heading text-[#0077A8]">{t('emplacement')}</h3>
+                  <p className="text-xs text-gray-500 font-body">{t('camping_tente')}</p>
                 </CardContent>
               </Card>
 
-              <Card
-                onClick={() => { setHebergementType('logement'); setStep('categorie'); }}
-                className="cursor-pointer border-2 border-[#00AEEF]/30 hover:border-[#00AEEF] hover:shadow-lg transition-all rounded-xl"
-              >
+              <Card onClick={() => { setHebergementType('logement'); setStep('categorie'); }} className="cursor-pointer border-2 border-[#00AEEF]/30 hover:border-[#00AEEF] hover:shadow-lg transition-all rounded-xl">
                 <CardContent className="p-6 text-center">
                   <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <Home className="w-8 h-8 text-blue-600" />
                   </div>
-                  <h3 className="font-heading text-[#0077A8]">Hébergement</h3>
-                  <p className="text-xs text-gray-500 font-body">Mobil-home / Cottage</p>
+                  <h3 className="font-heading text-[#0077A8]">{t('logement')}</h3>
+                  <p className="text-xs text-gray-500 font-body">{t('mobilhome_cottage')}</p>
                 </CardContent>
               </Card>
             </div>
           </motion.div>
         )}
 
-        {/* Étape 2: Choix de la catégorie */}
         {step === 'categorie' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
             <h2 className="font-heading text-xl text-[#0077A8] mb-4">
-              {hebergementType === 'emplacement' ? 'Type d\'emplacement' : 'Type d\'hébergement'}
+              {hebergementType === 'emplacement' ? t('type_emplacement') : t('type_hebergement')}
             </h2>
-
             <div className="grid gap-3">
               {Object.keys(hebergementType === 'emplacement' ? emplacements : logements).map((cat) => (
-                <Card
-                  key={cat}
-                  onClick={() => { setSelectedCategorie(cat); setStep('numero'); }}
-                  className="cursor-pointer border-2 border-[#00AEEF]/30 hover:border-[#00AEEF] hover:shadow-md transition-all rounded-xl"
-                >
+                <Card key={cat} onClick={() => { setSelectedCategorie(cat); setStep('numero'); }} className="cursor-pointer border-2 border-[#00AEEF]/30 hover:border-[#00AEEF] hover:shadow-md transition-all rounded-xl">
                   <CardContent className="p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      {hebergementType === 'emplacement' ? (
-                        <MapPin className="w-5 h-5 text-green-600" />
-                      ) : (
-                        <Home className="w-5 h-5 text-blue-600" />
-                      )}
+                      {hebergementType === 'emplacement' ? <MapPin className="w-5 h-5 text-green-600" /> : <Home className="w-5 h-5 text-blue-600" />}
                       <span className="font-heading text-[#0077A8]">{cat}</span>
                     </div>
                     <ChevronRight className="w-5 h-5 text-gray-400" />
@@ -412,30 +369,23 @@ export default function SuiviIntervention() {
           </motion.div>
         )}
 
-        {/* Étape 3: Choix du numéro */}
         {step === 'numero' && selectedCategorie && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-            <h2 className="font-heading text-xl text-[#0077A8] mb-4">
-              Sélectionnez votre numéro
-            </h2>
-            <p className="text-sm text-gray-600 font-body mb-4">Catégorie: {selectedCategorie}</p>
-
+            <h2 className="font-heading text-xl text-[#0077A8] mb-4">{t('select_numero')}</h2>
+            <p className="text-sm text-gray-600 font-body mb-4">{t('categorie')}: {selectedCategorie}</p>
             <Select onValueChange={handleSelectNumero}>
               <SelectTrigger className="w-full h-14 border-2 border-[#00AEEF]/30 rounded-xl text-lg font-heading">
-                <SelectValue placeholder="Choisir un numéro" />
+                <SelectValue placeholder={t('choisir_numero')} />
               </SelectTrigger>
               <SelectContent>
                 {(hebergementType === 'emplacement' ? emplacements : logements)[selectedCategorie]?.map((num) => (
-                  <SelectItem key={num} value={num} className="text-lg">
-                    {num}
-                  </SelectItem>
+                  <SelectItem key={num} value={num} className="text-lg">{num}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </motion.div>
         )}
 
-        {/* Étape 4: Affichage du suivi */}
         {step === 'suivi' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
             {isLoading ? (
@@ -445,25 +395,21 @@ export default function SuiviIntervention() {
             ) : filteredIncidents.length === 0 ? (
               <div className="text-center py-12">
                 <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="font-heading text-xl text-[#0077A8] mb-2">Aucun signalement trouvé</h3>
-                <p className="font-body text-gray-600">
-                  Aucun signalement n'est enregistré pour votre hébergement.
-                </p>
+                <h3 className="font-heading text-xl text-[#0077A8] mb-2">{t('aucun_signalement')}</h3>
+                <p className="font-body text-gray-600">{t('aucun_signalement_detail')}</p>
               </div>
             ) : (
               <>
-                {/* Interventions actives */}
                 {activeIncidents.length > 0 && (
                   <div className="space-y-4">
                     <h3 className="font-heading text-lg text-[#0077A8] flex items-center gap-2">
                       <Clock className="w-5 h-5 text-[#FFA500]" />
-                      Interventions en cours ({activeIncidents.length})
+                      {t('interventions_en_cours')} ({activeIncidents.length})
                     </h3>
                     
                     {activeIncidents.map((incident) => (
                       <Card key={incident.id} className="border-2 border-[#00AEEF] rounded-xl overflow-hidden">
                         <CardContent className="p-0">
-                          {/* Header de l'intervention */}
                           <div className="bg-[#00AEEF]/10 p-4 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               <span className="text-2xl">{categoryEmojis[incident.categorie]}</span>
@@ -471,9 +417,7 @@ export default function SuiviIntervention() {
                                 <Badge className={`${getStatusConfig(incident.statut).color} text-white`}>
                                   {getStatusConfig(incident.statut).label}
                                 </Badge>
-                                {incident.urgent && (
-                                  <Badge className="bg-red-500 text-white ml-2">Urgent</Badge>
-                                )}
+                                {incident.urgent && <Badge className="bg-red-500 text-white ml-2">{t('urgent_label')}</Badge>}
                               </div>
                             </div>
                             <span className="text-xs text-gray-500 font-body">
@@ -481,7 +425,6 @@ export default function SuiviIntervention() {
                             </span>
                           </div>
 
-                          {/* Timeline */}
                           <div className="p-4">
                             <div className="relative">
                               {renderTimeline(incident).map((step, index, arr) => (
@@ -490,20 +433,12 @@ export default function SuiviIntervention() {
                                     <div className={`w-10 h-10 rounded-full ${step.color} flex items-center justify-center ${step.status === 'active' ? 'animate-pulse' : ''}`}>
                                       <step.icon className="w-5 h-5 text-white" />
                                     </div>
-                                    {index < arr.length - 1 && (
-                                      <div className={`w-0.5 flex-1 mt-2 ${step.status === 'completed' ? 'bg-gray-300' : 'bg-gray-200'}`} />
-                                    )}
+                                    {index < arr.length - 1 && <div className={`w-0.5 flex-1 mt-2 ${step.status === 'completed' ? 'bg-gray-300' : 'bg-gray-200'}`} />}
                                   </div>
                                   <div className="flex-1 pb-4">
                                     <div className="flex items-center justify-between">
-                                      <h4 className={`font-heading ${step.status === 'active' ? step.color.replace('bg-', 'text-') : 'text-gray-700'}`}>
-                                        {step.title}
-                                      </h4>
-                                      {step.date && (
-                                        <span className="text-xs text-gray-400">
-                                          {format(new Date(step.date), 'dd/MM HH:mm', { locale: fr })}
-                                        </span>
-                                      )}
+                                      <h4 className="font-heading text-gray-700">{step.title}</h4>
+                                      {step.date && <span className="text-xs text-gray-400">{format(new Date(step.date), 'dd/MM HH:mm', { locale: fr })}</span>}
                                     </div>
                                     <div className="mt-1 text-gray-600">{step.details}</div>
                                   </div>
@@ -517,12 +452,11 @@ export default function SuiviIntervention() {
                   </div>
                 )}
 
-                {/* Interventions résolues */}
                 {resolvedIncidents.length > 0 && (
                   <div className="space-y-3">
                     <h3 className="font-heading text-lg text-gray-500 flex items-center gap-2">
                       <CheckCircle className="w-5 h-5 text-green-500" />
-                      Interventions résolues ({resolvedIncidents.length})
+                      {t('interventions_resolues')} ({resolvedIncidents.length})
                     </h3>
                     
                     {resolvedIncidents.map((incident) => {
@@ -530,14 +464,11 @@ export default function SuiviIntervention() {
                       return (
                         <Card key={incident.id} className="border border-gray-200 rounded-xl overflow-hidden">
                           <CardContent className="p-0">
-                            <button
-                              onClick={() => toggleExpand(incident.id)}
-                              className="w-full p-4 flex items-center justify-between hover:bg-gray-50"
-                            >
+                            <button onClick={() => toggleExpand(incident.id)} className="w-full p-4 flex items-center justify-between hover:bg-gray-50">
                               <div className="flex items-center gap-3">
                                 <span className="text-xl">{categoryEmojis[incident.categorie]}</span>
                                 <div className="text-left">
-                                  <Badge className="bg-green-500 text-white text-xs">Résolu</Badge>
+                                  <Badge className="bg-green-500 text-white text-xs">{t('resolu')}</Badge>
                                   <p className="text-sm text-gray-500 font-body mt-1">
                                     {incident.date_saisie && format(new Date(incident.date_saisie), 'dd/MM/yyyy', { locale: fr })}
                                   </p>
@@ -548,12 +479,7 @@ export default function SuiviIntervention() {
 
                             <AnimatePresence>
                               {isExpanded && (
-                                <motion.div
-                                  initial={{ height: 0, opacity: 0 }}
-                                  animate={{ height: 'auto', opacity: 1 }}
-                                  exit={{ height: 0, opacity: 0 }}
-                                  className="overflow-hidden"
-                                >
+                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                                   <div className="p-4 pt-0 border-t">
                                     {renderTimeline(incident).map((step, index, arr) => (
                                       <div key={index} className="flex gap-4 mb-3 last:mb-0">
@@ -561,9 +487,7 @@ export default function SuiviIntervention() {
                                           <div className={`w-8 h-8 rounded-full ${step.color} flex items-center justify-center`}>
                                             <step.icon className="w-4 h-4 text-white" />
                                           </div>
-                                          {index < arr.length - 1 && (
-                                            <div className="w-0.5 flex-1 mt-1 bg-gray-200" />
-                                          )}
+                                          {index < arr.length - 1 && <div className="w-0.5 flex-1 mt-1 bg-gray-200" />}
                                         </div>
                                         <div className="flex-1 pb-2">
                                           <h4 className="font-heading text-sm text-gray-600">{step.title}</h4>
@@ -586,13 +510,13 @@ export default function SuiviIntervention() {
           </motion.div>
         )}
       </div>
-      {/* Bouton sticky "Revenir à l'accueil" - toujours visible */}
+
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-sm border-t border-gray-200 z-20">
         <div className="max-w-2xl mx-auto">
           <Link to={createPageUrl('Home')}>
             <Button className="w-full h-12 bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading shadow-lg">
               <Home className="w-5 h-5 mr-2" />
-              Revenir à l'accueil
+              {t('retour_accueil')}
             </Button>
           </Link>
         </div>
