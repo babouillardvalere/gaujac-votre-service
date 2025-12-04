@@ -19,6 +19,7 @@ import Menage from './pages/Menage';
 import ConditionsClient from './pages/ConditionsClient';
 import Attente from './pages/Attente';
 import Materiel from './pages/Materiel';
+import SuiviIntervention from './pages/SuiviIntervention';
 import __Layout from './Layout.jsx';
 
 
@@ -44,6 +45,7 @@ export const PAGES = {
     "ConditionsClient": ConditionsClient,
     "Attente": Attente,
     "Materiel": Materiel,
+    "SuiviIntervention": SuiviIntervention,
 }
 
 export const pagesConfig = {
