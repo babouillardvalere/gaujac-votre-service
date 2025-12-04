@@ -220,14 +220,18 @@ export default function InterventionActions({ incident, onUpdate }) {
                   </div>
                 )}
                 
-                {incident.statut === 'en_attente_materiel' && incident.attente_date && (
+                {(incident.statut === 'en_attente_materiel' || incident.motif_attente) && incident.attente_date && (
                   <div className="flex items-start gap-3">
                     <div className="w-3 h-3 rounded-full bg-[#FFA500] mt-1.5"></div>
                     <div>
-                      <p className="font-heading text-sm text-[#FFA500]">Mise en attente</p>
+                      <p className="font-heading text-sm text-[#FFA500]">🟨 En attente</p>
+                      {incident.motif_attente && (
+                        <p className="text-xs text-gray-700 font-body mt-1">
+                          📝 Motif : <span className="font-medium">{incident.motif_attente}</span>
+                        </p>
+                      )}
                       <p className="text-xs text-gray-500 font-body">
-                        {format(new Date(incident.attente_date), 'dd/MM/yyyy à HH:mm', { locale: fr })}
-                        {incident.attente_raison && ` - ${incident.attente_raison}`}
+                        ⏱ Date : {format(new Date(incident.attente_date), 'dd/MM/yyyy – HH:mm', { locale: fr })}
                       </p>
                     </div>
                   </div>

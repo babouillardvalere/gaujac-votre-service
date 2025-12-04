@@ -6,26 +6,38 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Clock, Package, Loader2 } from 'lucide-react';
+import { Clock, Package, Loader2, AlertCircle } from 'lucide-react';
 
 export default function MettreEnAttenteDialog({ open, onOpenChange, onConfirm, isLoading }) {
   const { t } = useTranslation();
   const [formData, setFormData] = useState({
     raison: '',
+    motifAttente: '',
     materiel: false,
     materielDetail: '',
     delai: '',
     commentaire: ''
   });
+  const [showError, setShowError] = useState(false);
 
   const handleConfirm = () => {
-    if (!formData.commentaire.trim()) {
+    if (!formData.motifAttente.trim()) {
+      setShowError(true);
       return;
     }
+    setShowError(false);
     onConfirm(formData);
   };
 
-  const isValid = formData.commentaire.trim() && formData.raison;
+  const isValid = formData.motifAttente.trim();
+
+  const motifSuggestions = [
+    "Attente de matériel",
+    "Attente du fournisseur",
+    "Client absent",
+    "Besoin d'une pièce spécifique",
+    "Besoin d'un second technicien"
+  ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -38,8 +50,39 @@ export default function MettreEnAttenteDialog({ open, onOpenChange, onConfirm, i
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* Motif d'attente - OBLIGATOIRE */}
           <div className="space-y-2">
-            <label className="text-sm font-heading text-[#0077A8]">{t('raison_attente_label')} *</label>
+            <label className="text-sm font-heading text-[#0077A8] flex items-center gap-1">
+              Motif de l'attente <span className="text-red-500">*</span>
+            </label>
+            <Textarea
+              value={formData.motifAttente}
+              onChange={(e) => { setFormData({ ...formData, motifAttente: e.target.value }); setShowError(false); }}
+              placeholder="Décrivez la raison de la mise en attente..."
+              className={`border-[#00AEEF]/30 rounded-xl min-h-20 ${showError && !formData.motifAttente.trim() ? 'border-red-500' : ''}`}
+            />
+            {showError && !formData.motifAttente.trim() && (
+              <p className="text-red-500 text-xs flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" />
+                Ce champ est obligatoire
+              </p>
+            )}
+            <div className="flex flex-wrap gap-1 mt-2">
+              {motifSuggestions.map((suggestion) => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, motifAttente: suggestion })}
+                  className="text-xs px-2 py-1 bg-[#FFA500]/10 text-[#FFA500] rounded-lg hover:bg-[#FFA500]/20 transition-colors font-body"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-heading text-[#0077A8]">{t('raison_attente_label')}</label>
             <Select value={formData.raison} onValueChange={(v) => setFormData({ ...formData, raison: v })}>
               <SelectTrigger className="border-[#00AEEF]/30 rounded-xl">
                 <SelectValue placeholder={t('selectionner_raison')} />
@@ -97,19 +140,19 @@ export default function MettreEnAttenteDialog({ open, onOpenChange, onConfirm, i
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-heading text-[#0077A8]">{t('commentaire_interne_label')} *</label>
+            <label className="text-sm font-heading text-[#0077A8]">{t('commentaire_interne_label')}</label>
             <Textarea
               value={formData.commentaire}
               onChange={(e) => setFormData({ ...formData, commentaire: e.target.value })}
               placeholder={t('detaillez_situation')}
-              className="border-[#00AEEF]/30 rounded-xl min-h-24"
+              className="border-[#00AEEF]/30 rounded-xl min-h-16"
             />
           </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl">
-            {t('annuler')}
+            ❌ {t('annuler')}
           </Button>
           <Button
             onClick={handleConfirm}
@@ -117,7 +160,7 @@ export default function MettreEnAttenteDialog({ open, onOpenChange, onConfirm, i
             className="bg-[#FFA500] hover:bg-[#e69500] rounded-xl font-heading"
           >
             {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Clock className="w-4 h-4 mr-2" />}
-            {t('mettre_en_attente')}
+            ✔️ Valider
           </Button>
         </DialogFooter>
       </DialogContent>

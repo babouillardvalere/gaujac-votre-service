@@ -114,6 +114,7 @@ export default function Technique() {
       data: {
         statut: 'en_attente_materiel',
         attente_raison: formData.raison,
+        motif_attente: formData.motifAttente,
         attente_materiel: formData.materiel,
         attente_materiel_detail: formData.materielDetail,
         attente_delai: formData.delai,

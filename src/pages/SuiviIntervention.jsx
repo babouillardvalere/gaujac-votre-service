@@ -203,16 +203,21 @@ export default function SuiviIntervention() {
       });
     }
 
-    if (incident.statut === 'en_attente_materiel') {
+    if (incident.statut === 'en_attente_materiel' || incident.motif_attente) {
       steps.push({
-        status: 'active',
-        color: 'bg-purple-500',
+        status: incident.statut === 'en_attente_materiel' ? 'active' : 'completed',
+        color: 'bg-[#FFA500]',
         icon: Pause,
-        title: t('en_attente'),
+        title: '🟨 Intervention en attente',
         date: incident.attente_date,
         details: (
           <div className="text-sm space-y-1">
-            <p><span className="font-medium">{t('raison_attente')}:</span> {getRaisonLabel(incident.attente_raison)}</p>
+            {incident.motif_attente && (
+              <p className="text-[#FFA500] font-medium">⏳ Raison : {incident.motif_attente}</p>
+            )}
+            {!incident.motif_attente && incident.attente_raison && (
+              <p><span className="font-medium">{t('raison_attente')}:</span> {getRaisonLabel(incident.attente_raison)}</p>
+            )}
             {incident.attente_materiel && (
               <p className="text-red-600"><span className="font-medium">{t('materiel_manquant')}:</span> {incident.attente_materiel_detail}</p>
             )}
