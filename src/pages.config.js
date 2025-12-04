@@ -13,6 +13,9 @@ import Intervention from './pages/Intervention';
 import Dashboard from './pages/Dashboard';
 import Piscine from './pages/Piscine';
 import SatisfactionClient from './pages/SatisfactionClient';
+import MenuCollaborateur from './pages/MenuCollaborateur';
+import Technique from './pages/Technique';
+import Menage from './pages/Menage';
 import __Layout from './Layout.jsx';
 
 
@@ -32,6 +35,9 @@ export const PAGES = {
     "Dashboard": Dashboard,
     "Piscine": Piscine,
     "SatisfactionClient": SatisfactionClient,
+    "MenuCollaborateur": MenuCollaborateur,
+    "Technique": Technique,
+    "Menage": Menage,
 }
 
 export const pagesConfig = {
