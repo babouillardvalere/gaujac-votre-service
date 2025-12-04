@@ -15,8 +15,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { 
   ArrowLeft, Clock, Star, AlertTriangle, TrendingUp, Loader2, 
   Users, Home, Search, Building2, Filter, Calendar, CalendarDays,
-  ChevronDown, ChevronUp, Eye, AlertCircle
+  ChevronDown, ChevronUp, Eye, AlertCircle, MoreVertical
 } from 'lucide-react';
+import InterventionActions from '../components/bureau/InterventionActions';
 import { format, differenceInHours, differenceInMinutes, isToday, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -501,9 +502,7 @@ export default function Bureau() {
                                 )}
                               </td>
                               <td className="p-3">
-                                <Button variant="ghost" size="sm" className="text-[#00AEEF]">
-                                  <Eye className="w-4 h-4" />
-                                </Button>
+                                <InterventionActions incident={incident} />
                               </td>
                             </tr>
                           );
