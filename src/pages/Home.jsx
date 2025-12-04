@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation, getLanguage } from '../components/translations';
 import Logo from '../components/Logo';
-import { Users, Star, Briefcase } from 'lucide-react';
+import { Users, Star, Briefcase, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 
@@ -23,6 +23,13 @@ export default function Home() {
       href: '/IdentiteClient',
       color: 'bg-[#00AEEF]',
       description: 'Signaler un problème'
+    },
+    {
+      title: 'Suivi intervention',
+      icon: Search,
+      href: '/SuiviIntervention',
+      color: 'bg-[#0077A8]',
+      description: 'Suivre votre demande'
     },
     {
       title: t('avis'),
