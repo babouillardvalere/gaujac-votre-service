@@ -8,6 +8,7 @@ import CollaborateurTechnique from './pages/CollaborateurTechnique';
 import CollaborateurMenage from './pages/CollaborateurMenage';
 import Bureau from './pages/Bureau';
 import Avis from './pages/Avis';
+import SignalementClient from './pages/SignalementClient';
 
 
 export const PAGES = {
@@ -21,6 +22,7 @@ export const PAGES = {
     "CollaborateurMenage": CollaborateurMenage,
     "Bureau": Bureau,
     "Avis": Avis,
+    "SignalementClient": SignalementClient,
 }
 
 export const pagesConfig = {
