@@ -6,6 +6,7 @@ export const translations = {
     collaborateur: "Collaborateur",
     avis: "Avis",
     retour: "Retour",
+    retour_accueil: "Revenir à l'accueil",
     envoyer: "Envoyer",
     annuler: "Annuler",
     confirmer: "Confirmer",
@@ -14,7 +15,35 @@ export const translations = {
     chargement: "Chargement...",
     succes: "Succès",
     erreur: "Erreur",
-    
+    fermer: "Fermer",
+    enregistrer: "Enregistrer",
+    modifier: "Modifier",
+    supprimer: "Supprimer",
+    ajouter: "Ajouter",
+    rechercher: "Rechercher",
+    filtrer: "Filtrer",
+    tous: "Tous",
+    aucun: "Aucun",
+    oui: "Oui",
+    non: "Non",
+
+    // Home page
+    camping_paradis: "Camping Paradis",
+    slogan: "Le Domaine de Gaujac à votre service !",
+    signaler_probleme: "Signaler un problème",
+    donner_avis: "Donner votre avis",
+    espace_collaborateurs: "Espace collaborateurs",
+    suivi_intervention: "Suivi intervention",
+    suivre_demande: "Suivre votre demande",
+    changer_langue: "Changer de langue / Change language",
+
+    // Language selection
+    bienvenue: "Bienvenue",
+    welcome: "Welcome",
+    choisir_langue: "Choisissez votre langue",
+    francais: "Français",
+    anglais: "English",
+
     // Identity
     identite_title: "Votre identité",
     nom: "Nom",
@@ -25,27 +54,64 @@ export const translations = {
     date_error_depart: "La date de départ doit être aujourd'hui ou après",
     date_error_ordre: "La date de départ doit être après la date d'arrivée",
     champs_obligatoires: "Tous les champs sont obligatoires",
-    
+    informations_sejour: "Informations de séjour",
+
+    // Conditions
+    conditions_title: "Informations importantes",
+    conditions_accept: "J'ai lu et j'accepte les conditions",
+    conditions_continue: "Continuer",
+    horaires_intervention: "Horaires d'intervention",
+    horaires_detail: "Nos équipes interviennent de 8h à 20h. En dehors de ces horaires, seules les urgences (gaz, eau, électricité) sont traitées.",
+    urgences: "Urgences",
+    urgences_detail: "En cas d'urgence grave (fuite de gaz, inondation), contactez immédiatement l'accueil ou le numéro d'urgence affiché dans votre hébergement.",
+    regles_menage: "Règles de ménage",
+    regles_menage_detail: "Le ménage de fin de séjour n'est pas inclus. Merci de laisser l'hébergement propre et rangé.",
+    infos_pratiques: "Informations pratiques",
+    infos_pratiques_detail: "Wifi gratuit disponible. Piscine ouverte de 10h à 19h. Épicerie ouverte de 8h à 20h.",
+
     // Accommodation
     choix_hebergement: "Choisir votre hébergement",
     emplacement: "Emplacement",
-    logement: "Logement",
+    logement: "Hébergement",
+    camping_tente: "Camping / Tente",
+    mobilhome_cottage: "Mobil-home / Cottage",
     select_categorie: "Sélectionner une catégorie",
     select_numero: "Sélectionner un numéro",
-    
-    // Report
+    type_emplacement: "Type d'emplacement",
+    type_hebergement: "Type d'hébergement",
+    choisir_numero: "Choisir un numéro",
+
+    // Report / Signalement
     signalement_title: "Signaler un problème",
     urgence: "Problème urgent",
+    probleme_urgent: "Problème urgent ?",
+    intervention_prioritaire: "Une intervention prioritaire sera déclenchée.",
     description: "Description du problème",
+    description_obligatoire: "La description est obligatoire",
+    description_placeholder: "Décrivez votre problème en détail...",
     photo: "Photo (facultatif)",
     ajouter_photo: "Ajouter une photo",
-    signalement_envoye: "Signalement envoyé avec succès",
-    
-    // Categories
+    signalement_envoye: "Demande enregistrée !",
+    signalement_message: "Nous avons bien pris en compte votre demande, notre équipe interviendra dans les plus brefs délais. Nous vous remercions de votre confiance chers clients !",
+    suivre_intervention: "Suivre mon intervention",
+    nouveau_signalement: "Nouveau signalement",
+    selectionner_probleme: "Veuillez sélectionner au moins un type de problème",
+    envoi_en_cours: "Envoi en cours...",
+    envoyer_signalement: "Envoyer le signalement",
+    erreur_envoi: "Erreur lors de l'envoi",
+
+    // Problem categories
+    problemes_techniques: "Problèmes techniques",
+    menage_section: "Ménage",
+    nuisances_section: "Nuisances & Animaux",
     technique: "Technique",
     gaz: "Gaz",
     electricite: "Électricité",
-    eau_plomberie: "Eau / Plomberie",
+    eau_plomberie: "Eau / Fuite / Plomberie",
+    probleme_technique_divers: "Problème technique divers",
+    espace_vert: "Espace vert",
+    mobilier_casse: "Mobilier cassé / matériel",
+    probleme_structurel: "Problème structurel",
     immobilier: "Immobilier",
     clim: "Climatisation",
     tv: "TV",
@@ -55,77 +121,238 @@ export const translations = {
     souris: "Souris",
     guepes: "Guêpes",
     frelons: "Frelons",
+    fourmis: "Fourmis",
+    moustiques: "Moustiques en intérieur",
     menage: "Ménage",
-    literie: "Literie",
-    vaisselle: "Vaisselle",
+    literie: "Changer la literie",
+    vaisselle: "Vaisselle / matériel cuisine",
+    nettoyage: "Ménage / nettoyage",
     terrasse: "Terrasse",
-    
-    // Staff
+    poubelle: "Poubelle / odeur",
+    produit_manquant: "Produit manquant",
+
+    // Follow-up / Suivi
+    suivi_title: "Suivre une intervention",
+    selectionner_hebergement: "Sélectionnez votre type d'hébergement",
+    aucun_signalement: "Aucun signalement trouvé",
+    aucun_signalement_detail: "Aucun signalement n'est enregistré pour votre hébergement.",
+    interventions_en_cours: "Interventions en cours",
+    interventions_resolues: "Interventions résolues",
+    acces_refuse: "Accès non autorisé",
+    acces_refuse_detail: "Vous ne pouvez pas accéder au suivi de cet hébergement. Veuillez vérifier votre sélection ou contacter l'accueil.",
+    retour_selection: "Retour à la sélection",
+
+    // Timeline statuses
+    demande_envoyee: "Demande envoyée",
+    prise_en_charge: "Prise en charge",
+    en_cours: "En cours",
+    en_attente: "En attente",
+    en_attente_materiel: "Reporté",
+    resolu: "Résolu",
+    intervention_en_cours: "L'intervention est en cours de traitement...",
+
+    // Timeline details
+    collaborateur_label: "Collaborateur",
+    raison_attente: "Raison",
+    materiel_manquant: "Matériel manquant",
+    delai_estime: "Délai estimé",
+    intervenant: "Intervenant",
+    temps_traitement: "Temps de traitement",
+    donner_avis_link: "Donner votre avis",
+    votre_note: "Votre note",
+
+    // Staff / Collaborateur
     mot_de_passe: "Mot de passe",
-    bureau: "Bureau",
-    acces_technique: "Accès Technique",
-    acces_menage: "Accès Ménage",
-    acces_bureau: "Accès Bureau",
     mot_de_passe_incorrect: "Mot de passe incorrect",
-    
+    se_connecter: "Se connecter",
+    acces_reserve: "Accès réservé au personnel",
+    deconnexion: "Déconnexion",
+    bonjour_equipe: "Bonjour l'équipe !",
+
+    // Menu collaborateur
+    menu_technique: "Technique",
+    menu_menage: "Ménage",
+    menu_bureau: "Bureau",
+    menu_attente: "Attente",
+    menu_materiel: "Matériel",
+    desc_technique: "Interventions techniques",
+    desc_menage: "Demandes de ménage",
+    desc_bureau: "Historique & Statistiques",
+    desc_attente: "Interventions reportées",
+    desc_materiel: "Stock & Demandes",
+
     // Interventions
     interventions: "Interventions",
-    en_route: "En route",
-    en_cours: "En cours",
-    termine: "Terminé",
     nouveau: "Nouveau",
     prendre_en_charge: "Prendre en charge",
     terminer: "Terminer",
+    terminer_intervention: "Terminer l'intervention",
+    mettre_en_attente: "Mettre en attente",
+    intervention_prete: "Intervention prête",
     commentaire: "Commentaire",
+    commentaire_optionnel: "Commentaire (optionnel)",
+    commentaire_interne: "Commentaire interne",
+    votre_nom: "Votre nom",
     photos_intervention: "Photos intervention",
     duree: "Durée",
     minutes: "minutes",
-    
-    // Dashboard
-    historique: "Historique",
-    statistiques: "Statistiques",
+    min: "min",
+    pris_en_charge_par: "Pris en charge par",
+    lien_avis_copie: "Lien copié dans le presse-papiers",
+
+    // Attente dialog
+    raison_attente_label: "Raison de l'attente",
+    materiel_manquant_question: "Matériel manquant ?",
+    detail_materiel: "Détail du matériel nécessaire",
+    detail_materiel_placeholder: "Ex: Robinet, flexible gaz...",
+    delai_estime_label: "Délai estimé",
+    commentaire_interne_label: "Commentaire interne",
+    detaillez_situation: "Détaillez la situation...",
+
+    // Raisons attente
+    raison_materiel_manquant: "Matériel manquant",
+    raison_client_absent: "Client absent",
+    raison_intervention_impossible: "Intervention impossible",
+    raison_attente_fournisseur: "Attente fournisseur",
+    raison_autre: "Autre",
+
+    // Délais
+    delai_1h: "1 heure",
+    delai_2h: "2 heures",
+    delai_demi_journee: "Demi-journée",
+    delai_1j: "1 jour",
+    delai_2j: "2 jours",
+    delai_1semaine: "1 semaine",
+    delai_indetermine: "Indéterminé",
+
+    // Page Attente
+    interventions_en_attente: "Interventions en attente",
+    aucune_intervention_attente: "Aucune intervention en attente",
+    depuis: "Depuis",
+    mettre_a_jour: "Mettre à jour",
+    mettre_a_jour_attente: "Mettre à jour l'attente",
+
+    // Page Matériel
+    gestion_materiel: "Gestion du matériel",
+    demandes: "Demandes",
     stock: "Stock",
+    historique: "Historique",
+    aucune_demande_materiel: "Aucune demande de matériel en attente",
+    materiel_requis: "Matériel requis",
+    materiel_non_specifie: "Matériel non spécifié",
+    signale_par: "Signalé par",
+    receptionne: "Réceptionné",
+    ajouter_article: "Ajouter un article",
+    nom_article: "Nom de l'article",
+    categorie: "Catégorie",
+    quantite: "Quantité",
+    seuil_alerte: "Seuil d'alerte",
+    unite: "Unité",
+    statut: "Statut",
+    actions: "Actions",
+    ok: "OK",
+    faible: "Faible",
+    rupture: "Rupture",
+    alertes_stock: "Alertes stock",
+    aucun_historique: "Aucun historique",
+    article: "Article",
+    hebergement: "Hébergement",
+    cat_technique: "🔧 Technique",
+    cat_menage: "🧹 Ménage",
+    cat_literie: "🛏 Literie",
+    cat_vaisselle: "🍽 Vaisselle",
+    cat_divers: "📦 Divers",
+    nom_requis: "Nom requis",
+    article_ajoute: "Article ajouté",
+    article_modifie: "Article modifié",
+    article_supprime: "Article supprimé",
+    modifier_article: "Modifier l'article",
+
+    // Bureau / Dashboard
+    bureau_title: "Bureau",
+    statistiques: "Statistiques",
+    logements: "Logements",
     filtre_date: "Filtrer par date",
     filtre_logement: "Filtrer par logement",
     filtre_type: "Filtrer par type",
     filtre_collaborateur: "Filtrer par collaborateur",
     filtre_urgence: "Urgence uniquement",
+    filtre_materiel: "Nécessite matériel",
+    filtre_attente: "En attente",
+    filtre_prolongees: "Prolongées",
     temps_moyen: "Temps moyen",
     satisfaction: "Satisfaction",
     interventions_total: "Total interventions",
-    
-    // Reviews
+    aujourd_hui: "Aujourd'hui",
+    en_retard: "En retard",
+    cette_semaine: "Cette semaine",
+    ce_mois: "Ce mois",
+    recherche_avancee: "Recherche avancée",
+    exporter: "Exporter",
+    details: "Détails",
+    date_signalement: "Date signalement",
+    date_resolution: "Date résolution",
+    materiel_prevu: "Matériel prévu",
+    materiel_utilise: "Matériel utilisé",
+    etait_en_attente: "Était en attente",
+    delai_total: "Délai total",
+
+    // Reviews / Avis
     noter_intervention: "Noter l'intervention",
     votre_avis: "Votre avis (facultatif)",
+    votre_avis_placeholder: "Partagez votre expérience...",
     merci_avis: "Merci pour votre avis !",
-    
-    // Offline
-    mode_hors_ligne: "Mode hors-ligne",
-    synchronisation: "Synchronisation en cours...",
-    donnees_synchronisees: "Données synchronisées",
-    
+    avis_enregistre: "Votre avis a bien été enregistré.",
+    incident_introuvable: "Incident introuvable",
+    avis_deja_donne: "Avis déjà enregistré",
+    avis_deja_donne_detail: "Vous avez déjà donné votre avis pour cette intervention. Merci !",
+    envoyer_avis: "Envoyer mon avis",
+
+    // Notifications
+    notifications: "Notifications",
+    alertes: "alerte(s)",
+    alertes_stock_label: "Alertes stock",
+    demandes_materiel: "demande(s) matériel",
+    nouveau_incident: "Nouvel incident",
+    incident_urgent: "Incident urgent",
+
     // Emplacement categories
     emplacement_6a: "6A",
     emplacement_10a: "10A",
     emplacement_eau_10a: "Eau + 10A",
-    
+
     // Logement categories
-    chalet_eco: "Chalet Éco",
-    chalet_classique: "Chalet Classique",
-    mobilhome_eco: "Mobil-home Éco",
-    mobilhome_classique: "Mobil-home Classique",
-    mobilhome_clim: "Mobil-home Clim",
-    confort_plus: "Confort+",
-    premium: "Premium",
-    premium_3ch: "Premium 3ch",
-    premium_twins: "Premium Twins",
+    chalet_eco: "Chalet Éco 1 ch",
+    chalet_classique: "Chalet Classique 1 ch",
+    mh_eco: "MH Éco",
+    mh_eco_clim: "MH Éco Clim",
+    mh_classique: "MH Classique",
+    mh_classique_clim: "MH Classique Clim",
+    mh_classique_3ch: "MH Classique 3 ch",
+    mh_confort_2ch: "MH Confort+ 2 ch",
+    mh_confort_3ch: "MH Confort+ 3 ch",
+    mh_premium_2ch: "MH Premium 2 ch",
+    mh_premium_3ch: "MH Premium 3 ch",
+    mh_premium_twins: "MH Premium Twins",
     cottage_premium: "Cottage Premium",
-    
-    // Stock
-    alerte_stock: "Alerte stock bas",
-    quantite: "Quantité",
-    seuil: "Seuil d'alerte"
+
+    // Offline
+    mode_hors_ligne: "Mode hors-ligne",
+    synchronisation: "Synchronisation en cours...",
+    donnees_synchronisees: "Données synchronisées",
+
+    // Misc
+    intervention_mise_a_jour: "Intervention mise à jour",
+    selectionner_raison: "Sélectionner une raison",
+    selectionner_delai: "Sélectionner un délai",
+    date: "Date",
+    heure: "Heure",
+    client_label: "Client",
+    urgent_label: "Urgent",
+    non_defini: "Non défini",
+    delai_label: "Délai"
   },
+
   en: {
     // General
     home_title: "Home",
@@ -133,6 +360,7 @@ export const translations = {
     collaborateur: "Staff",
     avis: "Reviews",
     retour: "Back",
+    retour_accueil: "Back to home",
     envoyer: "Submit",
     annuler: "Cancel",
     confirmer: "Confirm",
@@ -141,7 +369,35 @@ export const translations = {
     chargement: "Loading...",
     succes: "Success",
     erreur: "Error",
-    
+    fermer: "Close",
+    enregistrer: "Save",
+    modifier: "Edit",
+    supprimer: "Delete",
+    ajouter: "Add",
+    rechercher: "Search",
+    filtrer: "Filter",
+    tous: "All",
+    aucun: "None",
+    oui: "Yes",
+    non: "No",
+
+    // Home page
+    camping_paradis: "Camping Paradis",
+    slogan: "Le Domaine de Gaujac at your service!",
+    signaler_probleme: "Report a problem",
+    donner_avis: "Leave a review",
+    espace_collaborateurs: "Staff area",
+    suivi_intervention: "Track request",
+    suivre_demande: "Track your request",
+    changer_langue: "Change language / Changer de langue",
+
+    // Language selection
+    bienvenue: "Bienvenue",
+    welcome: "Welcome",
+    choisir_langue: "Choose your language",
+    francais: "Français",
+    anglais: "English",
+
     // Identity
     identite_title: "Your identity",
     nom: "Last name",
@@ -152,27 +408,64 @@ export const translations = {
     date_error_depart: "Departure date must be today or after",
     date_error_ordre: "Departure date must be after arrival date",
     champs_obligatoires: "All fields are required",
-    
+    informations_sejour: "Stay information",
+
+    // Conditions
+    conditions_title: "Important information",
+    conditions_accept: "I have read and accept the conditions",
+    conditions_continue: "Continue",
+    horaires_intervention: "Intervention hours",
+    horaires_detail: "Our teams work from 8am to 8pm. Outside these hours, only emergencies (gas, water, electricity) are handled.",
+    urgences: "Emergencies",
+    urgences_detail: "In case of serious emergency (gas leak, flooding), immediately contact the reception or the emergency number displayed in your accommodation.",
+    regles_menage: "Cleaning rules",
+    regles_menage_detail: "End-of-stay cleaning is not included. Please leave the accommodation clean and tidy.",
+    infos_pratiques: "Practical information",
+    infos_pratiques_detail: "Free wifi available. Pool open from 10am to 7pm. Grocery store open from 8am to 8pm.",
+
     // Accommodation
     choix_hebergement: "Choose your accommodation",
     emplacement: "Pitch",
     logement: "Accommodation",
+    camping_tente: "Camping / Tent",
+    mobilhome_cottage: "Mobile home / Cottage",
     select_categorie: "Select a category",
     select_numero: "Select a number",
-    
-    // Report
+    type_emplacement: "Pitch type",
+    type_hebergement: "Accommodation type",
+    choisir_numero: "Choose a number",
+
+    // Report / Signalement
     signalement_title: "Report a problem",
     urgence: "Emergency",
+    probleme_urgent: "Emergency issue?",
+    intervention_prioritaire: "Priority intervention will be triggered.",
     description: "Problem description",
+    description_obligatoire: "Description is required",
+    description_placeholder: "Describe your problem in detail...",
     photo: "Photo (optional)",
     ajouter_photo: "Add a photo",
-    signalement_envoye: "Report submitted successfully",
-    
-    // Categories
+    signalement_envoye: "Request registered!",
+    signalement_message: "We have received your request, our team will intervene as soon as possible. Thank you for your trust!",
+    suivre_intervention: "Track my request",
+    nouveau_signalement: "New report",
+    selectionner_probleme: "Please select at least one problem type",
+    envoi_en_cours: "Sending...",
+    envoyer_signalement: "Send report",
+    erreur_envoi: "Error while sending",
+
+    // Problem categories
+    problemes_techniques: "Technical problems",
+    menage_section: "Housekeeping",
+    nuisances_section: "Pests & Animals",
     technique: "Technical",
     gaz: "Gas",
     electricite: "Electricity",
-    eau_plomberie: "Water / Plumbing",
+    eau_plomberie: "Water / Leak / Plumbing",
+    probleme_technique_divers: "Other technical issue",
+    espace_vert: "Garden / Green space",
+    mobilier_casse: "Broken furniture / equipment",
+    probleme_structurel: "Structural issue",
     immobilier: "Property",
     clim: "Air conditioning",
     tv: "TV",
@@ -182,76 +475,236 @@ export const translations = {
     souris: "Mice",
     guepes: "Wasps",
     frelons: "Hornets",
+    fourmis: "Ants",
+    moustiques: "Indoor mosquitoes",
     menage: "Housekeeping",
-    literie: "Bedding",
-    vaisselle: "Dishes",
+    literie: "Change bedding",
+    vaisselle: "Dishes / kitchen equipment",
+    nettoyage: "Cleaning",
     terrasse: "Terrace",
-    
-    // Staff
+    poubelle: "Trash / smell",
+    produit_manquant: "Missing product",
+
+    // Follow-up / Suivi
+    suivi_title: "Track a request",
+    selectionner_hebergement: "Select your accommodation type",
+    aucun_signalement: "No report found",
+    aucun_signalement_detail: "No report is registered for your accommodation.",
+    interventions_en_cours: "Ongoing interventions",
+    interventions_resolues: "Resolved interventions",
+    acces_refuse: "Access denied",
+    acces_refuse_detail: "You cannot access the tracking for this accommodation. Please check your selection or contact the reception.",
+    retour_selection: "Back to selection",
+
+    // Timeline statuses
+    demande_envoyee: "Request sent",
+    prise_en_charge: "Taken over",
+    en_cours: "In progress",
+    en_attente: "Pending",
+    en_attente_materiel: "On hold",
+    resolu: "Resolved",
+    intervention_en_cours: "The intervention is being processed...",
+
+    // Timeline details
+    collaborateur_label: "Staff member",
+    raison_attente: "Reason",
+    materiel_manquant: "Missing equipment",
+    delai_estime: "Estimated delay",
+    intervenant: "Technician",
+    temps_traitement: "Processing time",
+    donner_avis_link: "Leave a review",
+    votre_note: "Your rating",
+
+    // Staff / Collaborateur
     mot_de_passe: "Password",
-    bureau: "Office",
-    acces_technique: "Technical Access",
-    acces_menage: "Housekeeping Access",
-    acces_bureau: "Office Access",
     mot_de_passe_incorrect: "Incorrect password",
-    
+    se_connecter: "Log in",
+    acces_reserve: "Staff access only",
+    deconnexion: "Log out",
+    bonjour_equipe: "Hello team!",
+
+    // Menu collaborateur
+    menu_technique: "Technical",
+    menu_menage: "Housekeeping",
+    menu_bureau: "Office",
+    menu_attente: "On hold",
+    menu_materiel: "Equipment",
+    desc_technique: "Technical interventions",
+    desc_menage: "Cleaning requests",
+    desc_bureau: "History & Statistics",
+    desc_attente: "Postponed interventions",
+    desc_materiel: "Stock & Requests",
+
     // Interventions
     interventions: "Interventions",
-    en_route: "On the way",
-    en_cours: "In progress",
-    termine: "Completed",
     nouveau: "New",
     prendre_en_charge: "Take over",
     terminer: "Complete",
+    terminer_intervention: "Complete intervention",
+    mettre_en_attente: "Put on hold",
+    intervention_prete: "Ready for intervention",
     commentaire: "Comment",
+    commentaire_optionnel: "Comment (optional)",
+    commentaire_interne: "Internal comment",
+    votre_nom: "Your name",
     photos_intervention: "Intervention photos",
     duree: "Duration",
     minutes: "minutes",
-    
-    // Dashboard
-    historique: "History",
-    statistiques: "Statistics",
+    min: "min",
+    pris_en_charge_par: "Taken over by",
+    lien_avis_copie: "Link copied to clipboard",
+
+    // Attente dialog
+    raison_attente_label: "Reason for hold",
+    materiel_manquant_question: "Missing equipment?",
+    detail_materiel: "Equipment details needed",
+    detail_materiel_placeholder: "E.g.: Tap, gas hose...",
+    delai_estime_label: "Estimated delay",
+    commentaire_interne_label: "Internal comment",
+    detaillez_situation: "Describe the situation...",
+
+    // Raisons attente
+    raison_materiel_manquant: "Missing equipment",
+    raison_client_absent: "Guest absent",
+    raison_intervention_impossible: "Intervention impossible",
+    raison_attente_fournisseur: "Waiting for supplier",
+    raison_autre: "Other",
+
+    // Délais
+    delai_1h: "1 hour",
+    delai_2h: "2 hours",
+    delai_demi_journee: "Half day",
+    delai_1j: "1 day",
+    delai_2j: "2 days",
+    delai_1semaine: "1 week",
+    delai_indetermine: "Undetermined",
+
+    // Page Attente
+    interventions_en_attente: "Interventions on hold",
+    aucune_intervention_attente: "No intervention on hold",
+    depuis: "Since",
+    mettre_a_jour: "Update",
+    mettre_a_jour_attente: "Update hold status",
+
+    // Page Matériel
+    gestion_materiel: "Equipment management",
+    demandes: "Requests",
     stock: "Stock",
+    historique: "History",
+    aucune_demande_materiel: "No equipment request pending",
+    materiel_requis: "Equipment required",
+    materiel_non_specifie: "Equipment not specified",
+    signale_par: "Reported by",
+    receptionne: "Received",
+    ajouter_article: "Add item",
+    nom_article: "Item name",
+    categorie: "Category",
+    quantite: "Quantity",
+    seuil_alerte: "Alert threshold",
+    unite: "Unit",
+    statut: "Status",
+    actions: "Actions",
+    ok: "OK",
+    faible: "Low",
+    rupture: "Out of stock",
+    alertes_stock: "Stock alerts",
+    aucun_historique: "No history",
+    article: "Item",
+    hebergement: "Accommodation",
+    cat_technique: "🔧 Technical",
+    cat_menage: "🧹 Cleaning",
+    cat_literie: "🛏 Bedding",
+    cat_vaisselle: "🍽 Dishes",
+    cat_divers: "📦 Miscellaneous",
+    nom_requis: "Name required",
+    article_ajoute: "Item added",
+    article_modifie: "Item modified",
+    article_supprime: "Item deleted",
+    modifier_article: "Edit item",
+
+    // Bureau / Dashboard
+    bureau_title: "Office",
+    statistiques: "Statistics",
+    logements: "Accommodations",
     filtre_date: "Filter by date",
     filtre_logement: "Filter by accommodation",
     filtre_type: "Filter by type",
     filtre_collaborateur: "Filter by staff",
     filtre_urgence: "Emergency only",
+    filtre_materiel: "Requires equipment",
+    filtre_attente: "On hold",
+    filtre_prolongees: "Extended",
     temps_moyen: "Average time",
     satisfaction: "Satisfaction",
     interventions_total: "Total interventions",
-    
-    // Reviews
+    aujourd_hui: "Today",
+    en_retard: "Late",
+    cette_semaine: "This week",
+    ce_mois: "This month",
+    recherche_avancee: "Advanced search",
+    exporter: "Export",
+    details: "Details",
+    date_signalement: "Report date",
+    date_resolution: "Resolution date",
+    materiel_prevu: "Planned equipment",
+    materiel_utilise: "Equipment used",
+    etait_en_attente: "Was on hold",
+    delai_total: "Total delay",
+
+    // Reviews / Avis
     noter_intervention: "Rate the intervention",
     votre_avis: "Your review (optional)",
+    votre_avis_placeholder: "Share your experience...",
     merci_avis: "Thank you for your feedback!",
-    
-    // Offline
-    mode_hors_ligne: "Offline mode",
-    synchronisation: "Syncing...",
-    donnees_synchronisees: "Data synchronized",
-    
+    avis_enregistre: "Your review has been saved.",
+    incident_introuvable: "Incident not found",
+    avis_deja_donne: "Review already submitted",
+    avis_deja_donne_detail: "You have already submitted a review for this intervention. Thank you!",
+    envoyer_avis: "Submit my review",
+
+    // Notifications
+    notifications: "Notifications",
+    alertes: "alert(s)",
+    alertes_stock_label: "Stock alerts",
+    demandes_materiel: "equipment request(s)",
+    nouveau_incident: "New incident",
+    incident_urgent: "Urgent incident",
+
     // Emplacement categories
     emplacement_6a: "6A",
     emplacement_10a: "10A",
     emplacement_eau_10a: "Water + 10A",
-    
+
     // Logement categories
-    chalet_eco: "Eco Chalet",
-    chalet_classique: "Classic Chalet",
-    mobilhome_eco: "Eco Mobile Home",
-    mobilhome_classique: "Classic Mobile Home",
-    mobilhome_clim: "AC Mobile Home",
-    confort_plus: "Comfort+",
-    premium: "Premium",
-    premium_3ch: "Premium 3BR",
-    premium_twins: "Premium Twins",
+    chalet_eco: "Eco Chalet 1BR",
+    chalet_classique: "Classic Chalet 1BR",
+    mh_eco: "Eco MH",
+    mh_eco_clim: "Eco MH AC",
+    mh_classique: "Classic MH",
+    mh_classique_clim: "Classic MH AC",
+    mh_classique_3ch: "Classic MH 3BR",
+    mh_confort_2ch: "Comfort+ MH 2BR",
+    mh_confort_3ch: "Comfort+ MH 3BR",
+    mh_premium_2ch: "Premium MH 2BR",
+    mh_premium_3ch: "Premium MH 3BR",
+    mh_premium_twins: "Premium Twins MH",
     cottage_premium: "Premium Cottage",
-    
-    // Stock
-    alerte_stock: "Low stock alert",
-    quantite: "Quantity",
-    seuil: "Alert threshold"
+
+    // Offline
+    mode_hors_ligne: "Offline mode",
+    synchronisation: "Syncing...",
+    donnees_synchronisees: "Data synchronized",
+
+    // Misc
+    intervention_mise_a_jour: "Intervention updated",
+    selectionner_raison: "Select a reason",
+    selectionner_delai: "Select a delay",
+    date: "Date",
+    heure: "Time",
+    client_label: "Guest",
+    urgent_label: "Urgent",
+    non_defini: "Not defined",
+    delai_label: "Delay"
   }
 };
 
@@ -267,6 +720,8 @@ export const useTranslation = () => {
 
 export const setLanguage = (lang) => {
   sessionStorage.setItem('user_language', lang);
+  // Trigger re-render by dispatching event
+  window.dispatchEvent(new Event('languagechange'));
 };
 
 export const getLanguage = () => {
