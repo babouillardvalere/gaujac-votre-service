@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation, getLanguage } from '../components/translations';
 import Logo from '../components/Logo';
-import { Users, Star } from 'lucide-react';
+import { Users, Star, Briefcase } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 
@@ -31,6 +31,13 @@ export default function Home() {
       color: 'bg-[#FFD700]',
       textColor: 'text-[#0077A8]',
       description: 'Donner votre avis'
+    },
+    {
+      title: t('collaborateur'),
+      icon: Briefcase,
+      href: '/Collaborateur',
+      color: 'bg-[#FFA500]',
+      description: 'Espace collaborateurs'
     }
   ];
 
