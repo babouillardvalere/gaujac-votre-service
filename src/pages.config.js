@@ -9,6 +9,8 @@ import CollaborateurMenage from './pages/CollaborateurMenage';
 import Bureau from './pages/Bureau';
 import Avis from './pages/Avis';
 import SignalementClient from './pages/SignalementClient';
+import Intervention from './pages/Intervention';
+import Dashboard from './pages/Dashboard';
 
 
 export const PAGES = {
@@ -23,6 +25,8 @@ export const PAGES = {
     "Bureau": Bureau,
     "Avis": Avis,
     "SignalementClient": SignalementClient,
+    "Intervention": Intervention,
+    "Dashboard": Dashboard,
 }
 
 export const pagesConfig = {
