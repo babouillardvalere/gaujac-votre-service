@@ -32,7 +32,8 @@ export default function ConditionsClient() {
   };
 
   return (
-    <div className="min-h-screen px-4 py-6">
+    <div className="min-h-screen px-4 py-6" role="main" aria-label="Conditions et informations importantes">
+      <h1 className="sr-only">Veuillez lire les conditions avant de continuer</h1>
       <div className="max-w-lg mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -110,9 +111,11 @@ export default function ConditionsClient() {
             <Button
               onClick={handleAccept}
               disabled={!accepted}
-              className="w-full h-12 bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading mt-4 disabled:opacity-50"
+              className="w-full h-14 bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading mt-4 disabled:opacity-50 text-lg focus:ring-4 focus:ring-[#FFD700]"
+              aria-label="J'accepte les conditions et je continue"
+              role="button"
             >
-              <CheckCircle className="w-4 h-4 mr-2" />
+              <CheckCircle className="w-5 h-5 mr-2" aria-hidden="true" />
               {t('conditions_continue')}
             </Button>
           </CardContent>

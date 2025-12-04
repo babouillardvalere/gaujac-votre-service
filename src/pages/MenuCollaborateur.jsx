@@ -69,7 +69,8 @@ export default function MenuCollaborateur() {
   };
 
   return (
-    <div className="min-h-screen px-4 py-6">
+    <div className="min-h-screen px-4 py-6" role="main" aria-label="Menu collaborateur">
+      <h1 className="sr-only">Menu principal collaborateur - Choisissez une section</h1>
       <div className="max-w-lg mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -89,7 +90,7 @@ export default function MenuCollaborateur() {
           <h1 className="font-handwritten text-3xl text-[#00AEEF]">{t('bonjour_equipe')}</h1>
         </motion.div>
 
-        <div className="space-y-4">
+        <nav className="space-y-4" role="navigation" aria-label="Menu collaborateur">
           {menuItems.map((item, index) => (
             <motion.div
               key={item.href}
@@ -97,11 +98,17 @@ export default function MenuCollaborateur() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 + index * 0.1 }}
             >
-              <Link to={createPageUrl(item.href)} className="block group">
+              <Link 
+                to={createPageUrl(item.href)} 
+                className="block group focus:ring-4 focus:ring-[#FFD700] rounded-xl"
+                aria-label={`${item.title} - ${item.description}`}
+                role="button"
+                tabIndex={0}
+              >
                 <Card className="border-2 border-[#00AEEF]/30 hover:border-[#00AEEF] hover:shadow-lg transition-all rounded-xl overflow-hidden">
                   <CardContent className="p-0">
-                    <div className="flex items-center p-5">
-                      <div className={`w-14 h-14 rounded-xl ${item.color} flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform`}>
+                    <div className="flex items-center p-5 min-h-[80px]">
+                      <div className={`w-14 h-14 rounded-xl ${item.color} flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform`} aria-hidden="true">
                         <item.icon className={`w-7 h-7 ${item.textColor}`} />
                       </div>
                       <div className="ml-5 flex-1">
@@ -110,7 +117,7 @@ export default function MenuCollaborateur() {
                         </h2>
                         <p className="font-body text-sm text-gray-600">{item.description}</p>
                       </div>
-                      <div className="text-[#00AEEF] group-hover:translate-x-1 transition-all">
+                      <div className="text-[#00AEEF] group-hover:translate-x-1 transition-all" aria-hidden="true">
                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
@@ -121,7 +128,7 @@ export default function MenuCollaborateur() {
               </Link>
             </motion.div>
           ))}
-        </div>
+        </nav>
 
         <motion.div
           initial={{ opacity: 0 }}

@@ -152,7 +152,8 @@ export default function Technique() {
   };
 
   return (
-    <div className="min-h-screen pb-8">
+    <div className="min-h-screen pb-8" role="main" aria-label="Gestion des interventions techniques">
+      <h1 className="sr-only">Interventions techniques - Liste et gestion</h1>
       <OfflineBanner />
       
       <div className="bg-[#00AEEF] text-white px-4 py-4 sticky top-0 z-10">

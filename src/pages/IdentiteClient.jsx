@@ -70,7 +70,8 @@ export default function IdentiteClient() {
   };
 
   return (
-    <div className="min-h-screen px-4 py-6">
+    <div className="min-h-screen px-4 py-6" role="main" aria-label="Formulaire d'identité client">
+      <h1 className="sr-only">Saisissez vos informations personnelles</h1>
       <div className="max-w-lg mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -156,10 +157,12 @@ export default function IdentiteClient() {
             <Button
               onClick={handleSubmit}
               disabled={!isFormValid()}
-              className="w-full h-12 bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading mt-4 disabled:opacity-50"
+              className="w-full h-14 bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading mt-4 disabled:opacity-50 text-lg focus:ring-4 focus:ring-[#FFD700]"
+              aria-label="Continuer vers l'étape suivante"
+              role="button"
             >
               {t('suivant')}
-              <ArrowRight className="w-4 h-4 ml-2" />
+              <ArrowRight className="w-5 h-5 ml-2" aria-hidden="true" />
             </Button>
           </CardContent>
         </Card>

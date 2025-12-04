@@ -193,20 +193,25 @@ export default function Signalement() {
   const ProblemButton = ({ problem, selected }) => (
     <button
       onClick={() => toggleProblem(problem.id)}
-      className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-1 ${
+      className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-1 min-h-[80px] focus:ring-4 focus:ring-[#FFD700] ${
         selected
           ? 'border-[#00AEEF] bg-[#e6f7ff]'
           : 'border-gray-200 hover:border-[#00AEEF]/50 bg-white'
       }`}
+      aria-label={`${problem.label} - ${selected ? 'Sélectionné' : 'Non sélectionné'}`}
+      aria-pressed={selected}
+      role="button"
+      tabIndex={0}
     >
-      <span className="text-2xl">{problem.emoji}</span>
+      <span className="text-2xl" aria-hidden="true">{problem.emoji}</span>
       <span className="text-xs font-body text-center text-[#0077A8]">{problem.label}</span>
-      {selected && <CheckCircle className="w-4 h-4 text-[#00AEEF]" />}
+      {selected && <CheckCircle className="w-4 h-4 text-[#00AEEF]" aria-hidden="true" />}
     </button>
   );
 
   return (
-    <div className="min-h-screen px-4 py-6 pb-20">
+    <div className="min-h-screen px-4 py-6 pb-20" role="main" aria-label="Page de signalement d'un problème">
+      <h1 className="sr-only">Signaler un problème - Formulaire de déclaration</h1>
       <OfflineBanner />
       
       <div className="max-w-lg mx-auto">
@@ -339,16 +344,19 @@ export default function Signalement() {
             <Button
               onClick={handleSubmit}
               disabled={!description.trim() || selectedProblems.length === 0 || isSubmitting}
-              className="w-full h-12 bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading disabled:opacity-50"
+              className="w-full h-14 bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading disabled:opacity-50 text-lg focus:ring-4 focus:ring-[#FFD700]"
+              aria-label={isSubmitting ? "Envoi en cours, veuillez patienter" : "Envoyer le signalement"}
+              aria-busy={isSubmitting}
+              role="button"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {t('envoi_en_cours')}
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" aria-hidden="true" />
+                  <span aria-live="polite">{t('envoi_en_cours')}</span>
                 </>
               ) : (
                 <>
-                  <Send className="w-4 h-4 mr-2" />
+                  <Send className="w-5 h-5 mr-2" aria-hidden="true" />
                   {t('envoyer_signalement')}
                 </>
               )}

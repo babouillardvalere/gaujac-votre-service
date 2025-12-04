@@ -104,7 +104,8 @@ export default function Avis() {
   }
 
   return (
-    <div className="min-h-screen px-4 py-6">
+    <div className="min-h-screen px-4 py-6" role="main" aria-label="Donner votre avis sur l'intervention">
+      <h1 className="sr-only">Notez l'intervention et partagez votre expérience</h1>
       <div className="max-w-md mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -135,7 +136,7 @@ export default function Avis() {
               </div>
             </div>
 
-            <div className="text-center">
+            <div className="text-center" role="group" aria-label="Notez l'intervention de 1 à 5 étoiles">
               <div className="flex justify-center gap-2">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <motion.button
@@ -145,7 +146,11 @@ export default function Avis() {
                     onMouseEnter={() => setHoverRating(star)}
                     onMouseLeave={() => setHoverRating(0)}
                     onClick={() => setRating(star)}
-                    className="focus:outline-none"
+                    className="focus:ring-4 focus:ring-[#FFD700] rounded-lg p-1"
+                    aria-label={`${star} étoile${star > 1 ? 's' : ''} sur 5`}
+                    aria-pressed={rating === star}
+                    role="button"
+                    tabIndex={0}
                   >
                     <Star
                       className={`w-12 h-12 transition-colors ${
@@ -153,9 +158,13 @@ export default function Avis() {
                           ? 'text-[#FFD700] fill-[#FFD700]'
                           : 'text-gray-300'
                       }`}
+                      aria-hidden="true"
                     />
                   </motion.button>
                 ))}
+              </div>
+              <div aria-live="polite" className="mt-2 font-body text-[#0077A8]">
+                {rating > 0 && `Note sélectionnée: ${rating} étoile${rating > 1 ? 's' : ''}`}
               </div>
             </div>
 

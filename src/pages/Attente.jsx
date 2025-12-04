@@ -102,7 +102,8 @@ export default function Attente() {
   };
 
   return (
-    <div className="min-h-screen pb-8">
+    <div className="min-h-screen pb-8" role="main" aria-label="Interventions en attente">
+      <h1 className="sr-only">Liste des interventions mises en attente</h1>
       <div className="bg-[#FFA500] text-white px-4 py-4 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">

@@ -95,7 +95,8 @@ export default function ChoixHebergement() {
   };
 
   return (
-    <div className="min-h-screen px-4 py-6">
+    <div className="min-h-screen px-4 py-6" role="main" aria-label="Choix de votre hébergement">
+      <h1 className="sr-only">Sélectionnez votre type d'hébergement</h1>
       <div className="max-w-lg mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -130,29 +131,37 @@ export default function ChoixHebergement() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-4"
+                  role="group"
+                  aria-label="Choisir le type d'hébergement"
                 >
                   <button
                     onClick={() => handleTypeSelect('Emplacement')}
-                    className="w-full p-5 bg-white border-2 border-[#00AEEF]/30 hover:border-[#00AEEF] rounded-xl flex items-center gap-4 transition-all"
+                    className="w-full p-5 bg-white border-2 border-[#00AEEF]/30 hover:border-[#00AEEF] rounded-xl flex items-center gap-4 transition-all min-h-[80px] focus:ring-4 focus:ring-[#FFD700]"
+                    aria-label="Emplacement nu - Tente, caravane, camping-car"
+                    role="button"
+                    tabIndex={0}
                   >
-                    <div className="w-14 h-14 bg-[#FFD700] rounded-xl flex items-center justify-center">
+                    <div className="w-14 h-14 bg-[#FFD700] rounded-xl flex items-center justify-center" aria-hidden="true">
                       <Tent className="w-7 h-7 text-[#0077A8]" />
                     </div>
                     <div className="text-left">
-                      <h3 className="font-heading text-lg text-[#0077A8]">{t('emplacement')}</h3>
+                      <h3 className="font-heading text-lg text-[#0077A8]">⛺ {t('emplacement')}</h3>
                       <p className="font-body text-sm text-gray-500">{t('camping_tente')}</p>
                     </div>
                   </button>
 
                   <button
                     onClick={() => handleTypeSelect('Mobil-home')}
-                    className="w-full p-5 bg-white border-2 border-[#00AEEF]/30 hover:border-[#00AEEF] rounded-xl flex items-center gap-4 transition-all"
+                    className="w-full p-5 bg-white border-2 border-[#00AEEF]/30 hover:border-[#00AEEF] rounded-xl flex items-center gap-4 transition-all min-h-[80px] focus:ring-4 focus:ring-[#FFD700]"
+                    aria-label="Mobil-home ou Cottage - Logement équipé"
+                    role="button"
+                    tabIndex={0}
                   >
-                    <div className="w-14 h-14 bg-[#00AEEF] rounded-xl flex items-center justify-center">
+                    <div className="w-14 h-14 bg-[#00AEEF] rounded-xl flex items-center justify-center" aria-hidden="true">
                       <Home className="w-7 h-7 text-white" />
                     </div>
                     <div className="text-left">
-                      <h3 className="font-heading text-lg text-[#0077A8]">{t('logement')}</h3>
+                      <h3 className="font-heading text-lg text-[#0077A8]">🏠 {t('logement')}</h3>
                       <p className="font-body text-sm text-gray-500">{t('mobilhome_cottage')}</p>
                     </div>
                   </button>

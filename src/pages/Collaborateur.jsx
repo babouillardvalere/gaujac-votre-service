@@ -28,7 +28,7 @@ export default function Collaborateur() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4" role="main" aria-label="Connexion espace collaborateur">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -77,7 +77,9 @@ export default function Collaborateur() {
             <Button
               onClick={handleLogin}
               disabled={!password}
-              className="w-full h-12 bg-[#00AEEF] hover:bg-[#0077A8] text-white font-heading rounded-xl shadow-lg disabled:opacity-50"
+              className="w-full h-14 bg-[#00AEEF] hover:bg-[#0077A8] text-white font-heading rounded-xl shadow-lg disabled:opacity-50 text-lg focus:ring-4 focus:ring-[#FFD700]"
+              aria-label="Se connecter à l'espace collaborateur"
+              role="button"
             >
               {t('se_connecter')}
             </Button>
