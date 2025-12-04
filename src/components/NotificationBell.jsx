@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueries } from '@tanstack/react-query';
 import { Bell, AlertTriangle, Clock, Home, Wrench, Sparkles, Bug } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,11 +30,27 @@ export default function NotificationBell() {
   const { data: incidents = [] } = useQuery({
     queryKey: ['notifications-incidents'],
     queryFn: () => base44.entities.Incident.filter({ statut: 'en_attente' }, '-date_saisie', 50),
-    refetchInterval: 10000 // Rafraîchir toutes les 10 secondes
+    refetchInterval: 10000
+  });
+
+  const { data: stockAlerts = [] } = useQuery({
+    queryKey: ['notifications-stock'],
+    queryFn: async () => {
+      const stock = await base44.entities.Stock.list();
+      return stock.filter(s => s.quantite <= s.seuil_alerte);
+    },
+    refetchInterval: 30000
+  });
+
+  const { data: materielDemandes = [] } = useQuery({
+    queryKey: ['notifications-materiel'],
+    queryFn: () => base44.entities.Incident.filter({ statut: 'en_attente_materiel', attente_materiel: true }, '-attente_date', 20),
+    refetchInterval: 15000
   });
 
   const pendingCount = incidents.length;
   const urgentCount = incidents.filter(i => i.urgent).length;
+  const totalAlerts = pendingCount + stockAlerts.length + materielDemandes.length;
 
   // Détecter nouvelles notifications
   useEffect(() => {
@@ -72,11 +88,11 @@ export default function NotificationBell() {
           
           <Bell className={`w-6 h-6 ${hasNewNotification ? 'animate-pulse' : ''}`} />
           
-          {pendingCount > 0 && (
+          {totalAlerts > 0 && (
             <span className={`absolute -top-1 -right-1 min-w-5 h-5 flex items-center justify-center text-xs font-bold rounded-full px-1 ${
-              urgentCount > 0 ? 'bg-red-500 text-white animate-pulse' : 'bg-[#FFA500] text-white'
+              urgentCount > 0 || stockAlerts.some(s => s.quantite === 0) ? 'bg-red-500 text-white animate-pulse' : 'bg-[#FFA500] text-white'
             }`}>
-              {pendingCount}
+              {totalAlerts}
             </span>
           )}
         </button>
@@ -90,10 +106,31 @@ export default function NotificationBell() {
           <div className="flex items-center justify-between">
             <span className="font-heading">Notifications</span>
             <Badge className="bg-white/20 text-white">
-              {pendingCount} en attente
+              {totalAlerts} alerte(s)
             </Badge>
           </div>
         </div>
+
+        {/* Alertes Stock */}
+        {stockAlerts.length > 0 && (
+          <div className="p-2 bg-red-50 border-b">
+            <p className="text-xs font-heading text-red-600 mb-1">🧰 Alertes stock</p>
+            <div className="flex flex-wrap gap-1">
+              {stockAlerts.slice(0, 5).map(s => (
+                <Badge key={s.id} className={`text-xs ${s.quantite === 0 ? 'bg-red-500' : 'bg-[#FFA500]'} text-white`}>
+                  {s.nom_article}: {s.quantite}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Demandes matériel */}
+        {materielDemandes.length > 0 && (
+          <div className="p-2 bg-orange-50 border-b">
+            <p className="text-xs font-heading text-orange-600">📦 {materielDemandes.length} demande(s) matériel</p>
+          </div>
+        )}
 
         <ScrollArea className="h-[350px]">
           {incidents.length === 0 ? (

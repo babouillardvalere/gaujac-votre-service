@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
 import NotificationBell from '../components/NotificationBell';
-import { Wrench, Sparkles, Building2, LogOut } from 'lucide-react';
+import { Wrench, Sparkles, Building2, LogOut, Clock, Package } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { Button } from '@/components/ui/button';
@@ -46,6 +46,22 @@ export default function MenuCollaborateur() {
       color: 'bg-[#FFA500]',
       textColor: 'text-white',
       description: 'Historique & Statistiques'
+    },
+    {
+      title: 'Attente',
+      icon: Clock,
+      href: 'Attente',
+      color: 'bg-gray-500',
+      textColor: 'text-white',
+      description: 'Interventions reportées'
+    },
+    {
+      title: 'Matériel',
+      icon: Package,
+      href: 'Materiel',
+      color: 'bg-[#0077A8]',
+      textColor: 'text-white',
+      description: 'Stock & Demandes'
     }
   ];
 

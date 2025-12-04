@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import Logo from '../components/Logo';
 import OfflineBanner from '../components/OfflineBanner';
 import NotificationBell from '../components/NotificationBell';
+import MettreEnAttenteDialog from '../components/MettreEnAttenteDialog';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  ArrowLeft, Clock, User, CheckCircle, Play, Loader2, Sparkles, Bed, UtensilsCrossed
+  ArrowLeft, Clock, User, CheckCircle, Play, Loader2, Sparkles, Bed, UtensilsCrossed, Pause
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -36,6 +37,8 @@ export default function Menage() {
   const [collaborateurNom, setCollaborateurNom] = useState('');
   const [commentaire, setCommentaire] = useState('');
   const [filter, setFilter] = useState('en_attente');
+  const [showAttenteDialog, setShowAttenteDialog] = useState(false);
+  const [incidentToWait, setIncidentToWait] = useState(null);
 
   useEffect(() => {
     const auth = sessionStorage.getItem('collaborateur_authenticated');
@@ -85,6 +88,28 @@ export default function Menage() {
     });
   };
 
+  const handleMettreEnAttente = (incident) => {
+    setIncidentToWait(incident);
+    setShowAttenteDialog(true);
+  };
+
+  const confirmMettreEnAttente = (formData) => {
+    updateMutation.mutate({
+      id: incidentToWait.id,
+      data: {
+        statut: 'en_attente_materiel',
+        attente_raison: formData.raison,
+        attente_materiel: formData.materiel,
+        attente_materiel_detail: formData.materielDetail,
+        attente_delai: formData.delai,
+        attente_commentaire: formData.commentaire,
+        attente_date: new Date().toISOString()
+      }
+    });
+    setShowAttenteDialog(false);
+    setIncidentToWait(null);
+  };
+
   const filteredIncidents = incidents.filter(i => {
     if (filter === 'tous') return true;
     return i.statut === filter;
@@ -98,6 +123,8 @@ export default function Menage() {
         return <Badge className="bg-[#FFA500] text-white">En attente</Badge>;
       case 'en_cours':
         return <Badge className="bg-[#FFD700] text-[#0077A8]">En cours</Badge>;
+      case 'en_attente_materiel':
+        return <Badge className="bg-gray-500 text-white"><Clock className="w-3 h-3 mr-1" />Reporté</Badge>;
       case 'resolu':
         return <Badge className="bg-green-500 text-white">Résolu</Badge>;
       default:
@@ -263,14 +290,24 @@ export default function Menage() {
                     placeholder="Commentaire interne (optionnel)"
                     className="border-[#FFD700]/50 rounded-xl font-body"
                   />
-                  <Button
-                    onClick={() => handleTerminer(selectedIncident)}
-                    disabled={updateMutation.isPending}
-                    className="w-full bg-green-500 hover:bg-green-600 rounded-xl font-heading"
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Terminer
-                  </Button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      onClick={() => handleMettreEnAttente(selectedIncident)}
+                      variant="outline"
+                      className="border-gray-400 text-gray-600 rounded-xl font-heading"
+                    >
+                      <Pause className="w-4 h-4 mr-2" />
+                      En attente
+                    </Button>
+                    <Button
+                      onClick={() => handleTerminer(selectedIncident)}
+                      disabled={updateMutation.isPending}
+                      className="bg-green-500 hover:bg-green-600 rounded-xl font-heading"
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Terminer
+                    </Button>
+                  </div>
                 </div>
               )}
 
@@ -288,6 +325,13 @@ export default function Menage() {
           )}
         </DialogContent>
       </Dialog>
+      {/* Dialog mise en attente */}
+      <MettreEnAttenteDialog
+        open={showAttenteDialog}
+        onOpenChange={setShowAttenteDialog}
+        onConfirm={confirmMettreEnAttente}
+        isLoading={updateMutation.isPending}
+      />
     </div>
   );
 }
