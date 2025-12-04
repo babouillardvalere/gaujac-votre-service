@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, Send, AlertTriangle, CheckCircle, Loader2, Camera, Home } from 'lucide-react';
+import { ArrowLeft, Send, AlertTriangle, CheckCircle, Loader2, Camera, Home, Search } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
@@ -55,6 +56,7 @@ export default function Signalement() {
   const [photoPreview, setPhotoPreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [lastIncidentId, setLastIncidentId] = useState(null);
 
   // Données de session
   const [userData, setUserData] = useState({});
@@ -134,7 +136,7 @@ export default function Signalement() {
         problemesTechniques.some(pt => pt.id === p) || nuisances.some(n => n.id === p)
       );
 
-      await base44.entities.Incident.create({
+      const newIncident = await base44.entities.Incident.create({
         type: isTechnique ? 'technique' : 'menage',
         categorie: selectedProblems[0], // Catégorie principale
         sous_categorie: selectedProblems.join(', '),
@@ -151,6 +153,9 @@ export default function Signalement() {
         statut: 'en_attente'
       });
 
+      // Sauvegarder l'ID du dernier incident pour le suivi
+      sessionStorage.setItem('last_incident_id', newIncident.id);
+      setLastIncidentId(newIncident.id);
       setIsSuccess(true);
     } catch (error) {
       toast.error('Erreur lors de l\'envoi');
@@ -165,26 +170,32 @@ export default function Signalement() {
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="text-center"
+          className="text-center max-w-md"
         >
           <div className="w-24 h-24 bg-[#00AEEF] rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
             <CheckCircle className="w-12 h-12 text-white" />
           </div>
-          <h2 className="font-handwritten text-3xl text-[#0077A8] mb-2">Signalement envoyé !</h2>
-          <p className="font-body text-gray-600 mb-6">Notre équipe va intervenir rapidement.</p>
-          <Button
-            onClick={() => {
-              setIsSuccess(false);
-              setSelectedProblems([]);
-              setDescription('');
-              setUrgent(false);
-              setPhoto(null);
-              setPhotoPreview(null);
-            }}
-            className="bg-[#FFD700] text-[#0077A8] hover:bg-[#FFA500] rounded-xl font-heading"
-          >
-            Nouveau signalement
-          </Button>
+          <h2 className="font-handwritten text-3xl text-[#0077A8] mb-4">🎉 Demande enregistrée !</h2>
+          <p className="font-body text-gray-600 mb-8 leading-relaxed">
+            Nous avons bien pris en compte votre demande, notre équipe interviendra dans les plus brefs délais. 
+            Nous vous remercions de votre confiance chers clients !
+          </p>
+          
+          <div className="space-y-3">
+            <Link to={createPageUrl('SuiviIntervention')} className="block">
+              <Button className="w-full h-12 bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading">
+                <Search className="w-5 h-5 mr-2" />
+                Suivre mon intervention
+              </Button>
+            </Link>
+            
+            <Link to={createPageUrl('Home')} className="block">
+              <Button variant="outline" className="w-full h-12 border-2 border-[#00AEEF] text-[#0077A8] hover:bg-[#e6f7ff] rounded-xl font-heading">
+                <Home className="w-5 h-5 mr-2" />
+                Retour à l'accueil
+              </Button>
+            </Link>
+          </div>
         </motion.div>
       </div>
     );

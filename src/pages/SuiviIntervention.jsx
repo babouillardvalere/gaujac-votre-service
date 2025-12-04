@@ -77,6 +77,20 @@ export default function SuiviIntervention() {
     const lang = sessionStorage.getItem('user_language');
     if (!lang) {
       navigate(createPageUrl('ChoixLangue'));
+      return;
+    }
+
+    // Vérifier si des données d'hébergement existent en session
+    const savedType = sessionStorage.getItem('hebergement_type');
+    const savedCategorie = sessionStorage.getItem('hebergement_categorie');
+    const savedNumero = sessionStorage.getItem('hebergement_numero');
+
+    if (savedType && savedNumero) {
+      // Pré-remplir avec les données de session
+      setHebergementType(savedType === 'Emplacement' ? 'emplacement' : 'logement');
+      setSelectedCategorie(savedCategorie);
+      setSelectedNumero(savedNumero);
+      setStep('suivi');
     }
   }, [navigate]);
 
