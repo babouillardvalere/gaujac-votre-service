@@ -101,31 +101,31 @@ export default function Piscine() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-blue-50 flex items-center justify-center px-4">
-        <Card className="w-full max-w-md shadow-xl border-0">
-          <CardHeader className="text-center pb-2">
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <Card className="w-full max-w-md shadow-xl border-2 border-[#00AEEF] rounded-xl overflow-hidden">
+          <CardHeader className="text-center pb-2 bg-[#00AEEF]">
             <Logo className="h-16 mb-4" />
-            <CardTitle className="text-xl flex items-center justify-center gap-2">
-              <Droplet className="w-5 h-5 text-cyan-500" />
+            <CardTitle className="text-xl font-heading text-white flex items-center justify-center gap-2">
+              <Droplet className="w-5 h-5" />
               Entretien Piscine
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-6">
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#00AEEF]" />
               <Input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
                 placeholder="Mot de passe"
-                className="pl-10 pr-10 h-12"
+                className="pl-10 pr-10 h-12 border-[#00AEEF]/30 rounded-xl font-body"
               />
               <button onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2">
-                {showPassword ? <EyeOff className="w-4 h-4 text-slate-400" /> : <Eye className="w-4 h-4 text-slate-400" />}
+                {showPassword ? <EyeOff className="w-4 h-4 text-[#00AEEF]" /> : <Eye className="w-4 h-4 text-[#00AEEF]" />}
               </button>
             </div>
-            <Button onClick={handleLogin} className="w-full h-12 bg-cyan-500 hover:bg-cyan-600">
+            <Button onClick={handleLogin} className="w-full h-12 bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading">
               Accéder
             </Button>
           </CardContent>
@@ -135,13 +135,13 @@ export default function Piscine() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-blue-50 px-4 py-6">
+    <div className="min-h-screen px-4 py-6">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <Logo className="h-12" />
           <Button
             onClick={() => setShowForm(!showForm)}
-            className="bg-cyan-500 hover:bg-cyan-600"
+            className="bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading"
           >
             <Plus className="w-4 h-4 mr-2" />
             Nouvelle mesure
@@ -154,9 +154,9 @@ export default function Piscine() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <Card className="shadow-lg border-0 mb-6">
-              <CardHeader className="pb-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-t-lg">
-                <CardTitle className="text-lg">Nouvelles mesures</CardTitle>
+            <Card className="shadow-lg border-2 border-[#00AEEF] rounded-xl overflow-hidden mb-6">
+              <CardHeader className="pb-3 bg-[#00AEEF] text-white">
+                <CardTitle className="text-lg font-heading">Nouvelles mesures</CardTitle>
               </CardHeader>
               <CardContent className="pt-4 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -242,14 +242,14 @@ export default function Piscine() {
                   <Button
                     variant="outline"
                     onClick={() => setShowForm(false)}
-                    className="flex-1"
+                    className="flex-1 border-[#00AEEF] text-[#0077A8] rounded-xl font-heading"
                   >
                     Annuler
                   </Button>
                   <Button
                     onClick={handleSubmit}
                     disabled={!formData.chlore || !formData.ph || !formData.temperature || createMutation.isPending}
-                    className="flex-1 bg-cyan-500 hover:bg-cyan-600"
+                    className="flex-1 bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading"
                   >
                     {createMutation.isPending ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -264,17 +264,17 @@ export default function Piscine() {
         )}
 
         {/* Historique */}
-        <Card className="shadow-lg border-0">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Droplet className="w-5 h-5 text-cyan-500" />
+        <Card className="shadow-lg border-2 border-[#00AEEF] rounded-xl overflow-hidden">
+          <CardHeader className="pb-3 bg-[#00AEEF]">
+            <CardTitle className="text-lg font-heading text-white flex items-center gap-2">
+              <Droplet className="w-5 h-5" />
               Historique des mesures
             </CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
               <div className="flex justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
+                <Loader2 className="w-8 h-8 animate-spin text-[#00AEEF]" />
               </div>
             ) : mesures.length === 0 ? (
               <p className="text-center text-slate-500 py-8">Aucune mesure enregistrée</p>

@@ -62,28 +62,28 @@ export default function Dashboard() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 flex items-center justify-center px-4">
-        <Card className="w-full max-w-md shadow-xl border-0">
-          <CardHeader className="text-center pb-2">
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <Card className="w-full max-w-md shadow-xl border-2 border-[#00AEEF] rounded-xl overflow-hidden">
+          <CardHeader className="text-center pb-2 bg-[#00AEEF]">
             <Logo className="h-16 mb-4" />
-            <CardTitle className="text-xl">Dashboard Administration</CardTitle>
+            <CardTitle className="text-xl font-heading text-white">Dashboard Administration</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-6">
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#00AEEF]" />
               <Input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
                 placeholder="Mot de passe"
-                className="pl-10 pr-10 h-12"
+                className="pl-10 pr-10 h-12 border-[#00AEEF]/30 rounded-xl font-body"
               />
               <button onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2">
-                {showPassword ? <EyeOff className="w-4 h-4 text-slate-400" /> : <Eye className="w-4 h-4 text-slate-400" />}
+                {showPassword ? <EyeOff className="w-4 h-4 text-[#00AEEF]" /> : <Eye className="w-4 h-4 text-[#00AEEF]" />}
               </button>
             </div>
-            <Button onClick={handleLogin} className="w-full h-12 bg-emerald-500 hover:bg-emerald-600">
+            <Button onClick={handleLogin} className="w-full h-12 bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading">
               Accéder
             </Button>
           </CardContent>
@@ -142,78 +142,78 @@ export default function Dashboard() {
   const getProblemEmoji = (id) => problemTypes.find(t => t.id === id)?.emoji || '❓';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50">
-      <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-lg border-b">
+    <div className="min-h-screen">
+      <div className="sticky top-0 z-10 bg-[#00AEEF] shadow-lg">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <Logo className="h-10" />
-          <h1 className="text-lg font-semibold text-slate-800">Dashboard Administration</h1>
+          <h1 className="text-lg font-heading text-white">Dashboard Administration</h1>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="bg-slate-100 p-1 rounded-xl">
-            <TabsTrigger value="overview" className="rounded-lg">Vue d'ensemble</TabsTrigger>
-            <TabsTrigger value="incidents" className="rounded-lg">Incidents</TabsTrigger>
-            <TabsTrigger value="stats" className="rounded-lg">Statistiques</TabsTrigger>
-            <TabsTrigger value="satisfaction" className="rounded-lg">Satisfaction</TabsTrigger>
+          <TabsList className="bg-[#e6f7ff] p-1 rounded-xl border border-[#00AEEF]/30">
+            <TabsTrigger value="overview" className="rounded-lg font-heading data-[state=active]:bg-[#00AEEF] data-[state=active]:text-white">Vue d'ensemble</TabsTrigger>
+            <TabsTrigger value="incidents" className="rounded-lg font-heading data-[state=active]:bg-[#00AEEF] data-[state=active]:text-white">Incidents</TabsTrigger>
+            <TabsTrigger value="stats" className="rounded-lg font-heading data-[state=active]:bg-[#00AEEF] data-[state=active]:text-white">Statistiques</TabsTrigger>
+            <TabsTrigger value="satisfaction" className="rounded-lg font-heading data-[state=active]:bg-[#00AEEF] data-[state=active]:text-white">Satisfaction</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
             {/* KPI Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-0">
+              <Card className="bg-white border-2 border-[#00AEEF] rounded-xl">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                    <div className="w-10 h-10 bg-[#00AEEF] rounded-lg flex items-center justify-center">
                       <AlertTriangle className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <p className="text-xs text-blue-600">En cours</p>
-                      <p className="text-2xl font-bold text-blue-700">{enCours.length}</p>
+                      <p className="text-xs font-body text-[#0077A8]">En cours</p>
+                      <p className="text-2xl font-heading text-[#0077A8]">{enCours.length}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-0">
+              <Card className="bg-white border-2 border-[#00AEEF] rounded-xl">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
+                    <div className="w-10 h-10 bg-[#00AEEF] rounded-lg flex items-center justify-center">
                       <TrendingUp className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <p className="text-xs text-emerald-600">Résolus</p>
-                      <p className="text-2xl font-bold text-emerald-700">{resolus.length}</p>
+                      <p className="text-xs font-body text-[#0077A8]">Résolus</p>
+                      <p className="text-2xl font-heading text-[#0077A8]">{resolus.length}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-0">
+              <Card className="bg-white border-2 border-[#FFD700] rounded-xl">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center">
-                      <Star className="w-5 h-5 text-white" />
+                    <div className="w-10 h-10 bg-[#FFD700] rounded-lg flex items-center justify-center">
+                      <Star className="w-5 h-5 text-[#0077A8]" />
                     </div>
                     <div>
-                      <p className="text-xs text-amber-600">Satisfaction</p>
-                      <p className="text-2xl font-bold text-amber-700">{avgSatisfaction}/5</p>
+                      <p className="text-xs font-body text-[#0077A8]">Satisfaction</p>
+                      <p className="text-2xl font-heading text-[#0077A8]">{avgSatisfaction}/5</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-0">
+              <Card className="bg-white border-2 border-[#FFA500] rounded-xl">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+                    <div className="w-10 h-10 bg-[#FFA500] rounded-lg flex items-center justify-center">
                       <Clock className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <p className="text-xs text-purple-600">{"<24h"}</p>
-                      <p className="text-2xl font-bold text-purple-700">
+                      <p className="text-xs font-body text-[#0077A8]">{"<24h"}</p>
+                      <p className="text-2xl font-heading text-[#0077A8]">
                         {resolus.length > 0 ? Math.round((tempsCategories.quelques_heures + tempsCategories.moins_24h) / resolus.length * 100) : 0}%
                       </p>
                     </div>
@@ -224,9 +224,9 @@ export default function Dashboard() {
 
             {/* Charts */}
             <div className="grid lg:grid-cols-2 gap-6">
-              <Card className="shadow-sm">
+              <Card className="shadow-sm border-2 border-[#00AEEF]/30 rounded-xl">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Interventions par type</CardTitle>
+                  <CardTitle className="text-base font-heading text-[#0077A8]">Interventions par type</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="h-64">
@@ -242,9 +242,9 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              <Card className="shadow-sm">
+              <Card className="shadow-sm border-2 border-[#00AEEF]/30 rounded-xl">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Rapidité de résolution</CardTitle>
+                  <CardTitle className="text-base font-heading text-[#0077A8]">Rapidité de résolution</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">

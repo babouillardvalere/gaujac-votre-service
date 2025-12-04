@@ -27,22 +27,22 @@ export default function Collaborateur() {
     { 
       id: 'technique', 
       icon: Wrench, 
-      color: 'from-orange-500 to-red-500',
-      bgColor: 'from-orange-50 to-red-50',
+      color: 'bg-[#00AEEF]',
+      textColor: 'text-white',
       page: 'CollaborateurTechnique'
     },
     { 
       id: 'menage', 
       icon: Sparkles, 
-      color: 'from-sky-500 to-blue-500',
-      bgColor: 'from-sky-50 to-blue-50',
+      color: 'bg-[#FFD700]',
+      textColor: 'text-[#0077A8]',
       page: 'CollaborateurMenage'
     },
     { 
       id: 'bureau', 
       icon: Building2, 
-      color: 'from-emerald-500 to-teal-500',
-      bgColor: 'from-emerald-50 to-teal-50',
+      color: 'bg-[#FFA500]',
+      textColor: 'text-white',
       page: 'Bureau'
     }
   ];
@@ -62,7 +62,7 @@ export default function Collaborateur() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-sky-50 px-4 py-8">
+    <div className="min-h-screen px-4 py-8">
       <div className="max-w-lg mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -72,20 +72,20 @@ export default function Collaborateur() {
           <Logo className="h-20" />
         </motion.div>
 
-        <Card className="shadow-lg border-0">
-          <CardHeader className="pb-4">
+        <Card className="shadow-lg border-2 border-[#00AEEF] rounded-xl overflow-hidden">
+          <CardHeader className="pb-4 bg-[#00AEEF]">
             <button 
               onClick={() => selectedRole ? setSelectedRole(null) : navigate('/Home')}
-              className="flex items-center text-slate-500 hover:text-sky-600 transition-colors mb-4"
+              className="flex items-center text-white/80 hover:text-white transition-colors mb-4 font-body"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               {t('retour')}
             </button>
-            <CardTitle className="text-2xl font-light text-slate-800">
+            <CardTitle className="text-2xl font-heading text-white">
               {t('collaborateur')}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             {!selectedRole ? (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -96,18 +96,18 @@ export default function Collaborateur() {
                   <button
                     key={role.id}
                     onClick={() => handleRoleSelect(role)}
-                    className={`w-full group bg-gradient-to-r ${role.bgColor} hover:shadow-md rounded-xl p-5 text-left transition-all border border-slate-100`}
+                    className="w-full group bg-white hover:bg-[#e6f7ff] rounded-xl p-5 text-left transition-all border-2 border-[#00AEEF]/30 hover:border-[#00AEEF]"
                   >
                     <div className="flex items-center">
-                      <div className={`w-14 h-14 bg-gradient-to-br ${role.color} rounded-xl flex items-center justify-center shadow-lg`}>
-                        <role.icon className="w-7 h-7 text-white" />
+                      <div className={`w-14 h-14 ${role.color} rounded-xl flex items-center justify-center shadow-lg`}>
+                        <role.icon className={`w-7 h-7 ${role.textColor}`} />
                       </div>
                       <div className="ml-4 flex-1">
-                        <h3 className="text-lg font-semibold text-slate-800">
+                        <h3 className="text-lg font-heading text-[#0077A8]">
                           {t(`acces_${role.id}`)}
                         </h3>
                       </div>
-                      <Lock className="w-5 h-5 text-slate-400" />
+                      <Lock className="w-5 h-5 text-[#00AEEF]" />
                     </div>
                   </button>
                 ))}
@@ -118,13 +118,13 @@ export default function Collaborateur() {
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-6"
               >
-                <div className={`p-6 bg-gradient-to-r ${selectedRole.bgColor} rounded-xl`}>
+                <div className="p-6 bg-[#e6f7ff] rounded-xl border border-[#00AEEF]/30">
                   <div className="flex items-center gap-4">
-                    <div className={`w-14 h-14 bg-gradient-to-br ${selectedRole.color} rounded-xl flex items-center justify-center shadow-lg`}>
-                      <selectedRole.icon className="w-7 h-7 text-white" />
+                    <div className={`w-14 h-14 ${selectedRole.color} rounded-xl flex items-center justify-center shadow-lg`}>
+                      <selectedRole.icon className={`w-7 h-7 ${selectedRole.textColor}`} />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-slate-800">
+                      <h3 className="text-lg font-heading text-[#0077A8]">
                         {t(`acces_${selectedRole.id}`)}
                       </h3>
                     </div>
@@ -132,13 +132,13 @@ export default function Collaborateur() {
                 </div>
 
                 <div className="space-y-3">
-                  <label className="text-sm text-slate-600">{t('mot_de_passe')}</label>
+                  <label className="text-sm font-heading text-[#0077A8]">{t('mot_de_passe')}</label>
                   <Input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
-                    className="h-12 border-slate-200 focus:border-sky-500 focus:ring-sky-500"
+                    className="h-12 border-[#00AEEF]/30 focus:border-[#00AEEF] rounded-xl font-body"
                     placeholder="••••••••"
                   />
                 </div>
@@ -146,7 +146,7 @@ export default function Collaborateur() {
                 <Button
                   onClick={handleLogin}
                   disabled={!password}
-                  className="w-full h-12 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-medium rounded-xl shadow-lg shadow-sky-500/25 disabled:opacity-50"
+                  className="w-full h-12 bg-[#00AEEF] hover:bg-[#0077A8] text-white font-heading rounded-xl shadow-lg disabled:opacity-50"
                 >
                   {t('confirmer')}
                 </Button>
