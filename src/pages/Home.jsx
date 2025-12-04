@@ -21,45 +21,52 @@ export default function Home() {
       title: t('client'),
       icon: Users,
       href: '/SignalementClient',
-      color: 'from-sky-500 to-sky-600',
+      color: 'bg-[#00AEEF]',
       description: 'Signaler un problème'
     },
     {
       title: t('avis'),
       icon: Star,
       href: '/SatisfactionClient',
-      color: 'from-amber-500 to-yellow-500',
+      color: 'bg-[#FFD700]',
+      textColor: 'text-[#0077A8]',
       description: 'Donner votre avis'
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-sky-50">
-      {/* Decorative background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-10 w-72 h-72 bg-sky-200/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 left-10 w-96 h-96 bg-amber-200/20 rounded-full blur-3xl" />
-      </div>
-
-      <div className="relative z-10 px-6 py-12 max-w-lg mx-auto">
+    <div className="min-h-screen px-6 py-8">
+      <div className="max-w-lg mx-auto">
+        {/* Logo */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-12"
+          className="mb-6"
         >
           <Logo className="h-24 md:h-28" />
         </motion.div>
 
-        <motion.h1 
+        {/* Titre principal avec style Camping Paradis */}
+        <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="text-3xl font-light text-slate-800 text-center mb-10"
+          className="text-center mb-10"
         >
-          {t('home_title')}
-        </motion.h1>
+          <h1 className="font-handwritten text-4xl md:text-5xl text-[#00AEEF] leading-tight">
+            Camping Paradis
+          </h1>
+          <div className="flex items-center justify-center gap-2 mt-2">
+            <span className="text-[#FFD700] text-xl">⭐</span>
+            <p className="font-handwritten text-2xl text-[#0077A8]">
+              Le Domaine de Gaujac à votre service !
+            </p>
+            <span className="text-[#FFD700] text-xl">⭐</span>
+          </div>
+        </motion.div>
 
+        {/* Menu principal */}
         <div className="space-y-4">
           {menuItems.map((item, index) => (
             <motion.div
@@ -72,18 +79,18 @@ export default function Home() {
                 to={createPageUrl(item.href.replace('/', ''))}
                 className="block group"
               >
-                <div className="bg-white rounded-2xl shadow-sm hover:shadow-lg border border-slate-100 transition-all duration-300 overflow-hidden">
+                <div className="bg-white rounded-xl border-2 border-[#00AEEF] shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden">
                   <div className="flex items-center p-5">
-                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform`}>
-                      <item.icon className="w-7 h-7 text-white" />
+                    <div className={`w-14 h-14 rounded-xl ${item.color} flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform`}>
+                      <item.icon className={`w-7 h-7 ${item.textColor || 'text-white'}`} />
                     </div>
                     <div className="ml-5 flex-1">
-                      <h2 className="text-lg font-semibold text-slate-800 group-hover:text-sky-600 transition-colors">
+                      <h2 className="font-heading text-lg text-[#0077A8] group-hover:text-[#00AEEF] transition-colors">
                         {item.title}
                       </h2>
-                      <p className="text-sm text-slate-500">{item.description}</p>
+                      <p className="font-body text-sm text-gray-600">{item.description}</p>
                     </div>
-                    <div className="text-slate-300 group-hover:text-sky-500 group-hover:translate-x-1 transition-all">
+                    <div className="text-[#00AEEF] group-hover:translate-x-1 transition-all">
                       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
@@ -95,6 +102,7 @@ export default function Home() {
           ))}
         </div>
 
+        {/* Lien changer de langue */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -103,7 +111,7 @@ export default function Home() {
         >
           <Link 
             to={createPageUrl('ChoixLangue')} 
-            className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-sky-600 transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-[#0077A8] hover:text-[#00AEEF] transition-colors font-body"
           >
             <span>🌐</span>
             <span>Changer de langue / Change language</span>

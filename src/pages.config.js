@@ -13,6 +13,7 @@ import Intervention from './pages/Intervention';
 import Dashboard from './pages/Dashboard';
 import Piscine from './pages/Piscine';
 import SatisfactionClient from './pages/SatisfactionClient';
+import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
@@ -36,4 +37,5 @@ export const PAGES = {
 export const pagesConfig = {
     mainPage: "ChoixLangue",
     Pages: PAGES,
+    Layout: __Layout,
 };

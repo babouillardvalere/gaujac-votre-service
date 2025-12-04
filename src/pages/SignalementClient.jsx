@@ -32,6 +32,13 @@ export default function SignalementClient() {
   const urlParams = new URLSearchParams(window.location.search);
   const mobilhomeId = urlParams.get('id');
 
+  // Couleurs par catégorie
+  const categoryColors = {
+    technique: 'bg-[#00AEEF]',
+    menage: 'bg-[#FFD700]',
+    nuisible: 'bg-[#FFA500]'
+  };
+
   const [step, setStep] = useState(1);
   const [clientInfo, setClientInfo] = useState({
     nom: '',
@@ -113,17 +120,17 @@ export default function SignalementClient() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 flex items-center justify-center px-4">
+      <div className="min-h-screen flex items-center justify-center px-4">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           className="text-center"
         >
-          <div className="w-24 h-24 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
+          <div className="w-24 h-24 bg-[#00AEEF] rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
             <CheckCircle className="w-12 h-12 text-white" />
           </div>
-          <h2 className="text-2xl font-semibold text-slate-800 mb-2">Signalement envoyé !</h2>
-          <p className="text-slate-600 mb-6">Notre équipe va intervenir rapidement.</p>
+          <h2 className="font-handwritten text-3xl text-[#0077A8] mb-2">Signalement envoyé !</h2>
+          <p className="font-body text-gray-600 mb-6">Notre équipe va intervenir rapidement.</p>
           <Button
             onClick={() => {
               setIsSuccess(false);
@@ -133,7 +140,7 @@ export default function SignalementClient() {
               setPhoto(null);
               setPhotoPreview(null);
             }}
-            variant="outline"
+            className="bg-[#FFD700] text-[#0077A8] hover:bg-[#FFA500] rounded-xl font-heading"
           >
             Nouveau signalement
           </Button>
@@ -143,7 +150,7 @@ export default function SignalementClient() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 px-4 py-6">
+    <div className="min-h-screen px-4 py-6">
       <OfflineBanner />
       
       <div className="max-w-lg mx-auto">
@@ -155,14 +162,14 @@ export default function SignalementClient() {
           <Logo className="h-16" />
         </motion.div>
 
-        <Card className="shadow-lg border-0">
-          <CardHeader className="pb-4 bg-gradient-to-r from-sky-500 to-blue-500 text-white rounded-t-lg">
+        <Card className="shadow-lg border-2 border-[#00AEEF] rounded-xl overflow-hidden">
+          <CardHeader className="pb-4 bg-[#00AEEF] text-white">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
                 <Home className="w-6 h-6" />
               </div>
               <div>
-                <CardTitle className="text-xl">Signaler un problème</CardTitle>
+                <CardTitle className="text-xl font-heading">Signaler un problème</CardTitle>
                 <p className="text-sky-100 text-sm">
                   {mobilhomeId ? `Logement ${mobilhomeId}` : 'Sélectionnez votre logement'}
                   {mobilhome && ` - ${mobilhome.categorie}`}
@@ -239,7 +246,7 @@ export default function SignalementClient() {
                   <Button
                     onClick={() => setStep(2)}
                     disabled={!clientInfo.prenom || !clientInfo.nom}
-                    className="w-full h-12 bg-sky-500 hover:bg-sky-600 mt-4"
+                    className="w-full h-12 bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading mt-4"
                   >
                     Continuer
                   </Button>
@@ -257,13 +264,13 @@ export default function SignalementClient() {
                 >
                   <button
                     onClick={() => setStep(1)}
-                    className="flex items-center text-slate-500 hover:text-sky-600 text-sm mb-2"
+                    className="flex items-center text-[#0077A8] hover:text-[#00AEEF] text-sm mb-2 font-body"
                   >
                     <ArrowLeft className="w-4 h-4 mr-1" />
                     Retour
                   </button>
                   
-                  <h3 className="font-medium text-slate-700">Type de problème</h3>
+                  <h3 className="font-heading text-[#0077A8]">Type de problème</h3>
                   
                   <div className="grid grid-cols-3 gap-3">
                     {problemTypes.map((type) => {
@@ -274,12 +281,12 @@ export default function SignalementClient() {
                           onClick={() => handleTypeSelect(type)}
                           className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
                             selectedType?.id === type.id
-                              ? 'border-sky-500 bg-sky-50'
-                              : 'border-slate-200 hover:border-slate-300 bg-white'
+                              ? 'border-[#00AEEF] bg-[#e6f7ff]'
+                              : 'border-[#00AEEF]/30 hover:border-[#00AEEF] bg-white'
                           }`}
                         >
                           <span className="text-3xl">{type.emoji}</span>
-                          <span className="text-xs font-medium text-slate-700 text-center">{type.label}</span>
+                          <span className="text-xs font-heading text-[#0077A8] text-center">{type.label}</span>
                         </button>
                       );
                     })}
@@ -288,7 +295,7 @@ export default function SignalementClient() {
                   {selectedType && (
                     <Button
                       onClick={() => setStep(3)}
-                      className="w-full h-12 bg-sky-500 hover:bg-sky-600 mt-4"
+                      className="w-full h-12 bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading mt-4"
                     >
                       Continuer
                     </Button>
@@ -307,28 +314,28 @@ export default function SignalementClient() {
                 >
                   <button
                     onClick={() => setStep(2)}
-                    className="flex items-center text-slate-500 hover:text-sky-600 text-sm mb-2"
+                    className="flex items-center text-[#0077A8] hover:text-[#00AEEF] text-sm mb-2 font-body"
                   >
                     <ArrowLeft className="w-4 h-4 mr-1" />
                     Retour
                   </button>
 
-                  <div className="flex items-center gap-3 p-3 bg-sky-50 rounded-lg">
+                  <div className="flex items-center gap-3 p-3 bg-[#e6f7ff] rounded-xl border border-[#00AEEF]/30">
                     <span className="text-2xl">{selectedType.emoji}</span>
-                    <span className="font-medium text-slate-700">{selectedType.label}</span>
+                    <span className="font-heading text-[#0077A8]">{selectedType.label}</span>
                   </div>
 
                   {/* Urgency */}
-                  <div className={`p-4 rounded-xl ${isUrgent ? 'bg-red-50 border-2 border-red-200' : 'bg-amber-50 border-2 border-amber-200'}`}>
+                  <div className={`p-4 rounded-xl ${isUrgent ? 'bg-[#FFA500]/20 border-2 border-[#FFA500]' : 'bg-[#FFF4B2] border-2 border-[#FFD700]'}`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <AlertTriangle className={`w-5 h-5 ${isUrgent ? 'text-red-500' : 'text-amber-500'}`} />
-                        <span className="font-medium">Problème urgent ?</span>
+                        <AlertTriangle className={`w-5 h-5 ${isUrgent ? 'text-[#FFA500]' : 'text-[#FFD700]'}`} />
+                        <span className="font-heading text-[#0077A8]">Problème urgent ?</span>
                       </div>
                       <Checkbox
                         checked={isUrgent}
                         onCheckedChange={setIsUrgent}
-                        className="data-[state=checked]:bg-red-500"
+                        className="data-[state=checked]:bg-[#FFA500]"
                       />
                     </div>
                   </div>
@@ -346,7 +353,7 @@ export default function SignalementClient() {
 
                   {/* Photo */}
                   <div className="space-y-2">
-                    <Label>Photo (facultatif)</Label>
+                    <Label className="font-heading text-[#0077A8]">Photo (facultatif)</Label>
                     <input
                       type="file"
                       accept="image/*"
@@ -357,10 +364,10 @@ export default function SignalementClient() {
                     />
                     <label
                       htmlFor="photo-upload"
-                      className="flex items-center justify-center gap-3 p-4 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-sky-400 hover:bg-sky-50 transition-all"
+                      className="flex items-center justify-center gap-3 p-4 border-2 border-dashed border-[#00AEEF]/50 rounded-xl cursor-pointer hover:border-[#00AEEF] hover:bg-[#e6f7ff] transition-all"
                     >
-                      <Camera className="w-6 h-6 text-slate-400" />
-                      <span className="text-slate-600">Ajouter une photo</span>
+                      <Camera className="w-6 h-6 text-[#00AEEF]" />
+                      <span className="text-[#0077A8] font-body">Ajouter une photo</span>
                     </label>
                     {photoPreview && (
                       <div className="relative mt-2">
@@ -378,7 +385,7 @@ export default function SignalementClient() {
                   <Button
                     onClick={handleSubmit}
                     disabled={!description.trim() || isSubmitting}
-                    className="w-full h-12 bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-600 hover:to-blue-600 mt-4"
+                    className="w-full h-12 bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading mt-4"
                   >
                     {isSubmitting ? (
                       <>
