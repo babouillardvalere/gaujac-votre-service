@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation, getLanguage } from '../components/translations';
 import Logo from '../components/Logo';
-import { Users, Wrench, Star } from 'lucide-react';
+import { Users, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 
@@ -20,22 +20,15 @@ export default function Home() {
     {
       title: t('client'),
       icon: Users,
-      href: '/IdentiteClient',
+      href: '/SignalementClient',
       color: 'from-sky-500 to-sky-600',
       description: 'Signaler un problème'
     },
     {
-      title: t('collaborateur'),
-      icon: Wrench,
-      href: '/Collaborateur',
-      color: 'from-amber-500 to-orange-500',
-      description: 'Espace collaborateur'
-    },
-    {
       title: t('avis'),
       icon: Star,
-      href: '/Avis',
-      color: 'from-emerald-500 to-teal-500',
+      href: '/SatisfactionClient',
+      color: 'from-amber-500 to-yellow-500',
       description: 'Donner votre avis'
     }
   ];

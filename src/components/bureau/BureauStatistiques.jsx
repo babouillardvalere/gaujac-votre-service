@@ -3,78 +3,97 @@ import { useTranslation } from '../translations';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, Star, AlertTriangle, Wrench, Bug, Sparkles, TrendingUp, Loader2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Clock, Star, AlertTriangle, TrendingUp, Loader2, Users, Home, Package } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import { problemTypes } from '../mobilhomeData';
 
-const COLORS = ['#0ea5e9', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#ec4899'];
+const COLORS = ['#0ea5e9', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 
 export default function BureauStatistiques() {
   const { t } = useTranslation();
 
   const { data: incidents = [], isLoading } = useQuery({
-    queryKey: ['stats-incidents'],
+    queryKey: ['bureau-stats-incidents'],
     queryFn: () => base44.entities.Incident.filter({}, '-created_date', 1000)
   });
 
-  const { data: avis = [] } = useQuery({
-    queryKey: ['stats-avis'],
-    queryFn: () => base44.entities.Avis.filter({}, '-created_date', 500)
+  const { data: satisfactions = [] } = useQuery({
+    queryKey: ['bureau-stats-satisfaction'],
+    queryFn: () => base44.entities.Satisfaction.filter({}, '-created_date', 500)
   });
 
-  // Stats calculations
-  const completedIncidents = incidents.filter(i => i.statut === 'termine');
+  const resolus = incidents.filter(i => i.statut === 'resolu');
   
-  const avgDuration = completedIncidents.length > 0
-    ? Math.round(completedIncidents.reduce((sum, i) => sum + (i.duree_minutes || 0), 0) / completedIncidents.length)
+  // Temps moyen de résolution
+  const avgDuration = resolus.filter(i => i.duree_resolution_heures).length > 0
+    ? (resolus.filter(i => i.duree_resolution_heures).reduce((sum, i) => sum + i.duree_resolution_heures, 0) / resolus.filter(i => i.duree_resolution_heures).length).toFixed(1)
     : 0;
 
-  const avgRating = avis.length > 0
-    ? (avis.reduce((sum, a) => sum + a.note, 0) / avis.length).toFixed(1)
+  // Satisfaction moyenne
+  const avgRating = satisfactions.length > 0
+    ? (satisfactions.reduce((sum, a) => sum + a.note, 0) / satisfactions.length).toFixed(1)
     : 0;
 
-  const urgentCount = incidents.filter(i => i.probleme_urgent).length;
+  // Urgences
+  const urgentCount = incidents.filter(i => i.urgence).length;
   const urgentPercent = incidents.length > 0 ? Math.round((urgentCount / incidents.length) * 100) : 0;
 
-  // Problem types distribution
-  const problemTypes = incidents.reduce((acc, i) => {
-    const key = i.sous_categorie || 'autre';
-    acc[key] = (acc[key] || 0) + 1;
+  // Rapidité de résolution
+  const tempsCategories = {
+    'Quelques heures': resolus.filter(i => i.duree_resolution_heures && i.duree_resolution_heures < 4).length,
+    'Moins de 24h': resolus.filter(i => i.duree_resolution_heures && i.duree_resolution_heures >= 4 && i.duree_resolution_heures < 24).length,
+    'Plus d\'une journée': resolus.filter(i => i.duree_resolution_heures && i.duree_resolution_heures >= 24 && i.duree_resolution_heures < 72).length,
+    'Plus de 3 jours': resolus.filter(i => i.duree_resolution_heures && i.duree_resolution_heures >= 72).length
+  };
+
+  const tempsData = Object.entries(tempsCategories).map(([name, value]) => ({ name, value }));
+
+  // Par type de problème
+  const parType = problemTypes.map(type => ({
+    name: type.label,
+    value: incidents.filter(i => i.type_probleme === type.id).length
+  })).filter(d => d.value > 0).sort((a, b) => b.value - a.value);
+
+  // Par technicien
+  const parTechnicien = resolus.reduce((acc, i) => {
+    if (i.technicien) {
+      if (!acc[i.technicien]) {
+        acc[i.technicien] = { count: 0, totalHours: 0 };
+      }
+      acc[i.technicien].count++;
+      acc[i.technicien].totalHours += i.duree_resolution_heures || 0;
+    }
     return acc;
   }, {});
 
-  const typeData = Object.entries(problemTypes)
+  const technicienData = Object.entries(parTechnicien)
+    .map(([name, data]) => ({
+      name,
+      count: data.count,
+      avgHours: data.count > 0 ? (data.totalHours / data.count).toFixed(1) : 0
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  // Logements à problèmes récurrents
+  const parLogement = incidents.reduce((acc, i) => {
+    acc[i.mobilhome_id] = (acc[i.mobilhome_id] || 0) + 1;
+    return acc;
+  }, {});
+
+  const topLogements = Object.entries(parLogement)
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 6)
-    .map(([name, value]) => ({ name: t(name), value }));
+    .slice(0, 10);
 
-  // Category distribution
-  const categoryData = [
-    { name: t('technique'), value: incidents.filter(i => i.categorie_probleme === 'technique').length },
-    { name: t('nuisibles'), value: incidents.filter(i => i.categorie_probleme === 'nuisibles').length },
-    { name: t('menage'), value: incidents.filter(i => i.categorie_probleme === 'menage').length }
-  ].filter(d => d.value > 0);
-
-  // Problematic accommodations
-  const accommodationIssues = incidents.reduce((acc, i) => {
-    const key = i.hebergement_numero;
-    acc[key] = (acc[key] || 0) + 1;
+  // Matériel utilisé
+  const materielUtilise = resolus.reduce((acc, i) => {
+    if (i.materiel_utilise) {
+      i.materiel_utilise.forEach(m => {
+        acc[m] = (acc[m] || 0) + 1;
+      });
+    }
     return acc;
   }, {});
-
-  const topProblematic = Object.entries(accommodationIssues)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
-
-  // Monthly trend
-  const monthlyData = incidents.reduce((acc, i) => {
-    const month = new Date(i.created_date).toLocaleString('fr', { month: 'short' });
-    acc[month] = (acc[month] || 0) + 1;
-    return acc;
-  }, {});
-
-  const trendData = Object.entries(monthlyData)
-    .slice(-6)
-    .map(([name, value]) => ({ name, value }));
 
   if (isLoading) {
     return (
@@ -95,8 +114,8 @@ export default function BureauStatistiques() {
                 <Clock className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-xs text-sky-600">{t('temps_moyen')}</p>
-                <p className="text-2xl font-bold text-sky-700">{avgDuration} min</p>
+                <p className="text-xs text-sky-600">Temps moyen</p>
+                <p className="text-2xl font-bold text-sky-700">{avgDuration}h</p>
               </div>
             </div>
           </CardContent>
@@ -109,7 +128,7 @@ export default function BureauStatistiques() {
                 <Star className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-xs text-amber-600">{t('satisfaction')}</p>
+                <p className="text-xs text-amber-600">Satisfaction</p>
                 <p className="text-2xl font-bold text-amber-700">{avgRating}/5</p>
               </div>
             </div>
@@ -137,7 +156,7 @@ export default function BureauStatistiques() {
                 <TrendingUp className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-xs text-emerald-600">{t('interventions_total')}</p>
+                <p className="text-xs text-emerald-600">Total interventions</p>
                 <p className="text-2xl font-bold text-emerald-700">{incidents.length}</p>
               </div>
             </div>
@@ -145,9 +164,8 @@ export default function BureauStatistiques() {
         </Card>
       </div>
 
-      {/* Charts */}
+      {/* Charts Row 1 */}
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Problem Types */}
         <Card className="shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Types de problèmes</CardTitle>
@@ -155,7 +173,7 @@ export default function BureauStatistiques() {
           <CardContent>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={typeData} layout="vertical">
+                <BarChart data={parType.slice(0, 8)} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" />
                   <YAxis type="category" dataKey="name" width={100} fontSize={12} />
@@ -167,85 +185,134 @@ export default function BureauStatistiques() {
           </CardContent>
         </Card>
 
-        {/* Category Distribution */}
         <Card className="shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Répartition par catégorie</CardTitle>
+            <CardTitle className="text-base">Rapidité d'intervention</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={categoryData}
+                    data={tempsData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={60}
-                    outerRadius={90}
+                    innerRadius={50}
+                    outerRadius={80}
                     paddingAngle={5}
                     dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }) => percent > 0 ? `${(percent * 100).toFixed(0)}%` : ''}
                   >
-                    {categoryData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    {tempsData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={['#10b981', '#0ea5e9', '#f59e0b', '#ef4444'][index]} />
                     ))}
                   </Pie>
                   <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
             </div>
+            <div className="flex flex-wrap gap-2 justify-center mt-2">
+              {[
+                { label: 'Quelques heures', color: 'bg-emerald-500' },
+                { label: '<24h', color: 'bg-sky-500' },
+                { label: '>1 jour', color: 'bg-amber-500' },
+                { label: '>3 jours', color: 'bg-red-500' }
+              ].map(item => (
+                <div key={item.label} className="flex items-center gap-1 text-xs">
+                  <div className={`w-2 h-2 rounded-full ${item.color}`} />
+                  <span>{item.label}</span>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
+      </div>
 
-        {/* Monthly Trend */}
+      {/* Charts Row 2 */}
+      <div className="grid lg:grid-cols-2 gap-6">
         <Card className="shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Évolution mensuelle</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Charge par technicien
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={trendData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} dot={{ fill: '#10b981' }} />
-                </LineChart>
-              </ResponsiveContainer>
+            <div className="space-y-3">
+              {technicienData.slice(0, 6).map((tech, idx) => (
+                <div key={tech.name} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                      ['bg-blue-100 text-blue-600', 'bg-emerald-100 text-emerald-600', 'bg-purple-100 text-purple-600', 'bg-amber-100 text-amber-600'][idx % 4]
+                    }`}>
+                      {tech.name[0].toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-medium">{tech.name}</p>
+                      <p className="text-xs text-slate-500">Moy: {tech.avgHours}h</p>
+                    </div>
+                  </div>
+                  <Badge variant="outline">{tech.count} interventions</Badge>
+                </div>
+              ))}
+              {technicienData.length === 0 && (
+                <p className="text-center text-slate-500 py-4">Aucune donnée</p>
+              )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Problematic Accommodations */}
         <Card className="shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Logements à problèmes récurrents</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Home className="w-4 h-4" />
+              Logements à problèmes récurrents
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {topProblematic.map(([num, count], idx) => (
-                <div key={num} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                      idx === 0 ? 'bg-red-100 text-red-700' : 
-                      idx === 1 ? 'bg-amber-100 text-amber-700' : 
-                      'bg-slate-200 text-slate-600'
+            <div className="space-y-2">
+              {topLogements.map(([num, count], idx) => (
+                <div key={num} className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${
+                      idx < 3 ? 'bg-red-100 text-red-600' : 'bg-slate-200 text-slate-600'
                     }`}>
                       {idx + 1}
                     </span>
-                    <span className="font-medium">Logement #{num}</span>
+                    <span className="font-medium">#{num}</span>
                   </div>
                   <span className="text-sm text-slate-500">{count} incidents</span>
                 </div>
               ))}
-              {topProblematic.length === 0 && (
-                <p className="text-center text-slate-500 py-4">Aucune donnée disponible</p>
+              {topLogements.length === 0 && (
+                <p className="text-center text-slate-500 py-4">Aucune donnée</p>
               )}
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Matériel utilisé */}
+      {Object.keys(materielUtilise).length > 0 && (
+        <Card className="shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Package className="w-4 h-4" />
+              Matériel remplacé (saison)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {Object.entries(materielUtilise).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([nom, count]) => (
+                <div key={nom} className="bg-slate-50 rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-slate-700">{count}</p>
+                  <p className="text-xs text-slate-500">{nom}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
