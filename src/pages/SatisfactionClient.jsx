@@ -68,25 +68,25 @@ export default function SatisfactionClient() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-yellow-50 flex items-center justify-center px-4">
+      <div className="min-h-screen flex items-center justify-center px-4">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           className="text-center"
         >
-          <div className="w-24 h-24 bg-gradient-to-br from-amber-500 to-yellow-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
-            <CheckCircle className="w-12 h-12 text-white" />
+          <div className="w-24 h-24 bg-[#FFD700] rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
+            <CheckCircle className="w-12 h-12 text-[#0077A8]" />
           </div>
-          <h2 className="text-2xl font-semibold text-slate-800 mb-2">Merci !</h2>
-          <p className="text-slate-600 mb-6">Votre avis a été enregistré.</p>
-          <p className="text-slate-500 text-sm">Bonnes vacances au Camping Paradis ! 🌴</p>
+          <h2 className="font-handwritten text-3xl text-[#0077A8] mb-2">Merci !</h2>
+          <p className="font-body text-gray-600 mb-6">Votre avis a été enregistré.</p>
+          <p className="font-handwritten text-[#00AEEF] text-lg">Bonnes vacances au Camping Paradis ! 🌴</p>
         </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-yellow-50 px-4 py-6">
+    <div className="min-h-screen px-4 py-6">
       <div className="max-w-md mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -96,15 +96,15 @@ export default function SatisfactionClient() {
           <Logo className="h-16" />
         </motion.div>
 
-        <Card className="shadow-lg border-0">
-          <CardHeader className="pb-4 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-t-lg">
+        <Card className="shadow-lg border-2 border-[#00AEEF] rounded-xl overflow-hidden">
+          <CardHeader className="pb-4 bg-[#FFD700]">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                <Star className="w-6 h-6" />
+              <div className="w-12 h-12 bg-white/30 rounded-xl flex items-center justify-center">
+                <Star className="w-6 h-6 text-[#0077A8]" />
               </div>
               <div>
-                <CardTitle className="text-xl">Votre avis</CardTitle>
-                <p className="text-amber-100 text-sm">
+                <CardTitle className="text-xl font-heading text-[#0077A8]">Votre avis</CardTitle>
+                <p className="text-[#0077A8]/80 text-sm font-body">
                   Comment s'est passée l'intervention ?
                 </p>
               </div>
@@ -113,18 +113,18 @@ export default function SatisfactionClient() {
           
           <CardContent className="pt-6 space-y-6">
             {incident && (
-              <div className="bg-slate-50 rounded-xl p-4 flex items-center gap-3">
-                <Home className="w-5 h-5 text-slate-400" />
+              <div className="bg-[#e6f7ff] rounded-xl p-4 flex items-center gap-3 border border-[#00AEEF]/30">
+                <Home className="w-5 h-5 text-[#00AEEF]" />
                 <div>
-                  <p className="font-medium text-slate-700">Logement #{incident.mobilhome_id}</p>
-                  <p className="text-sm text-slate-500">{incident.type_probleme}</p>
+                  <p className="font-heading text-[#0077A8]">Logement #{incident.mobilhome_id}</p>
+                  <p className="text-sm font-body text-gray-600">{incident.type_probleme}</p>
                 </div>
               </div>
             )}
 
             {/* Star Rating */}
             <div className="text-center">
-              <p className="text-sm text-slate-600 mb-4">Notez notre intervention</p>
+              <p className="text-sm font-heading text-[#0077A8] mb-4">Notez notre intervention</p>
               <div className="flex justify-center gap-2">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <motion.button
@@ -150,7 +150,7 @@ export default function SatisfactionClient() {
                 <motion.p 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="text-amber-600 font-medium mt-3"
+                  className="font-handwritten text-xl text-[#00AEEF] mt-3"
                 >
                   {rating === 5 && 'Excellent ! 🌟'}
                   {rating === 4 && 'Très bien ! 👍'}
@@ -163,14 +163,14 @@ export default function SatisfactionClient() {
 
             {/* Comment */}
             <div>
-              <label className="text-sm text-slate-600 mb-2 block">
+              <label className="text-sm font-heading text-[#0077A8] mb-2 block">
                 Un commentaire ? (facultatif)
               </label>
               <Textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="Partagez votre expérience..."
-                className="min-h-28 border-slate-200"
+                className="min-h-28 border-[#00AEEF]/30 rounded-xl font-body"
               />
             </div>
 
@@ -178,7 +178,7 @@ export default function SatisfactionClient() {
             <Button
               onClick={handleSubmit}
               disabled={rating === 0 || createMutation.isPending}
-              className="w-full h-12 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white font-medium rounded-xl shadow-lg disabled:opacity-50"
+              className="w-full h-12 bg-[#00AEEF] hover:bg-[#0077A8] text-white font-heading rounded-xl shadow-lg disabled:opacity-50"
             >
               {createMutation.isPending ? (
                 <>
