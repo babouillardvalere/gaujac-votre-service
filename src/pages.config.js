@@ -17,6 +17,8 @@ import MenuCollaborateur from './pages/MenuCollaborateur';
 import Technique from './pages/Technique';
 import Menage from './pages/Menage';
 import ConditionsClient from './pages/ConditionsClient';
+import Attente from './pages/Attente';
+import Materiel from './pages/Materiel';
 import __Layout from './Layout.jsx';
 
 
@@ -40,6 +42,8 @@ export const PAGES = {
     "Technique": Technique,
     "Menage": Menage,
     "ConditionsClient": ConditionsClient,
+    "Attente": Attente,
+    "Materiel": Materiel,
 }
 
 export const pagesConfig = {
