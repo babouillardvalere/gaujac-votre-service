@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation, getLanguage } from '../components/translations';
+import { getLanguage } from '../components/translations';
 import Logo from '../components/Logo';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, ArrowRight, AlertCircle } from 'lucide-react';
+import { User, Calendar, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
+import { format } from 'date-fns';
 
 export default function IdentiteClient() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
+  const today = format(new Date(), 'yyyy-MM-dd');
   
   const [formData, setFormData] = useState({
     nom: '',
@@ -20,187 +21,147 @@ export default function IdentiteClient() {
     dateArrivee: '',
     dateDepart: ''
   });
-  
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (!getLanguage()) {
       navigate('/ChoixLangue');
     }
-    
-    // Restore from session if exists
-    const savedData = sessionStorage.getItem('client_identity');
-    if (savedData) {
-      setFormData(JSON.parse(savedData));
-    }
   }, [navigate]);
 
-  const validateDates = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const arrivee = new Date(formData.dateArrivee);
-    const depart = new Date(formData.dateDepart);
-    
+  const validateForm = () => {
     const newErrors = {};
-
-    if (arrivee > today) {
-      newErrors.dateArrivee = t('date_error_arrivee');
+    
+    if (!formData.nom.trim()) newErrors.nom = 'Requis';
+    if (!formData.prenom.trim()) newErrors.prenom = 'Requis';
+    if (!formData.dateArrivee) newErrors.dateArrivee = 'Requis';
+    if (!formData.dateDepart) newErrors.dateDepart = 'Requis';
+    
+    if (formData.dateArrivee && formData.dateArrivee > today) {
+      newErrors.dateArrivee = 'La date d\'arrivée doit être aujourd\'hui ou avant';
     }
     
-    if (depart < today) {
-      newErrors.dateDepart = t('date_error_depart');
+    if (formData.dateArrivee && formData.dateDepart && formData.dateDepart < formData.dateArrivee) {
+      newErrors.dateDepart = 'La date de départ doit être après l\'arrivée';
     }
     
-    if (arrivee >= depart) {
-      newErrors.dateOrdre = t('date_error_ordre');
-    }
-
-    return newErrors;
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    // Check all fields filled
-    if (!formData.nom || !formData.prenom || !formData.dateArrivee || !formData.dateDepart) {
-      setErrors({ general: t('champs_obligatoires') });
-      return;
-    }
-
-    const dateErrors = validateDates();
-    if (Object.keys(dateErrors).length > 0) {
-      setErrors(dateErrors);
-      return;
-    }
-
-    // Store in session
-    sessionStorage.setItem('client_identity', JSON.stringify(formData));
-    sessionStorage.setItem('user_name', formData.nom);
-    sessionStorage.setItem('user_surname', formData.prenom);
-    sessionStorage.setItem('user_date_arrivee', formData.dateArrivee);
-    sessionStorage.setItem('user_date_depart', formData.dateDepart);
-
-    navigate('/ChoixHebergement');
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const isFormValid = () => {
-    return formData.nom && formData.prenom && formData.dateArrivee && formData.dateDepart;
+    return formData.nom.trim() && 
+           formData.prenom.trim() && 
+           formData.dateArrivee && 
+           formData.dateDepart &&
+           formData.dateArrivee <= today &&
+           formData.dateDepart >= formData.dateArrivee;
+  };
+
+  const handleSubmit = () => {
+    if (validateForm()) {
+      sessionStorage.setItem('user_nom', formData.nom);
+      sessionStorage.setItem('user_prenom', formData.prenom);
+      sessionStorage.setItem('user_date_arrivee', formData.dateArrivee);
+      sessionStorage.setItem('user_date_depart', formData.dateDepart);
+      navigate(createPageUrl('ConditionsClient'));
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-sky-50 px-4 py-8">
-      <div className="max-w-md mx-auto">
+    <div className="min-h-screen px-4 py-6">
+      <div className="max-w-lg mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-6"
         >
           <Logo className="h-20" />
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="text-center mb-6"
         >
-          <Card className="shadow-lg border-0">
-            <CardHeader className="pb-4">
-              <button 
-                onClick={() => navigate('/Home')}
-                className="flex items-center text-slate-500 hover:text-sky-600 transition-colors mb-4"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                {t('retour')}
-              </button>
-              <CardTitle className="text-2xl font-light text-slate-800">
-                {t('identite_title')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="space-y-2">
-                  <Label htmlFor="prenom" className="text-slate-700">{t('prenom')}</Label>
-                  <Input
-                    id="prenom"
-                    value={formData.prenom}
-                    onChange={(e) => setFormData({ ...formData, prenom: e.target.value })}
-                    className="h-12 border-slate-200 focus:border-sky-500 focus:ring-sky-500"
-                    placeholder="Jean"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="nom" className="text-slate-700">{t('nom')}</Label>
-                  <Input
-                    id="nom"
-                    value={formData.nom}
-                    onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
-                    className="h-12 border-slate-200 focus:border-sky-500 focus:ring-sky-500"
-                    placeholder="Dupont"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="dateArrivee" className="text-slate-700">{t('date_arrivee')}</Label>
-                  <Input
-                    id="dateArrivee"
-                    type="date"
-                    value={formData.dateArrivee}
-                    onChange={(e) => setFormData({ ...formData, dateArrivee: e.target.value })}
-                    className="h-12 border-slate-200 focus:border-sky-500 focus:ring-sky-500"
-                  />
-                  {errors.dateArrivee && (
-                    <p className="text-red-500 text-sm flex items-center gap-1">
-                      <AlertCircle className="w-4 h-4" />
-                      {errors.dateArrivee}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="dateDepart" className="text-slate-700">{t('date_depart')}</Label>
-                  <Input
-                    id="dateDepart"
-                    type="date"
-                    value={formData.dateDepart}
-                    onChange={(e) => setFormData({ ...formData, dateDepart: e.target.value })}
-                    className="h-12 border-slate-200 focus:border-sky-500 focus:ring-sky-500"
-                  />
-                  {errors.dateDepart && (
-                    <p className="text-red-500 text-sm flex items-center gap-1">
-                      <AlertCircle className="w-4 h-4" />
-                      {errors.dateDepart}
-                    </p>
-                  )}
-                </div>
-
-                {errors.dateOrdre && (
-                  <p className="text-red-500 text-sm flex items-center gap-1 bg-red-50 p-3 rounded-lg">
-                    <AlertCircle className="w-4 h-4" />
-                    {errors.dateOrdre}
-                  </p>
-                )}
-
-                {errors.general && (
-                  <p className="text-red-500 text-sm flex items-center gap-1 bg-red-50 p-3 rounded-lg">
-                    <AlertCircle className="w-4 h-4" />
-                    {errors.general}
-                  </p>
-                )}
-
-                <Button
-                  type="submit"
-                  disabled={!isFormValid()}
-                  className="w-full h-12 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-medium rounded-xl shadow-lg shadow-sky-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {t('suivant')}
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+          <h1 className="font-handwritten text-3xl text-[#00AEEF]">Bienvenue !</h1>
+          <p className="font-body text-[#0077A8]">Commençons par vos informations</p>
         </motion.div>
+
+        <Card className="shadow-lg border-2 border-[#00AEEF] rounded-xl overflow-hidden">
+          <CardHeader className="bg-[#00AEEF] pb-4">
+            <CardTitle className="text-xl font-heading text-white flex items-center gap-2">
+              <User className="w-5 h-5" />
+              Votre identité
+            </CardTitle>
+          </CardHeader>
+          
+          <CardContent className="pt-6 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="font-heading text-[#0077A8]">Prénom *</Label>
+                <Input
+                  value={formData.prenom}
+                  onChange={(e) => setFormData({ ...formData, prenom: e.target.value })}
+                  placeholder="Jean"
+                  className={`border-[#00AEEF]/30 rounded-xl font-body ${errors.prenom ? 'border-red-500' : ''}`}
+                />
+                {errors.prenom && <p className="text-red-500 text-xs">{errors.prenom}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label className="font-heading text-[#0077A8]">Nom *</Label>
+                <Input
+                  value={formData.nom}
+                  onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
+                  placeholder="Dupont"
+                  className={`border-[#00AEEF]/30 rounded-xl font-body ${errors.nom ? 'border-red-500' : ''}`}
+                />
+                {errors.nom && <p className="text-red-500 text-xs">{errors.nom}</p>}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="font-heading text-[#0077A8] flex items-center gap-1">
+                  <Calendar className="w-4 h-4" />
+                  Date d'arrivée *
+                </Label>
+                <Input
+                  type="date"
+                  value={formData.dateArrivee}
+                  max={today}
+                  onChange={(e) => setFormData({ ...formData, dateArrivee: e.target.value })}
+                  className={`border-[#00AEEF]/30 rounded-xl font-body ${errors.dateArrivee ? 'border-red-500' : ''}`}
+                />
+                {errors.dateArrivee && <p className="text-red-500 text-xs">{errors.dateArrivee}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label className="font-heading text-[#0077A8] flex items-center gap-1">
+                  <Calendar className="w-4 h-4" />
+                  Date de départ *
+                </Label>
+                <Input
+                  type="date"
+                  value={formData.dateDepart}
+                  min={formData.dateArrivee || today}
+                  onChange={(e) => setFormData({ ...formData, dateDepart: e.target.value })}
+                  className={`border-[#00AEEF]/30 rounded-xl font-body ${errors.dateDepart ? 'border-red-500' : ''}`}
+                />
+                {errors.dateDepart && <p className="text-red-500 text-xs">{errors.dateDepart}</p>}
+              </div>
+            </div>
+
+            <Button
+              onClick={handleSubmit}
+              disabled={!isFormValid()}
+              className="w-full h-12 bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading mt-4 disabled:opacity-50"
+            >
+              Continuer
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

@@ -16,6 +16,7 @@ import SatisfactionClient from './pages/SatisfactionClient';
 import MenuCollaborateur from './pages/MenuCollaborateur';
 import Technique from './pages/Technique';
 import Menage from './pages/Menage';
+import ConditionsClient from './pages/ConditionsClient';
 import __Layout from './Layout.jsx';
 
 
@@ -38,6 +39,7 @@ export const PAGES = {
     "MenuCollaborateur": MenuCollaborateur,
     "Technique": Technique,
     "Menage": Menage,
+    "ConditionsClient": ConditionsClient,
 }
 
 export const pagesConfig = {

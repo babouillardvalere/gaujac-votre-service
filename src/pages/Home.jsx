@@ -20,7 +20,7 @@ export default function Home() {
     {
       title: t('client'),
       icon: Users,
-      href: '/SignalementClient',
+      href: '/IdentiteClient',
       color: 'bg-[#00AEEF]',
       description: 'Signaler un problème'
     },
