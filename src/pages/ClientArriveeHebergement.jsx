@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../components/translations';
+import { base44 } from '@/api/base44Client';
 import { emplacements, logements } from '../components/accommodationData';
 import { getCodeFromCategory } from '../components/categoryCodeMapping';
 import InventaireDisplay from '../components/InventaireDisplay';
 import ClientArriveePhotos from '../components/ClientArriveePhotos';
 import Logo from '../components/Logo';
+import ArriveeProgressBar from '../components/ArriveeProgressBar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -56,25 +58,35 @@ export default function ClientArriveeHebergement() {
     setStep(2);
   };
 
-  const handleContinueToPhotos = () => {
+  const handleContinueToInventaire = async () => {
     if (!typeLogement || !categorie || !numero) {
       toast.error(t('champs_obligatoires'));
       return;
     }
 
     // Sauvegarder les données en session
-    const arriveeData = {
-      nom: sessionStorage.getItem('arrivee_nom'),
-      prenom: sessionStorage.getItem('arrivee_prenom'),
-      date_arrivee: sessionStorage.getItem('arrivee_date_arrivee'),
-      date_depart: sessionStorage.getItem('arrivee_date_depart'),
-      type_hebergement: typeLogement,
-      categorie: categorie,
-      numero: numero
-    };
-    
-    sessionStorage.setItem('arrivee_data', JSON.stringify(arriveeData));
-    setStep(3);
+    sessionStorage.setItem('arrivee_type_logement', typeLogement);
+    sessionStorage.setItem('arrivee_categorie', categorie);
+    sessionStorage.setItem('arrivee_numero', numero);
+
+    // Mettre à jour le dossier
+    const dossierId = sessionStorage.getItem('arrivee_dossier_id');
+    if (dossierId) {
+      try {
+        await base44.entities.DossierArrivee.update(dossierId, {
+          type_logement: typeLogement,
+          categorie_logement: categorie,
+          numero_logement: numero,
+          etape_2_terminee: true,
+          etape_actuelle: 3
+        });
+      } catch (error) {
+        console.error('Error updating dossier:', error);
+      }
+    }
+
+    // Rediriger vers contrôle inventaire
+    navigate(createPageUrl('ClientControleInventaire'));
   };
 
   const handlePhotosComplete = () => {
@@ -138,11 +150,13 @@ export default function ClientArriveeHebergement() {
           <h1 className="font-handwritten text-3xl text-[#22c55e] text-center mb-2">
             🏡 {lang === 'fr' ? 'Arrivée' : 'Arrival'}
           </h1>
-          <p className="text-center text-gray-600 font-body mb-6">
-            {step === 3 
-              ? (lang === 'fr' ? 'Étape 3/3 : Photos d\'arrivée' : 'Step 3/3: Arrival photos')
-              : (lang === 'fr' ? `Étape ${step}/3 : Hébergement` : `Step ${step}/3: Accommodation`)}
-          </p>
+
+          {/* Barre de progression */}
+          <Card className="border-2 border-[#00AEEF]/30 rounded-xl mb-6">
+            <CardContent className="p-4">
+              <ArriveeProgressBar etapeActuelle={2} lang={lang} />
+            </CardContent>
+          </Card>
 
           <AnimatePresence mode="wait">
             {step === 1 && (
@@ -253,31 +267,19 @@ export default function ClientArriveeHebergement() {
                     )}
 
                     <Button
-                      onClick={handleContinueToPhotos}
+                      onClick={handleContinueToInventaire}
                       disabled={!categorie || !numero}
                       className="w-full h-12 bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl font-heading"
                     >
                       <CheckCircle className="w-5 h-5 mr-2" />
-                      {lang === 'fr' ? 'Continuer' : 'Continue'}
+                      {lang === 'fr' ? 'Continuer vers inventaire' : 'Continue to inventory'}
                     </Button>
                   </CardContent>
                 </Card>
               </motion.div>
             )}
 
-            {step === 3 && (
-              <motion.div
-                key="step3"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-              >
-                <ClientArriveePhotos 
-                  onComplete={handlePhotosComplete}
-                  onSkip={handleSkipPhotos}
-                />
-              </motion.div>
-            )}
+
           </AnimatePresence>
         </motion.div>
       </div>
