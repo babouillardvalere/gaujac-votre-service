@@ -91,6 +91,7 @@ export function useNotifications() {
     recentlyResolved,
     recentAvis,
     stockAlerts,
+    urgentTaches,
     counts: {
       technique: techniqueCount,
       techniqueUrgent,
@@ -98,8 +99,9 @@ export function useNotifications() {
       menageUrgent,
       bureau: bureauCount,
       materiel: waitingIncidents.length + stockAlerts.length,
-      total: totalCount,
-      hasUrgent: urgentIncidents.length > 0
+      taches: urgentTaches.length,
+      total: totalCount + urgentTaches.length,
+      hasUrgent: urgentIncidents.length > 0 || urgentTaches.length > 0
     }
   };
 }
