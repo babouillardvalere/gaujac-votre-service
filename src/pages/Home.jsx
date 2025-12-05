@@ -5,7 +5,7 @@ import Logo from '../components/Logo';
 import HomeAvisSection from '../components/HomeAvisSection';
 import CustomUsersIcon from '../components/CustomUsersIcon';
 import AccessibilityPanel, { getAccessibilitySettings, saveAccessibilitySettings, speakText, stopSpeaking } from '../components/AccessibilityPanel';
-import { Users, Star, Briefcase, Search, Accessibility, Plus, Minus, Volume2, VolumeX, X } from 'lucide-react';
+import { Users, Star, Briefcase, Search, Accessibility, Plus, Minus, Volume2, VolumeX, X, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { Button } from '@/components/ui/button';
@@ -102,6 +102,20 @@ export default function Home() {
       description: t('donner_avis'),
       ariaLabel: 'Voir les avis clients',
       iconColor: 'text-black'
+    },
+    {
+      title: lang === 'fr' ? '📊 Statistiques' : '📊 Statistics',
+      icon: TrendingUp,
+      href: '/Statistiques',
+      bgColor: 'bg-gradient-to-br from-blue-500 to-cyan-500',
+      borderColor: 'border-blue-500',
+      iconBg: 'bg-white',
+      textColor: 'text-white',
+      subtitleColor: 'text-white/90',
+      arrowColor: 'text-white',
+      description: lang === 'fr' ? 'Tableaux de bord' : 'Dashboards',
+      ariaLabel: lang === 'fr' ? 'Voir les statistiques' : 'View statistics',
+      iconColor: 'text-blue-500'
     },
     {
       title: t('collaborateur'),
