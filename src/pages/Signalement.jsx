@@ -29,7 +29,6 @@ export default function Signalement() {
   const [urgent, setUrgent] = useState(false);
   const [urgentManuallySet, setUrgentManuallySet] = useState(false);
   const [autorisationAcces, setAutorisationAcces] = useState(null); // 'oui' ou 'non'
-  const [clauseAcceptee, setClauseAcceptee] = useState(false);
   const [photo, setPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
