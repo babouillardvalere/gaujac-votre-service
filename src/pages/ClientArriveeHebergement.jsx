@@ -4,6 +4,7 @@ import { useTranslation } from '../components/translations';
 import { emplacements, logements } from '../components/accommodationData';
 import { getCodeFromCategory } from '../components/categoryCodeMapping';
 import InventaireDisplay from '../components/InventaireDisplay';
+import ClientArriveePhotos from '../components/ClientArriveePhotos';
 import Logo from '../components/Logo';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -55,34 +56,45 @@ export default function ClientArriveeHebergement() {
     setStep(2);
   };
 
-  const handleSubmit = () => {
+  const handleContinueToPhotos = () => {
     if (!typeLogement || !categorie || !numero) {
       toast.error(t('champs_obligatoires'));
       return;
     }
 
-    sessionStorage.setItem('arrivee_type_logement', typeLogement);
-    sessionStorage.setItem('arrivee_categorie', categorie);
-    sessionStorage.setItem('arrivee_numero', numero);
+    // Sauvegarder les données en session
+    const arriveeData = {
+      nom: sessionStorage.getItem('arrivee_nom'),
+      prenom: sessionStorage.getItem('arrivee_prenom'),
+      date_arrivee: sessionStorage.getItem('arrivee_date_arrivee'),
+      date_depart: sessionStorage.getItem('arrivee_date_depart'),
+      type_hebergement: typeLogement,
+      categorie: categorie,
+      numero: numero
+    };
+    
+    sessionStorage.setItem('arrivee_data', JSON.stringify(arriveeData));
+    setStep(3);
+  };
 
-    // Afficher confirmation et rediriger
+  const handlePhotosComplete = () => {
     toast.success(lang === 'fr' 
       ? '✅ Votre arrivée a bien été enregistrée !'
       : '✅ Your arrival has been registered!'
     );
     
     setTimeout(() => {
-      // Nettoyer la session
       sessionStorage.removeItem('arrivee_nom');
       sessionStorage.removeItem('arrivee_prenom');
       sessionStorage.removeItem('arrivee_date_arrivee');
       sessionStorage.removeItem('arrivee_date_depart');
-      sessionStorage.removeItem('arrivee_type_logement');
-      sessionStorage.removeItem('arrivee_categorie');
-      sessionStorage.removeItem('arrivee_numero');
-      
+      sessionStorage.removeItem('arrivee_data');
       navigate(createPageUrl('Home'));
     }, 2000);
+  };
+
+  const handleSkipPhotos = () => {
+    handlePhotosComplete();
   };
 
   const emplacementCategories = [
@@ -127,7 +139,9 @@ export default function ClientArriveeHebergement() {
             🏡 {lang === 'fr' ? 'Arrivée' : 'Arrival'}
           </h1>
           <p className="text-center text-gray-600 font-body mb-6">
-            {lang === 'fr' ? 'Étape 2/2 : Hébergement' : 'Step 2/2: Accommodation'}
+            {step === 3 
+              ? (lang === 'fr' ? 'Étape 3/3 : Photos d\'arrivée' : 'Step 3/3: Arrival photos')
+              : (lang === 'fr' ? `Étape ${step}/3 : Hébergement` : `Step ${step}/3: Accommodation`)}
           </p>
 
           <AnimatePresence mode="wait">
@@ -239,15 +253,29 @@ export default function ClientArriveeHebergement() {
                     )}
 
                     <Button
-                      onClick={handleSubmit}
+                      onClick={handleContinueToPhotos}
                       disabled={!categorie || !numero}
                       className="w-full h-12 bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl font-heading"
                     >
                       <CheckCircle className="w-5 h-5 mr-2" />
-                      {lang === 'fr' ? 'Confirmer mon arrivée' : 'Confirm my arrival'}
+                      {lang === 'fr' ? 'Continuer' : 'Continue'}
                     </Button>
                   </CardContent>
                 </Card>
+              </motion.div>
+            )}
+
+            {step === 3 && (
+              <motion.div
+                key="step3"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+              >
+                <ClientArriveePhotos 
+                  onComplete={handlePhotosComplete}
+                  onSkip={handleSkipPhotos}
+                />
               </motion.div>
             )}
           </AnimatePresence>
