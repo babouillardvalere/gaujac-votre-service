@@ -22,6 +22,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import InterventionActions from '../components/bureau/InterventionActions';
 import BureauStatistiques from '../components/bureau/BureauStatistiques';
 import BureauAvis from '../components/bureau/BureauAvis';
+import BureauRapports from '../components/bureau/BureauRapports';
 import { format, differenceInHours, differenceInMinutes, isToday, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -123,6 +124,11 @@ export default function Bureau() {
     queryKey: ['bureau-incidents'],
     queryFn: () => base44.entities.Incident.filter({}, '-date_saisie', 1000),
     refetchInterval: 30000
+  });
+
+  const { data: avis = [] } = useQuery({
+    queryKey: ['bureau-avis'],
+    queryFn: () => base44.entities.Avis.filter({}, '-created_date', 500)
   });
 
   // Mutations pour actions de groupe
@@ -437,6 +443,9 @@ export default function Bureau() {
             </TabsTrigger>
             <TabsTrigger value="avis" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               ⭐ Avis
+            </TabsTrigger>
+            <TabsTrigger value="rapports" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
+              📊 Rapports
             </TabsTrigger>
           </TabsList>
 
@@ -843,6 +852,11 @@ export default function Bureau() {
           {/* Avis */}
           <TabsContent value="avis" className="space-y-6">
             <BureauAvis />
+          </TabsContent>
+
+          {/* Rapports */}
+          <TabsContent value="rapports" className="space-y-6">
+            <BureauRapports incidents={incidents} avis={avis} />
           </TabsContent>
         </Tabs>
       </div>
