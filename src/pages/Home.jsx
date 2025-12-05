@@ -168,15 +168,131 @@ export default function Home() {
         {/* Section Avis */}
         <HomeAvisSection />
 
+        {/* Bouton Accessibilité visible */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="mt-8"
+        >
+          <button
+            onClick={() => setShowAccessibilityMenu(!showAccessibilityMenu)}
+            className="w-full bg-[#0077A8] hover:bg-[#005f85] text-white rounded-xl p-4 flex items-center justify-center gap-3 shadow-lg transition-all focus:ring-4 focus:ring-[#FFD700]"
+            aria-label={lang === 'en' ? 'Open accessibility menu' : 'Ouvrir le menu accessibilité'}
+          >
+            <Accessibility className="w-6 h-6" />
+            <span className="font-heading text-lg">
+              {lang === 'en' ? '♿ Accessibility' : '♿ Accessibilité'}
+            </span>
+          </button>
+        </motion.div>
+
+        {/* Menu Accessibilité déplié */}
+        <AnimatePresence>
+          {showAccessibilityMenu && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-4 overflow-hidden"
+            >
+              <div className="bg-white rounded-xl border-2 border-[#0077A8] p-5 shadow-lg space-y-4">
+                {/* En-tête */}
+                <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+                  <h3 className="font-heading text-[#0077A8] text-lg flex items-center gap-2">
+                    <Accessibility className="w-5 h-5" />
+                    {lang === 'en' ? 'Accessibility Options' : 'Options d\'accessibilité'}
+                  </h3>
+                  <button
+                    onClick={() => setShowAccessibilityMenu(false)}
+                    className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
+                    aria-label={lang === 'en' ? 'Close' : 'Fermer'}
+                  >
+                    <X className="w-4 h-4 text-gray-600" />
+                  </button>
+                </div>
+
+                {/* Taille du texte */}
+                <div className="space-y-2">
+                  <label className="font-body text-sm text-gray-600">
+                    📝 {lang === 'en' ? 'Text Size' : 'Taille du texte'}
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <Button
+                      onClick={decreaseFontSize}
+                      disabled={accessibilitySettings.fontSize <= 80}
+                      className="flex-1 h-12 bg-[#00AEEF] hover:bg-[#0077A8] disabled:bg-gray-300 text-white font-bold text-lg rounded-xl"
+                      aria-label={lang === 'en' ? 'Decrease text size' : 'Réduire le texte'}
+                    >
+                      <Minus className="w-4 h-4 mr-1" />
+                      A-
+                    </Button>
+                    <div className="w-16 h-12 flex items-center justify-center bg-[#e6f7ff] rounded-xl font-bold text-[#0077A8]">
+                      {accessibilitySettings.fontSize}%
+                    </div>
+                    <Button
+                      onClick={increaseFontSize}
+                      disabled={accessibilitySettings.fontSize >= 150}
+                      className="flex-1 h-12 bg-[#00AEEF] hover:bg-[#0077A8] disabled:bg-gray-300 text-white font-bold text-lg rounded-xl"
+                      aria-label={lang === 'en' ? 'Increase text size' : 'Agrandir le texte'}
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      A+
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Lecture vocale */}
+                <div className="flex items-center justify-between p-4 bg-green-50 rounded-xl border border-green-200">
+                  <div className="flex items-center gap-3">
+                    <Volume2 className="w-6 h-6 text-green-600" />
+                    <div>
+                      <p className="font-heading text-green-700 text-sm">
+                        🔊 {lang === 'en' ? 'Voice Reading' : 'Lecture vocale'}
+                      </p>
+                      <p className="text-xs text-green-600">
+                        {lang === 'en' ? 'Reads elements on hover/touch' : 'Lit les éléments survolés/touchés'}
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={accessibilitySettings.speechEnabled}
+                    onCheckedChange={toggleSpeech}
+                    className="data-[state=checked]:bg-green-500"
+                    aria-label={lang === 'en' ? 'Toggle voice reading' : 'Activer/désactiver la lecture vocale'}
+                  />
+                </div>
+
+                {/* Indicateur état */}
+                {accessibilitySettings.speechEnabled && (
+                  <div className="bg-green-100 text-green-700 px-4 py-2 rounded-lg text-sm text-center flex items-center justify-center gap-2">
+                    <Volume2 className="w-4 h-4 animate-pulse" />
+                    {lang === 'en' ? 'Voice reading is ON - Touch or hover elements to hear them' : 'Lecture vocale activée - Survolez ou touchez les éléments pour les entendre'}
+                  </div>
+                )}
+
+                {/* Astuce */}
+                <div className="bg-[#FFF4B2] rounded-lg p-3 text-xs text-[#0077A8]">
+                  💡 <strong>{lang === 'en' ? 'Tip:' : 'Astuce :'}</strong>{' '}
+                  {lang === 'en' 
+                    ? 'Use TAB to navigate, ENTER to activate buttons.'
+                    : 'Utilisez TAB pour naviguer, ENTRÉE pour activer les boutons.'}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.5 }}
-          className="mt-12 text-center"
+          className="mt-8 text-center"
         >
           <Link 
             to={createPageUrl('ChoixLangue')} 
             className="inline-flex items-center gap-2 text-sm text-[#0077A8] hover:text-[#00AEEF] transition-colors font-body"
+            aria-label={lang === 'en' ? 'Change language' : 'Changer de langue'}
           >
             <span>🌐</span>
             <span>{t('changer_langue')}</span>
