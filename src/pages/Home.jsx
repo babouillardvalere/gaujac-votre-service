@@ -66,7 +66,7 @@ export default function Home() {
       href: '/IdentiteClient',
       bgColor: 'bg-[#00AEEF]',
       borderColor: 'border-[#00AEEF]',
-      iconBg: 'bg-white/20',
+      iconBg: 'bg-[#FFD700]',
       textColor: 'text-white',
       subtitleColor: 'text-white/90',
       arrowColor: 'text-white',
