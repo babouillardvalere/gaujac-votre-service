@@ -11,14 +11,52 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 
 export default function Home() {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const navigate = useNavigate();
+  const [showAccessibilityMenu, setShowAccessibilityMenu] = useState(false);
+  const [accessibilitySettings, setAccessibilitySettings] = useState(getAccessibilitySettings());
 
   useEffect(() => {
     if (!getLanguage()) {
       navigate('/ChoixLangue');
     }
   }, [navigate]);
+
+  useEffect(() => {
+    const handleAccessibilityChange = (e) => {
+      setAccessibilitySettings(e.detail);
+    };
+    window.addEventListener('accessibilitychange', handleAccessibilityChange);
+    return () => window.removeEventListener('accessibilitychange', handleAccessibilityChange);
+  }, []);
+
+  const updateAccessibility = (key, value) => {
+    const newSettings = { ...accessibilitySettings, [key]: value };
+    setAccessibilitySettings(newSettings);
+    saveAccessibilitySettings(newSettings);
+  };
+
+  const increaseFontSize = () => {
+    if (accessibilitySettings.fontSize < 150) {
+      updateAccessibility('fontSize', accessibilitySettings.fontSize + 10);
+      speakText(lang === 'en' ? 'Text increased' : 'Texte agrandi', true);
+    }
+  };
+
+  const decreaseFontSize = () => {
+    if (accessibilitySettings.fontSize > 80) {
+      updateAccessibility('fontSize', accessibilitySettings.fontSize - 10);
+      speakText(lang === 'en' ? 'Text decreased' : 'Texte réduit', true);
+    }
+  };
+
+  const toggleSpeech = () => {
+    const newValue = !accessibilitySettings.speechEnabled;
+    updateAccessibility('speechEnabled', newValue);
+    speakText(newValue 
+      ? (lang === 'en' ? 'Voice reading enabled' : 'Lecture vocale activée')
+      : (lang === 'en' ? 'Voice reading disabled' : 'Lecture vocale désactivée'), true);
+  };
 
   const menuItems = [
     {
