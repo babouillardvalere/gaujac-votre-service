@@ -7,6 +7,7 @@ import { getCodeFromCategory } from '../components/categoryCodeMapping';
 import { getCategorie, isUrgent, getDescriptionProbleme } from '../components/inventaireCategories';
 import Logo from '../components/Logo';
 import SignaturePad from '../components/SignaturePad';
+import ArriveeProgressBar from '../components/ArriveeProgressBar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -289,8 +290,9 @@ export default function ClientControleInventaire() {
       });
 
       // Créer les interventions ménage
+      const interventionsMenageIds = [];
       for (const intervention of interventionsPreview.menage) {
-        await base44.entities.Incident.create({
+        const incident = await base44.entities.Incident.create({
           type: 'menage',
           categorie: 'menage',
           sous_categorie: intervention.objet,
@@ -307,11 +309,13 @@ export default function ClientControleInventaire() {
           autorisation_acces: 'oui',
           clause_autorisation_acceptee: true
         });
+        interventionsMenageIds.push(incident.id);
       }
 
       // Créer les interventions technique
+      const interventionsTechniqueIds = [];
       for (const intervention of interventionsPreview.technique) {
-        await base44.entities.Incident.create({
+        const incident = await base44.entities.Incident.create({
           type: 'technique',
           categorie: 'divers_technique',
           sous_categorie: intervention.objet,
@@ -328,6 +332,23 @@ export default function ClientControleInventaire() {
           autorisation_acces: 'oui',
           clause_autorisation_acceptee: true
         });
+        interventionsTechniqueIds.push(incident.id);
+      }
+
+      // Mettre à jour le dossier d'arrivée
+      const dossierId = sessionStorage.getItem('arrivee_dossier_id');
+      if (dossierId) {
+        await base44.entities.DossierArrivee.update(dossierId, {
+          etape_3_terminee: true,
+          etape_4_terminee: true,
+          etape_actuelle: 4,
+          inventaire_id: inventaire.id,
+          interventions_menage: interventionsMenageIds,
+          interventions_technique: interventionsTechniqueIds,
+          statut: 'finalise',
+          date_finalisation: new Date().toISOString(),
+          remarques_client: remarques
+        });
       }
 
       toast.success(lang === 'fr' ? '✅ Inventaire envoyé à la réception !' : '✅ Inventory sent to reception!');
@@ -339,16 +360,10 @@ export default function ClientControleInventaire() {
         );
       }
       
-      // Nettoyer session
+      // Rediriger vers page de confirmation
       setTimeout(() => {
-        sessionStorage.removeItem('arrivee_nom');
-        sessionStorage.removeItem('arrivee_prenom');
-        sessionStorage.removeItem('arrivee_date_arrivee');
-        sessionStorage.removeItem('arrivee_date_depart');
-        sessionStorage.removeItem('arrivee_type_logement');
-        sessionStorage.removeItem('arrivee_categorie');
-        sessionStorage.removeItem('arrivee_numero');
-        navigate(createPageUrl('Home'));
+        const dossierId = sessionStorage.getItem('arrivee_dossier_id');
+        navigate(createPageUrl('ClientArriveeSuivi') + `?id=${dossierId}`);
       }, 2000);
     } catch (error) {
       console.error('Submit error:', error);
@@ -377,9 +392,13 @@ export default function ClientControleInventaire() {
           <h1 className="font-handwritten text-3xl text-[#22c55e] text-center mb-2">
             ✔️ {lang === 'fr' ? 'Contrôle Inventaire' : 'Inventory Check'}
           </h1>
-          <p className="text-center text-gray-600 font-body mb-6">
-            {lang === 'fr' ? 'Arrivée - Validation' : 'Arrival - Validation'}
-          </p>
+
+          {/* Barre de progression */}
+          <Card className="border-2 border-[#00AEEF]/30 rounded-xl mb-6">
+            <CardContent className="p-4">
+              <ArriveeProgressBar etapeActuelle={3} lang={lang} />
+            </CardContent>
+          </Card>
 
           {/* Bloc 1 - Informations séjour */}
           <Card className="border-2 border-[#00AEEF]/30 rounded-xl mb-6">
