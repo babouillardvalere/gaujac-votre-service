@@ -361,6 +361,16 @@ export const translations = {
     aide_ia_piki: "Aide IA PIKI",
     assistant_intelligent: "Assistant intelligent",
     bientot: "Bientôt",
+
+    // Autorisation d'accès
+    autorisation_acces_title: "Autorisation d'accès",
+    autorisation_acces_question: "Autorisez-vous l'intervenant à entrer dans votre hébergement ?",
+    autorisation_oui: "OUI, j'autorise l'intervenant à entrer",
+    autorisation_non: "NON, je n'autorise pas l'accès — je souhaite être présent",
+    autorisation_non_message: "Merci d'être présent lorsque l'intervenant passera. En cas d'absence au moment du passage, l'intervention pourra être reportée.",
+    autorisation_obligatoire: "Veuillez indiquer si vous autorisez l'accès",
+    acces_autorise: "Accès autorisé",
+    acces_non_autorise: "Présence client requise",
     
     // Attente dialog extended
     motif_attente_label: "Motif de l'attente",
@@ -840,6 +850,16 @@ export const translations = {
     aide_ia_piki: "PIKI AI Assistant",
     assistant_intelligent: "Smart assistant",
     bientot: "Coming soon",
+
+    // Access authorization
+    autorisation_acces_title: "Access authorization",
+    autorisation_acces_question: "Do you authorize staff to enter your accommodation?",
+    autorisation_oui: "YES, I authorize staff to enter",
+    autorisation_non: "NO, I do not authorize access — I wish to be present",
+    autorisation_non_message: "Please be present when staff arrives. If absent, the intervention may be postponed.",
+    autorisation_obligatoire: "Please indicate if you authorize access",
+    acces_autorise: "Access authorized",
+    acces_non_autorise: "Client presence required",
     
     // Avis publics
     ils_ont_adore: "They Loved Their Stay!",

@@ -8,7 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, Send, AlertTriangle, CheckCircle, Loader2, Camera, Home, Search } from 'lucide-react';
+import { ArrowLeft, Send, AlertTriangle, CheckCircle, Loader2, Camera, Home, Search, DoorOpen, UserCheck } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
@@ -23,7 +25,8 @@ export default function Signalement() {
   const [selectedProblems, setSelectedProblems] = useState([]);
   const [description, setDescription] = useState('');
   const [urgent, setUrgent] = useState(false);
-  const [urgentManuallySet, setUrgentManuallySet] = useState(false); // Pour savoir si l'utilisateur a manuellement changé
+  const [urgentManuallySet, setUrgentManuallySet] = useState(false);
+  const [autorisationAcces, setAutorisationAcces] = useState(null); // 'oui' ou 'non'
   const [photo, setPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -123,6 +126,10 @@ export default function Signalement() {
       toast.error(t('selectionner_probleme'));
       return;
     }
+    if (!autorisationAcces) {
+      toast.error(t('autorisation_obligatoire'));
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -175,7 +182,8 @@ export default function Signalement() {
         photo_url: photoUrl,
         date_saisie: new Date().toISOString(),
         statut: 'en_attente',
-        priorite_ordre: nextOrdre
+        priorite_ordre: nextOrdre,
+        autorisation_acces: autorisationAcces
       });
 
       sessionStorage.setItem('last_incident_id', newIncident.id);
@@ -331,6 +339,67 @@ export default function Signalement() {
               )}
             </div>
 
+            {/* Section Autorisation d'accès */}
+            <div className="p-4 rounded-xl bg-blue-50 border-2 border-[#00AEEF]/50">
+              <h3 className="font-heading text-[#0077A8] mb-3 flex items-center gap-2">
+                <DoorOpen className="w-5 h-5" />
+                {t('autorisation_acces_title')} *
+              </h3>
+              <p className="text-sm font-body text-gray-600 mb-4">
+                {t('autorisation_acces_question')}
+              </p>
+              
+              <RadioGroup 
+                value={autorisationAcces} 
+                onValueChange={setAutorisationAcces}
+                className="space-y-3"
+              >
+                <div 
+                  className={`flex items-center space-x-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                    autorisationAcces === 'oui' 
+                      ? 'border-green-500 bg-green-50' 
+                      : 'border-gray-200 bg-white hover:border-green-300'
+                  }`}
+                  onClick={() => setAutorisationAcces('oui')}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={t('autorisation_oui')}
+                >
+                  <RadioGroupItem value="oui" id="acces-oui" className="text-green-600" />
+                  <Label htmlFor="acces-oui" className="flex items-center gap-2 cursor-pointer font-body text-sm flex-1">
+                    <UserCheck className="w-5 h-5 text-green-600" />
+                    {t('autorisation_oui')}
+                  </Label>
+                </div>
+                
+                <div 
+                  className={`flex items-center space-x-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                    autorisationAcces === 'non' 
+                      ? 'border-orange-500 bg-orange-50' 
+                      : 'border-gray-200 bg-white hover:border-orange-300'
+                  }`}
+                  onClick={() => setAutorisationAcces('non')}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={t('autorisation_non')}
+                >
+                  <RadioGroupItem value="non" id="acces-non" className="text-orange-600" />
+                  <Label htmlFor="acces-non" className="flex items-center gap-2 cursor-pointer font-body text-sm flex-1">
+                    <DoorOpen className="w-5 h-5 text-orange-600" />
+                    {t('autorisation_non')}
+                  </Label>
+                </div>
+              </RadioGroup>
+              
+              {autorisationAcces === 'non' && (
+                <div className="mt-3 p-3 bg-orange-100 rounded-lg border border-orange-300">
+                  <p className="text-sm font-body text-orange-700">
+                    ⚠️ {t('autorisation_non_message')}
+                  </p>
+                </div>
+              )}
+            </div>
+
             <div>
               <label className="font-heading text-[#0077A8] mb-2 block">
                 {t('description')} *
@@ -377,7 +446,7 @@ export default function Signalement() {
 
             <Button
               onClick={handleSubmit}
-              disabled={!description.trim() || selectedProblems.length === 0 || isSubmitting}
+              disabled={!description.trim() || selectedProblems.length === 0 || !autorisationAcces || isSubmitting}
               className="w-full h-14 bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading disabled:opacity-50 text-lg focus:ring-4 focus:ring-[#FFD700]"
               aria-label={isSubmitting ? "Envoi en cours, veuillez patienter" : "Envoyer le signalement"}
               aria-busy={isSubmitting}
