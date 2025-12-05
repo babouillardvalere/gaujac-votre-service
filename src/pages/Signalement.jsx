@@ -405,14 +405,6 @@ export default function Signalement() {
                   </p>
                 </div>
               )}
-
-              {/* Clause obligatoire si autorisation = oui */}
-              {autorisationAcces === 'oui' && (
-                <ClauseAutorisationAcces 
-                  accepted={clauseAcceptee} 
-                  onAcceptedChange={setClauseAcceptee} 
-                />
-              )}
             </div>
 
             <div>
