@@ -125,8 +125,10 @@ export default function Home() {
           className="text-center mb-8 bg-gradient-to-b from-[#e6f7ff] to-white rounded-2xl p-6 shadow-sm"
         >
           <Logo className="h-20 mb-4 mx-auto" />
-          <h1 className="font-handwritten text-4xl md:text-5xl text-[#00AEEF] mb-2">
-            🏕️ {t('camping_paradis')} 🏕️
+          <h1 className="font-handwritten text-4xl md:text-5xl text-[#00AEEF] mb-2 flex items-center justify-center gap-2">
+            <span>🏕️</span>
+            <span>{t('camping_paradis')}</span>
+            <span>🏕️</span>
           </h1>
           <p className="font-heading text-xl text-[#0077A8]">
             ⭐ {t('slogan')} ⭐
