@@ -364,7 +364,7 @@ export const translations = {
 
     // Autorisation d'accès
     autorisation_acces_title: "Autorisation d'accès",
-    autorisation_acces_question: "Autorisez-vous l'intervenant à entrer dans votre hébergement ?",
+    autorisation_acces_question: "Autorisez-vous notre intervenant à entrer dans votre hébergement / emplacement en votre absence ?",
     autorisation_oui: "OUI, j'autorise l'intervenant à entrer",
     autorisation_non: "NON, je n'autorise pas l'accès — je souhaite être présent",
     autorisation_non_message: "Merci d'être présent lorsque l'intervenant passera. En cas d'absence au moment du passage, l'intervention pourra être reportée.",
