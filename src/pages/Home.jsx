@@ -95,7 +95,7 @@ export default function Home() {
       href: '/MeilleursAvis',
       bgColor: 'bg-[#FFA500]',
       borderColor: 'border-[#FFA500]',
-      iconBg: 'bg-white/20',
+      iconBg: 'bg-[#00AEEF]',
       textColor: 'text-white',
       subtitleColor: 'text-white/90',
       arrowColor: 'text-white',
