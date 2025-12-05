@@ -58,7 +58,13 @@ const translations = {
     visual_section: 'Vision',
     cognitive_section: 'Cognition',
     motor_section: 'Motricité',
-    audio_section: 'Audio'
+    audio_section: 'Audio',
+    contact_section: 'Besoin d\'aide ? Contactez-nous',
+    call_camping: 'Appeler le camping',
+    send_email: 'Envoyer un email',
+    phone_copied: 'Numéro copié',
+    call_us: 'Appelez-nous au 04 66 61 67 57',
+    contact_help: 'Pour joindre le camping, appuyez ici pour appeler, ou ici pour envoyer un email.'
   },
   en: {
     accessibility: 'Accessibility',
@@ -111,7 +117,13 @@ const translations = {
     visual_section: 'Vision',
     cognitive_section: 'Cognition',
     motor_section: 'Motor Skills',
-    audio_section: 'Audio'
+    audio_section: 'Audio',
+    contact_section: 'Need help? Contact us',
+    call_camping: 'Call the campsite',
+    send_email: 'Send an email',
+    phone_copied: 'Number copied',
+    call_us: 'Call us at 04 66 61 67 57',
+    contact_help: 'To contact the campsite, press here to call, or here to send an email.'
   }
 };
 
@@ -578,6 +590,27 @@ export default function AccessibilityPanel() {
     updateSettingWithHaptic('guidedMode', !settings.guidedMode);
   };
 
+  const handleCallCamping = () => {
+    const phoneNumber = '0466616757';
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      window.location.href = `tel:${phoneNumber}`;
+    } else {
+      navigator.clipboard.writeText('04 66 61 67 57');
+      alert(t('call_us'));
+      speakText(t('call_us'), true);
+    }
+    triggerHaptic();
+  };
+
+  const handleSendEmail = () => {
+    const email = 'campingdomainedegaujac@gmail.com';
+    const subject = encodeURIComponent('[Assistance accessibilité – Application Camping Paradis]');
+    window.location.href = `mailto:${email}?subject=${subject}`;
+    triggerHaptic();
+  };
+
   return (
     <>
       {/* Boutons rapides A+/A- persistants */}
@@ -940,6 +973,43 @@ export default function AccessibilityPanel() {
                   </>
                 )}
               </Button>
+            </div>
+
+            {/* === SECTION CONTACT === */}
+            <div className="border-t-2 border-[#FFD700] pt-4 mt-4">
+              <h2 className="font-heading text-[#0077A8] text-xl mb-4">📞 {t('contact_section')}</h2>
+              <p className="text-sm text-gray-600 font-body mb-4">{t('contact_help')}</p>
+              
+              <div className="space-y-3">
+                {/* Bouton Appeler */}
+                <Button
+                  onClick={handleCallCamping}
+                  className="w-full h-16 bg-[#00AEEF] hover:bg-[#FFD700] text-white hover:text-[#0077A8] rounded-xl font-heading text-lg transition-all shadow-lg"
+                  aria-label={t('call_camping')}
+                >
+                  <div className="flex items-center justify-center gap-3">
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                      <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                    </svg>
+                    <span>📞 {t('call_camping')}</span>
+                  </div>
+                </Button>
+
+                {/* Bouton Email */}
+                <Button
+                  onClick={handleSendEmail}
+                  className="w-full h-16 bg-[#0077A8] hover:bg-[#FFD700] text-white hover:text-[#0077A8] rounded-xl font-heading text-lg transition-all shadow-lg"
+                  aria-label={t('send_email')}
+                >
+                  <div className="flex items-center justify-center gap-3">
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                    </svg>
+                    <span>✉️ {t('send_email')}</span>
+                  </div>
+                </Button>
+              </div>
             </div>
 
             {/* Info accessibilité */}
