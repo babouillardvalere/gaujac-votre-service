@@ -101,13 +101,31 @@ export default function ConditionsClient() {
                   </div>
                   <div className="font-body text-gray-700 text-sm space-y-2">
                     <p className="font-semibold">9h00 → 16h00</p>
+                    <p className="text-xs font-semibold text-[#0077A8]">
+                      {isFrench ? "Samedi & dimanche (juillet/août) :" : "Saturday & Sunday (July/August):"}
+                    </p>
                     <p className="text-xs">
                       {isFrench 
-                        ? "Samedi & dimanche (juillet/août) : possibilité d'interventions renforcées selon disponibilité" 
-                        : "Saturday & Sunday (July/August): possible reinforced interventions based on availability"}
+                        ? "Il vous manque quelque chose ? Un petit passage dans une zone oubliée de votre mobil-home ? Une trace tenace qui résiste ?" 
+                        : "Missing something? Need a quick clean in a forgotten area of your mobile home? A stubborn stain that won't go away?"}
                     </p>
-                    <p className="text-xs italic text-gray-600">
-                      {isFrench ? "Hors de ces horaires → intervention le lendemain" : "Outside these hours → next day intervention"}
+                    <p className="text-xs mt-2">
+                      ✨ {isFrench 
+                        ? "Notre équipe ménage est là pour vous !" 
+                        : "Our housekeeping team is here for you!"}
+                    </p>
+                    <p className="text-xs">
+                      {isFrench 
+                        ? "Ce sont de véritables magiciennes du logis, toujours prêtes à intervenir." 
+                        : "They are true home magicians, always ready to help."}
+                    </p>
+                    <p className="text-xs">
+                      {isFrench 
+                        ? "Elles sont sur les starting-blocks : patientez quelques instants, notre équipe arrive." 
+                        : "They are on the starting blocks: wait a moment, our team is coming."}
+                    </p>
+                    <p className="text-xs mt-2 font-semibold text-[#0077A8]">
+                      {isFrench ? "Merci pour votre confiance et votre bienveillance 💙" : "Thank you for your trust and kindness 💙"}
                     </p>
                   </div>
                 </div>
