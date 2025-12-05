@@ -15,7 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { 
   ArrowLeft, Clock, Star, AlertTriangle, TrendingUp, Loader2, 
   Users, Home, Search, Building2, Filter, Calendar, CalendarDays,
-  ChevronDown, ChevronUp, Eye, AlertCircle, MoreVertical
+  ChevronDown, ChevronUp, Eye, AlertCircle, MoreVertical, LogOut
 } from 'lucide-react';
 import InterventionActions from '../components/bureau/InterventionActions';
 import BureauStatistiques from '../components/bureau/BureauStatistiques';
@@ -61,11 +61,25 @@ export default function Bureau() {
   });
 
   useEffect(() => {
-    const auth = sessionStorage.getItem('collaborateur_authenticated');
-    if (auth !== 'true') {
+    const collabAuth = sessionStorage.getItem('collaborateur_authenticated');
+    const bureauAuth = sessionStorage.getItem('bureau_authenticated');
+    
+    if (collabAuth !== 'true') {
       navigate(createPageUrl('Collaborateur'));
+      return;
+    }
+    
+    if (bureauAuth !== 'true') {
+      navigate(createPageUrl('MenuCollaborateur'));
+      return;
     }
   }, [navigate]);
+
+  const handleBureauLogout = () => {
+    sessionStorage.removeItem('bureau_authenticated');
+    sessionStorage.removeItem('bureau_auth_time');
+    navigate(createPageUrl('MenuCollaborateur'));
+  };
 
   const { data: incidents = [], isLoading } = useQuery({
     queryKey: ['bureau-incidents'],
@@ -223,6 +237,15 @@ export default function Bureau() {
           </div>
           <div className="flex items-center gap-2">
             <NotificationBell />
+            <Button
+              onClick={handleBureauLogout}
+              variant="ghost"
+              size="sm"
+              className="text-white hover:bg-white/20 rounded-lg"
+              title="Déconnexion Bureau"
+            >
+              <LogOut className="w-5 h-5" />
+            </Button>
             <Building2 className="w-8 h-8" />
           </div>
         </div>
