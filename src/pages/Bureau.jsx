@@ -335,9 +335,10 @@ export default function Bureau() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="tous">Tous statuts</SelectItem>
-                      <SelectItem value="en_attente">En attente</SelectItem>
-                      <SelectItem value="en_cours">En cours</SelectItem>
-                      <SelectItem value="resolu">Résolu</SelectItem>
+                      <SelectItem value="en_attente">🟠 En attente</SelectItem>
+                      <SelectItem value="en_cours">🔵 En cours</SelectItem>
+                      <SelectItem value="en_attente_materiel">⏳ En attente (reporté)</SelectItem>
+                      <SelectItem value="resolu">✅ Résolu</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -500,13 +501,21 @@ export default function Bureau() {
                                 )}
                               </td>
                               <td className="p-3">
-                                <Badge className={
-                                  incident.statut === 'resolu' ? 'bg-green-500 text-white' :
-                                  incident.statut === 'en_cours' ? 'bg-[#00AEEF] text-white' :
-                                  'bg-[#FFA500] text-white'
-                                }>
-                                  {incident.statut}
-                                </Badge>
+                                <div className="space-y-1">
+                                  <Badge className={
+                                    incident.statut === 'resolu' ? 'bg-green-500 text-white' :
+                                    incident.statut === 'en_cours' ? 'bg-[#00AEEF] text-white' :
+                                    incident.statut === 'en_attente_materiel' ? 'bg-gray-500 text-white' :
+                                    'bg-[#FFA500] text-white'
+                                  }>
+                                    {incident.statut === 'en_attente_materiel' ? '⏳ Reporté' : incident.statut}
+                                  </Badge>
+                                  {incident.statut === 'en_attente_materiel' && incident.motif_attente && (
+                                    <p className="text-xs text-gray-500 max-w-[120px] truncate" title={incident.motif_attente}>
+                                      {incident.motif_attente}
+                                    </p>
+                                  )}
+                                </div>
                               </td>
                               <td className="p-3 text-sm">
                                 <div className="space-y-1">
@@ -615,6 +624,23 @@ export default function Bureau() {
                   </div>
                 </div>
               </div>
+
+              {/* Motif d'attente */}
+              {selectedIncident.statut === 'en_attente_materiel' && selectedIncident.motif_attente && (
+                <div className="bg-[#FFA500]/10 rounded-xl p-4 border border-[#FFA500]/30">
+                  <h4 className="font-heading text-[#FFA500] mb-2">⏳ Intervention en attente</h4>
+                  <p className="font-body text-gray-700"><strong>Motif :</strong> {selectedIncident.motif_attente}</p>
+                  {selectedIncident.attente_materiel_detail && (
+                    <p className="font-body text-gray-600 text-sm mt-1">Matériel nécessaire : {selectedIncident.attente_materiel_detail}</p>
+                  )}
+                  {selectedIncident.attente_delai && (
+                    <p className="font-body text-gray-500 text-xs mt-1">Délai estimé : {selectedIncident.attente_delai}</p>
+                  )}
+                  {selectedIncident.attente_date && (
+                    <p className="font-body text-gray-400 text-xs mt-1">Mis en attente le : {format(new Date(selectedIncident.attente_date), 'dd/MM/yyyy HH:mm')}</p>
+                  )}
+                </div>
+              )}
 
               {/* Collaborateur */}
               {selectedIncident.pris_par && (

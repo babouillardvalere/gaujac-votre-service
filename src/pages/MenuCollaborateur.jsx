@@ -46,14 +46,6 @@ export default function MenuCollaborateur() {
       description: t('desc_bureau')
     },
     {
-      title: t('menu_attente'),
-      icon: Clock,
-      href: 'Attente',
-      color: 'bg-gray-500',
-      textColor: 'text-white',
-      description: t('desc_attente')
-    },
-    {
       title: t('menu_materiel'),
       icon: Package,
       href: 'Materiel',

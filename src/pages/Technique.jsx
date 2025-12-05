@@ -212,14 +212,17 @@ export default function Technique() {
 
       <div className="max-w-4xl mx-auto px-4 py-6">
         <Tabs value={filter} onValueChange={setFilter} className="mb-6">
-          <TabsList className="bg-[#e6f7ff] p-1 rounded-xl border border-[#00AEEF]/30 w-full">
-            <TabsTrigger value="en_attente" className="flex-1 rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
+          <TabsList className="bg-[#e6f7ff] p-1 rounded-xl border border-[#00AEEF]/30 w-full grid grid-cols-4">
+            <TabsTrigger value="en_attente" className="rounded-lg font-heading text-xs data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               {t('en_attente')} ({incidents.filter(i => i.statut === 'en_attente').length})
             </TabsTrigger>
-            <TabsTrigger value="en_cours" className="flex-1 rounded-lg font-heading data-[state=active]:bg-[#00AEEF] data-[state=active]:text-white">
+            <TabsTrigger value="en_cours" className="rounded-lg font-heading text-xs data-[state=active]:bg-[#00AEEF] data-[state=active]:text-white">
               {t('en_cours')} ({incidents.filter(i => i.statut === 'en_cours').length})
             </TabsTrigger>
-            <TabsTrigger value="resolu" className="flex-1 rounded-lg font-heading data-[state=active]:bg-green-500 data-[state=active]:text-white">
+            <TabsTrigger value="en_attente_materiel" className="rounded-lg font-heading text-xs data-[state=active]:bg-gray-500 data-[state=active]:text-white">
+              ⏳ Attente ({incidents.filter(i => i.statut === 'en_attente_materiel').length})
+            </TabsTrigger>
+            <TabsTrigger value="resolu" className="rounded-lg font-heading text-xs data-[state=active]:bg-green-500 data-[state=active]:text-white">
               {t('resolu')} ({incidents.filter(i => i.statut === 'resolu').length})
             </TabsTrigger>
           </TabsList>
@@ -277,6 +280,14 @@ export default function Technique() {
                           {incident.statut === 'en_cours' && incident.date_debut && (
                             <InterventionTimer startTime={incident.date_debut} isActive={true} />
                           )}
+                        </div>
+                      )}
+                      {incident.statut === 'en_attente_materiel' && incident.motif_attente && (
+                        <div className="mt-2 pt-2 border-t border-gray-100">
+                          <p className="text-xs font-body text-[#FFA500] flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            ⏳ Motif : {incident.motif_attente}
+                          </p>
                         </div>
                       )}
                     </CardContent>
@@ -378,6 +389,51 @@ export default function Technique() {
                       {t('terminer')}
                     </Button>
                   </div>
+                </div>
+              )}
+
+              {selectedIncident.statut === 'en_attente_materiel' && (
+                <div className="space-y-3 pt-4 border-t">
+                  <div className="bg-[#FFA500]/10 p-4 rounded-xl border border-[#FFA500]/30">
+                    <p className="text-sm font-heading text-[#FFA500] mb-2">⏳ Intervention en attente</p>
+                    <p className="font-body text-gray-700"><strong>Motif :</strong> {selectedIncident.motif_attente}</p>
+                    {selectedIncident.attente_materiel_detail && (
+                      <p className="font-body text-gray-600 text-sm mt-1">Matériel : {selectedIncident.attente_materiel_detail}</p>
+                    )}
+                    {selectedIncident.attente_delai && (
+                      <p className="font-body text-gray-500 text-xs mt-1">Délai estimé : {selectedIncident.attente_delai}</p>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button 
+                      onClick={() => {
+                        updateMutation.mutate({
+                          id: selectedIncident.id,
+                          data: { statut: 'en_cours' }
+                        });
+                      }}
+                      className="bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading"
+                    >
+                      <Play className="w-4 h-4 mr-2" />
+                      Reprendre
+                    </Button>
+                    <Button 
+                      onClick={() => handleMettreEnAttente(selectedIncident)}
+                      variant="outline"
+                      className="border-[#FFA500] text-[#FFA500] rounded-xl font-heading"
+                    >
+                      <Pause className="w-4 h-4 mr-2" />
+                      Modifier motif
+                    </Button>
+                  </div>
+                  <Button 
+                    onClick={() => handleTerminer(selectedIncident)}
+                    disabled={updateMutation.isPending}
+                    className="w-full bg-green-500 hover:bg-green-600 rounded-xl font-heading"
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Passer en résolu
+                  </Button>
                 </div>
               )}
 
