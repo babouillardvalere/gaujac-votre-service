@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../components/translations';
-import { accommodationData } from '../components/accommodationData';
-import { mobilhomeData } from '../components/mobilhomeData';
+import { emplacements, logements } from '../components/accommodationData';
+import { generateMobilhomes } from '../components/mobilhomeData';
 import Logo from '../components/Logo';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -33,11 +33,11 @@ export default function ClientDepartHebergement() {
   useEffect(() => {
     if (categorie) {
       if (typeLogement === 'emplacement') {
-        const filtered = accommodationData.filter(a => a.categorie === categorie);
-        setAvailableNumbers(filtered.map(a => a.numero));
+        const numbers = emplacements[categorie] || [];
+        setAvailableNumbers(numbers);
       } else {
-        const filtered = mobilhomeData.filter(m => m.categorie === categorie);
-        setAvailableNumbers(filtered.map(m => m.numero));
+        const numbers = logements[categorie] || [];
+        setAvailableNumbers(numbers);
       }
       setNumero('');
     }
