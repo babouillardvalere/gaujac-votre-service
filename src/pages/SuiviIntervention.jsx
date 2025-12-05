@@ -284,6 +284,29 @@ export default function SuiviIntervention() {
       }
     }
 
+    // Photo APRÈS si disponible et résolu
+    if (incident.photo_apres_url && incident.statut === 'resolu') {
+      steps.push({
+        status: 'completed',
+        color: 'bg-green-400',
+        icon: CheckCircle,
+        title: lang === 'en' ? '📷 After photo taken' : '📷 Photo APRÈS prise',
+        date: incident.photo_apres_timestamp,
+        details: (
+          <div className="space-y-2">
+            <img 
+              src={incident.photo_apres_url} 
+              alt="Après intervention" 
+              className="w-full max-w-xs h-32 object-cover rounded-lg border-2 border-green-300"
+            />
+            <p className="text-xs text-gray-500">
+              {incident.photo_apres_timestamp && format(new Date(incident.photo_apres_timestamp), 'dd/MM HH:mm:ss', { locale: fr })}
+            </p>
+          </div>
+        )
+      });
+    }
+
     if (incident.statut === 'resolu') {
       const dureeTotal = incident.temps_total_intervention || (incident.date_saisie && incident.date_resolution
         ? Math.round((new Date(incident.date_resolution) - new Date(incident.date_saisie)) / 60000)
@@ -291,38 +314,26 @@ export default function SuiviIntervention() {
       const dureeIntervention = incident.date_debut && incident.date_resolution
         ? Math.round((new Date(incident.date_resolution) - new Date(incident.date_debut)) / 60000)
         : null;
-      
+
       const formatDuree = (mins) => {
         if (mins < 60) return `${mins} ${t('min')}`;
         const h = Math.floor(mins / 60);
         const m = mins % 60;
         return m > 0 ? `${h}h${m}min` : `${h}h`;
       };
-      
+
       steps.push({
         status: 'completed',
         color: 'bg-green-500',
         icon: CheckCircle,
-        title: t('resolu'),
+        title: lang === 'en' ? '✅ Completed' : '✅ Terminé',
         date: incident.date_resolution,
         details: (
           <div className="text-sm space-y-2">
             <p><span className="font-medium">{t('intervenant')}:</span> {incident.pris_par}</p>
-            {dureeTotal && <p><span className="font-medium">⏱ Durée totale:</span> {formatDuree(dureeTotal)}</p>}
-            {dureeIntervention && <p className="text-xs text-gray-500">Intervention: {formatDuree(dureeIntervention)}</p>}
-            
-            {/* Photo APRÈS visible par le client */}
-            {incident.photo_apres_url && (
-              <div className="mt-2">
-                <p className="text-xs text-gray-500 mb-1">📷 Photo après intervention:</p>
-                <img 
-                  src={incident.photo_apres_url} 
-                  alt="Après intervention" 
-                  className="w-full max-w-xs h-24 object-cover rounded-lg border"
-                />
-              </div>
-            )}
-            
+            {dureeTotal && <p><span className="font-medium">⏱ {lang === 'en' ? 'Total duration' : 'Durée totale'}:</span> {formatDuree(dureeTotal)}</p>}
+            {dureeIntervention && <p className="text-xs text-gray-500">{lang === 'en' ? 'Intervention' : 'Intervention'}: {formatDuree(dureeIntervention)}</p>}
+
             {!incident.note_client && (
               <Link to={`${createPageUrl('Avis')}?id=${incident.id}`} className="inline-flex items-center gap-1 text-[#00AEEF] hover:underline font-medium">
                 <Star className="w-4 h-4" />
