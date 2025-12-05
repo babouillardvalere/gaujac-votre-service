@@ -13,7 +13,8 @@ import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
 
-const URGENT_CATEGORIES = ['gaz', 'eau', 'electricite'];
+// Catégories qui déclenchent l'urgence automatique (mais peuvent être décochées manuellement)
+const URGENT_CATEGORIES = ['gaz', 'eau', 'electricite', 'guepes', 'frelons'];
 
 export default function Signalement() {
   const navigate = useNavigate();
@@ -87,10 +88,13 @@ export default function Signalement() {
         ? prev.filter(p => p !== problemId)
         : [...prev, problemId];
       
-      const hasUrgent = newSelection.some(p => URGENT_CATEGORIES.includes(p));
-      if (hasUrgent && !urgent) {
+      // Si on ajoute une catégorie urgente et que l'utilisateur n'a pas encore coché urgent manuellement
+      const isAddingUrgentCategory = !prev.includes(problemId) && URGENT_CATEGORIES.includes(problemId);
+      if (isAddingUrgentCategory && !urgent) {
         setUrgent(true);
       }
+      // Note: on ne décoche PAS automatiquement si on retire une catégorie urgente
+      // L'utilisateur garde le contrôle total
       
       return newSelection;
     });
