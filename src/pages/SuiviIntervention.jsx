@@ -208,9 +208,32 @@ export default function SuiviIntervention() {
         status: 'completed',
         color: 'bg-orange-500',
         icon: User,
-        title: t('prise_en_charge'),
+        title: lang === 'en' ? '🚗 Technician on the way' : '🚗 Technicien en route',
         date: incident.date_debut,
         details: <p className="text-sm">{t('collaborateur_label')}: <span className="font-medium">{incident.pris_par}</span></p>
+      });
+    }
+
+    // Photo AVANT si disponible
+    if (incident.photo_avant_url) {
+      steps.push({
+        status: 'completed',
+        color: 'bg-orange-400',
+        icon: Play,
+        title: lang === 'en' ? '📷 Before photo taken' : '📷 Photo AVANT prise',
+        date: incident.photo_avant_timestamp,
+        details: (
+          <div className="space-y-2">
+            <img 
+              src={incident.photo_avant_url} 
+              alt="Avant intervention" 
+              className="w-full max-w-xs h-32 object-cover rounded-lg border-2 border-orange-300"
+            />
+            <p className="text-xs text-gray-500">
+              {incident.photo_avant_timestamp && format(new Date(incident.photo_avant_timestamp), 'dd/MM HH:mm:ss', { locale: fr })}
+            </p>
+          </div>
+        )
       });
     }
 
@@ -219,7 +242,7 @@ export default function SuiviIntervention() {
         status: 'active',
         color: 'bg-blue-500',
         icon: Play,
-        title: t('en_cours'),
+        title: lang === 'en' ? '🔧 Intervention in progress' : '🔧 Intervention en cours',
         date: null,
         details: <p className="text-sm text-blue-600">{t('intervention_en_cours')}</p>
       });
@@ -230,12 +253,12 @@ export default function SuiviIntervention() {
         status: incident.statut === 'en_attente_materiel' ? 'active' : 'completed',
         color: 'bg-[#FFA500]',
         icon: Pause,
-        title: '🟨 Intervention en attente',
+        title: lang === 'en' ? '⏸️ On hold' : '⏸️ En attente',
         date: incident.attente_date,
         details: (
           <div className="text-sm space-y-1">
             {incident.motif_attente && (
-              <p className="text-[#FFA500] font-medium">⏳ Raison : {incident.motif_attente}</p>
+              <p className="text-[#FFA500] font-medium">⏳ {lang === 'en' ? 'Reason' : 'Raison'} : {incident.motif_attente}</p>
             )}
             {!incident.motif_attente && incident.attente_raison && (
               <p><span className="font-medium">{t('raison_attente')}:</span> {getRaisonLabel(incident.attente_raison)}</p>
@@ -247,6 +270,18 @@ export default function SuiviIntervention() {
           </div>
         )
       });
+
+      // Si reprise après attente (statut plus avancé que en_attente_materiel)
+      if (incident.statut !== 'en_attente_materiel' && incident.attente_date) {
+        steps.push({
+          status: 'completed',
+          color: 'bg-blue-400',
+          icon: Play,
+          title: lang === 'en' ? '▶️ Work resumed' : '▶️ Reprise de l\'intervention',
+          date: null,
+          details: <p className="text-sm text-blue-600">{lang === 'en' ? 'Technician resumed work' : 'Le technicien a repris l\'intervention'}</p>
+        });
+      }
     }
 
     if (incident.statut === 'resolu') {
