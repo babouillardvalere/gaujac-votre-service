@@ -55,6 +55,38 @@ export default function Reception() {
             {lang === 'fr' ? 'Gestion des arrivées et départs' : 'Arrivals and departures management'}
           </p>
 
+          {/* Bouton Assistance Client en priorité */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mb-6"
+          >
+            <button
+              onClick={() => navigate(createPageUrl('ReceptionAssistance'))}
+              className="w-full focus:ring-4 focus:ring-[#FFD700] rounded-xl"
+            >
+              <Card className="bg-gradient-to-r from-red-600 to-red-500 border-0 rounded-xl hover:shadow-2xl transition-all">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
+                      <span className="text-4xl">🆘</span>
+                    </div>
+                    <div className="text-left flex-1">
+                      <h2 className="font-heading text-2xl text-white mb-1">
+                        {lang === 'fr' ? 'Assistance Client' : 'Guest Assistance'}
+                      </h2>
+                      <p className="text-sm text-white/90 font-body">
+                        {lang === 'fr' 
+                          ? 'Faire la procédure à sa place (Arrivée, Séjour, Départ)'
+                          : 'Complete procedures on their behalf (Arrival, Stay, Departure)'}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </button>
+          </motion.div>
+
           <div className="space-y-4">
             {modules.map((module, index) => (
               <motion.div
