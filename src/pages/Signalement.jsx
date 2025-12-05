@@ -13,7 +13,7 @@ import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
 
-// Catégories qui déclenchent l'urgence automatique (mais peuvent être décochées manuellement)
+// Catégories qui déclenchent l'urgence automatique (peuvent être décochées manuellement)
 const URGENT_CATEGORIES = ['gaz', 'eau', 'electricite', 'guepes', 'frelons'];
 
 export default function Signalement() {
@@ -23,6 +23,7 @@ export default function Signalement() {
   const [selectedProblems, setSelectedProblems] = useState([]);
   const [description, setDescription] = useState('');
   const [urgent, setUrgent] = useState(false);
+  const [urgentManuallySet, setUrgentManuallySet] = useState(false); // Pour savoir si l'utilisateur a manuellement changé
   const [photo, setPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -88,16 +89,21 @@ export default function Signalement() {
         ? prev.filter(p => p !== problemId)
         : [...prev, problemId];
       
-      // Si on ajoute une catégorie urgente et que l'utilisateur n'a pas encore coché urgent manuellement
+      // Si on AJOUTE une catégorie urgente ET que l'utilisateur n'a PAS manuellement décoché
       const isAddingUrgentCategory = !prev.includes(problemId) && URGENT_CATEGORIES.includes(problemId);
-      if (isAddingUrgentCategory && !urgent) {
+      if (isAddingUrgentCategory && !urgentManuallySet) {
         setUrgent(true);
       }
-      // Note: on ne décoche PAS automatiquement si on retire une catégorie urgente
-      // L'utilisateur garde le contrôle total
+      // Note: on ne décoche JAMAIS automatiquement - l'utilisateur garde le contrôle total
       
       return newSelection;
     });
+  };
+
+  // Gestion manuelle de l'urgence par l'utilisateur
+  const handleUrgentChange = (checked) => {
+    setUrgent(checked);
+    setUrgentManuallySet(true); // L'utilisateur a pris le contrôle
   };
 
   const handlePhotoChange = (e) => {
@@ -290,7 +296,7 @@ export default function Signalement() {
                 </div>
                 <Checkbox
                   checked={urgent}
-                  onCheckedChange={setUrgent}
+                  onCheckedChange={handleUrgentChange}
                   className="data-[state=checked]:bg-[#FFA500] data-[state=checked]:border-[#FFA500]"
                 />
               </label>
