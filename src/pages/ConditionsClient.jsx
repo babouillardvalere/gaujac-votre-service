@@ -182,6 +182,71 @@ export default function ConditionsClient() {
                   </div>
                 </div>
 
+                {/* 6. Clause d'autorisation d'accès */}
+                <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-300">
+                  <div className="flex items-center gap-2 mb-3">
+                    <FileText className="w-5 h-5 text-blue-600" />
+                    <h3 className="font-heading text-[#0077A8]">
+                      {isFrench ? "📜 6. Clause d'autorisation d'accès" : "📜 6. Access authorization clause"}
+                    </h3>
+                  </div>
+                  <div className="font-body text-gray-700 text-sm space-y-3">
+                    <p className="italic text-xs text-gray-600">
+                      {isFrench 
+                        ? "En autorisant l'intervenant du Camping Paradis – Domaine de Gaujac à entrer dans mon hébergement ou sur mon emplacement en mon absence, je reconnais et accepte les éléments suivants :"
+                        : "By authorizing Camping Paradis – Domaine de Gaujac staff to enter my accommodation or pitch in my absence, I acknowledge and accept the following:"}
+                    </p>
+                    
+                    <div className="bg-white rounded-lg p-3 border border-blue-200">
+                      <p className="font-semibold text-[#0077A8] mb-2">
+                        {isFrench ? "1. Responsabilité et cadre d'intervention" : "1. Liability and scope of intervention"}
+                      </p>
+                      <ul className="text-xs space-y-1">
+                        <li>• {isFrench 
+                          ? "Le camping est uniquement responsable des dommages directement causés par l'intervention réalisée, et dans la limite du problème déclaré."
+                          : "The campsite is only responsible for damages directly caused by the intervention, within the scope of the reported issue."}
+                        </li>
+                        <li>• {isFrench 
+                          ? "Je comprends que le camping ne peut garantir la sécurité des effets personnels laissés sans surveillance dans l'hébergement ou sur l'emplacement."
+                          : "I understand that the campsite cannot guarantee the security of personal belongings left unattended in the accommodation or on the pitch."}
+                        </li>
+                        <li>• {isFrench 
+                          ? "Les objets de valeur doivent être conservés par le client ou placés dans un lieu sécurisé."
+                          : "Valuables must be kept by the guest or placed in a secure location."}
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div className="bg-white rounded-lg p-3 border border-blue-200">
+                      <p className="font-semibold text-[#0077A8] mb-2">
+                        {isFrench ? "2. Traçabilité" : "2. Traceability"}
+                      </p>
+                      <p className="text-xs mb-2">
+                        {isFrench ? "L'application enregistre automatiquement :" : "The application automatically records:"}
+                      </p>
+                      <ul className="text-xs space-y-0.5">
+                        <li>• {isFrench ? "la date et l'heure de l'autorisation" : "date and time of authorization"}</li>
+                        <li>• {isFrench ? "les informations d'identification du client" : "guest identification information"}</li>
+                        <li>• {isFrench ? "l'identifiant du logement/emplacement" : "accommodation/pitch identifier"}</li>
+                        <li>• {isFrench ? "les dates du séjour" : "stay dates"}</li>
+                        <li>• {isFrench ? "l'identifiant du signalement" : "report identifier"}</li>
+                        <li>• {isFrench ? "et, si nécessaire, l'adresse IP" : "and, if necessary, IP address"}</li>
+                      </ul>
+                    </div>
+
+                    <div className="bg-white rounded-lg p-3 border border-blue-200">
+                      <p className="font-semibold text-[#0077A8] mb-2">
+                        {isFrench ? "3. Photos avant / après intervention" : "3. Before/after intervention photos"}
+                      </p>
+                      <p className="text-xs">
+                        {isFrench 
+                          ? "Pour assurer le suivi et la protection du personnel et du camping, des photos avant et après intervention peuvent être prises et associées à la fiche d'intervention."
+                          : "To ensure follow-up and protect staff and the campsite, before and after photos may be taken and associated with the intervention record."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </ScrollArea>
 
