@@ -36,6 +36,9 @@ import ClientArriveeIdentite from './pages/ClientArriveeIdentite';
 import ClientArriveeHebergement from './pages/ClientArriveeHebergement';
 import ClientControleInventaire from './pages/ClientControleInventaire';
 import ClientArriveeSuivi from './pages/ClientArriveeSuivi';
+import Reception from './pages/Reception';
+import ReceptionArrivees from './pages/ReceptionArrivees';
+import ReceptionDeparts from './pages/ReceptionDeparts';
 import __Layout from './Layout.jsx';
 
 
@@ -78,6 +81,9 @@ export const PAGES = {
     "ClientArriveeHebergement": ClientArriveeHebergement,
     "ClientControleInventaire": ClientControleInventaire,
     "ClientArriveeSuivi": ClientArriveeSuivi,
+    "Reception": Reception,
+    "ReceptionArrivees": ReceptionArrivees,
+    "ReceptionDeparts": ReceptionDeparts,
 }
 
 export const pagesConfig = {
