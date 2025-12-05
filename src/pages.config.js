@@ -39,6 +39,7 @@ import ClientArriveeSuivi from './pages/ClientArriveeSuivi';
 import Reception from './pages/Reception';
 import ReceptionArrivees from './pages/ReceptionArrivees';
 import ReceptionDeparts from './pages/ReceptionDeparts';
+import ClientDepartInventaire from './pages/ClientDepartInventaire';
 import __Layout from './Layout.jsx';
 
 
@@ -84,6 +85,7 @@ export const PAGES = {
     "Reception": Reception,
     "ReceptionArrivees": ReceptionArrivees,
     "ReceptionDeparts": ReceptionDeparts,
+    "ClientDepartInventaire": ClientDepartInventaire,
 }
 
 export const pagesConfig = {
