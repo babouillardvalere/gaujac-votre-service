@@ -126,7 +126,7 @@ export default function ConditionsClient() {
                       <li>🔧 {isFrench ? "Problème technique (eau, gaz, électricité…)" : "Technical problem (water, gas, electricity...)"}</li>
                       <li>🧹 {isFrench ? "Problème de ménage (literie, vaisselle…)" : "Housekeeping issue (bedding, dishes...)"}</li>
                       <li>🐝 {isFrench ? "Nuisibles (guêpes, frelons, rongeurs)" : "Pests (wasps, hornets, rodents)"}</li>
-                      <li>🪑 {isFrench ? "Matériel cassé" : "Broken equipment"}</li>
+                      <li>🪑 {isFrench ? "Matériel cassé (caution)" : "Broken equipment (deposit)"}</li>
                       <li>⚠️ {isFrench ? "Dysfonctionnements divers" : "Various malfunctions"}</li>
                     </ul>
                     <p className="mt-3 text-xs font-semibold text-[#0077A8]">
