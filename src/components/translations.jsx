@@ -350,7 +350,17 @@ export const translations = {
     client_label: "Client",
     urgent_label: "Urgent",
     non_defini: "Non défini",
-    delai_label: "Délai"
+    delai_label: "Délai",
+    
+    // Séjour terminé
+    sejour_termine: "Votre séjour est terminé",
+    acces_suivi_termine: "Vous ne pouvez plus accéder au suivi des interventions.",
+    merci_visite: "Merci de votre visite au Camping Paradis !",
+    
+    // Piki IA
+    aide_ia_piki: "Aide IA PIKI",
+    assistant_intelligent: "Assistant intelligent",
+    bientot: "Bientôt"
   },
 
   en: {
@@ -704,7 +714,87 @@ export const translations = {
     client_label: "Guest",
     urgent_label: "Urgent",
     non_defini: "Not defined",
-    delai_label: "Delay"
+    delai_label: "Delay",
+    valider: "Confirm",
+    
+    // Attente dialog
+    motif_attente_label: "Reason for hold",
+    motif_attente_obligatoire: "This field is required",
+    motif_attente_placeholder: "Describe the reason for putting on hold...",
+    suggestion_attente_materiel: "Waiting for equipment",
+    suggestion_attente_fournisseur: "Waiting for supplier",
+    suggestion_client_absent: "Guest absent",
+    suggestion_piece_specifique: "Need a specific part",
+    suggestion_second_technicien: "Need a second technician",
+    intervention_en_attente: "Intervention on hold",
+    motif_label: "Reason",
+    materiel_necessaire: "Required equipment",
+    mis_en_attente_le: "Put on hold on",
+    reprendre: "Resume",
+    modifier_motif: "Edit reason",
+    passer_resolu: "Mark as resolved",
+    
+    // Bureau auth
+    connexion_bureau: "Office Login",
+    acces_reserve_bureau: "Access reserved for Reception and Management only.",
+    mot_de_passe_bureau: "Office Password",
+    mot_de_passe_incorrect_bureau: "Incorrect password.",
+    acces_reserve_direction: "Access reserved for reception and management.",
+    verification: "Verifying...",
+    
+    // Bureau page
+    bureau_gestion: "Office - Management & History",
+    intervention_total: "total intervention(s)",
+    deconnexion_bureau: "Office Logout",
+    aujourdhui: "Today",
+    en_retard: "Late",
+    critiques_3j: "Critical (+3d)",
+    historique: "History",
+    statistiques: "Statistics",
+    recherche_filtres: "Search & Filters",
+    reinitialiser: "Reset",
+    avance: "Advanced",
+    nom_client: "Guest name",
+    numero_logement: "Accommodation/pitch number",
+    tous_types: "All types",
+    tous_statuts: "All statuses",
+    toutes_categories: "All categories",
+    tous_hebergements: "All accommodations",
+    urgents_uniquement: "Urgent only",
+    non_urgents: "Non-urgent",
+    toute_journee: "All day",
+    matin: "Morning (6am-12pm)",
+    apres_midi: "Afternoon (12pm-6pm)",
+    soir: "Evening (6pm-10pm)",
+    du: "From",
+    au: "To",
+    resultats_trouves: "result(s) found",
+    sejour: "Stay",
+    type_label: "Type",
+    numero_label: "Number",
+    intervention_label: "Intervention",
+    icones: "Icons",
+    timing: "Timing",
+    signale: "Reported",
+    pris_en_charge: "Taken over",
+    duree_label: "Duration",
+    intervenant_label: "Technician",
+    note_label: "Note",
+    avis_client: "Guest review",
+    fiche_intervention: "Intervention details",
+    total_label: "Total",
+    attente_label: "Wait",
+    reporte: "Postponed",
+    
+    // Séjour terminé
+    sejour_termine: "Your stay has ended",
+    acces_suivi_termine: "You can no longer access intervention tracking.",
+    merci_visite: "Thank you for visiting Camping Paradis!",
+    
+    // Piki IA
+    aide_ia_piki: "PIKI AI Assistant",
+    assistant_intelligent: "Smart assistant",
+    bientot: "Coming soon"
   }
 };
 
