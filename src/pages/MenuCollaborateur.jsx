@@ -8,7 +8,7 @@ import { useNotifications } from '../components/useNotifications';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Wrench, Sparkles, Building2, LogOut, Package, Lock, ListTodo, ClipboardList } from 'lucide-react';
+import { Wrench, Sparkles, Building2, LogOut, Package, Lock, ClipboardList } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 
@@ -77,15 +77,6 @@ export default function MenuCollaborateur() {
       textColor: 'text-white',
       description: t('desc_materiel'),
       badgeCount: counts.materiel
-    },
-    {
-      title: 'Tâches',
-      icon: ListTodo,
-      href: 'Taches',
-      color: 'bg-purple-500',
-      textColor: 'text-white',
-      description: 'Gestion des tâches',
-      badgeCount: counts.taches || 0
     },
     {
       title: t('menu_bureau'),
