@@ -275,6 +275,19 @@ export default function SuiviIntervention() {
             <p><span className="font-medium">{t('intervenant')}:</span> {incident.pris_par}</p>
             {dureeTotal && <p><span className="font-medium">⏱ Durée totale:</span> {formatDuree(dureeTotal)}</p>}
             {dureeIntervention && <p className="text-xs text-gray-500">Intervention: {formatDuree(dureeIntervention)}</p>}
+            
+            {/* Photo APRÈS visible par le client */}
+            {incident.photo_apres_url && (
+              <div className="mt-2">
+                <p className="text-xs text-gray-500 mb-1">📷 Photo après intervention:</p>
+                <img 
+                  src={incident.photo_apres_url} 
+                  alt="Après intervention" 
+                  className="w-full max-w-xs h-24 object-cover rounded-lg border"
+                />
+              </div>
+            )}
+            
             {!incident.note_client && (
               <Link to={`${createPageUrl('Avis')}?id=${incident.id}`} className="inline-flex items-center gap-1 text-[#00AEEF] hover:underline font-medium">
                 <Star className="w-4 h-4" />
