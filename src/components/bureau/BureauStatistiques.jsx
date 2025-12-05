@@ -1,318 +1,278 @@
-import React from 'react';
-import { useTranslation } from '../translations';
-import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Star, AlertTriangle, TrendingUp, Loader2, Users, Home, Package } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { problemTypes } from '../mobilhomeData';
+import { TrendingUp, Clock, Star, Home, Users, MapPin } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { differenceInHours, isThisWeek, isThisMonth, parseISO, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 
-const COLORS = ['#0ea5e9', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+const COLORS = ['#00AEEF', '#FFD700', '#FFA500', '#10b981', '#8b5cf6', '#ec4899', '#ef4444', '#6366f1'];
 
-export default function BureauStatistiques() {
-  const { t } = useTranslation();
+export default function BureauStatistiques({ incidents }) {
+  const [periodeFilter, setPeriodeFilter] = useState('tout');
+  const [categorieFilter, setCategorieFilter] = useState('tous');
 
-  const { data: incidents = [], isLoading } = useQuery({
-    queryKey: ['bureau-stats-incidents'],
-    queryFn: () => base44.entities.Incident.filter({}, '-created_date', 1000)
-  });
-
-  const { data: satisfactions = [] } = useQuery({
-    queryKey: ['bureau-stats-satisfaction'],
-    queryFn: () => base44.entities.Satisfaction.filter({}, '-created_date', 500)
-  });
-
-  const resolus = incidents.filter(i => i.statut === 'resolu');
-  
-  // Temps moyen de résolution
-  const avgDuration = resolus.filter(i => i.duree_resolution_heures).length > 0
-    ? (resolus.filter(i => i.duree_resolution_heures).reduce((sum, i) => sum + i.duree_resolution_heures, 0) / resolus.filter(i => i.duree_resolution_heures).length).toFixed(1)
-    : 0;
-
-  // Satisfaction moyenne
-  const avgRating = satisfactions.length > 0
-    ? (satisfactions.reduce((sum, a) => sum + a.note, 0) / satisfactions.length).toFixed(1)
-    : 0;
-
-  // Urgences
-  const urgentCount = incidents.filter(i => i.urgence).length;
-  const urgentPercent = incidents.length > 0 ? Math.round((urgentCount / incidents.length) * 100) : 0;
-
-  // Rapidité de résolution
-  const tempsCategories = {
-    'Quelques heures': resolus.filter(i => i.duree_resolution_heures && i.duree_resolution_heures < 4).length,
-    'Moins de 24h': resolus.filter(i => i.duree_resolution_heures && i.duree_resolution_heures >= 4 && i.duree_resolution_heures < 24).length,
-    'Plus d\'une journée': resolus.filter(i => i.duree_resolution_heures && i.duree_resolution_heures >= 24 && i.duree_resolution_heures < 72).length,
-    'Plus de 3 jours': resolus.filter(i => i.duree_resolution_heures && i.duree_resolution_heures >= 72).length
+  // Filtrage par période
+  const filterByPeriode = (inc) => {
+    if (periodeFilter === 'tout') return true;
+    if (!inc.date_saisie) return false;
+    const date = parseISO(inc.date_saisie);
+    const now = new Date();
+    if (periodeFilter === 'semaine') {
+      return isWithinInterval(date, { start: startOfWeek(now, { weekStartsOn: 1 }), end: endOfWeek(now, { weekStartsOn: 1 }) });
+    }
+    if (periodeFilter === 'mois') {
+      return isWithinInterval(date, { start: startOfMonth(now), end: endOfMonth(now) });
+    }
+    if (periodeFilter === 'saison') {
+      const startSaison = new Date(now.getFullYear(), 5, 1); // 1er juin
+      const endSaison = new Date(now.getFullYear(), 8, 30); // 30 septembre
+      return isWithinInterval(date, { start: startSaison, end: endSaison });
+    }
+    return true;
   };
 
-  const tempsData = Object.entries(tempsCategories).map(([name, value]) => ({ name, value }));
+  const filteredIncidents = incidents.filter(filterByPeriode);
 
-  // Par type de problème
-  const parType = problemTypes.map(type => ({
-    name: type.label,
-    value: incidents.filter(i => i.type_probleme === type.id).length
-  })).filter(d => d.value > 0).sort((a, b) => b.value - a.value);
+  // Stats par mobil-home
+  const mobilhomeStats = Object.entries(
+    filteredIncidents
+      .filter(i => i.logement)
+      .reduce((acc, i) => {
+        acc[i.logement] = (acc[i.logement] || 0) + 1;
+        return acc;
+      }, {})
+  ).map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value);
 
-  // Par technicien
-  const parTechnicien = resolus.reduce((acc, i) => {
-    if (i.technicien) {
-      if (!acc[i.technicien]) {
-        acc[i.technicien] = { count: 0, totalHours: 0 };
-      }
-      acc[i.technicien].count++;
-      acc[i.technicien].totalHours += i.duree_resolution_heures || 0;
-    }
-    return acc;
-  }, {});
+  // Stats par emplacement
+  const emplacementStats = Object.entries(
+    filteredIncidents
+      .filter(i => i.emplacement)
+      .reduce((acc, i) => {
+        acc[i.emplacement] = (acc[i.emplacement] || 0) + 1;
+        return acc;
+      }, {})
+  ).map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value);
 
-  const technicienData = Object.entries(parTechnicien)
-    .map(([name, data]) => ({
-      name,
-      count: data.count,
-      avgHours: data.count > 0 ? (data.totalHours / data.count).toFixed(1) : 0
-    }))
-    .sort((a, b) => b.count - a.count);
+  // Stats avis (1 à 5 étoiles)
+  const avisStats = [1, 2, 3, 4, 5].map(note => ({
+    name: `${note} ⭐`,
+    value: filteredIncidents.filter(i => i.note_client === note).length,
+    note
+  }));
 
-  // Logements à problèmes récurrents
-  const parLogement = incidents.reduce((acc, i) => {
-    acc[i.mobilhome_id] = (acc[i.mobilhome_id] || 0) + 1;
-    return acc;
-  }, {});
+  const totalAvis = avisStats.reduce((sum, a) => sum + a.value, 0);
+  const scoreMoyen = totalAvis > 0
+    ? (avisStats.reduce((sum, a) => sum + (a.note * a.value), 0) / totalAvis).toFixed(2)
+    : 0;
 
-  const topLogements = Object.entries(parLogement)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10);
-
-  // Matériel utilisé
-  const materielUtilise = resolus.reduce((acc, i) => {
-    if (i.materiel_utilise) {
-      i.materiel_utilise.forEach(m => {
-        acc[m] = (acc[m] || 0) + 1;
-      });
-    }
-    return acc;
-  }, {});
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
-      </div>
-    );
-  }
+  // KPIs
+  const resolus = filteredIncidents.filter(i => i.statut === 'resolu' && i.date_resolution && i.date_saisie);
+  const tempsResolution = resolus.map(i => differenceInHours(new Date(i.date_resolution), new Date(i.date_saisie)));
+  const tempsMoyen = tempsResolution.length > 0 ? (tempsResolution.reduce((a, b) => a + b, 0) / tempsResolution.length).toFixed(1) : 0;
+  const moins3h = tempsResolution.filter(t => t < 3).length;
 
   return (
     <div className="space-y-6">
-      {/* KPI Cards */}
+      {/* Filtres */}
+      <div className="flex gap-3 flex-wrap">
+        <Select value={periodeFilter} onValueChange={setPeriodeFilter}>
+          <SelectTrigger className="w-40 border-[#FFA500]/30 rounded-xl">
+            <SelectValue placeholder="Période" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="tout">📅 Toute période</SelectItem>
+            <SelectItem value="semaine">📆 Cette semaine</SelectItem>
+            <SelectItem value="mois">🗓 Ce mois</SelectItem>
+            <SelectItem value="saison">☀️ Saison (juin-sept)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-sky-50 to-sky-100 border-0">
+        <Card className="border-2 border-[#00AEEF] rounded-xl">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-sky-500 rounded-lg flex items-center justify-center">
-                <Clock className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <p className="text-xs text-sky-600">Temps moyen</p>
-                <p className="text-2xl font-bold text-sky-700">{avgDuration}h</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-0">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center">
-                <Star className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <p className="text-xs text-amber-600">Satisfaction</p>
-                <p className="text-2xl font-bold text-amber-700">{avgRating}/5</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-red-50 to-red-100 border-0">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center">
-                <AlertTriangle className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <p className="text-xs text-red-600">Urgences</p>
-                <p className="text-2xl font-bold text-red-700">{urgentPercent}%</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-0">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-[#00AEEF] rounded-lg flex items-center justify-center">
                 <TrendingUp className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-xs text-emerald-600">Total interventions</p>
-                <p className="text-2xl font-bold text-emerald-700">{incidents.length}</p>
+                <p className="text-xs font-body text-[#0077A8]">Total interventions</p>
+                <p className="text-2xl font-heading text-[#0077A8]">{filteredIncidents.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-[#FFD700] rounded-xl">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#FFD700] rounded-lg flex items-center justify-center">
+                <Clock className="w-5 h-5 text-[#0077A8]" />
+              </div>
+              <div>
+                <p className="text-xs font-body text-[#0077A8]">Temps moyen</p>
+                <p className="text-2xl font-heading text-[#0077A8]">{tempsMoyen}h</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-[#FFA500] rounded-xl">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#FFA500] rounded-lg flex items-center justify-center">
+                <Star className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-xs font-body text-[#0077A8]">Note moyenne</p>
+                <p className="text-2xl font-heading text-[#0077A8]">{scoreMoyen}/5</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-green-500 rounded-xl">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-xs font-body text-[#0077A8]">{"<3h"}</p>
+                <p className="text-2xl font-heading text-[#0077A8]">
+                  {resolus.length > 0 ? Math.round(moins3h / resolus.length * 100) : 0}%
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Charts Row 1 */}
       <div className="grid lg:grid-cols-2 gap-6">
-        <Card className="shadow-sm">
+        {/* Graphique 1: Interventions par mobil-home */}
+        <Card className="border-2 border-[#00AEEF]/30 rounded-xl">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Types de problèmes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={parType.slice(0, 8)} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" />
-                  <YAxis type="category" dataKey="name" width={100} fontSize={12} />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="#0ea5e9" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Rapidité d'intervention</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={tempsData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                    label={({ name, percent }) => percent > 0 ? `${(percent * 100).toFixed(0)}%` : ''}
-                  >
-                    {tempsData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={['#10b981', '#0ea5e9', '#f59e0b', '#ef4444'][index]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex flex-wrap gap-2 justify-center mt-2">
-              {[
-                { label: 'Quelques heures', color: 'bg-emerald-500' },
-                { label: '<24h', color: 'bg-sky-500' },
-                { label: '>1 jour', color: 'bg-amber-500' },
-                { label: '>3 jours', color: 'bg-red-500' }
-              ].map(item => (
-                <div key={item.label} className="flex items-center gap-1 text-xs">
-                  <div className={`w-2 h-2 rounded-full ${item.color}`} />
-                  <span>{item.label}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Charts Row 2 */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        <Card className="shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Charge par technicien
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {technicienData.slice(0, 6).map((tech, idx) => (
-                <div key={tech.name} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                      ['bg-blue-100 text-blue-600', 'bg-emerald-100 text-emerald-600', 'bg-purple-100 text-purple-600', 'bg-amber-100 text-amber-600'][idx % 4]
-                    }`}>
-                      {tech.name[0].toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="font-medium">{tech.name}</p>
-                      <p className="text-xs text-slate-500">Moy: {tech.avgHours}h</p>
-                    </div>
-                  </div>
-                  <Badge variant="outline">{tech.count} interventions</Badge>
-                </div>
-              ))}
-              {technicienData.length === 0 && (
-                <p className="text-center text-slate-500 py-4">Aucune donnée</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
+            <CardTitle className="text-base font-heading text-[#0077A8] flex items-center gap-2">
               <Home className="w-4 h-4" />
-              Logements à problèmes récurrents
+              📊 Interventions par Mobil-home
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {topLogements.map(([num, count], idx) => (
-                <div key={num} className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <span className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${
-                      idx < 3 ? 'bg-red-100 text-red-600' : 'bg-slate-200 text-slate-600'
-                    }`}>
-                      {idx + 1}
-                    </span>
-                    <span className="font-medium">#{num}</span>
+            {mobilhomeStats.length > 0 ? (
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={mobilhomeStats.slice(0, 15)} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis type="number" />
+                    <YAxis type="category" dataKey="name" width={60} fontSize={11} />
+                    <Tooltip />
+                    <Bar dataKey="value" fill="#00AEEF" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <p className="text-center text-gray-500 py-8">Aucune donnée</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Graphique 2: Interventions par emplacement */}
+        <Card className="border-2 border-[#00AEEF]/30 rounded-xl">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-heading text-[#0077A8] flex items-center gap-2">
+              <MapPin className="w-4 h-4" />
+              📊 Interventions par Emplacement
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {emplacementStats.length > 0 ? (
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={emplacementStats.slice(0, 15)} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis type="number" />
+                    <YAxis type="category" dataKey="name" width={60} fontSize={11} />
+                    <Tooltip />
+                    <Bar dataKey="value" fill="#FFD700" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <p className="text-center text-gray-500 py-8">Aucune donnée</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Graphique 3: Répartition des avis */}
+        <Card className="border-2 border-[#00AEEF]/30 rounded-xl lg:col-span-2">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-heading text-[#0077A8] flex items-center gap-2">
+              <Star className="w-4 h-4" />
+              ⭐ Répartition des avis clients
+              <Badge className="bg-[#FFD700] text-[#0077A8] ml-2">
+                Moyenne: {scoreMoyen}/5
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Camembert */}
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={avisStats.filter(a => a.value > 0)}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                    >
+                      {avisStats.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              
+              {/* Barres horizontales */}
+              <div className="space-y-3">
+                {avisStats.map((avis, idx) => (
+                  <div key={avis.note}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-body">{avis.name}</span>
+                      <span className="font-heading text-[#0077A8]">
+                        {avis.value} ({totalAvis > 0 ? Math.round(avis.value / totalAvis * 100) : 0}%)
+                      </span>
+                    </div>
+                    <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full transition-all" 
+                        style={{ 
+                          width: `${totalAvis > 0 ? (avis.value / totalAvis * 100) : 0}%`,
+                          backgroundColor: COLORS[idx]
+                        }} 
+                      />
+                    </div>
                   </div>
-                  <span className="text-sm text-slate-500">{count} incidents</span>
+                ))}
+                <div className="mt-4 p-3 bg-[#FFD700]/20 rounded-xl">
+                  <p className="text-sm font-body text-[#0077A8]">
+                    <strong>Total avis:</strong> {totalAvis} | <strong>Score global:</strong> {scoreMoyen}/5 ⭐
+                  </p>
                 </div>
-              ))}
-              {topLogements.length === 0 && (
-                <p className="text-center text-slate-500 py-4">Aucune donnée</p>
-              )}
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Matériel utilisé */}
-      {Object.keys(materielUtilise).length > 0 && (
-        <Card className="shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Package className="w-4 h-4" />
-              Matériel remplacé (saison)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Object.entries(materielUtilise).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([nom, count]) => (
-                <div key={nom} className="bg-slate-50 rounded-lg p-3 text-center">
-                  <p className="text-2xl font-bold text-slate-700">{count}</p>
-                  <p className="text-xs text-slate-500">{nom}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
