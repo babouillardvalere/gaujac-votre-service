@@ -1401,6 +1401,297 @@ Rapport généré automatiquement par Camping Paradis`;
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog Rapport de Litige */}
+      <Dialog open={showLitigeDialog} onOpenChange={setShowLitigeDialog}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-red-600 flex items-center gap-2">
+              <Zap className="w-5 h-5" />
+              {t('rapport_litige')}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {/* Sélection intervention */}
+            <div>
+              <label className="text-sm font-heading text-[#0077A8] block mb-2">
+                {t('selectionner_intervention')}
+              </label>
+              <Select
+                value={selectedIncidentForLitige?.id || ''}
+                onValueChange={(v) => {
+                  const inc = incidents.find(i => i.id === v);
+                  setSelectedIncidentForLitige(inc);
+                }}
+              >
+                <SelectTrigger className="rounded-xl">
+                  <SelectValue placeholder={t('selectionner_intervention')} />
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  {incidents.filter(i => i.statut === 'resolu').length === 0 ? (
+                    <SelectItem value="none" disabled>{t('aucune_intervention')}</SelectItem>
+                  ) : (
+                    incidents
+                      .filter(i => i.statut === 'resolu')
+                      .sort((a, b) => new Date(b.date_resolution) - new Date(a.date_resolution))
+                      .slice(0, 50)
+                      .map(inc => (
+                        <SelectItem key={inc.id} value={inc.id}>
+                          {inc.logement || inc.emplacement} - {inc.client_prenom} {inc.client_nom} ({inc.date_resolution ? format(new Date(inc.date_resolution), 'dd/MM/yy') : '-'})
+                        </SelectItem>
+                      ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Détails de l'intervention sélectionnée */}
+            {selectedIncidentForLitige && (
+              <div className="space-y-4">
+                <Card className="border-2 border-red-200 rounded-xl bg-red-50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="font-heading text-red-700 text-lg">
+                      {t('informations_litige')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {/* Infos principales */}
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="bg-white p-3 rounded-lg">
+                        <p className="text-xs text-gray-500 font-heading">{t('date_intervention')}</p>
+                        <p className="font-body font-medium">
+                          {selectedIncidentForLitige.date_saisie && format(new Date(selectedIncidentForLitige.date_saisie), 'dd/MM/yyyy HH:mm')}
+                          {selectedIncidentForLitige.date_resolution && (
+                            <span className="text-green-600"> → {format(new Date(selectedIncidentForLitige.date_resolution), 'dd/MM/yyyy HH:mm')}</span>
+                          )}
+                        </p>
+                      </div>
+                      <div className="bg-white p-3 rounded-lg">
+                        <p className="text-xs text-gray-500 font-heading">{t('client_info')}</p>
+                        <p className="font-body font-medium">
+                          {selectedIncidentForLitige.client_prenom} {selectedIncidentForLitige.client_nom}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Séjour: {selectedIncidentForLitige.date_arrivee} → {selectedIncidentForLitige.date_depart}
+                        </p>
+                      </div>
+                      <div className="bg-white p-3 rounded-lg">
+                        <p className="text-xs text-gray-500 font-heading">{t('hebergement_info')}</p>
+                        <p className="font-body font-medium">
+                          {selectedIncidentForLitige.logement ? '🏠 Mobil-home' : '⛺ Emplacement'} {selectedIncidentForLitige.logement || selectedIncidentForLitige.emplacement}
+                        </p>
+                      </div>
+                      <div className="bg-white p-3 rounded-lg">
+                        <p className="text-xs text-gray-500 font-heading">{t('collaborateur_info')}</p>
+                        <p className="font-body font-medium">
+                          {selectedIncidentForLitige.pris_par || '-'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    <div className="bg-white p-3 rounded-lg">
+                      <p className="text-xs text-gray-500 font-heading mb-1">Description</p>
+                      <p className="font-body text-sm">{selectedIncidentForLitige.description}</p>
+                    </div>
+
+                    {/* Photos preuves */}
+                    <div className="bg-white p-4 rounded-lg">
+                      <p className="text-sm font-heading text-[#0077A8] mb-3 flex items-center gap-2">
+                        📷 {t('photos_preuves')}
+                      </p>
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* Photo AVANT */}
+                        <div className="space-y-2">
+                          <p className="text-xs font-heading text-orange-600">{t('photo_avant')}</p>
+                          {selectedIncidentForLitige.photo_avant_url ? (
+                            <>
+                              <img 
+                                src={selectedIncidentForLitige.photo_avant_url} 
+                                alt="Avant" 
+                                className="w-full h-40 object-cover rounded-lg border-2 border-orange-300"
+                              />
+                              <p className="text-xs text-gray-500">
+                                {selectedIncidentForLitige.photo_avant_timestamp && format(new Date(selectedIncidentForLitige.photo_avant_timestamp), 'dd/MM/yyyy HH:mm:ss')}
+                              </p>
+                              {selectedIncidentForLitige.photo_avant_hash && (
+                                <div className="flex items-center gap-1">
+                                  <p className="text-xs text-gray-400 font-mono truncate flex-1">
+                                    SHA-256: {selectedIncidentForLitige.photo_avant_hash.substring(0, 20)}...
+                                  </p>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 px-2"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(selectedIncidentForLitige.photo_avant_hash);
+                                      toast.success(t('copier_hash'));
+                                    }}
+                                  >
+                                    📋
+                                  </Button>
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <div className="w-full h-40 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-sm">
+                              Aucune photo
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Photo APRÈS */}
+                        <div className="space-y-2">
+                          <p className="text-xs font-heading text-green-600">{t('photo_apres')}</p>
+                          {selectedIncidentForLitige.photo_apres_url ? (
+                            <>
+                              <img 
+                                src={selectedIncidentForLitige.photo_apres_url} 
+                                alt="Après" 
+                                className="w-full h-40 object-cover rounded-lg border-2 border-green-300"
+                              />
+                              <p className="text-xs text-gray-500">
+                                {selectedIncidentForLitige.photo_apres_timestamp && format(new Date(selectedIncidentForLitige.photo_apres_timestamp), 'dd/MM/yyyy HH:mm:ss')}
+                              </p>
+                              {selectedIncidentForLitige.photo_apres_hash && (
+                                <div className="flex items-center gap-1">
+                                  <p className="text-xs text-gray-400 font-mono truncate flex-1">
+                                    SHA-256: {selectedIncidentForLitige.photo_apres_hash.substring(0, 20)}...
+                                  </p>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 px-2"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(selectedIncidentForLitige.photo_apres_hash);
+                                      toast.success(t('copier_hash'));
+                                    }}
+                                  >
+                                    📋
+                                  </Button>
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <div className="w-full h-40 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-sm">
+                              Aucune photo
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Photo client (signalement initial) */}
+                    {selectedIncidentForLitige.photo_url && (
+                      <div className="bg-white p-3 rounded-lg">
+                        <p className="text-xs font-heading text-gray-600 mb-2">📸 Photo du signalement (client)</p>
+                        <img 
+                          src={selectedIncidentForLitige.photo_url} 
+                          alt="Signalement" 
+                          className="w-full max-w-xs h-32 object-cover rounded-lg border"
+                        />
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Email pour envoi */}
+                <div>
+                  <label className="text-sm font-heading text-[#0077A8] block mb-2">
+                    {t('envoyer_email_litige')}
+                  </label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="email"
+                      placeholder="email@example.com"
+                      value={litigeEmail}
+                      onChange={(e) => setLitigeEmail(e.target.value)}
+                      className="rounded-xl flex-1"
+                    />
+                    <Button
+                      onClick={async () => {
+                        if (!litigeEmail) {
+                          toast.error('Veuillez saisir un email');
+                          return;
+                        }
+                        const inc = selectedIncidentForLitige;
+                        const body = `
+RAPPORT DE LITIGE - CAMPING PARADIS
+===================================
+
+INTERVENTION #${inc.id}
+
+DATE
+----
+• Signalement: ${inc.date_saisie ? format(new Date(inc.date_saisie), 'dd/MM/yyyy HH:mm') : '-'}
+• Résolution: ${inc.date_resolution ? format(new Date(inc.date_resolution), 'dd/MM/yyyy HH:mm') : '-'}
+
+CLIENT
+------
+• Nom: ${inc.client_prenom} ${inc.client_nom}
+• Séjour: ${inc.date_arrivee} → ${inc.date_depart}
+
+HÉBERGEMENT
+-----------
+• Type: ${inc.logement ? 'Mobil-home' : 'Emplacement'}
+• Numéro: ${inc.logement || inc.emplacement}
+
+INTERVENANT
+-----------
+• Collaborateur: ${inc.pris_par || 'Non renseigné'}
+
+DESCRIPTION
+-----------
+${inc.description}
+
+PREUVES PHOTOGRAPHIQUES
+-----------------------
+${inc.photo_avant_url ? `• Photo AVANT: ${inc.photo_avant_url}\n  Date: ${inc.photo_avant_timestamp ? format(new Date(inc.photo_avant_timestamp), 'dd/MM/yyyy HH:mm:ss') : '-'}\n  Hash SHA-256: ${inc.photo_avant_hash || '-'}` : '• Photo AVANT: Non disponible'}
+
+${inc.photo_apres_url ? `• Photo APRÈS: ${inc.photo_apres_url}\n  Date: ${inc.photo_apres_timestamp ? format(new Date(inc.photo_apres_timestamp), 'dd/MM/yyyy HH:mm:ss') : '-'}\n  Hash SHA-256: ${inc.photo_apres_hash || '-'}` : '• Photo APRÈS: Non disponible'}
+
+${inc.photo_url ? `• Photo signalement client: ${inc.photo_url}` : ''}
+
+---
+Rapport généré le ${format(new Date(), 'dd/MM/yyyy HH:mm')}
+Camping Paradis - Domaine de Gaujac
+                        `.trim();
+
+                        try {
+                          await base44.integrations.Core.SendEmail({
+                            to: litigeEmail,
+                            subject: `Camping Paradis - Rapport de litige #${inc.logement || inc.emplacement} - ${inc.client_nom}`,
+                            body
+                          });
+                          toast.success(t('rapport_litige_genere'));
+                          setLitigeEmail('');
+                        } catch (err) {
+                          toast.error('Erreur lors de l\'envoi');
+                        }
+                      }}
+                      className="bg-red-500 hover:bg-red-600 text-white rounded-xl"
+                    >
+                      <Mail className="w-4 h-4 mr-2" />
+                      Envoyer
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowLitigeDialog(false);
+              setSelectedIncidentForLitige(null);
+              setLitigeEmail('');
+            }} className="rounded-xl">
+              Fermer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
