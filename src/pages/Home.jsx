@@ -70,20 +70,22 @@ export default function Home() {
       subtitleColor: 'text-white/90',
       arrowColor: 'text-white',
       description: t('signaler_probleme'),
-      ariaLabel: 'Signaler un problème - Accéder au formulaire client'
+      ariaLabel: 'Signaler un problème - Accéder au formulaire client',
+      iconColor: 'text-white'
     },
     {
       title: t('suivi_intervention'),
       icon: Search,
       href: '/SuiviIntervention',
-      bgColor: 'bg-white',
+      bgColor: 'bg-[#FFD700]',
       borderColor: 'border-[#FFD700]',
-      iconBg: 'bg-[#FFD700]',
+      iconBg: 'bg-[#00AEEF]',
       textColor: 'text-[#0077A8]',
-      subtitleColor: 'text-gray-600',
-      arrowColor: 'text-[#FFD700]',
+      subtitleColor: 'text-[#0077A8]',
+      arrowColor: 'text-[#0077A8]',
       description: t('suivre_demande'),
-      ariaLabel: 'Suivre votre demande - Voir le statut de votre intervention'
+      ariaLabel: 'Suivre votre demande - Voir le statut de votre intervention',
+      iconColor: 'text-white'
     },
     {
       title: t('avis'),
@@ -153,7 +155,7 @@ export default function Home() {
                   <div className="flex items-center justify-between p-6 h-full">
                     <div className="flex items-center gap-4">
                       <div className={`w-14 h-14 rounded-xl ${item.iconBg} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`} aria-hidden="true">
-                        <item.icon className={`w-7 h-7 ${item.textColor === 'text-white' ? 'text-white' : 'text-white'}`} aria-hidden="true" />
+                        <item.icon className={`w-7 h-7 ${item.iconColor || 'text-white'}`} aria-hidden="true" />
                       </div>
                       <div>
                         <h2 className={`font-heading text-2xl ${item.textColor} mb-1`}>
