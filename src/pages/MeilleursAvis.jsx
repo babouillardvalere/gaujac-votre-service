@@ -236,17 +236,25 @@ export default function MeilleursAvis() {
           )}
         </div>
 
-        {/* Bouton retour */}
+        {/* Boutons */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="mt-8 text-center"
+          className="mt-8 flex flex-col gap-3"
         >
+          <Link to={createPageUrl('AvisIdentification')}>
+            <Button 
+              className="w-full bg-[#FFD700] hover:bg-[#FFA500] text-[#0077A8] rounded-xl font-heading h-12"
+            >
+              <Star className="w-5 h-5 mr-2" />
+              {t('donner_avis')}
+            </Button>
+          </Link>
           <Link to={createPageUrl('Home')}>
             <Button 
               variant="outline" 
-              className="border-2 border-[#00AEEF] text-[#0077A8] hover:bg-[#00AEEF]/10 rounded-xl font-heading"
+              className="w-full border-2 border-[#00AEEF] text-[#0077A8] hover:bg-[#00AEEF]/10 rounded-xl font-heading"
             >
               <Home className="w-4 h-4 mr-2" />
               {t('retour_accueil')}

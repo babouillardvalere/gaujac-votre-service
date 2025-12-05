@@ -56,12 +56,12 @@ export default function Home() {
     {
       title: t('avis'),
       icon: Star,
-      href: '/AvisIdentification',
+      href: '/MeilleursAvis',
       color: 'bg-[#FFD700]',
       textColor: 'text-[#0077A8]',
       description: t('donner_avis'),
-      ariaLabel: 'Donner votre avis - Noter une intervention',
-      clientInfo: hasUserInfo ? `${userPrenom} ${userName}` : null
+      ariaLabel: 'Voir les avis clients',
+      clientInfo: null
     },
     {
       title: t('collaborateur'),
