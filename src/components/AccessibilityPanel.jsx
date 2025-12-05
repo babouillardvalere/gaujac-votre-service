@@ -30,7 +30,35 @@ const translations = {
     text_reset: 'Taille de texte réinitialisée',
     contrast_on: 'Contraste élevé activé',
     contrast_off: 'Contraste normal',
-    current_size: 'Taille actuelle'
+    current_size: 'Taille actuelle',
+    // Nouvelles traductions
+    daltonism_mode: 'Mode Daltonien',
+    daltonism_desc: 'Adapter les couleurs pour les différents types de daltonisme',
+    disabled: 'Désactivé',
+    protanopia: 'Protanopie',
+    deuteranopia: 'Deutéranopie',
+    tritanopia: 'Tritanopie',
+    easy_reading: 'Mode facile à lire',
+    easy_reading_desc: 'Phrases courtes et vocabulaire simplifié',
+    focus_mode: 'Mode concentration',
+    focus_mode_desc: 'Réduit les distractions visuelles (TDAH)',
+    big_buttons: 'Navigation simplifiée',
+    big_buttons_desc: 'Grosses zones cliquables',
+    haptic_feedback: 'Retour tactile',
+    haptic_feedback_desc: 'Vibrations sur les actions (mobile)',
+    subtitles: 'Sous-titres automatiques',
+    subtitles_desc: 'Transcription des messages vocaux',
+    cursor_size: 'Curseur visible',
+    cursor_size_desc: 'Taille du curseur renforcée',
+    cursor_small: 'Petite',
+    cursor_medium: 'Moyenne',
+    cursor_large: 'Très grande',
+    guided_mode: 'Lecture guidée',
+    guided_mode_desc: 'Cadre lumineux sur l\'élément actif',
+    visual_section: 'Vision',
+    cognitive_section: 'Cognition',
+    motor_section: 'Motricité',
+    audio_section: 'Audio'
   },
   en: {
     accessibility: 'Accessibility',
@@ -55,14 +83,50 @@ const translations = {
     text_reset: 'Text size reset',
     contrast_on: 'High contrast enabled',
     contrast_off: 'Normal contrast',
-    current_size: 'Current size'
+    current_size: 'Current size',
+    // New translations
+    daltonism_mode: 'Color Blind Mode',
+    daltonism_desc: 'Adapt colors for different types of color blindness',
+    disabled: 'Disabled',
+    protanopia: 'Protanopia',
+    deuteranopia: 'Deuteranopia',
+    tritanopia: 'Tritanopia',
+    easy_reading: 'Easy Reading',
+    easy_reading_desc: 'Short sentences and simplified vocabulary',
+    focus_mode: 'Focus Mode',
+    focus_mode_desc: 'Reduce visual distractions (ADHD)',
+    big_buttons: 'Simplified Navigation',
+    big_buttons_desc: 'Large clickable areas',
+    haptic_feedback: 'Haptic Feedback',
+    haptic_feedback_desc: 'Vibrations on actions (mobile)',
+    subtitles: 'Auto Subtitles',
+    subtitles_desc: 'Voice message transcription',
+    cursor_size: 'Visible Cursor',
+    cursor_size_desc: 'Enhanced cursor size',
+    cursor_small: 'Small',
+    cursor_medium: 'Medium',
+    cursor_large: 'Very Large',
+    guided_mode: 'Guided Reading',
+    guided_mode_desc: 'Highlighted frame on active element',
+    visual_section: 'Vision',
+    cognitive_section: 'Cognition',
+    motor_section: 'Motor Skills',
+    audio_section: 'Audio'
   }
 };
 
 const defaultSettings = {
   fontSize: 100,
   highContrast: false,
-  speechEnabled: false
+  speechEnabled: false,
+  daltonismMode: 'disabled', // disabled, protanopia, deuteranopia, tritanopia
+  easyReading: false,
+  focusMode: false,
+  bigButtons: false,
+  hapticFeedback: false,
+  subtitles: false,
+  cursorSize: 'small', // small, medium, large
+  guidedMode: false
 };
 
 export const getAccessibilitySettings = () => {
@@ -83,13 +147,48 @@ export const saveAccessibilitySettings = (settings) => {
 export const applyAccessibilityStyles = (settings) => {
   document.documentElement.style.fontSize = `${settings.fontSize}%`;
   
+  // Contraste
   if (settings.highContrast) {
     document.body.classList.add('high-contrast-mode');
   } else {
     document.body.classList.remove('high-contrast-mode');
   }
   
-  // Mettre à jour l'attribut pour le speech
+  // Daltonisme
+  document.body.setAttribute('data-daltonism-mode', settings.daltonismMode || 'disabled');
+  
+  // Easy reading
+  if (settings.easyReading) {
+    document.body.classList.add('easy-reading-mode');
+  } else {
+    document.body.classList.remove('easy-reading-mode');
+  }
+  
+  // Focus mode
+  if (settings.focusMode) {
+    document.body.classList.add('focus-mode');
+  } else {
+    document.body.classList.remove('focus-mode');
+  }
+  
+  // Big buttons
+  if (settings.bigButtons) {
+    document.body.classList.add('big-buttons-mode');
+  } else {
+    document.body.classList.remove('big-buttons-mode');
+  }
+  
+  // Cursor size
+  document.body.setAttribute('data-cursor-size', settings.cursorSize || 'small');
+  
+  // Guided mode
+  if (settings.guidedMode) {
+    document.body.classList.add('guided-mode');
+  } else {
+    document.body.classList.remove('guided-mode');
+  }
+  
+  // Speech
   if (settings.speechEnabled) {
     document.body.setAttribute('data-speech-enabled', 'true');
   } else {
@@ -236,6 +335,7 @@ export default function AccessibilityPanel() {
     const style = document.createElement('style');
     style.id = 'accessibility-styles';
     style.textContent = `
+      /* Contraste élevé */
       .high-contrast-mode {
         background: #000 !important;
         color: #FFFF00 !important;
@@ -259,17 +359,107 @@ export default function AccessibilityPanel() {
         filter: grayscale(100%) contrast(1.2);
       }
       
+      /* Daltonisme - Protanopie (rouge-vert) */
+      body[data-daltonism-mode="protanopia"] {
+        filter: url('#protanopia-filter');
+      }
+      body[data-daltonism-mode="protanopia"] .bg-red-500,
+      body[data-daltonism-mode="protanopia"] .text-red-500 {
+        background-color: #0077A8 !important;
+        color: #0077A8 !important;
+      }
+      body[data-daltonism-mode="protanopia"] .bg-green-500,
+      body[data-daltonism-mode="protanopia"] .text-green-500 {
+        background-color: #FFD700 !important;
+        color: #FFD700 !important;
+      }
+      
+      /* Daltonisme - Deutéranopie (rouge-vert) */
+      body[data-daltonism-mode="deuteranopia"] {
+        filter: brightness(1.1) saturate(1.3);
+      }
+      body[data-daltonism-mode="deuteranopia"] .bg-red-500 {
+        background-color: #FF6B00 !important;
+      }
+      body[data-daltonism-mode="deuteranopia"] .bg-green-500 {
+        background-color: #0099FF !important;
+      }
+      
+      /* Daltonisme - Tritanopie (bleu-jaune) */
+      body[data-daltonism-mode="tritanopia"] .bg-blue-500 {
+        background-color: #CC0066 !important;
+      }
+      body[data-daltonism-mode="tritanopia"] .text-blue-500 {
+        color: #CC0066 !important;
+      }
+      
+      /* Mode facile à lire */
+      .easy-reading-mode {
+        line-height: 1.8 !important;
+        letter-spacing: 0.05em !important;
+      }
+      .easy-reading-mode * {
+        font-family: Arial, sans-serif !important;
+        line-height: 1.8 !important;
+      }
+      .easy-reading-mode p, .easy-reading-mode span {
+        max-width: 70ch !important;
+      }
+      
+      /* Mode concentration/focus (TDAH) */
+      .focus-mode * {
+        animation: none !important;
+        transition: none !important;
+      }
+      .focus-mode [class*="opacity-"],
+      .focus-mode [class*="blur-"] {
+        opacity: 1 !important;
+        filter: none !important;
+      }
+      .focus-mode .fixed:not(.z-50):not([role="dialog"]) {
+        display: none !important;
+      }
+      
+      /* Gros boutons */
+      .big-buttons-mode button,
+      .big-buttons-mode a,
+      .big-buttons-mode [role="button"],
+      .big-buttons-mode input,
+      .big-buttons-mode textarea {
+        min-height: 60px !important;
+        min-width: 60px !important;
+        padding: 16px !important;
+        font-size: 1.2em !important;
+      }
+      
+      /* Curseur personnalisé */
+      body[data-cursor-size="medium"] * {
+        cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><circle cx="16" cy="16" r="8" fill="black" stroke="white" stroke-width="2"/></svg>') 16 16, auto !important;
+      }
+      body[data-cursor-size="large"] * {
+        cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><circle cx="24" cy="24" r="12" fill="red" stroke="white" stroke-width="3"/></svg>') 24 24, auto !important;
+      }
+      
+      /* Mode guidé */
+      .guided-mode *:focus {
+        outline: 4px solid #FFD700 !important;
+        outline-offset: 4px !important;
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.8) !important;
+      }
+      
+      /* Focus clavier */
       *:focus {
         outline: 3px solid #FFD700 !important;
         outline-offset: 2px !important;
       }
       
+      /* Zones cliquables minimum */
       button, a, input, textarea, select, [role="button"], [tabindex="0"] {
         min-height: 44px;
         min-width: 44px;
       }
       
-      /* Animation pour indiquer que la lecture vocale est active */
+      /* Indicateur lecture vocale */
       body[data-speech-enabled="true"] *:hover,
       body[data-speech-enabled="true"] *:focus {
         outline: 2px dashed #00AEEF !important;
@@ -339,6 +529,53 @@ export default function AccessibilityPanel() {
         }
       }, 500);
     }
+  };
+
+  const triggerHaptic = () => {
+    if (settings.hapticFeedback && 'vibrate' in navigator) {
+      navigator.vibrate(50);
+    }
+  };
+
+  const updateSettingWithHaptic = useCallback((key, value) => {
+    updateSetting(key, value);
+    triggerHaptic();
+  }, [settings]);
+
+  const toggleDaltonismMode = (mode) => {
+    updateSettingWithHaptic('daltonismMode', mode);
+  };
+
+  const toggleEasyReading = () => {
+    updateSettingWithHaptic('easyReading', !settings.easyReading);
+  };
+
+  const toggleFocusMode = () => {
+    updateSettingWithHaptic('focusMode', !settings.focusMode);
+  };
+
+  const toggleBigButtons = () => {
+    updateSettingWithHaptic('bigButtons', !settings.bigButtons);
+  };
+
+  const toggleHapticFeedback = () => {
+    const newValue = !settings.hapticFeedback;
+    updateSetting('hapticFeedback', newValue);
+    if (newValue && 'vibrate' in navigator) {
+      navigator.vibrate(100);
+    }
+  };
+
+  const toggleSubtitles = () => {
+    updateSettingWithHaptic('subtitles', !settings.subtitles);
+  };
+
+  const changeCursorSize = (size) => {
+    updateSettingWithHaptic('cursorSize', size);
+  };
+
+  const toggleGuidedMode = () => {
+    updateSettingWithHaptic('guidedMode', !settings.guidedMode);
   };
 
   return (
@@ -415,9 +652,13 @@ export default function AccessibilityPanel() {
             {t('tip_text')}
           </p>
 
-          <div className="space-y-6 py-4">
+          <div className="space-y-6 py-4 max-h-[70vh] overflow-y-auto">
+            {/* === SECTION VISION === */}
+            <div className="border-b-2 border-[#00AEEF] pb-4">
+              <h2 className="font-heading text-[#0077A8] text-xl mb-4">👁️ {t('visual_section')}</h2>
+            
             {/* Taille du texte */}
-            <div className="space-y-3">
+            <div className="space-y-3 mb-4">
               <h3 className="font-heading text-[#0077A8] text-lg">📝 {t('text_size')}</h3>
               <div className="flex items-center justify-between gap-2">
                 <Button
@@ -459,8 +700,190 @@ export default function AccessibilityPanel() {
               </Button>
             </div>
 
-            {/* Lecture vocale interactive - NOUVEAU */}
-            <div className="flex items-center justify-between p-4 bg-green-50 rounded-xl border-2 border-green-200">
+            {/* Contraste élevé */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl mb-4">
+              <div className="flex items-center gap-3">
+                <Eye className="w-6 h-6 text-[#0077A8]" aria-hidden="true" />
+                <div>
+                  <p className="font-heading text-[#0077A8]">👁 {t('high_contrast')}</p>
+                  <p className="text-sm text-gray-600 font-body">{t('high_contrast_desc')}</p>
+                </div>
+              </div>
+              <Switch
+                checked={settings.highContrast}
+                onCheckedChange={toggleHighContrast}
+                aria-label={t('high_contrast')}
+                className="data-[state=checked]:bg-[#00AEEF]"
+              />
+            </div>
+
+            {/* Mode Daltonien */}
+            <div className="space-y-3 mb-4">
+              <h3 className="font-heading text-[#0077A8] text-base">🎨 {t('daltonism_mode')}</h3>
+              <p className="text-sm text-gray-600 font-body">{t('daltonism_desc')}</p>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  onClick={() => toggleDaltonismMode('disabled')}
+                  variant={settings.daltonismMode === 'disabled' ? 'default' : 'outline'}
+                  className={`h-12 ${settings.daltonismMode === 'disabled' ? 'bg-[#00AEEF] text-white' : 'border-[#00AEEF]'}`}
+                >
+                  {t('disabled')}
+                </Button>
+                <Button
+                  onClick={() => toggleDaltonismMode('protanopia')}
+                  variant={settings.daltonismMode === 'protanopia' ? 'default' : 'outline'}
+                  className={`h-12 ${settings.daltonismMode === 'protanopia' ? 'bg-[#00AEEF] text-white' : 'border-[#00AEEF]'}`}
+                >
+                  {t('protanopia')}
+                </Button>
+                <Button
+                  onClick={() => toggleDaltonismMode('deuteranopia')}
+                  variant={settings.daltonismMode === 'deuteranopia' ? 'default' : 'outline'}
+                  className={`h-12 ${settings.daltonismMode === 'deuteranopia' ? 'bg-[#00AEEF] text-white' : 'border-[#00AEEF]'}`}
+                >
+                  {t('deuteranopia')}
+                </Button>
+                <Button
+                  onClick={() => toggleDaltonismMode('tritanopia')}
+                  variant={settings.daltonismMode === 'tritanopia' ? 'default' : 'outline'}
+                  className={`h-12 ${settings.daltonismMode === 'tritanopia' ? 'bg-[#00AEEF] text-white' : 'border-[#00AEEF]'}`}
+                >
+                  {t('tritanopia')}
+                </Button>
+              </div>
+            </div>
+            </div>
+
+            {/* === SECTION COGNITION === */}
+            <div className="border-b-2 border-purple-500 pb-4">
+              <h2 className="font-heading text-purple-700 text-xl mb-4">🧠 {t('cognitive_section')}</h2>
+            
+            {/* Mode facile à lire */}
+            <div className="flex items-center justify-between p-4 bg-purple-50 rounded-xl mb-4">
+              <div className="flex items-center gap-3">
+                <div className="text-2xl">📖</div>
+                <div>
+                  <p className="font-heading text-purple-700">🧠 {t('easy_reading')}</p>
+                  <p className="text-sm text-purple-600 font-body">{t('easy_reading_desc')}</p>
+                </div>
+              </div>
+              <Switch
+                checked={settings.easyReading}
+                onCheckedChange={toggleEasyReading}
+                aria-label={t('easy_reading')}
+                className="data-[state=checked]:bg-purple-500"
+              />
+            </div>
+
+            {/* Mode concentration */}
+            <div className="flex items-center justify-between p-4 bg-orange-50 rounded-xl mb-4">
+              <div className="flex items-center gap-3">
+                <div className="text-2xl">🎯</div>
+                <div>
+                  <p className="font-heading text-orange-700">🎯 {t('focus_mode')}</p>
+                  <p className="text-sm text-orange-600 font-body">{t('focus_mode_desc')}</p>
+                </div>
+              </div>
+              <Switch
+                checked={settings.focusMode}
+                onCheckedChange={toggleFocusMode}
+                aria-label={t('focus_mode')}
+                className="data-[state=checked]:bg-orange-500"
+              />
+            </div>
+
+            {/* Mode guidé */}
+            <div className="flex items-center justify-between p-4 bg-indigo-50 rounded-xl mb-4">
+              <div className="flex items-center gap-3">
+                <div className="text-2xl">📘</div>
+                <div>
+                  <p className="font-heading text-indigo-700">📘 {t('guided_mode')}</p>
+                  <p className="text-sm text-indigo-600 font-body">{t('guided_mode_desc')}</p>
+                </div>
+              </div>
+              <Switch
+                checked={settings.guidedMode}
+                onCheckedChange={toggleGuidedMode}
+                aria-label={t('guided_mode')}
+                className="data-[state=checked]:bg-indigo-500"
+              />
+            </div>
+            </div>
+
+            {/* === SECTION MOTRICITÉ === */}
+            <div className="border-b-2 border-blue-500 pb-4">
+              <h2 className="font-heading text-blue-700 text-xl mb-4">🖱️ {t('motor_section')}</h2>
+            
+            {/* Navigation simplifiée */}
+            <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl mb-4">
+              <div className="flex items-center gap-3">
+                <div className="text-2xl">🖱️</div>
+                <div>
+                  <p className="font-heading text-blue-700">🖱️ {t('big_buttons')}</p>
+                  <p className="text-sm text-blue-600 font-body">{t('big_buttons_desc')}</p>
+                </div>
+              </div>
+              <Switch
+                checked={settings.bigButtons}
+                onCheckedChange={toggleBigButtons}
+                aria-label={t('big_buttons')}
+                className="data-[state=checked]:bg-blue-500"
+              />
+            </div>
+
+            {/* Curseur personnalisé */}
+            <div className="space-y-3 mb-4">
+              <h3 className="font-heading text-blue-700 text-base">🖱️ {t('cursor_size')}</h3>
+              <p className="text-sm text-blue-600 font-body">{t('cursor_size_desc')}</p>
+              <div className="grid grid-cols-3 gap-2">
+                <Button
+                  onClick={() => changeCursorSize('small')}
+                  variant={settings.cursorSize === 'small' ? 'default' : 'outline'}
+                  className={`h-12 ${settings.cursorSize === 'small' ? 'bg-blue-500 text-white' : 'border-blue-500'}`}
+                >
+                  {t('cursor_small')}
+                </Button>
+                <Button
+                  onClick={() => changeCursorSize('medium')}
+                  variant={settings.cursorSize === 'medium' ? 'default' : 'outline'}
+                  className={`h-12 ${settings.cursorSize === 'medium' ? 'bg-blue-500 text-white' : 'border-blue-500'}`}
+                >
+                  {t('cursor_medium')}
+                </Button>
+                <Button
+                  onClick={() => changeCursorSize('large')}
+                  variant={settings.cursorSize === 'large' ? 'default' : 'outline'}
+                  className={`h-12 ${settings.cursorSize === 'large' ? 'bg-blue-500 text-white' : 'border-blue-500'}`}
+                >
+                  {t('cursor_large')}
+                </Button>
+              </div>
+            </div>
+
+            {/* Retour haptique */}
+            <div className="flex items-center justify-between p-4 bg-pink-50 rounded-xl mb-4">
+              <div className="flex items-center gap-3">
+                <div className="text-2xl">📳</div>
+                <div>
+                  <p className="font-heading text-pink-700">📳 {t('haptic_feedback')}</p>
+                  <p className="text-sm text-pink-600 font-body">{t('haptic_feedback_desc')}</p>
+                </div>
+              </div>
+              <Switch
+                checked={settings.hapticFeedback}
+                onCheckedChange={toggleHapticFeedback}
+                aria-label={t('haptic_feedback')}
+                className="data-[state=checked]:bg-pink-500"
+              />
+            </div>
+            </div>
+
+            {/* === SECTION AUDIO === */}
+            <div className="pb-4">
+              <h2 className="font-heading text-green-700 text-xl mb-4">🔊 {t('audio_section')}</h2>
+            
+            {/* Lecture vocale interactive */}
+            <div className="flex items-center justify-between p-4 bg-green-50 rounded-xl border-2 border-green-200 mb-4">
               <div className="flex items-center gap-3">
                 <Volume2 className="w-6 h-6 text-green-600" aria-hidden="true" />
                 <div>
@@ -476,20 +899,20 @@ export default function AccessibilityPanel() {
               />
             </div>
 
-            {/* Contraste élevé */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+            {/* Sous-titres */}
+            <div className="flex items-center justify-between p-4 bg-teal-50 rounded-xl mb-4">
               <div className="flex items-center gap-3">
-                <Eye className="w-6 h-6 text-[#0077A8]" aria-hidden="true" />
+                <div className="text-2xl">💬</div>
                 <div>
-                  <p className="font-heading text-[#0077A8]">👁 {t('high_contrast')}</p>
-                  <p className="text-sm text-gray-600 font-body">{t('high_contrast_desc')}</p>
+                  <p className="font-heading text-teal-700">💬 {t('subtitles')}</p>
+                  <p className="text-sm text-teal-600 font-body">{t('subtitles_desc')}</p>
                 </div>
               </div>
               <Switch
-                checked={settings.highContrast}
-                onCheckedChange={toggleHighContrast}
-                aria-label={t('high_contrast')}
-                className="data-[state=checked]:bg-[#00AEEF]"
+                checked={settings.subtitles}
+                onCheckedChange={toggleSubtitles}
+                aria-label={t('subtitles')}
+                className="data-[state=checked]:bg-teal-500"
               />
             </div>
 
@@ -520,10 +943,11 @@ export default function AccessibilityPanel() {
             </div>
 
             {/* Info accessibilité */}
-            <div className="bg-[#FFF4B2] rounded-xl p-4 border border-[#FFD700]">
+            <div className="bg-[#FFF4B2] rounded-xl p-4 border border-[#FFD700] mt-4">
               <p className="text-sm font-body text-[#0077A8]">
                 <strong>💡 {t('tip')} :</strong> {t('tip_text')}
               </p>
+            </div>
             </div>
           </div>
 
