@@ -66,12 +66,12 @@ export default function NotificationBell() {
         <Button
           variant="ghost"
           size="icon"
-          className={`relative ${hasNewNotification ? 'animate-bounce' : ''}`}
+          className={`relative w-12 h-12 rounded-xl bg-white/20 hover:bg-white/30 border-2 border-white/40 ${hasNewNotification ? 'animate-bounce' : ''}`}
         >
-          <Bell className="w-6 h-6 text-white" />
+          <Bell className={`w-7 h-7 ${totalAlerts > 0 ? 'text-[#FFD700]' : 'text-white'}`} />
           {totalAlerts > 0 && (
-            <span className={`absolute -top-1 -right-1 min-w-5 h-5 flex items-center justify-center text-xs font-bold rounded-full px-1 ${
-              urgentCount > 0 || stockAlerts.some(s => s.quantite === 0) ? 'bg-red-500 text-white animate-pulse' : 'bg-[#FFA500] text-white'
+            <span className={`absolute -top-2 -right-2 min-w-6 h-6 flex items-center justify-center text-xs font-bold rounded-full px-1.5 shadow-lg border-2 border-white ${
+              urgentCount > 0 || stockAlerts.some(s => s.quantite === 0) ? 'bg-red-500 text-white animate-pulse' : 'bg-[#FFD700] text-[#0077A8]'
             }`}>
               {totalAlerts}
             </span>
