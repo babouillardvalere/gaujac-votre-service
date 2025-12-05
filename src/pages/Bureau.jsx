@@ -21,6 +21,7 @@ import {
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import InterventionActions from '../components/bureau/InterventionActions';
 import BureauStatistiques from '../components/bureau/BureauStatistiques';
+import BureauStatistiquesClients from '../components/bureau/BureauStatistiquesClients';
 import BureauAvis from '../components/bureau/BureauAvis';
 import BureauRapports from '../components/bureau/BureauRapports';
 import { format, differenceInHours, differenceInMinutes, isToday, parseISO } from 'date-fns';
@@ -441,6 +442,9 @@ export default function Bureau() {
             <TabsTrigger value="statistiques" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               Statistiques
             </TabsTrigger>
+            <TabsTrigger value="stats-clients" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
+              👥 Clients
+            </TabsTrigger>
             <TabsTrigger value="avis" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               ⭐ Avis
             </TabsTrigger>
@@ -847,6 +851,11 @@ export default function Bureau() {
           {/* Statistiques */}
           <TabsContent value="statistiques" className="space-y-6">
             <BureauStatistiques incidents={incidents} />
+          </TabsContent>
+
+          {/* Statistiques Clients */}
+          <TabsContent value="stats-clients" className="space-y-6">
+            <BureauStatistiquesClients lang="fr" />
           </TabsContent>
 
           {/* Avis */}
