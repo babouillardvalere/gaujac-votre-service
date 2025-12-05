@@ -1421,37 +1421,209 @@ Rapport généré automatiquement par Camping Paradis`;
           </DialogHeader>
           
           <div className="space-y-4 py-4">
-            {/* Sélection intervention */}
+            {/* Filtres de recherche */}
+            <Card className="border border-gray-200 rounded-xl bg-gray-50">
+              <CardContent className="p-4 space-y-3">
+                <p className="text-sm font-heading text-[#0077A8] flex items-center gap-2">
+                  <Search className="w-4 h-4" />
+                  {lang === 'en' ? 'Search filters' : 'Filtres de recherche'}
+                </p>
+                
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {/* Recherche client */}
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">{t('client_info')}</label>
+                    <Input
+                      placeholder={lang === 'en' ? 'Name...' : 'Nom...'}
+                      value={litigeFilters.search}
+                      onChange={(e) => setLitigeFilters({ ...litigeFilters, search: e.target.value })}
+                      className="rounded-lg h-9 text-sm"
+                    />
+                  </div>
+
+                  {/* Lieu */}
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">{t('hebergement_info')}</label>
+                    <Input
+                      placeholder={lang === 'en' ? 'Location...' : 'N° hébergement...'}
+                      value={litigeFilters.lieu}
+                      onChange={(e) => setLitigeFilters({ ...litigeFilters, lieu: e.target.value })}
+                      className="rounded-lg h-9 text-sm"
+                    />
+                  </div>
+
+                  {/* Catégorie */}
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">{lang === 'en' ? 'Category' : 'Catégorie'}</label>
+                    <Select
+                      value={litigeFilters.categorie}
+                      onValueChange={(v) => setLitigeFilters({ ...litigeFilters, categorie: v })}
+                    >
+                      <SelectTrigger className="rounded-lg h-9 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{lang === 'en' ? 'All categories' : 'Toutes catégories'}</SelectItem>
+                        <SelectItem value="gaz">🔥 Gaz</SelectItem>
+                        <SelectItem value="eau">💧 Eau</SelectItem>
+                        <SelectItem value="electricite">⚡ Électricité</SelectItem>
+                        <SelectItem value="plomberie">🔧 Plomberie</SelectItem>
+                        <SelectItem value="mobilier">🪑 Mobilier</SelectItem>
+                        <SelectItem value="nettoyage">🧹 Nettoyage</SelectItem>
+                        <SelectItem value="literie">🛏 Literie</SelectItem>
+                        <SelectItem value="divers_technique">🛠 Divers</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Intervenant */}
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">{t('collaborateur_info')}</label>
+                    <Select
+                      value={litigeFilters.intervenant}
+                      onValueChange={(v) => setLitigeFilters({ ...litigeFilters, intervenant: v })}
+                    >
+                      <SelectTrigger className="rounded-lg h-9 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{lang === 'en' ? 'All technicians' : 'Tous intervenants'}</SelectItem>
+                        {[...new Set(incidents.filter(i => i.pris_par).map(i => i.pris_par))].map(tech => (
+                          <SelectItem key={tech} value={tech}>{tech}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Date début */}
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">{t('date_debut')}</label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-full h-9 rounded-lg text-sm justify-start">
+                          <CalendarIcon className="w-3 h-3 mr-2" />
+                          {litigeFilters.dateStart ? format(litigeFilters.dateStart, 'dd/MM/yy') : '-'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={litigeFilters.dateStart}
+                          onSelect={(date) => setLitigeFilters({ ...litigeFilters, dateStart: date })}
+                          locale={fr}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  {/* Date fin */}
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">{t('date_fin')}</label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-full h-9 rounded-lg text-sm justify-start">
+                          <CalendarIcon className="w-3 h-3 mr-2" />
+                          {litigeFilters.dateEnd ? format(litigeFilters.dateEnd, 'dd/MM/yy') : '-'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={litigeFilters.dateEnd}
+                          onSelect={(date) => setLitigeFilters({ ...litigeFilters, dateEnd: date })}
+                          locale={fr}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+
+                {/* Bouton réinitialiser */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setLitigeFilters({ search: '', categorie: 'all', dateStart: null, dateEnd: null, lieu: '', intervenant: 'all' })}
+                  className="text-xs text-gray-500"
+                >
+                  <RefreshCcw className="w-3 h-3 mr-1" />
+                  {t('reinitialiser')}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Sélection intervention filtrée */}
             <div>
               <label className="text-sm font-heading text-[#0077A8] block mb-2">
                 {t('selectionner_intervention')}
               </label>
-              <Select
-                value={selectedIncidentForLitige?.id || ''}
-                onValueChange={(v) => {
-                  const inc = incidents.find(i => i.id === v);
-                  setSelectedIncidentForLitige(inc);
-                }}
-              >
-                <SelectTrigger className="rounded-xl">
-                  <SelectValue placeholder={t('selectionner_intervention')} />
-                </SelectTrigger>
-                <SelectContent className="max-h-60">
-                  {incidents.filter(i => i.statut === 'resolu').length === 0 ? (
-                    <SelectItem value="none" disabled>{t('aucune_intervention')}</SelectItem>
-                  ) : (
-                    incidents
-                      .filter(i => i.statut === 'resolu')
-                      .sort((a, b) => new Date(b.date_resolution) - new Date(a.date_resolution))
-                      .slice(0, 50)
-                      .map(inc => (
-                        <SelectItem key={inc.id} value={inc.id}>
-                          {inc.logement || inc.emplacement} - {inc.client_prenom} {inc.client_nom} ({inc.date_resolution ? format(new Date(inc.date_resolution), 'dd/MM/yy') : '-'})
-                        </SelectItem>
-                      ))
-                  )}
-                </SelectContent>
-              </Select>
+              {(() => {
+                const filteredIncidents = incidents
+                  .filter(i => i.statut === 'resolu')
+                  .filter(i => {
+                    // Filtre client
+                    if (litigeFilters.search) {
+                      const searchLower = litigeFilters.search.toLowerCase();
+                      const clientMatch = `${i.client_prenom} ${i.client_nom}`.toLowerCase().includes(searchLower);
+                      if (!clientMatch) return false;
+                    }
+                    // Filtre lieu
+                    if (litigeFilters.lieu) {
+                      const lieuMatch = (i.logement || i.emplacement || '').toLowerCase().includes(litigeFilters.lieu.toLowerCase());
+                      if (!lieuMatch) return false;
+                    }
+                    // Filtre catégorie
+                    if (litigeFilters.categorie !== 'all' && i.categorie !== litigeFilters.categorie) return false;
+                    // Filtre intervenant
+                    if (litigeFilters.intervenant !== 'all' && i.pris_par !== litigeFilters.intervenant) return false;
+                    // Filtre date début
+                    if (litigeFilters.dateStart && i.date_resolution) {
+                      if (new Date(i.date_resolution) < litigeFilters.dateStart) return false;
+                    }
+                    // Filtre date fin
+                    if (litigeFilters.dateEnd && i.date_resolution) {
+                      if (new Date(i.date_resolution) > litigeFilters.dateEnd) return false;
+                    }
+                    return true;
+                  })
+                  .sort((a, b) => new Date(b.date_resolution) - new Date(a.date_resolution))
+                  .slice(0, 50);
+
+                return (
+                  <>
+                    <p className="text-xs text-gray-500 mb-2">
+                      {filteredIncidents.length} {lang === 'en' ? 'intervention(s) found' : 'intervention(s) trouvée(s)'}
+                    </p>
+                    <Select
+                      value={selectedIncidentForLitige?.id || ''}
+                      onValueChange={(v) => {
+                        const inc = incidents.find(i => i.id === v);
+                        setSelectedIncidentForLitige(inc);
+                      }}
+                    >
+                      <SelectTrigger className="rounded-xl">
+                        <SelectValue placeholder={t('selectionner_intervention')} />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {filteredIncidents.length === 0 ? (
+                          <SelectItem value="none" disabled>{t('aucune_intervention')}</SelectItem>
+                        ) : (
+                          filteredIncidents.map(inc => (
+                            <SelectItem key={inc.id} value={inc.id}>
+                              <span className="flex items-center gap-2">
+                                <span>{inc.logement || inc.emplacement}</span>
+                                <span className="text-gray-400">|</span>
+                                <span>{inc.client_prenom} {inc.client_nom}</span>
+                                <span className="text-gray-400">|</span>
+                                <span className="text-xs text-gray-500">{inc.date_resolution ? format(new Date(inc.date_resolution), 'dd/MM/yy HH:mm') : '-'}</span>
+                              </span>
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </>
+                );
+              })()}
             </div>
 
             {/* Détails de l'intervention sélectionnée */}
