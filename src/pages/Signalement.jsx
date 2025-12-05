@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { getLanguage, useTranslation } from '../components/translations';
-import { Checkbox } from '@/components/ui/checkbox';
 
 // Composant Clause d'autorisation d'accès
 function ClauseAutorisationAcces({ accepted, onAcceptedChange }) {
