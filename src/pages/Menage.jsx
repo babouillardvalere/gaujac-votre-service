@@ -302,11 +302,19 @@ export default function Menage() {
                             : 'bg-orange-100 text-orange-700'
                         }`}>
                           {incident.autorisation_acces === 'oui' ? (
-                            <UserCheck className="w-3 h-3" />
+                            <>
+                              <UserCheck className="w-3 h-3" />
+                              {t('acces_autorise')}
+                            </>
                           ) : (
-                            <DoorOpen className="w-3 h-3" />
+                            <>
+                              <DoorOpen className="w-3 h-3" />
+                              {t('acces_non_autorise')}
+                              {incident.plage_horaire_client && (
+                                <span className="ml-1">— {t('plage_demandee')}: {incident.plage_horaire_client}</span>
+                              )}
+                            </>
                           )}
-                          {incident.autorisation_acces === 'oui' ? t('acces_autorise') : t('acces_non_autorise')}
                         </div>
                       )}
                       {incident.pris_par && incident.statut === 'en_cours' && (
@@ -361,15 +369,21 @@ export default function Menage() {
                     : 'bg-orange-100 text-orange-700'
                 }`}>
                   {selectedIncident.autorisation_acces === 'oui' ? (
-                    <UserCheck className="w-4 h-4" />
+                    <>
+                      <UserCheck className="w-4 h-4" />
+                      <span className="font-body text-sm">{t('acces_autorise')}</span>
+                    </>
                   ) : (
-                    <DoorOpen className="w-4 h-4" />
+                    <>
+                      <DoorOpen className="w-4 h-4" />
+                      <span className="font-body text-sm">
+                        {t('acces_non_autorise')}
+                        {selectedIncident.plage_horaire_client && (
+                          <span className="block text-xs mt-1">📅 {t('plage_demandee')}: {selectedIncident.plage_horaire_client}</span>
+                        )}
+                      </span>
+                    </>
                   )}
-                  <span className="font-body text-sm">
-                    {selectedIncident.autorisation_acces === 'oui' 
-                      ? t('acces_autorise')
-                      : t('acces_non_autorise')}
-                  </span>
                 </div>
               </div>
 
