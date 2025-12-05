@@ -44,10 +44,28 @@ export default function SuiviIntervention() {
     dateDepart: sessionStorage.getItem('user_date_depart')
   };
 
+  // Vérifier si le séjour est terminé
+  const isSejourTermine = () => {
+    if (!userData.dateDepart) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const depart = new Date(userData.dateDepart);
+    depart.setHours(23, 59, 59, 999);
+    return today > depart;
+  };
+
+  const [sejourTermine, setSejourTermine] = useState(false);
+
   useEffect(() => {
     const savedLang = sessionStorage.getItem('user_language');
     if (!savedLang) {
       navigate(createPageUrl('ChoixLangue'));
+      return;
+    }
+
+    // Vérifier si séjour terminé
+    if (isSejourTermine()) {
+      setSejourTermine(true);
       return;
     }
 
@@ -74,13 +92,27 @@ export default function SuiviIntervention() {
     refetchInterval: 10000
   });
 
+  // Filtrage STRICT : uniquement les interventions du séjour actuel du client
   const filteredIncidents = incidents.filter(incident => {
-    if (!userData.dateArrivee || !userData.dateDepart || !incident.date_saisie) return true;
+    // Vérifier que l'intervention correspond au client actuel
+    if (!userData.dateArrivee || !userData.dateDepart || !incident.date_saisie) return false;
+    
+    // Vérifier nom/prénom si disponibles
+    if (userData.nom && userData.prenom) {
+      const nomMatch = incident.client_nom?.toLowerCase() === userData.nom.toLowerCase();
+      const prenomMatch = incident.client_prenom?.toLowerCase() === userData.prenom.toLowerCase();
+      if (!nomMatch || !prenomMatch) return false;
+    }
+    
     try {
       const incidentDate = parseISO(incident.date_saisie);
       const arrivee = parseISO(userData.dateArrivee);
-      const depart = parseISO(userData.dateDepart);
-      return isWithinInterval(incidentDate, { start: arrivee, end: depart });
+      // Ajouter 23h59 à la date de départ pour inclure toute la journée
+      const depart = new Date(userData.dateDepart);
+      depart.setHours(23, 59, 59, 999);
+      
+      // L'intervention doit être créée PENDANT le séjour du client
+      return incidentDate >= arrivee && incidentDate <= depart;
     } catch {
       return false;
     }
@@ -253,6 +285,38 @@ export default function SuiviIntervention() {
 
     return steps;
   };
+
+  // Affichage si séjour terminé
+  if (sejourTermine) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 pb-24">
+        <Card className="max-w-md border-2 border-gray-300 rounded-xl">
+          <CardContent className="p-6 text-center">
+            <Clock className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h2 className="font-heading text-xl text-gray-600 mb-2">
+              {lang === 'fr' ? 'Votre séjour est terminé' : 'Your stay has ended'}
+            </h2>
+            <p className="font-body text-gray-500 mb-4">
+              {lang === 'fr' 
+                ? 'Vous ne pouvez plus accéder au suivi des interventions.' 
+                : 'You can no longer access intervention tracking.'}
+            </p>
+            <p className="font-body text-gray-400 text-sm mb-6">
+              {lang === 'fr' 
+                ? 'Merci de votre visite au Camping Paradis !' 
+                : 'Thank you for visiting Camping Paradis!'}
+            </p>
+            <Link to={createPageUrl('Home')}>
+              <Button className="w-full bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading">
+                <Home className="w-5 h-5 mr-2" />
+                {t('retour_accueil')}
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (accessDenied) {
     return (
