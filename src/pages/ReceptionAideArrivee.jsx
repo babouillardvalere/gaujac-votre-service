@@ -2,83 +2,80 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../components/translations';
 import { base44 } from '@/api/base44Client';
+import { getCodeFromCategory } from '../components/categoryCodeMapping';
 import Logo from '../components/Logo';
+import PhotoManagerReception from '../components/reception/PhotoManagerReception';
+import DemanderPhotosDialog from '../components/reception/DemanderPhotosDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { emplacements, logements } from '../components/accommodationData';
-import { ArrowLeft, ArrowRight, Plus, Minus, Upload, Loader2, CheckCircle } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowLeft, ArrowRight, CheckCircle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
+
+const emplacementCategories = [
+  { value: 'Emplacement 6A', label: 'Électricité 6A' },
+  { value: 'Emplacement 10A', label: 'Électricité 10A' },
+  { value: 'Emplacement Eau+10A', label: 'Eau + 10A' }
+];
+
+const mobilhomeCategories = [
+  { value: 'Chalet Eco', label: 'Chalet Éco 1 ch' },
+  { value: 'Chalet Classique', label: 'Chalet Classique 1 ch' },
+  { value: 'Mobil-home Eco', label: 'MH Éco 2 ch' },
+  { value: 'Mobil-home Eco Clim', label: 'MH Éco Clim' },
+  { value: 'Mobil-home Classique', label: 'MH Classique' },
+  { value: 'Mobil-home Classique Clim', label: 'MH Classique Clim' },
+  { value: 'Mobil-home Classique 3ch', label: 'MH Classique 3 ch' },
+  { value: 'Confort+ 2ch', label: 'MH Confort+ 2 ch' },
+  { value: 'Confort+ 3ch', label: 'MH Confort+ 3 ch' },
+  { value: 'Premium 2ch', label: 'MH Premium 2 ch' },
+  { value: 'Premium 3ch', label: 'MH Premium 3 ch' },
+  { value: 'Premium Twins', label: 'MH Premium Twins' },
+  { value: 'Cottage Premium', label: 'Cottage Premium 2 ch' }
+];
 
 export default function ReceptionAideArrivee() {
   const { t, lang } = useTranslation();
   const navigate = useNavigate();
 
-  const [step, setStep] = useState(1);
+  const [etape, setEtape] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+
   const [formData, setFormData] = useState({
     client_nom: '',
     client_prenom: '',
     date_arrivee: '',
     date_depart: '',
-    nombre_adultes: 2,
-    nombre_adolescents: 0,
-    nombre_enfants: 0,
-    nombre_bebes: 0,
-    nombre_chiens: 0,
-    nombre_chats: 0,
     type_logement: '',
     categorie_logement: '',
     numero_logement: '',
-    proprete: 'correct',
-    remarques_internes: '',
-    photo_arrivee: ''
+    nombre_adultes: 0,
+    nombre_adolescents: 0,
+    nombre_enfants: 0,
+    nombre_bebes: 0,
+    nombre_animaux: 0,
+    nombre_chiens: 0,
+    nombre_chats: 0,
+    autres_animaux: '',
+    inventaire_valide: true,
+    objets_manquants: [],
+    photos: [],
+    evaluation_proprete: 'correct',
+    commentaire_proprete: '',
+    remarques: ''
   });
-
-  const [availableNumbers, setAvailableNumbers] = useState([]);
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
-    if (field === 'categorie_logement') {
-      const numbers = formData.type_logement === 'emplacement' 
-        ? emplacements[value] || []
-        : logements[value] || [];
-      setAvailableNumbers(numbers);
-      setFormData(prev => ({ ...prev, numero_logement: '' }));
-    }
-  };
-
-  const handleIncrement = (field) => {
-    setFormData(prev => ({ ...prev, [field]: Math.min(prev[field] + 1, 20) }));
-  };
-
-  const handleDecrement = (field) => {
-    setFormData(prev => ({ ...prev, [field]: Math.max(prev[field] - 1, 0) }));
-  };
-
-  const handlePhotoUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setFormData(prev => ({ ...prev, photo_arrivee: file_url }));
-      toast.success(lang === 'fr' ? 'Photo ajoutée' : 'Photo added');
-    } catch (error) {
-      toast.error(lang === 'fr' ? 'Erreur upload' : 'Upload error');
-    }
   };
 
   const handleSubmit = async () => {
-    if (!formData.client_nom || !formData.client_prenom || 
-        !formData.date_arrivee || !formData.date_depart ||
-        !formData.type_logement || !formData.categorie_logement || !formData.numero_logement) {
+    if (!formData.client_nom || !formData.client_prenom || !formData.numero_logement) {
       toast.error(t('champs_obligatoires'));
       return;
     }
@@ -86,14 +83,15 @@ export default function ReceptionAideArrivee() {
     setSubmitting(true);
 
     try {
-      const codeDossier = `ARRIVEE-${formData.numero_logement}-${formData.date_arrivee}`;
+      const codeDossier = `ARRIVEE-${formData.numero_logement}-${formData.date_arrivee || new Date().toISOString().split('T')[0]}`;
       
+      // Créer le dossier d'arrivée
       const dossier = await base44.entities.DossierArrivee.create({
         code_dossier: codeDossier,
         client_nom: formData.client_nom,
         client_prenom: formData.client_prenom,
-        date_arrivee: formData.date_arrivee,
-        date_depart: formData.date_depart,
+        date_arrivee: formData.date_arrivee || new Date().toISOString().split('T')[0],
+        date_depart: formData.date_depart || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         type_logement: formData.type_logement,
         categorie_logement: formData.categorie_logement,
         numero_logement: formData.numero_logement,
@@ -101,9 +99,10 @@ export default function ReceptionAideArrivee() {
         nombre_adolescents: formData.nombre_adolescents,
         nombre_enfants: formData.nombre_enfants,
         nombre_bebes: formData.nombre_bebes,
-        nombre_animaux: formData.nombre_chiens + formData.nombre_chats,
+        nombre_animaux: formData.nombre_animaux,
         nombre_chiens: formData.nombre_chiens,
         nombre_chats: formData.nombre_chats,
+        autres_animaux: formData.autres_animaux,
         etape_actuelle: 4,
         etape_1_terminee: true,
         etape_2_terminee: true,
@@ -111,25 +110,48 @@ export default function ReceptionAideArrivee() {
         etape_4_terminee: true,
         statut: 'finalise',
         date_finalisation: new Date().toISOString(),
-        remarques_client: formData.remarques_internes
+        remarques_client: `[RÉCEPTION] ${formData.remarques}`
       });
 
-      // Créer intervention si propreté insatisfaisante
-      if (formData.proprete === 'pas_satisfaisant') {
+      // Créer le contrôle inventaire
+      await base44.entities.ControleInventaireArrivee.create({
+        numero_locatif: formData.numero_logement,
+        categorie_locatif: formData.categorie_logement,
+        client_nom: formData.client_nom,
+        client_prenom: formData.client_prenom,
+        date_arrivee: formData.date_arrivee || new Date().toISOString().split('T')[0],
+        date_depart: formData.date_depart || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        objets_valides: [],
+        objets_manquants: formData.objets_manquants,
+        photos_pieces: formData.photos.reduce((acc, photo, index) => {
+          acc[`photo_${index + 1}`] = {
+            url: photo.url,
+            source: photo.source,
+            description: photo.description
+          };
+          return acc;
+        }, {}),
+        evaluation_proprete: formData.evaluation_proprete,
+        commentaire_proprete: formData.commentaire_proprete,
+        date_validation: new Date().toISOString(),
+        inventaire_complet: formData.objets_manquants.length === 0
+      });
+
+      // Si propreté insatisfaisante, créer intervention
+      if (formData.evaluation_proprete === 'pas_satisfaisant') {
         await base44.entities.Incident.create({
           type: 'menage',
           categorie: 'nettoyage',
-          description: `Propreté non satisfaisante à l'arrivée - ${formData.remarques_internes}`,
+          description: `Propreté insatisfaisante constatée à l'arrivée - ${formData.commentaire_proprete}`,
           urgent: true,
           client_nom: formData.client_nom,
           client_prenom: formData.client_prenom,
           date_arrivee: formData.date_arrivee,
           date_depart: formData.date_depart,
           logement: formData.numero_logement,
-          photo_url: formData.photo_arrivee,
           statut: 'en_attente',
           autorisation_acces: 'oui',
-          commentaire_interne: 'Créé par réception lors de l\'arrivée assistée'
+          commentaire_interne: '[RÉCEPTION] Constaté lors de l\'arrivée assistée'
         });
       }
 
@@ -147,34 +169,12 @@ export default function ReceptionAideArrivee() {
     }
   };
 
-  const emplacementCategories = [
-    { value: 'Emplacement 6A', label: lang === 'fr' ? 'Électricité 6A' : 'Electricity 6A' },
-    { value: 'Emplacement 10A', label: lang === 'fr' ? 'Électricité 10A' : 'Electricity 10A' },
-    { value: 'Emplacement Eau+10A', label: lang === 'fr' ? 'Eau + 10A' : 'Water + 10A' }
-  ];
-
-  const mobilhomeCategories = [
-    { value: 'Chalet Eco', label: lang === 'fr' ? 'Chalet Éco 1 ch' : 'Eco Chalet 1BR' },
-    { value: 'Chalet Classique', label: lang === 'fr' ? 'Chalet Classique 1 ch' : 'Classic Chalet 1BR' },
-    { value: 'Mobil-home Eco', label: lang === 'fr' ? 'MH Éco 2 ch' : 'Eco MH 2BR' },
-    { value: 'Mobil-home Eco Clim', label: 'MH Éco Clim' },
-    { value: 'Mobil-home Classique', label: lang === 'fr' ? 'MH Classique' : 'Classic MH' },
-    { value: 'Mobil-home Classique Clim', label: lang === 'fr' ? 'MH Classique Clim' : 'Classic MH AC' },
-    { value: 'Mobil-home Classique 3ch', label: lang === 'fr' ? 'MH Classique 3 ch' : 'Classic MH 3BR' },
-    { value: 'Confort+ 2ch', label: lang === 'fr' ? 'MH Confort+ 2 ch' : 'Comfort+ MH 2BR' },
-    { value: 'Confort+ 3ch', label: lang === 'fr' ? 'MH Confort+ 3 ch' : 'Comfort+ MH 3BR' },
-    { value: 'Premium 2ch', label: lang === 'fr' ? 'MH Premium 2 ch' : 'Premium MH 2BR' },
-    { value: 'Premium 3ch', label: lang === 'fr' ? 'MH Premium 3 ch' : 'Premium MH 3BR' },
-    { value: 'Premium Twins', label: 'MH Premium Twins' },
-    { value: 'Cottage Premium', label: lang === 'fr' ? 'Cottage Premium 2 ch' : 'Premium Cottage 2BR' }
-  ];
-
   return (
     <div className="min-h-screen px-6 py-8">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
           <button
-            onClick={() => navigate(createPageUrl('ReceptionAssistance'))}
+            onClick={() => etape === 1 ? navigate(createPageUrl('ReceptionAssistance')) : setEtape(etape - 1)}
             className="flex items-center gap-2 text-[#0077A8] hover:text-[#00AEEF] mb-4"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -187,243 +187,332 @@ export default function ReceptionAideArrivee() {
             🏡 {lang === 'fr' ? 'Aide Arrivée Client' : 'Guest Arrival Assistance'}
           </h1>
 
-          <Card className="border-2 border-[#22c55e]/30 rounded-xl">
-            <CardContent className="p-6 space-y-6">
-              {/* Identité */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>{t('nom')} *</Label>
-                  <Input
-                    value={formData.client_nom}
-                    onChange={(e) => handleChange('client_nom', e.target.value)}
-                    className="border-2 border-gray-200 rounded-xl"
-                  />
-                </div>
-                <div>
-                  <Label>{t('prenom')} *</Label>
-                  <Input
-                    value={formData.client_prenom}
-                    onChange={(e) => handleChange('client_prenom', e.target.value)}
-                    className="border-2 border-gray-200 rounded-xl"
-                  />
-                </div>
-                <div>
-                  <Label>{t('date_arrivee')} *</Label>
-                  <Input
-                    type="date"
-                    value={formData.date_arrivee}
-                    onChange={(e) => handleChange('date_arrivee', e.target.value)}
-                    className="border-2 border-gray-200 rounded-xl"
-                  />
-                </div>
-                <div>
-                  <Label>{t('date_depart')} *</Label>
-                  <Input
-                    type="date"
-                    value={formData.date_depart}
-                    onChange={(e) => handleChange('date_depart', e.target.value)}
-                    className="border-2 border-gray-200 rounded-xl"
-                  />
-                </div>
-              </div>
-
-              {/* Personnes */}
-              <div>
-                <h3 className="font-heading text-lg text-[#0077A8] mb-3">
-                  {lang === 'fr' ? 'Nombre de personnes' : 'Number of people'}
-                </h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {['nombre_adultes', 'nombre_adolescents', 'nombre_enfants', 'nombre_bebes'].map(field => (
-                    <div key={field} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                      <span className="text-sm font-heading">
-                        {field === 'nombre_adultes' && '👨 Adultes'}
-                        {field === 'nombre_adolescents' && '🧑 Ados'}
-                        {field === 'nombre_enfants' && '👧 Enfants'}
-                        {field === 'nombre_bebes' && '👶 Bébés'}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => handleDecrement(field)} className="w-8 h-8 rounded-full bg-white border">
-                          <Minus className="w-4 h-4 mx-auto" />
-                        </button>
-                        <span className="w-8 text-center font-bold">{formData[field]}</span>
-                        <button onClick={() => handleIncrement(field)} className="w-8 h-8 rounded-full bg-white border">
-                          <Plus className="w-4 h-4 mx-auto" />
-                        </button>
-                      </div>
+          {/* Barre de progression */}
+          <Card className="border-2 border-[#22c55e]/30 rounded-xl mb-6">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                {[1, 2, 3, 4, 5].map(step => (
+                  <div key={step} className="flex items-center">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      etape > step ? 'bg-green-500 text-white' :
+                      etape === step ? 'bg-[#22c55e] text-white' :
+                      'bg-gray-200 text-gray-500'
+                    }`}>
+                      {etape > step ? '✓' : step}
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Animaux */}
-              <div>
-                <h3 className="font-heading text-lg text-[#0077A8] mb-3">
-                  {lang === 'fr' ? 'Animaux' : 'Pets'}
-                </h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex items-center justify-between p-3 bg-orange-50 rounded-xl">
-                    <span className="text-sm font-heading">🐶 Chiens</span>
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => handleDecrement('nombre_chiens')} className="w-8 h-8 rounded-full bg-white border">
-                        <Minus className="w-4 h-4 mx-auto" />
-                      </button>
-                      <span className="w-8 text-center font-bold">{formData.nombre_chiens}</span>
-                      <button onClick={() => handleIncrement('nombre_chiens')} className="w-8 h-8 rounded-full bg-white border">
-                        <Plus className="w-4 h-4 mx-auto" />
-                      </button>
-                    </div>
+                    {step < 5 && <div className={`w-12 h-1 ${etape > step ? 'bg-green-500' : 'bg-gray-200'}`} />}
                   </div>
-                  <div className="flex items-center justify-between p-3 bg-pink-50 rounded-xl">
-                    <span className="text-sm font-heading">🐱 Chats</span>
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => handleDecrement('nombre_chats')} className="w-8 h-8 rounded-full bg-white border">
-                        <Minus className="w-4 h-4 mx-auto" />
-                      </button>
-                      <span className="w-8 text-center font-bold">{formData.nombre_chats}</span>
-                      <button onClick={() => handleIncrement('nombre_chats')} className="w-8 h-8 rounded-full bg-white border">
-                        <Plus className="w-4 h-4 mx-auto" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                ))}
               </div>
-
-              {/* Hébergement */}
-              <div>
-                <h3 className="font-heading text-lg text-[#0077A8] mb-3">
-                  {lang === 'fr' ? 'Hébergement' : 'Accommodation'}
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => {
-                        handleChange('type_logement', 'emplacement');
-                        handleChange('categorie_logement', '');
-                      }}
-                      className={`flex-1 p-3 rounded-xl border-2 ${
-                        formData.type_logement === 'emplacement' ? 'border-[#00AEEF] bg-blue-50' : 'border-gray-300'
-                      }`}
-                    >
-                      ⛺ Emplacement
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleChange('type_logement', 'mobilhome');
-                        handleChange('categorie_logement', '');
-                      }}
-                      className={`flex-1 p-3 rounded-xl border-2 ${
-                        formData.type_logement === 'mobilhome' ? 'border-[#22c55e] bg-green-50' : 'border-gray-300'
-                      }`}
-                    >
-                      🏠 Mobil-home
-                    </button>
-                  </div>
-
-                  {formData.type_logement && (
-                    <>
-                      <Select value={formData.categorie_logement} onValueChange={(v) => handleChange('categorie_logement', v)}>
-                        <SelectTrigger className="border-2 border-gray-200 rounded-xl">
-                          <SelectValue placeholder={lang === 'fr' ? 'Catégorie' : 'Category'} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {(formData.type_logement === 'emplacement' ? emplacementCategories : mobilhomeCategories).map(cat => (
-                            <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-
-                      {formData.categorie_logement && (
-                        <Select value={formData.numero_logement} onValueChange={(v) => handleChange('numero_logement', v)}>
-                          <SelectTrigger className="border-2 border-gray-200 rounded-xl">
-                            <SelectValue placeholder={lang === 'fr' ? 'Numéro' : 'Number'} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {availableNumbers.map(num => (
-                              <SelectItem key={num} value={num}>{num}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Propreté */}
-              <div>
-                <h3 className="font-heading text-lg text-[#0077A8] mb-3">
-                  {lang === 'fr' ? 'État de propreté' : 'Cleanliness status'}
-                </h3>
-                <div className="flex gap-3">
-                  {[
-                    { value: 'pas_satisfaisant', emoji: '😠', label: 'Pas satisfaisant' },
-                    { value: 'correct', emoji: '😐', label: 'Correct' },
-                    { value: 'tres_propre', emoji: '😊', label: 'Très propre' }
-                  ].map(opt => (
-                    <button
-                      key={opt.value}
-                      onClick={() => handleChange('proprete', opt.value)}
-                      className={`flex-1 p-3 rounded-xl border-2 ${
-                        formData.proprete === opt.value ? 'border-[#22c55e] bg-green-50' : 'border-gray-300'
-                      }`}
-                    >
-                      <div className="text-3xl">{opt.emoji}</div>
-                      <div className="text-xs mt-1">{opt.label}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Photo */}
-              <div>
-                <Label>{lang === 'fr' ? 'Photo (optionnel)' : 'Photo (optional)'}</Label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoUpload}
-                  className="hidden"
-                  id="photo-arrivee"
-                />
-                <label htmlFor="photo-arrivee">
-                  <Button type="button" variant="outline" className="w-full">
-                    <Upload className="w-4 h-4 mr-2" />
-                    {formData.photo_arrivee ? '✅ Photo ajoutée' : 'Ajouter photo'}
-                  </Button>
-                </label>
-              </div>
-
-              {/* Remarques internes */}
-              <div>
-                <Label>{lang === 'fr' ? 'Remarques internes (non visible client)' : 'Internal notes (not visible to guest)'}</Label>
-                <Textarea
-                  value={formData.remarques_internes}
-                  onChange={(e) => handleChange('remarques_internes', e.target.value)}
-                  className="border-2 border-gray-200 rounded-xl"
-                  rows={3}
-                  placeholder={lang === 'fr' ? 'Notes pour la réception...' : 'Notes for reception...'}
-                />
-              </div>
-
-              {/* Validation */}
-              <Button
-                onClick={handleSubmit}
-                disabled={submitting}
-                className="w-full h-12 bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl font-heading"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    {lang === 'fr' ? 'Enregistrement...' : 'Saving...'}
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="w-5 h-5 mr-2" />
-                    {lang === 'fr' ? 'Valider l\'arrivée du client' : 'Validate guest arrival'}
-                  </>
-                )}
-              </Button>
             </CardContent>
           </Card>
+
+          <AnimatePresence mode="wait">
+            {/* Étape 1 : Identité */}
+            {etape === 1 && (
+              <motion.div key="etape1" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
+                <Card className="border-2 border-[#22c55e]/30 rounded-xl">
+                  <CardContent className="p-6 space-y-4">
+                    <h2 className="font-heading text-xl text-[#0077A8]">
+                      👤 {lang === 'fr' ? 'Identité client' : 'Guest identity'}
+                    </h2>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>{t('nom')} *</Label>
+                        <Input
+                          value={formData.client_nom}
+                          onChange={(e) => handleChange('client_nom', e.target.value)}
+                          className="border-2 border-gray-200 rounded-xl"
+                        />
+                      </div>
+                      <div>
+                        <Label>{t('prenom')} *</Label>
+                        <Input
+                          value={formData.client_prenom}
+                          onChange={(e) => handleChange('client_prenom', e.target.value)}
+                          className="border-2 border-gray-200 rounded-xl"
+                        />
+                      </div>
+                      <div>
+                        <Label>{t('date_arrivee')}</Label>
+                        <Input
+                          type="date"
+                          value={formData.date_arrivee}
+                          onChange={(e) => handleChange('date_arrivee', e.target.value)}
+                          className="border-2 border-gray-200 rounded-xl"
+                        />
+                      </div>
+                      <div>
+                        <Label>{t('date_depart')}</Label>
+                        <Input
+                          type="date"
+                          value={formData.date_depart}
+                          onChange={(e) => handleChange('date_depart', e.target.value)}
+                          className="border-2 border-gray-200 rounded-xl"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label>{lang === 'fr' ? 'Type d\'hébergement' : 'Accommodation type'} *</Label>
+                      <Select value={formData.type_logement} onValueChange={(val) => handleChange('type_logement', val)}>
+                        <SelectTrigger className="border-2 border-gray-200 rounded-xl">
+                          <SelectValue placeholder={lang === 'fr' ? 'Sélectionner' : 'Select'} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="emplacement">⛺ {lang === 'fr' ? 'Emplacement' : 'Pitch'}</SelectItem>
+                          <SelectItem value="mobilhome">🏠 {lang === 'fr' ? 'Mobil-home' : 'Mobile home'}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {formData.type_logement && (
+                      <>
+                        <div>
+                          <Label>{lang === 'fr' ? 'Catégorie' : 'Category'} *</Label>
+                          <Select value={formData.categorie_logement} onValueChange={(val) => handleChange('categorie_logement', val)}>
+                            <SelectTrigger className="border-2 border-gray-200 rounded-xl">
+                              <SelectValue placeholder={lang === 'fr' ? 'Sélectionner' : 'Select'} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {(formData.type_logement === 'emplacement' ? emplacementCategories : mobilhomeCategories).map(cat => (
+                                <SelectItem key={cat.value} value={cat.value}>
+                                  {cat.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div>
+                          <Label>{lang === 'fr' ? 'Numéro de locatif' : 'Accommodation number'} *</Label>
+                          <Input
+                            value={formData.numero_logement}
+                            onChange={(e) => handleChange('numero_logement', e.target.value.toUpperCase())}
+                            placeholder="Ex: R01, D14, E23"
+                            className="border-2 border-gray-200 rounded-xl"
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    <Button onClick={() => setEtape(2)} className="w-full bg-[#22c55e] hover:bg-[#16a34a]">
+                      {t('suivant')} <ArrowRight className="w-5 h-5 ml-2" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Étape 2 : Statistiques */}
+            {etape === 2 && (
+              <motion.div key="etape2" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
+                <Card className="border-2 border-[#22c55e]/30 rounded-xl">
+                  <CardContent className="p-6 space-y-4">
+                    <h2 className="font-heading text-xl text-[#0077A8]">
+                      👥 {lang === 'fr' ? 'Statistiques séjour' : 'Stay statistics'}
+                    </h2>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>{lang === 'fr' ? 'Adultes (18+)' : 'Adults (18+)'}</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={formData.nombre_adultes}
+                          onChange={(e) => handleChange('nombre_adultes', parseInt(e.target.value) || 0)}
+                          className="border-2 border-gray-200 rounded-xl"
+                        />
+                      </div>
+                      <div>
+                        <Label>{lang === 'fr' ? 'Adolescents (13-17)' : 'Teens (13-17)'}</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={formData.nombre_adolescents}
+                          onChange={(e) => handleChange('nombre_adolescents', parseInt(e.target.value) || 0)}
+                          className="border-2 border-gray-200 rounded-xl"
+                        />
+                      </div>
+                      <div>
+                        <Label>{lang === 'fr' ? 'Enfants (3-12)' : 'Children (3-12)'}</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={formData.nombre_enfants}
+                          onChange={(e) => handleChange('nombre_enfants', parseInt(e.target.value) || 0)}
+                          className="border-2 border-gray-200 rounded-xl"
+                        />
+                      </div>
+                      <div>
+                        <Label>{lang === 'fr' ? 'Bébés (0-2)' : 'Babies (0-2)'}</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={formData.nombre_bebes}
+                          onChange={(e) => handleChange('nombre_bebes', parseInt(e.target.value) || 0)}
+                          className="border-2 border-gray-200 rounded-xl"
+                        />
+                      </div>
+                      <div>
+                        <Label>{lang === 'fr' ? '🐶 Chiens' : '🐶 Dogs'}</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={formData.nombre_chiens}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value) || 0;
+                            handleChange('nombre_chiens', val);
+                            handleChange('nombre_animaux', val + formData.nombre_chats);
+                          }}
+                          className="border-2 border-gray-200 rounded-xl"
+                        />
+                      </div>
+                      <div>
+                        <Label>{lang === 'fr' ? '🐱 Chats' : '🐱 Cats'}</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={formData.nombre_chats}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value) || 0;
+                            handleChange('nombre_chats', val);
+                            handleChange('nombre_animaux', formData.nombre_chiens + val);
+                          }}
+                          className="border-2 border-gray-200 rounded-xl"
+                        />
+                      </div>
+                    </div>
+
+                    <Button onClick={() => setEtape(3)} className="w-full bg-[#22c55e] hover:bg-[#16a34a]">
+                      {t('suivant')} <ArrowRight className="w-5 h-5 ml-2" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Étape 3 : Photos */}
+            {etape === 3 && (
+              <motion.div key="etape3" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
+                <Card className="border-2 border-[#22c55e]/30 rounded-xl">
+                  <CardContent className="p-6 space-y-4">
+                    <h2 className="font-heading text-xl text-[#0077A8]">
+                      📸 {lang === 'fr' ? 'Photos d\'état' : 'Condition photos'}
+                    </h2>
+                    
+                    <PhotoManagerReception
+                      numeroLogement={formData.numero_logement}
+                      onPhotosSelected={(photos) => handleChange('photos', photos)}
+                      selectedPhotos={formData.photos}
+                      lang={lang}
+                    />
+
+                    <DemanderPhotosDialog
+                      numeroLogement={formData.numero_logement}
+                      serviceType="menage"
+                      description={lang === 'fr' ? 'État initial du locatif' : 'Initial accommodation condition'}
+                      lang={lang}
+                    />
+
+                    <Button onClick={() => setEtape(4)} className="w-full bg-[#22c55e] hover:bg-[#16a34a]">
+                      {t('suivant')} <ArrowRight className="w-5 h-5 ml-2" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Étape 4 : Propreté */}
+            {etape === 4 && (
+              <motion.div key="etape4" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
+                <Card className="border-2 border-[#22c55e]/30 rounded-xl">
+                  <CardContent className="p-6 space-y-4">
+                    <h2 className="font-heading text-xl text-[#0077A8]">
+                      🧹 {lang === 'fr' ? 'Évaluation propreté' : 'Cleanliness assessment'}
+                    </h2>
+                    
+                    <div className="flex gap-3">
+                      {[
+                        { value: 'pas_satisfaisant', emoji: '😠', label: 'Pas satisfaisant' },
+                        { value: 'correct', emoji: '😐', label: 'Correct' },
+                        { value: 'tres_propre', emoji: '😊', label: 'Très propre' }
+                      ].map(opt => (
+                        <button
+                          key={opt.value}
+                          onClick={() => handleChange('evaluation_proprete', opt.value)}
+                          className={`flex-1 p-4 rounded-xl border-2 ${
+                            formData.evaluation_proprete === opt.value ? 'border-[#22c55e] bg-green-50' : 'border-gray-300'
+                          }`}
+                        >
+                          <div className="text-4xl mb-2">{opt.emoji}</div>
+                          <div className="text-sm">{opt.label}</div>
+                        </button>
+                      ))}
+                    </div>
+
+                    <div>
+                      <Label>{lang === 'fr' ? 'Commentaire' : 'Comment'}</Label>
+                      <Textarea
+                        value={formData.commentaire_proprete}
+                        onChange={(e) => handleChange('commentaire_proprete', e.target.value)}
+                        className="border-2 border-gray-200 rounded-xl"
+                        rows={3}
+                        placeholder={lang === 'fr' ? 'Observations...' : 'Observations...'}
+                      />
+                    </div>
+
+                    <Button onClick={() => setEtape(5)} className="w-full bg-[#22c55e] hover:bg-[#16a34a]">
+                      {t('suivant')} <ArrowRight className="w-5 h-5 ml-2" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Étape 5 : Validation */}
+            {etape === 5 && (
+              <motion.div key="etape5" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
+                <Card className="border-2 border-[#22c55e]/30 rounded-xl">
+                  <CardContent className="p-6 space-y-4">
+                    <h2 className="font-heading text-xl text-[#0077A8]">
+                      ✅ {lang === 'fr' ? 'Remarques finales' : 'Final remarks'}
+                    </h2>
+                    
+                    <div>
+                      <Label>{lang === 'fr' ? 'Remarques' : 'Remarks'}</Label>
+                      <Textarea
+                        value={formData.remarques}
+                        onChange={(e) => handleChange('remarques', e.target.value)}
+                        className="border-2 border-gray-200 rounded-xl"
+                        rows={4}
+                        placeholder={lang === 'fr' ? 'Remarques internes ou client...' : 'Internal or guest remarks...'}
+                      />
+                    </div>
+
+                    <Button
+                      onClick={handleSubmit}
+                      disabled={submitting}
+                      className="w-full h-12 bg-[#22c55e] hover:bg-[#16a34a]"
+                    >
+                      {submitting ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          {lang === 'fr' ? 'Validation...' : 'Validating...'}
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="w-5 h-5 mr-2" />
+                          {lang === 'fr' ? 'Valider l\'arrivée' : 'Validate arrival'}
+                        </>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       </div>
     </div>
