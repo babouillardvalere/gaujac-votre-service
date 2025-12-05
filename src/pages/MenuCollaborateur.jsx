@@ -4,8 +4,10 @@ import Logo from '../components/Logo';
 import NotificationBell from '../components/NotificationBell';
 import BureauAuthDialog from '../components/BureauAuthDialog';
 import { useTranslation } from '../components/translations';
+import { useNotifications } from '../components/useNotifications';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Wrench, Sparkles, Building2, LogOut, Package, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
@@ -14,6 +16,7 @@ export default function MenuCollaborateur() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [showBureauAuth, setShowBureauAuth] = useState(false);
+  const { counts } = useNotifications();
 
   useEffect(() => {
     const auth = sessionStorage.getItem('collaborateur_authenticated');
@@ -43,7 +46,9 @@ export default function MenuCollaborateur() {
       href: 'Technique',
       color: 'bg-[#00AEEF]',
       textColor: 'text-white',
-      description: t('desc_technique')
+      description: t('desc_technique'),
+      badgeCount: counts.technique,
+      hasUrgent: counts.techniqueUrgent > 0
     },
     {
       title: t('menu_menage'),
@@ -51,7 +56,9 @@ export default function MenuCollaborateur() {
       href: 'Menage',
       color: 'bg-[#FFD700]',
       textColor: 'text-[#0077A8]',
-      description: t('desc_menage')
+      description: t('desc_menage'),
+      badgeCount: counts.menage,
+      hasUrgent: counts.menageUrgent > 0
     },
     {
       title: t('menu_materiel'),
@@ -59,7 +66,8 @@ export default function MenuCollaborateur() {
       href: 'Materiel',
       color: 'bg-[#0077A8]',
       textColor: 'text-white',
-      description: t('desc_materiel')
+      description: t('desc_materiel'),
+      badgeCount: counts.materiel
     },
     {
       title: t('menu_bureau'),
@@ -69,7 +77,8 @@ export default function MenuCollaborateur() {
       textColor: 'text-white',
       description: t('desc_bureau'),
       locked: true,
-      onClick: handleBureauClick
+      onClick: handleBureauClick,
+      badgeCount: counts.bureau
     }
   ];
 
@@ -143,6 +152,11 @@ export default function MenuCollaborateur() {
                               <Lock className="w-3 h-3 text-[#FFA500]" />
                             </div>
                           )}
+                          {item.badgeCount > 0 && (
+                            <span className={`absolute -top-2 -right-2 min-w-6 h-6 flex items-center justify-center text-xs font-bold rounded-full px-1.5 ${item.hasUrgent ? 'bg-red-500 animate-pulse' : 'bg-red-500'} text-white shadow-lg`}>
+                              {item.badgeCount}
+                            </span>
+                          )}
                         </div>
                         <div className="ml-5 flex-1">
                           <h2 className="font-heading text-lg text-[#0077A8] group-hover:text-[#00AEEF] transition-colors flex items-center gap-2">
@@ -169,8 +183,13 @@ export default function MenuCollaborateur() {
                   <Card className="border-2 border-[#00AEEF]/30 hover:border-[#00AEEF] hover:shadow-lg transition-all rounded-xl overflow-hidden">
                     <CardContent className="p-0">
                       <div className="flex items-center p-5 min-h-[80px]">
-                        <div className={`w-14 h-14 rounded-xl ${item.color} flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform`}>
+                        <div className={`w-14 h-14 rounded-xl ${item.color} flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform relative`}>
                           <item.icon className={`w-7 h-7 ${item.textColor}`} />
+                          {item.badgeCount > 0 && (
+                            <span className={`absolute -top-2 -right-2 min-w-6 h-6 flex items-center justify-center text-xs font-bold rounded-full px-1.5 ${item.hasUrgent ? 'bg-red-500 animate-pulse' : 'bg-red-500'} text-white shadow-lg`}>
+                              {item.badgeCount}
+                            </span>
+                          )}
                         </div>
                         <div className="ml-5 flex-1">
                           <h2 className="font-heading text-lg text-[#0077A8] group-hover:text-[#00AEEF] transition-colors">
