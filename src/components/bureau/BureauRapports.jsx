@@ -242,6 +242,14 @@ export default function BureauRapports({ incidents = [], avis = [] }) {
   const [showLitigeDialog, setShowLitigeDialog] = useState(false);
   const [selectedIncidentForLitige, setSelectedIncidentForLitige] = useState(null);
   const [litigeEmail, setLitigeEmail] = useState('');
+  const [litigeFilters, setLitigeFilters] = useState({
+    search: '',
+    categorie: 'all',
+    dateStart: null,
+    dateEnd: null,
+    lieu: '',
+    intervenant: 'all'
+  });
 
   // Filtres historique
   const [historyFilters, setHistoryFilters] = useState({
