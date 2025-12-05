@@ -853,7 +853,7 @@ export const translations = {
 
     // Access authorization
     autorisation_acces_title: "Access authorization",
-    autorisation_acces_question: "Do you authorize staff to enter your accommodation?",
+    autorisation_acces_question: "Do you authorize our staff to enter your accommodation / pitch in your absence?",
     autorisation_oui: "YES, I authorize staff to enter",
     autorisation_non: "NO, I do not authorize access — I wish to be present",
     autorisation_non_message: "Please be present when staff arrives. If absent, the intervention may be postponed.",
