@@ -19,9 +19,10 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format, differenceInMinutes } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { createPageUrl } from '../utils';
+import InterventionTimer from '../components/InterventionTimer';
 
 const categoryIcons = {
   literie: { emoji: '🛏️', label: 'literie' },
@@ -69,23 +70,35 @@ export default function Menage() {
       toast.error(t('champs_obligatoires'));
       return;
     }
+    const now = new Date();
+    const tempsPriseEnCharge = incident.date_saisie 
+      ? differenceInMinutes(now, new Date(incident.date_saisie))
+      : 0;
+    
     updateMutation.mutate({
       id: incident.id,
       data: {
         pris_par: collaborateurNom,
-        date_debut: new Date().toISOString(),
-        statut: 'en_cours'
+        date_debut: now.toISOString(),
+        statut: 'en_cours',
+        temps_prise_en_charge: tempsPriseEnCharge
       }
     });
   };
 
   const handleTerminer = (incident) => {
+    const now = new Date();
+    const tempsTotal = incident.date_saisie 
+      ? differenceInMinutes(now, new Date(incident.date_saisie))
+      : 0;
+    
     updateMutation.mutate({
       id: incident.id,
       data: {
-        date_resolution: new Date().toISOString(),
+        date_resolution: now.toISOString(),
         statut: 'resolu',
-        commentaire_interne: commentaire || incident.commentaire_interne
+        commentaire_interne: commentaire || incident.commentaire_interne,
+        temps_total_intervention: tempsTotal
       }
     });
   };
@@ -113,10 +126,29 @@ export default function Menage() {
     setIncidentToWait(null);
   };
 
-  const filteredIncidents = incidents.filter(i => {
-    if (filter === 'tous') return true;
-    return i.statut === filter;
-  });
+  // Tri par priorité
+  const sortByPriority = (a, b) => {
+    const getPriorityScore = (i) => {
+      if (i.statut === 'resolu') return 0;
+      if (i.statut === 'en_attente_materiel') return 1;
+      if (i.statut === 'en_cours' && !i.urgent) return 2;
+      if (i.statut === 'en_attente' && !i.urgent) return 3;
+      if (i.statut === 'en_cours' && i.urgent) return 4;
+      if (i.statut === 'en_attente' && i.urgent) return 5;
+      return 0;
+    };
+    const prioA = (a.priorite_bureau || 0) + getPriorityScore(a);
+    const prioB = (b.priorite_bureau || 0) + getPriorityScore(b);
+    if (prioB !== prioA) return prioB - prioA;
+    return new Date(b.date_saisie) - new Date(a.date_saisie);
+  };
+
+  const filteredIncidents = incidents
+    .filter(i => {
+      if (filter === 'tous') return true;
+      return i.statut === filter;
+    })
+    .sort(sortByPriority);
 
   const getCategoryInfo = (cat) => {
     const info = categoryIcons[cat] || { emoji: '🧹', label: 'menage' };
@@ -273,7 +305,10 @@ export default function Menage() {
 
               {selectedIncident.statut === 'en_cours' && (
                 <div className="space-y-3 pt-4 border-t">
-                  <p className="text-sm font-body text-[#FFD700]">{t('pris_en_charge_par')}: {selectedIncident.pris_par}</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-body text-[#FFD700]">{t('pris_en_charge_par')}: {selectedIncident.pris_par}</p>
+                    <InterventionTimer startTime={selectedIncident.date_debut} isActive={true} />
+                  </div>
                   <Textarea
                     value={commentaire}
                     onChange={(e) => setCommentaire(e.target.value)}
