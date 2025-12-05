@@ -540,12 +540,10 @@ export default function SuiviIntervention() {
                             clientNom={`${userData.prenom || ''} ${userData.nom || ''}`}
                           />
                           </div>
-                          </CardContent>
-                          </Card>
-                          ))}
-                          </div>
-                          )}
-
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
                 ) : (
                   <div className="text-center py-8 text-gray-500">
                     <CheckCircle className="w-12 h-12 mx-auto mb-2 text-green-300" />
