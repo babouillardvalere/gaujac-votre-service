@@ -20,6 +20,8 @@ import ConditionsClient from './pages/ConditionsClient';
 import Attente from './pages/Attente';
 import Materiel from './pages/Materiel';
 import SuiviIntervention from './pages/SuiviIntervention';
+import AvisIdentification from './pages/AvisIdentification';
+import AvisFormulaire from './pages/AvisFormulaire';
 import __Layout from './Layout.jsx';
 
 
@@ -46,6 +48,8 @@ export const PAGES = {
     "Attente": Attente,
     "Materiel": Materiel,
     "SuiviIntervention": SuiviIntervention,
+    "AvisIdentification": AvisIdentification,
+    "AvisFormulaire": AvisFormulaire,
 }
 
 export const pagesConfig = {
