@@ -32,6 +32,9 @@ const categoryIcons = {
   materiel_menage: { emoji: '🧹', label: 'menage' }
 };
 
+// Pour le ménage, les photos sont facultatives (pas de catégorie sécurité)
+const isPhotoRequired = () => false;
+
 export default function Menage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -74,9 +77,33 @@ export default function Menage() {
       toast.error(t('champs_obligatoires'));
       return;
     }
-    // Ouvrir la capture photo AVANT obligatoire
-    setIncidentForPhoto(incident);
-    setShowPhotoAvant(true);
+    // Photos facultatives pour le ménage - prise en charge directe
+    handlePrendreEnChargeSansPhoto(incident);
+  };
+
+  const handlePrendreEnChargeSansPhoto = async (incident) => {
+    const now = new Date();
+    const tempsPriseEnCharge = incident.date_saisie 
+      ? differenceInMinutes(now, new Date(incident.date_saisie))
+      : 0;
+    
+    await base44.entities.InterventionLog.create({
+      incident_id: incident.id,
+      action: 'prise_en_charge',
+      horodatage: now.toISOString(),
+      utilisateur: collaborateurNom,
+      commentaire: 'Intervention prise en charge'
+    });
+    
+    updateMutation.mutate({
+      id: incident.id,
+      data: {
+        pris_par: collaborateurNom,
+        date_debut: now.toISOString(),
+        statut: 'en_cours',
+        temps_prise_en_charge: tempsPriseEnCharge
+      }
+    });
   };
 
   const handlePhotoAvantUploaded = async (photoData) => {
@@ -111,9 +138,34 @@ export default function Menage() {
   };
 
   const handleTerminer = (incident) => {
-    // Ouvrir la capture photo APRES obligatoire
-    setIncidentForPhoto(incident);
-    setShowPhotoApres(true);
+    // Photos facultatives pour le ménage - terminer directement
+    handleTerminerSansPhoto(incident);
+  };
+
+  const handleTerminerSansPhoto = async (incident) => {
+    const now = new Date();
+    const tempsTotal = incident.date_saisie 
+      ? differenceInMinutes(now, new Date(incident.date_saisie))
+      : 0;
+    
+    await base44.entities.InterventionLog.create({
+      incident_id: incident.id,
+      action: 'resolu',
+      horodatage: now.toISOString(),
+      utilisateur: incident.pris_par || collaborateurNom,
+      commentaire: 'Intervention résolue'
+    });
+    
+    updateMutation.mutate({
+      id: incident.id,
+      data: {
+        date_resolution: now.toISOString(),
+        statut: 'resolu',
+        commentaire_interne: commentaire || incident.commentaire_interne,
+        temps_total_intervention: tempsTotal
+      }
+    });
+    setCommentaire('');
   };
 
   const handlePhotoApresUploaded = async (photoData) => {
@@ -476,6 +528,18 @@ export default function Menage() {
                     placeholder={t('votre_nom')}
                     className="border-[#FFD700]/50 rounded-xl font-body"
                   />
+                  
+                  {/* Message photos */}
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3">
+                    <p className="text-xs font-heading text-yellow-700 flex items-center gap-2 mb-1">
+                      <Camera className="w-4 h-4" />
+                      📸 Photos avant/après intervention
+                    </p>
+                    <p className="text-xs text-yellow-600 font-body">
+                      Facultatives pour le ménage. Elles protègent votre travail et garantissent la transparence en cas de contestation.
+                    </p>
+                  </div>
+                  
                   <Button
                     onClick={() => handlePrendreEnCharge(selectedIncident)}
                     disabled={!collaborateurNom.trim() || updateMutation.isPending}
@@ -483,6 +547,17 @@ export default function Menage() {
                   >
                     <Play className="w-4 h-4 mr-2" />
                     {t('prendre_en_charge')}
+                  </Button>
+                  
+                  {/* Option photo avant facultative */}
+                  <Button 
+                    onClick={() => { setIncidentForPhoto(selectedIncident); setShowPhotoAvant(true); }}
+                    variant="outline" 
+                    className="w-full border-yellow-300 text-yellow-700 rounded-xl font-body text-sm"
+                    disabled={!collaborateurNom.trim()}
+                  >
+                    <Camera className="w-4 h-4 mr-2" />
+                    Prendre en charge avec photo avant (recommandé)
                   </Button>
                 </div>
               )}
@@ -499,6 +574,14 @@ export default function Menage() {
                     placeholder={t('commentaire_optionnel')}
                     className="border-[#FFD700]/50 rounded-xl font-body"
                   />
+                  
+                  {/* Message photos */}
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3">
+                    <p className="text-xs text-yellow-600 font-body">
+                      📸 Photo après : facultative mais recommandée pour attester de votre travail.
+                    </p>
+                  </div>
+                  
                   <div className="grid grid-cols-2 gap-2">
                     <Button onClick={() => handleMettreEnAttente(selectedIncident)} variant="outline" className="border-gray-400 text-gray-600 rounded-xl font-heading">
                       <Pause className="w-4 h-4 mr-2" />
@@ -509,6 +592,16 @@ export default function Menage() {
                       {t('terminer')}
                     </Button>
                   </div>
+                  
+                  {/* Bouton photo facultative */}
+                  <Button 
+                    onClick={() => { setIncidentForPhoto(selectedIncident); setShowPhotoApres(true); }}
+                    variant="outline" 
+                    className="w-full border-yellow-300 text-yellow-700 rounded-xl font-body text-sm"
+                  >
+                    <Camera className="w-4 h-4 mr-2" />
+                    Terminer avec photo après (recommandé)
+                  </Button>
                 </div>
               )}
 
