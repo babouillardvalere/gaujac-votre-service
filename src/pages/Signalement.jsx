@@ -349,8 +349,8 @@ export default function Signalement() {
             {/* Section Autorisation d'accès */}
             <div className="p-4 rounded-xl bg-blue-50 border-2 border-[#00AEEF]/50">
               <h3 className="font-heading text-[#0077A8] mb-3 flex items-center gap-2">
-                <DoorOpen className="w-5 h-5" />
-                {t('autorisation_acces_title')} *
+                <Lock className="w-5 h-5" />
+                🔐 {t('autorisation_acces_title')} *
               </h3>
               <p className="text-sm font-body text-gray-600 mb-4">
                 {t('autorisation_acces_question')}
