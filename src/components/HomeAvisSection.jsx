@@ -49,8 +49,32 @@ export default function HomeAvisSection() {
     return `${prenom || ''} ${lastNameInitial}`.trim();
   };
 
-  if (isLoading || avisAffiches.length === 0) {
+  if (isLoading) {
     return null;
+  }
+
+  // Afficher la section même sans avis
+  if (avisAffiches.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8 }}
+        className="mt-10"
+      >
+        <div className="text-center mb-4">
+          <h2 className="font-handwritten text-2xl md:text-3xl text-[#FFD700] flex items-center justify-center gap-2">
+            ⭐ {t('ils_ont_adore')} ⭐
+          </h2>
+        </div>
+        <Card className="border-2 border-[#FFD700]/30 rounded-xl bg-white/90">
+          <CardContent className="p-6 text-center">
+            <Star className="w-10 h-10 text-[#FFD700] mx-auto mb-3 opacity-50" />
+            <p className="font-body text-gray-500">{t('aucun_avis')}</p>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
   }
 
   return (
