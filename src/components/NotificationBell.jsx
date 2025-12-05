@@ -23,10 +23,15 @@ const categoryEmojis = {
   literie: '🛏', nettoyage: '🧽', vaisselle: '🍽', poubelle: '🗑', produit_manquant: '🧴'
 };
 
-export default function NotificationBell() {
+export default function NotificationBell({ showNotificationCenter = false }) {
   const { t } = useTranslation();
   const [hasNewNotification, setHasNewNotification] = useState(false);
   const [lastCount, setLastCount] = useState(0);
+
+  // Si on veut afficher le NotificationCenter à la place
+  if (showNotificationCenter) {
+    return <NotificationCenter userType="collaborateur" />;
+  }
 
   const { data: incidents = [] } = useQuery({
     queryKey: ['notifications-incidents'],
