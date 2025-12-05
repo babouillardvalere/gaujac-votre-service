@@ -1070,11 +1070,18 @@ Rapport généré automatiquement par Camping Paradis`;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <h2 className="font-heading text-2xl text-[#0077A8] flex items-center gap-2">
           <FileText className="w-6 h-6" />
           {t('title')}
         </h2>
+        <Button
+          onClick={() => setShowLitigeDialog(true)}
+          className="bg-red-500 hover:bg-red-600 text-white rounded-xl"
+        >
+          <Zap className="w-4 h-4 mr-2" />
+          {t('generer_litige')}
+        </Button>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
