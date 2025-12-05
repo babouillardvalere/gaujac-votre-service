@@ -38,6 +38,11 @@ const categoryIcons = {
   frelons: { icon: Bug, emoji: '🐝', label: 'frelons' }
 };
 
+// Catégories nécessitant des photos obligatoires (sécurité)
+const SECURITY_CATEGORIES = ['gaz', 'electricite', 'eau', 'plomberie', 'structurel'];
+
+const isPhotoRequired = (categorie) => SECURITY_CATEGORIES.includes(categorie);
+
 export default function Technique() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -80,9 +85,40 @@ export default function Technique() {
       toast.error(t('champs_obligatoires'));
       return;
     }
-    // Ouvrir la capture photo AVANT obligatoire
-    setIncidentForPhoto(incident);
-    setShowPhotoAvant(true);
+    
+    // Photos obligatoires uniquement pour catégories sécurité
+    if (isPhotoRequired(incident.categorie)) {
+      setIncidentForPhoto(incident);
+      setShowPhotoAvant(true);
+    } else {
+      // Prise en charge directe sans photo obligatoire
+      handlePrendreEnChargeSansPhoto(incident);
+    }
+  };
+
+  const handlePrendreEnChargeSansPhoto = async (incident) => {
+    const now = new Date();
+    const tempsPriseEnCharge = incident.date_saisie 
+      ? differenceInMinutes(now, new Date(incident.date_saisie))
+      : 0;
+    
+    await base44.entities.InterventionLog.create({
+      incident_id: incident.id,
+      action: 'prise_en_charge',
+      horodatage: now.toISOString(),
+      utilisateur: collaborateurNom,
+      commentaire: 'Intervention prise en charge'
+    });
+    
+    updateMutation.mutate({
+      id: incident.id,
+      data: {
+        pris_par: collaborateurNom,
+        date_debut: now.toISOString(),
+        statut: 'en_cours',
+        temps_prise_en_charge: tempsPriseEnCharge
+      }
+    });
   };
 
   const handlePhotoAvantUploaded = async (photoData) => {
@@ -118,9 +154,40 @@ export default function Technique() {
   };
 
   const handleTerminer = (incident) => {
-    // Ouvrir la capture photo APRES obligatoire
-    setIncidentForPhoto(incident);
-    setShowPhotoApres(true);
+    // Photos obligatoires uniquement pour catégories sécurité
+    if (isPhotoRequired(incident.categorie)) {
+      setIncidentForPhoto(incident);
+      setShowPhotoApres(true);
+    } else {
+      // Terminer directement sans photo obligatoire
+      handleTerminerSansPhoto(incident);
+    }
+  };
+
+  const handleTerminerSansPhoto = async (incident) => {
+    const now = new Date();
+    const tempsTotal = incident.date_saisie 
+      ? differenceInMinutes(now, new Date(incident.date_saisie))
+      : 0;
+    
+    await base44.entities.InterventionLog.create({
+      incident_id: incident.id,
+      action: 'resolu',
+      horodatage: now.toISOString(),
+      utilisateur: incident.pris_par || collaborateurNom,
+      commentaire: 'Intervention résolue'
+    });
+    
+    updateMutation.mutate({
+      id: incident.id,
+      data: {
+        date_resolution: now.toISOString(),
+        statut: 'resolu',
+        commentaire_interne: commentaire || incident.commentaire_interne,
+        temps_total_intervention: tempsTotal
+      }
+    });
+    setCommentaire('');
   };
 
   const handlePhotoApresUploaded = async (photoData) => {
@@ -555,6 +622,25 @@ export default function Technique() {
                     placeholder={t('votre_nom')}
                     className="border-[#00AEEF]/30 rounded-xl font-body"
                   />
+                  
+                  {/* Message photos */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+                    <p className="text-xs font-heading text-blue-700 flex items-center gap-2 mb-1">
+                      <Camera className="w-4 h-4" />
+                      📸 Photos avant/après intervention
+                    </p>
+                    <p className="text-xs text-blue-600 font-body">
+                      {isPhotoRequired(selectedIncident.categorie) ? (
+                        <span className="text-red-600 font-medium">⚠️ Photos OBLIGATOIRES pour cette intervention (sécurité : {selectedIncident.categorie})</span>
+                      ) : (
+                        "Facultatives, sauf interventions liées à la sécurité (gaz, électricité, eau, structure)."
+                      )}
+                    </p>
+                    <p className="text-xs text-gray-500 font-body mt-1">
+                      Elles protègent votre travail et garantissent la transparence en cas de contestation.
+                    </p>
+                  </div>
+                  
                   <Button
                     onClick={() => handlePrendreEnCharge(selectedIncident)}
                     disabled={!collaborateurNom.trim() || updateMutation.isPending}
@@ -578,6 +664,18 @@ export default function Technique() {
                     placeholder={t('commentaire_optionnel')}
                     className="border-[#00AEEF]/30 rounded-xl font-body"
                   />
+                  
+                  {/* Message photos */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+                    <p className="text-xs text-blue-600 font-body">
+                      {isPhotoRequired(selectedIncident.categorie) ? (
+                        <span className="text-red-600 font-medium">⚠️ Photo APRÈS obligatoire pour cette intervention (sécurité)</span>
+                      ) : (
+                        "📸 Photo après : facultative mais recommandée pour attester de votre travail."
+                      )}
+                    </p>
+                  </div>
+                  
                   <div className="grid grid-cols-2 gap-2">
                     <Button onClick={() => handleMettreEnAttente(selectedIncident)} variant="outline" className="border-gray-400 text-gray-600 rounded-xl font-heading">
                       <Pause className="w-4 h-4 mr-2" />
@@ -588,6 +686,18 @@ export default function Technique() {
                       {t('terminer')}
                     </Button>
                   </div>
+                  
+                  {/* Bouton photo facultative */}
+                  {!isPhotoRequired(selectedIncident.categorie) && (
+                    <Button 
+                      onClick={() => { setIncidentForPhoto(selectedIncident); setShowPhotoApres(true); }}
+                      variant="outline" 
+                      className="w-full border-blue-300 text-blue-600 rounded-xl font-body text-sm"
+                    >
+                      <Camera className="w-4 h-4 mr-2" />
+                      Ajouter une photo après (recommandé)
+                    </Button>
+                  )}
                 </div>
               )}
 
