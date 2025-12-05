@@ -5,8 +5,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Lock, Eye, EyeOff, AlertCircle, Building2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import { useTranslation } from './translations';
 
 export default function BureauAuthDialog({ open, onOpenChange, onSuccess }) {
+  const { t } = useTranslation();
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -70,15 +72,15 @@ export default function BureauAuthDialog({ open, onOpenChange, onSuccess }) {
         </DialogHeader>
 
         <div className="text-center mb-4">
-          <h2 className="font-heading text-xl text-[#0077A8] mb-2">🔐 Connexion Bureau</h2>
+          <h2 className="font-heading text-xl text-[#0077A8] mb-2">🔐 {t('connexion_bureau')}</h2>
           <p className="font-body text-sm text-gray-600">
-            Accès réservé uniquement à la Réception et à la Direction.
+            {t('acces_reserve_bureau')}
           </p>
         </div>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-heading text-[#0077A8]">Mot de passe Bureau</label>
+            <label className="text-sm font-heading text-[#0077A8]">{t('mot_de_passe_bureau')}</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#FFA500]" />
               <Input
@@ -103,8 +105,8 @@ export default function BureauAuthDialog({ open, onOpenChange, onSuccess }) {
             <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2">
               <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-heading text-sm text-red-600">Mot de passe incorrect.</p>
-                <p className="font-body text-xs text-red-500">Accès réservé à la réception et à la direction.</p>
+                <p className="font-heading text-sm text-red-600">{t('mot_de_passe_incorrect_bureau')}</p>
+                <p className="font-body text-xs text-red-500">{t('acces_reserve_direction')}</p>
               </div>
             </div>
           )}
@@ -114,7 +116,7 @@ export default function BureauAuthDialog({ open, onOpenChange, onSuccess }) {
             disabled={!password.trim() || isLoading}
             className="w-full h-12 bg-[#FFA500] hover:bg-[#e69500] rounded-xl font-heading"
           >
-            {isLoading ? 'Vérification...' : 'Se connecter'}
+            {isLoading ? t('verification') : t('se_connecter')}
           </Button>
 
           <Button
@@ -122,7 +124,7 @@ export default function BureauAuthDialog({ open, onOpenChange, onSuccess }) {
             onClick={() => onOpenChange(false)}
             className="w-full text-gray-500 font-body"
           >
-            Annuler
+            {t('annuler')}
           </Button>
         </div>
       </DialogContent>

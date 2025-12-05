@@ -294,17 +294,13 @@ export default function SuiviIntervention() {
           <CardContent className="p-6 text-center">
             <Clock className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h2 className="font-heading text-xl text-gray-600 mb-2">
-              {lang === 'fr' ? 'Votre séjour est terminé' : 'Your stay has ended'}
+              {t('sejour_termine')}
             </h2>
             <p className="font-body text-gray-500 mb-4">
-              {lang === 'fr' 
-                ? 'Vous ne pouvez plus accéder au suivi des interventions.' 
-                : 'You can no longer access intervention tracking.'}
+              {t('acces_suivi_termine')}
             </p>
             <p className="font-body text-gray-400 text-sm mb-6">
-              {lang === 'fr' 
-                ? 'Merci de votre visite au Camping Paradis !' 
-                : 'Thank you for visiting Camping Paradis!'}
+              {t('merci_visite')}
             </p>
             <Link to={createPageUrl('Home')}>
               <Button className="w-full bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading">

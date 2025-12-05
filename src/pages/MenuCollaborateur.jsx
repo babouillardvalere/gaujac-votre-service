@@ -72,12 +72,12 @@ export default function MenuCollaborateur() {
       onClick: handleBureauClick
     },
     {
-      title: '🐤 Aide IA PIKI',
+      title: '🐤 ' + t('aide_ia_piki'),
       icon: Bot,
       href: null,
       color: 'bg-purple-500',
       textColor: 'text-white',
-      description: 'Assistant intelligent',
+      description: t('assistant_intelligent'),
       comingSoon: true
     }
   ];
@@ -128,7 +128,7 @@ export default function MenuCollaborateur() {
                         <div className="ml-5 flex-1">
                           <h2 className="font-heading text-lg text-gray-500 flex items-center gap-2">
                             {item.title}
-                            <span className="text-xs bg-gray-200 px-2 py-0.5 rounded">Bientôt</span>
+                            <span className="text-xs bg-gray-200 px-2 py-0.5 rounded">{t('bientot')}</span>
                           </h2>
                           <p className="font-body text-sm text-gray-400">{item.description}</p>
                         </div>

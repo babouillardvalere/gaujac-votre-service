@@ -32,11 +32,11 @@ export default function MettreEnAttenteDialog({ open, onOpenChange, onConfirm, i
   const isValid = formData.motifAttente.trim();
 
   const motifSuggestions = [
-    "Attente de matériel",
-    "Attente du fournisseur",
-    "Client absent",
-    "Besoin d'une pièce spécifique",
-    "Besoin d'un second technicien"
+    { key: 'materiel', label: t('suggestion_attente_materiel') },
+    { key: 'fournisseur', label: t('suggestion_attente_fournisseur') },
+    { key: 'absent', label: t('suggestion_client_absent') },
+    { key: 'piece', label: t('suggestion_piece_specifique') },
+    { key: 'technicien', label: t('suggestion_second_technicien') }
   ];
 
   return (
@@ -53,29 +53,29 @@ export default function MettreEnAttenteDialog({ open, onOpenChange, onConfirm, i
           {/* Motif d'attente - OBLIGATOIRE */}
           <div className="space-y-2">
             <label className="text-sm font-heading text-[#0077A8] flex items-center gap-1">
-              Motif de l'attente <span className="text-red-500">*</span>
+              {t('motif_attente_label')} <span className="text-red-500">*</span>
             </label>
             <Textarea
               value={formData.motifAttente}
               onChange={(e) => { setFormData({ ...formData, motifAttente: e.target.value }); setShowError(false); }}
-              placeholder="Décrivez la raison de la mise en attente..."
+              placeholder={t('motif_attente_placeholder')}
               className={`border-[#00AEEF]/30 rounded-xl min-h-20 ${showError && !formData.motifAttente.trim() ? 'border-red-500' : ''}`}
             />
             {showError && !formData.motifAttente.trim() && (
               <p className="text-red-500 text-xs flex items-center gap-1">
                 <AlertCircle className="w-3 h-3" />
-                Ce champ est obligatoire
+                {t('motif_attente_obligatoire')}
               </p>
             )}
             <div className="flex flex-wrap gap-1 mt-2">
               {motifSuggestions.map((suggestion) => (
                 <button
-                  key={suggestion}
+                  key={suggestion.key}
                   type="button"
-                  onClick={() => setFormData({ ...formData, motifAttente: suggestion })}
+                  onClick={() => setFormData({ ...formData, motifAttente: suggestion.label })}
                   className="text-xs px-2 py-1 bg-[#FFA500]/10 text-[#FFA500] rounded-lg hover:bg-[#FFA500]/20 transition-colors font-body"
                 >
-                  {suggestion}
+                  {suggestion.label}
                 </button>
               ))}
             </div>
@@ -160,7 +160,7 @@ export default function MettreEnAttenteDialog({ open, onOpenChange, onConfirm, i
             className="bg-[#FFA500] hover:bg-[#e69500] rounded-xl font-heading"
           >
             {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Clock className="w-4 h-4 mr-2" />}
-            ✔️ Valider
+            ✔️ {t('valider')}
           </Button>
         </DialogFooter>
       </DialogContent>

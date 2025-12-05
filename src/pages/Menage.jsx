@@ -203,7 +203,7 @@ export default function Menage() {
               {t('en_cours')} ({incidents.filter(i => i.statut === 'en_cours').length})
             </TabsTrigger>
             <TabsTrigger value="en_attente_materiel" className="rounded-lg font-heading text-xs data-[state=active]:bg-gray-500 data-[state=active]:text-white">
-              ⏳ Attente ({incidents.filter(i => i.statut === 'en_attente_materiel').length})
+              ⏳ {t('menu_attente')} ({incidents.filter(i => i.statut === 'en_attente_materiel').length})
             </TabsTrigger>
             <TabsTrigger value="resolu" className="rounded-lg font-heading text-xs data-[state=active]:bg-green-500 data-[state=active]:text-white">
               {t('resolu')} ({incidents.filter(i => i.statut === 'resolu').length})
@@ -259,7 +259,7 @@ export default function Menage() {
                         <div className="mt-2 pt-2 border-t border-gray-100">
                           <p className="text-xs font-body text-[#FFA500] flex items-center gap-1">
                             <Clock className="w-3 h-3" />
-                            ⏳ Motif : {incident.motif_attente}
+                            ⏳ {t('motif_label')} : {incident.motif_attente}
                           </p>
                         </div>
                       )}
@@ -348,13 +348,13 @@ export default function Menage() {
               {selectedIncident.statut === 'en_attente_materiel' && (
                 <div className="space-y-3 pt-4 border-t">
                   <div className="bg-[#FFA500]/10 p-4 rounded-xl border border-[#FFA500]/30">
-                    <p className="text-sm font-heading text-[#FFA500] mb-2">⏳ Intervention en attente</p>
-                    <p className="font-body text-gray-700"><strong>Motif :</strong> {selectedIncident.motif_attente}</p>
+                    <p className="text-sm font-heading text-[#FFA500] mb-2">⏳ {t('intervention_en_attente')}</p>
+                    <p className="font-body text-gray-700"><strong>{t('motif_label')} :</strong> {selectedIncident.motif_attente}</p>
                     {selectedIncident.attente_materiel_detail && (
-                      <p className="font-body text-gray-600 text-sm mt-1">Matériel : {selectedIncident.attente_materiel_detail}</p>
+                      <p className="font-body text-gray-600 text-sm mt-1">{t('materiel_necessaire')} : {selectedIncident.attente_materiel_detail}</p>
                     )}
                     {selectedIncident.attente_delai && (
-                      <p className="font-body text-gray-500 text-xs mt-1">Délai estimé : {selectedIncident.attente_delai}</p>
+                      <p className="font-body text-gray-500 text-xs mt-1">{t('delai_estime')} : {selectedIncident.attente_delai}</p>
                     )}
                   </div>
                   <div className="grid grid-cols-2 gap-2">
@@ -368,7 +368,7 @@ export default function Menage() {
                       className="bg-[#FFD700] hover:bg-[#FFA500] text-[#0077A8] rounded-xl font-heading"
                     >
                       <Play className="w-4 h-4 mr-2" />
-                      Reprendre
+                      {t('reprendre')}
                     </Button>
                     <Button 
                       onClick={() => handleMettreEnAttente(selectedIncident)}
@@ -376,7 +376,7 @@ export default function Menage() {
                       className="border-[#FFA500] text-[#FFA500] rounded-xl font-heading"
                     >
                       <Pause className="w-4 h-4 mr-2" />
-                      Modifier motif
+                      {t('modifier_motif')}
                     </Button>
                   </div>
                   <Button 
@@ -385,7 +385,7 @@ export default function Menage() {
                     className="w-full bg-green-500 hover:bg-green-600 rounded-xl font-heading"
                   >
                     <CheckCircle className="w-4 h-4 mr-2" />
-                    Passer en résolu
+                    {t('passer_resolu')}
                   </Button>
                 </div>
               )}
