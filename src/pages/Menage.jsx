@@ -171,21 +171,67 @@ export default function Menage() {
     setIncidentToWait(null);
   };
 
-  // Tri par priorité
+  // Fonction pour extraire l'heure de début d'une plage horaire
+  const getPlageHoraireStart = (plage) => {
+    if (!plage) return 24;
+    const match = plage.match(/(\d{2})h(\d{2})/);
+    if (match) {
+      return parseInt(match[1]) + parseInt(match[2]) / 60;
+    }
+    return 24;
+  };
+
+  // Déterminer le type de priorité
+  const getPriorityType = (incident) => {
+    if (incident.urgent) return 'urgent';
+    if (incident.autorisation_acces === 'non' && incident.plage_horaire_client) return 'plage_horaire';
+    return 'normal';
+  };
+
+  // Tri intelligent par priorité
   const sortByPriority = (a, b) => {
-    const getPriorityScore = (i) => {
-      if (i.statut === 'resolu') return 0;
-      if (i.statut === 'en_attente_materiel') return 1;
-      if (i.statut === 'en_cours' && !i.urgent) return 2;
-      if (i.statut === 'en_attente' && !i.urgent) return 3;
-      if (i.statut === 'en_cours' && i.urgent) return 4;
-      if (i.statut === 'en_attente' && i.urgent) return 5;
-      return 0;
-    };
-    const prioA = (a.priorite_bureau || 0) + getPriorityScore(a);
-    const prioB = (b.priorite_bureau || 0) + getPriorityScore(b);
-    if (prioB !== prioA) return prioB - prioA;
-    return new Date(b.date_saisie) - new Date(a.date_saisie);
+    if ((a.priorite_bureau || 0) !== (b.priorite_bureau || 0)) {
+      if (a.urgent && !b.urgent) return -1;
+      if (!a.urgent && b.urgent) return 1;
+      return (b.priorite_bureau || 0) - (a.priorite_bureau || 0);
+    }
+
+    const typeA = getPriorityType(a);
+    const typeB = getPriorityType(b);
+
+    if (a.statut === 'resolu' && b.statut !== 'resolu') return 1;
+    if (a.statut !== 'resolu' && b.statut === 'resolu') return -1;
+    if (a.statut === 'resolu' && b.statut === 'resolu') {
+      return new Date(b.date_resolution) - new Date(a.date_resolution);
+    }
+
+    if (a.statut === 'en_attente_materiel' && b.statut !== 'en_attente_materiel' && b.statut !== 'resolu') return 1;
+    if (a.statut !== 'en_attente_materiel' && a.statut !== 'resolu' && b.statut === 'en_attente_materiel') return -1;
+
+    if (typeA === 'urgent' && typeB !== 'urgent') return -1;
+    if (typeA !== 'urgent' && typeB === 'urgent') return 1;
+    if (typeA === 'urgent' && typeB === 'urgent') {
+      return new Date(a.date_saisie) - new Date(b.date_saisie);
+    }
+
+    if (typeA === 'plage_horaire' && typeB === 'normal') {
+      const plageStart = getPlageHoraireStart(a.plage_horaire_client);
+      const normalHour = new Date(b.date_saisie).getHours() + new Date(b.date_saisie).getMinutes() / 60;
+      if (plageStart > normalHour) return 1;
+      return -1;
+    }
+    if (typeA === 'normal' && typeB === 'plage_horaire') {
+      const plageStart = getPlageHoraireStart(b.plage_horaire_client);
+      const normalHour = new Date(a.date_saisie).getHours() + new Date(a.date_saisie).getMinutes() / 60;
+      if (plageStart > normalHour) return -1;
+      return 1;
+    }
+
+    if (typeA === 'plage_horaire' && typeB === 'plage_horaire') {
+      return getPlageHoraireStart(a.plage_horaire_client) - getPlageHoraireStart(b.plage_horaire_client);
+    }
+
+    return new Date(a.date_saisie) - new Date(b.date_saisie);
   };
 
   const filteredIncidents = incidents
@@ -269,15 +315,34 @@ export default function Menage() {
           <div className="space-y-4">
             {filteredIncidents.map((incident) => {
               const catInfo = getCategoryInfo(incident.categorie);
+              const priorityType = getPriorityType(incident);
+              
+              const priorityStyles = {
+                urgent: 'border-red-500 bg-red-500/10',
+                plage_horaire: 'border-blue-500 bg-blue-500/10',
+                normal: 'border-yellow-500 bg-yellow-500/10'
+              };
+              
               return (
                 <motion.div key={incident.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                  <Card className="border-2 border-[#FFD700]/50 rounded-xl cursor-pointer hover:shadow-lg transition-all" onClick={() => setSelectedIncident(incident)}>
+                  <Card className={`border-2 rounded-xl cursor-pointer hover:shadow-lg transition-all ${priorityStyles[priorityType]}`} onClick={() => setSelectedIncident(incident)}>
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
                           <span className="text-3xl">{catInfo.emoji}</span>
                           <div>
-                            <span className="font-heading text-[#0077A8]">{incident.logement || incident.emplacement}</span>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-heading text-[#0077A8]">{incident.logement || incident.emplacement}</span>
+                              {priorityType === 'urgent' && (
+                                <Badge className="bg-red-500 text-white text-xs">⚠️ Urgent</Badge>
+                              )}
+                              {priorityType === 'plage_horaire' && (
+                                <Badge className="bg-blue-500 text-white text-xs">⏰ {incident.plage_horaire_client}</Badge>
+                              )}
+                              {priorityType === 'normal' && (
+                                <Badge className="bg-yellow-500 text-black text-xs">🧹 Normal</Badge>
+                              )}
+                            </div>
                             <p className="text-sm font-body text-gray-600">{catInfo.label}</p>
                           </div>
                         </div>
