@@ -23,6 +23,7 @@ import SuiviIntervention from './pages/SuiviIntervention';
 import AvisIdentification from './pages/AvisIdentification';
 import AvisFormulaire from './pages/AvisFormulaire';
 import MeilleursAvis from './pages/MeilleursAvis';
+import Taches from './pages/Taches';
 import __Layout from './Layout.jsx';
 
 
@@ -52,6 +53,7 @@ export const PAGES = {
     "AvisIdentification": AvisIdentification,
     "AvisFormulaire": AvisFormulaire,
     "MeilleursAvis": MeilleursAvis,
+    "Taches": Taches,
 }
 
 export const pagesConfig = {
