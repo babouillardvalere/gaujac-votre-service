@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../components/translations';
 import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
+import { getCodeFromCategory } from '../components/categoryCodeMapping';
 import Logo from '../components/Logo';
 import SignaturePad from '../components/SignaturePad';
 import { Button } from '@/components/ui/button';
@@ -10,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ArrowLeft, Camera, Check, AlertCircle, Smile, Meh, Frown, Send } from 'lucide-react';
+import { ArrowLeft, Camera, Check, AlertCircle, Smile, Meh, Frown, Send, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
@@ -47,24 +49,54 @@ export default function ClientControleInventaire() {
     }
   }, [nom, categorie, navigate]);
 
-  // Liste d'inventaire simplifiée (peut être étendue selon la catégorie)
-  const inventaireItems = typeLogement === 'mobilhome' ? [
-    { id: 'assiettes', icon: '🍽️', nom_fr: 'Assiettes', nom_en: 'Plates', quantite: 'x6' },
-    { id: 'verres', icon: '🥤', nom_fr: 'Verres', nom_en: 'Glasses', quantite: 'x6' },
-    { id: 'couverts', icon: '🍴', nom_fr: 'Couverts', nom_en: 'Cutlery', quantite: 'x6' },
-    { id: 'casseroles', icon: '🍳', nom_fr: 'Casseroles', nom_en: 'Pots', quantite: 'x3' },
-    { id: 'poeles', icon: '🍳', nom_fr: 'Poêles', nom_en: 'Pans', quantite: 'x2' },
-    { id: 'tv', icon: '📺', nom_fr: 'TV', nom_en: 'TV', quantite: 'x1' },
-    { id: 'frigo', icon: '❄️', nom_fr: 'Frigo', nom_en: 'Fridge', quantite: 'x1' },
-    { id: 'micro_ondes', icon: '⚡', nom_fr: 'Micro-ondes', nom_en: 'Microwave', quantite: 'x1' },
-    { id: 'balai', icon: '🧹', nom_fr: 'Balai', nom_en: 'Broom', quantite: 'x1' },
-    { id: 'serpilliere', icon: '🧽', nom_fr: 'Serpillière', nom_en: 'Mop', quantite: 'x1' },
-    { id: 'table_exterieure', icon: '🪑', nom_fr: 'Table extérieure', nom_en: 'Outdoor table', quantite: 'x1' },
-    { id: 'chaises', icon: '🪑', nom_fr: 'Chaises', nom_en: 'Chairs', quantite: 'x6' },
-  ] : [
-    { id: 'terrain_propre', icon: '✅', nom_fr: 'Terrain propre', nom_en: 'Clean pitch', quantite: '' },
-    { id: 'electricite', icon: '⚡', nom_fr: 'Électricité', nom_en: 'Electricity', quantite: '' },
-  ];
+  // Charger l'inventaire selon la catégorie
+  const codeCategorie = typeLogement === 'mobilhome' ? getCodeFromCategory(categorie) : null;
+
+  const { data: inventaireData, isLoading: loadingInventaire } = useQuery({
+    queryKey: ['inventaire', codeCategorie],
+    queryFn: async () => {
+      if (!codeCategorie) return null;
+      const inventaires = await base44.entities.InventaireHebergement.list();
+      return inventaires.find(inv => inv.code_categorie === codeCategorie);
+    },
+    enabled: !!codeCategorie && typeLogement === 'mobilhome'
+  });
+
+  // Parser l'inventaire pour extraire les items
+  const parseInventaire = (contenu) => {
+    if (!contenu) return [];
+    
+    const items = [];
+    const lines = contenu.split('\n');
+    
+    for (const line of lines) {
+      // Détecter les lignes avec emoji + texte + quantité
+      const match = line.match(/^([^\s]+)\s+(.+?)\s+(×\d+|x\d+)?$/);
+      if (match) {
+        const [, emoji, nom, quantite] = match;
+        const id = nom.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        items.push({
+          id,
+          icon: emoji,
+          nom_fr: nom.trim(),
+          nom_en: nom.trim(), // On utilise le français par défaut, peut être amélioré
+          quantite: quantite ? quantite.replace('×', 'x') : ''
+        });
+      }
+    }
+    
+    return items;
+  };
+
+  // Liste d'inventaire selon la catégorie
+  const inventaireItems = typeLogement === 'mobilhome' && inventaireData
+    ? parseInventaire(lang === 'fr' ? inventaireData.contenu_fr : inventaireData.contenu_en)
+    : typeLogement === 'emplacement' 
+      ? [
+          { id: 'terrain_propre', icon: '✅', nom_fr: 'Terrain propre', nom_en: 'Clean pitch', quantite: '' },
+          { id: 'electricite', icon: '⚡', nom_fr: 'Électricité', nom_en: 'Electricity', quantite: '' },
+        ]
+      : [];
 
   const lieuxPhoto = typeLogement === 'mobilhome' ? [
     { id: 'cuisine', label_fr: 'Cuisine', label_en: 'Kitchen' },
@@ -255,7 +287,17 @@ export default function ClientControleInventaire() {
                   : 'If an icon is not checked = missing or damaged item'}
               </p>
 
-              <div className="grid grid-cols-2 gap-3 mb-4">
+              {loadingInventaire ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-8 h-8 animate-spin text-[#00AEEF]" />
+                </div>
+              ) : inventaireItems.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  {lang === 'fr' ? 'Inventaire non disponible' : 'Inventory not available'}
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-3 mb-4">
                 {inventaireItems.map(item => {
                   const isValidated = objetsValides.includes(item.id);
                   return (
@@ -279,9 +321,9 @@ export default function ClientControleInventaire() {
                     </button>
                   );
                 })}
-              </div>
+                  </div>
 
-              <Button
+                  <Button
                 onClick={() => setShowMissingDialog(true)}
                 variant="outline"
                 className="w-full border-2 border-orange-500 text-orange-600 hover:bg-orange-50"
@@ -290,17 +332,19 @@ export default function ClientControleInventaire() {
                 {lang === 'fr' ? 'Déclarer un objet manquant / cassé' : 'Report missing / broken item'}
               </Button>
 
-              {objetsMissing.length > 0 && (
-                <div className="mt-4 p-4 bg-orange-50 rounded-lg">
-                  <p className="font-heading text-sm text-orange-800 mb-2">
-                    {lang === 'fr' ? 'Objets déclarés :' : 'Declared items:'}
-                  </p>
-                  {objetsMissing.map((obj, idx) => (
-                    <div key={idx} className="text-sm text-gray-700">
-                      • {obj.objet}
+                  {objetsMissing.length > 0 && (
+                    <div className="mt-4 p-4 bg-orange-50 rounded-lg">
+                      <p className="font-heading text-sm text-orange-800 mb-2">
+                        {lang === 'fr' ? 'Objets déclarés :' : 'Declared items:'}
+                      </p>
+                      {objetsMissing.map((obj, idx) => (
+                        <div key={idx} className="text-sm text-gray-700">
+                          • {obj.objet}
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>
