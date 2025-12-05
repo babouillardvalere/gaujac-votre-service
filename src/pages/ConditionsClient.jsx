@@ -83,9 +83,7 @@ export default function ConditionsClient() {
                         <li>🔥 {isFrench ? "Plus de gaz" : "No gas"}</li>
                         <li>⚡ {isFrench ? "Plus d'électricité" : "No electricity"}</li>
                       </ul>
-                      <p className="text-xs mt-2 font-semibold text-red-600">
-                        ⚠️ {isFrench ? "Guêpes/Frelons : jamais en astreinte (intervention le lendemain)" : "Wasps/Hornets: never on-call (next day intervention)"}
-                      </p>
+
                       <p className="text-xs mt-2 italic text-gray-600">
                         {isFrench ? "Autres demandes → traitées le lendemain" : "Other requests → handled next day"}
                       </p>
