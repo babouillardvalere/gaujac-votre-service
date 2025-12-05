@@ -54,6 +54,22 @@ export function useNotifications() {
     refetchInterval: 30000
   });
 
+  // Tâches urgentes ou en retard
+  const { data: urgentTaches = [] } = useQuery({
+    queryKey: ['notif-taches'],
+    queryFn: async () => {
+      const taches = await base44.entities.Tache.filter({ statut: 'a_faire' }, '-date_echeance', 50);
+      const now = new Date();
+      return taches.filter(t => {
+        if (t.priorite === 'urgente') return true;
+        if (t.date_echeance && new Date(t.date_echeance) < now) return true;
+        if (t.date_echeance && (new Date(t.date_echeance) - now) < 24 * 60 * 60 * 1000) return true;
+        return false;
+      });
+    },
+    refetchInterval: 30000
+  });
+
   // Interventions techniques en attente
   const techniqueCount = pendingIncidents.filter(i => i.type === 'technique').length;
   const techniqueUrgent = urgentIncidents.filter(i => i.type === 'technique').length;
