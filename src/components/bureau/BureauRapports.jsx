@@ -23,6 +23,7 @@ import { fr, enUS } from 'date-fns/locale';
 import { toast } from 'sonner';
 import RapportPreview from './RapportPreview';
 import LitigePDFGenerator from './LitigePDFGenerator';
+import RapportPDFGenerator, { generateRapportPDF } from './RapportPDFGenerator';
 
 const translations = {
   fr: {
@@ -540,31 +541,54 @@ export default function BureauRapports({ incidents = [], avis = [] }) {
     }
   };
 
-  // Envoyer le rapport par email
+  // Envoyer le rapport par email avec PDF
   const sendReport = async (rapport, destinataires) => {
     try {
       const reportLang = rapport.langue || 'fr';
       const tReport = (key) => translations[reportLang]?.[key] || key;
       
-      const subject = `${tReport(rapport.type)} - ${rapport.date_debut} ${tReport('au')} ${rapport.date_fin}`;
-      const body = generateEmailBody(rapport.metriques, reportLang);
+      // Filtrer les incidents et avis pour la période du rapport
+      const periodIncidents = incidents.filter(i => {
+        const d = new Date(i.date_saisie);
+        return d >= new Date(rapport.date_debut) && d <= new Date(rapport.date_fin + 'T23:59:59');
+      });
+      const periodAvis = avis.filter(a => {
+        const d = new Date(a.created_date);
+        return d >= new Date(rapport.date_debut) && d <= new Date(rapport.date_fin + 'T23:59:59');
+      });
+
+      // Générer le PDF
+      const doc = await generateRapportPDF(rapport.type, rapport.metriques, periodIncidents, periodAvis, reportLang);
+      const pdfBlob = doc.output('blob');
+      
+      // Uploader le PDF
+      const file = new File([pdfBlob], `rapport_${rapport.type}.pdf`, { type: 'application/pdf' });
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+
+      // Email minimaliste avec lien vers le PDF
+      const typeLabel = tReport(rapport.type);
+      const emailBody = reportLang === 'fr' 
+        ? `Bonjour,\n\nVeuillez trouver ci-joint le rapport ${typeLabel}.\n\n📎 Télécharger le rapport: ${file_url}\n\nCamping Paradis – Domaine de Gaujac\nMerci et bonne journée.`
+        : `Hello,\n\nPlease find attached the ${typeLabel} report.\n\n📎 Download report: ${file_url}\n\nCamping Paradis – Domaine de Gaujac\nThank you and have a great day.`;
 
       for (const email of destinataires) {
         await base44.integrations.Core.SendEmail({
           to: email,
-          subject: `Camping Paradis - ${subject}`,
-          body
+          subject: `Camping Paradis - ${reportLang === 'fr' ? 'Rapport' : 'Report'} ${typeLabel}`,
+          body: emailBody
         });
       }
 
       await base44.entities.RapportHistorique.update(rapport.id, {
         envoi_reussi: true,
-        destinataires_envoyes: destinataires
+        destinataires_envoyes: destinataires,
+        pdf_url: file_url
       });
 
       toast.success(t('rapport_envoye'));
       queryClient.invalidateQueries({ queryKey: ['rapport-historique'] });
     } catch (error) {
+      console.error(error);
       toast.error('Erreur lors de l\'envoi');
     }
   };
@@ -705,16 +729,33 @@ Rapport généré automatiquement par Camping Paradis`;
     URL.revokeObjectURL(url);
   };
 
-  // Prévisualiser
-  const handlePreview = (type) => {
+  // Prévisualiser - génère le même PDF
+  const handlePreview = async (type) => {
     const config = configs.find(c => c.type === type);
     const reportLang = config?.langue || lang;
     const metricsConfig = config?.metriques_config || defaultMetricsConfig;
     const { debut, fin } = getPeriodDates(type);
     const metriques = calculateMetrics(debut, fin, reportLang, metricsConfig);
-    setPreviewData({ type, metriques, langue: reportLang });
-    setPreviewType(type);
-    setShowPreview(true);
+    
+    // Filtrer les incidents et avis pour la période
+    const periodIncidents = incidents.filter(i => {
+      const d = new Date(i.date_saisie);
+      return d >= new Date(debut) && d <= new Date(fin + 'T23:59:59');
+    });
+    const periodAvis = avis.filter(a => {
+      const d = new Date(a.created_date);
+      return d >= new Date(debut) && d <= new Date(fin + 'T23:59:59');
+    });
+    
+    try {
+      const doc = await generateRapportPDF(type, metriques, periodIncidents, periodAvis, reportLang);
+      const pdfBlob = doc.output('blob');
+      const url = URL.createObjectURL(pdfBlob);
+      window.open(url, '_blank');
+    } catch (error) {
+      console.error(error);
+      toast.error('Erreur lors de la génération');
+    }
   };
 
   const getConfig = (type) => configs.find(c => c.type === type);
@@ -988,18 +1029,31 @@ Rapport généré automatiquement par Camping Paradis`;
               <Settings className="w-4 h-4 mr-2" />
               {t('enregistrer')}
             </Button>
-            <Button onClick={() => handlePreview(type)} variant="outline" className="rounded-xl">
-              <Eye className="w-4 h-4 mr-2" />
-              {t('apercu')}
-            </Button>
-            <Button
-              onClick={() => generateReport(type, config)}
-              variant="outline"
-              className="rounded-xl border-green-500 text-green-600 hover:bg-green-50"
-              disabled={generating}
-            >
-              {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-            </Button>
+          </div>
+          
+          {/* Génération PDF */}
+          <div className="pt-3 border-t mt-3">
+            <RapportPDFGenerator
+              type={type}
+              metriques={(() => {
+                const reportLang = localConfig.langue || lang;
+                const metricsConfig = localConfig.metriques_config || defaultMetricsConfig;
+                const { debut, fin } = getPeriodDates(type);
+                return calculateMetrics(debut, fin, reportLang, metricsConfig);
+              })()}
+              incidents={incidents.filter(i => {
+                const { debut, fin } = getPeriodDates(type);
+                const d = new Date(i.date_saisie);
+                return d >= new Date(debut) && d <= new Date(fin + 'T23:59:59');
+              })}
+              avis={avis.filter(a => {
+                const { debut, fin } = getPeriodDates(type);
+                const d = new Date(a.created_date);
+                return d >= new Date(debut) && d <= new Date(fin + 'T23:59:59');
+              })}
+              lang={localConfig.langue || lang}
+              destinataires={localConfig.destinataires || []}
+            />
           </div>
         </CardContent>
       </Card>
