@@ -15,6 +15,87 @@ import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
 
+// Composant Clause d'autorisation d'accès
+function ClauseAutorisationAcces({ accepted, onAcceptedChange }) {
+  const { lang } = useTranslation();
+  const isFrench = lang === 'fr';
+
+  return (
+    <div className="mt-4 p-4 bg-blue-100 rounded-xl border-2 border-blue-300">
+      <h4 className="font-heading text-[#0077A8] text-sm mb-3 flex items-center gap-2">
+        📜 {isFrench ? "Clause d'autorisation d'accès" : "Access authorization clause"}
+      </h4>
+      
+      <div className="text-xs font-body text-gray-700 space-y-3 max-h-40 overflow-y-auto pr-2">
+        <p className="italic text-gray-600">
+          {isFrench 
+            ? "En autorisant l'intervenant du Camping Paradis – Domaine de Gaujac à entrer dans mon hébergement ou sur mon emplacement en mon absence, je reconnais et accepte les éléments suivants :"
+            : "By authorizing Camping Paradis – Domaine de Gaujac staff to enter my accommodation or pitch in my absence, I acknowledge and accept the following:"}
+        </p>
+
+        <div className="bg-white/50 rounded-lg p-2">
+          <p className="font-semibold text-[#0077A8]">
+            {isFrench ? "1. Responsabilité et cadre d'intervention" : "1. Liability and scope"}
+          </p>
+          <ul className="mt-1 space-y-1 text-gray-600">
+            <li>• {isFrench 
+              ? "Le camping est uniquement responsable des dommages directement causés par l'intervention."
+              : "The campsite is only responsible for damages directly caused by the intervention."}
+            </li>
+            <li>• {isFrench 
+              ? "Je comprends que le camping ne peut garantir la sécurité des effets personnels laissés sans surveillance."
+              : "I understand the campsite cannot guarantee security of unattended personal belongings."}
+            </li>
+          </ul>
+        </div>
+
+        <div className="bg-white/50 rounded-lg p-2">
+          <p className="font-semibold text-[#0077A8]">
+            {isFrench ? "2. Traçabilité" : "2. Traceability"}
+          </p>
+          <p className="text-gray-600 mt-1">
+            {isFrench 
+              ? "L'application enregistre automatiquement : date/heure, identité client, logement, dates de séjour, ID signalement."
+              : "The app automatically records: date/time, guest identity, accommodation, stay dates, report ID."}
+          </p>
+        </div>
+
+        <div className="bg-white/50 rounded-lg p-2">
+          <p className="font-semibold text-[#0077A8]">
+            {isFrench ? "3. Photos avant/après intervention" : "3. Before/after photos"}
+          </p>
+          <p className="text-gray-600 mt-1">
+            {isFrench 
+              ? "Des photos avant et après intervention peuvent être prises et associées à la fiche d'intervention."
+              : "Before and after photos may be taken and associated with the intervention record."}
+          </p>
+        </div>
+      </div>
+
+      <label className="flex items-start gap-3 mt-4 cursor-pointer p-3 bg-white rounded-lg border-2 border-blue-200 hover:border-blue-400 transition-all">
+        <Checkbox
+          checked={accepted}
+          onCheckedChange={onAcceptedChange}
+          className="mt-0.5 data-[state=checked]:bg-[#00AEEF] data-[state=checked]:border-[#00AEEF]"
+        />
+        <span className="font-body text-sm text-gray-700">
+          {isFrench 
+            ? "☑ J'ai lu et j'accepte cette clause. Je comprends que l'intervention sera photographiée avant et après pour garantir la transparence."
+            : "☑ I have read and accept this clause. I understand the intervention will be photographed before and after to ensure transparency."}
+        </span>
+      </label>
+
+      {!accepted && (
+        <p className="text-xs text-red-600 mt-2 font-body">
+          ⛔ {isFrench 
+            ? "Le signalement ne peut être envoyé sans validation de la clause."
+            : "The report cannot be sent without validating the clause."}
+        </p>
+      )}
+    </div>
+  );
+}
+
 // Catégories qui déclenchent l'urgence automatique (peuvent être décochées manuellement)
 const URGENT_CATEGORIES = ['gaz', 'eau', 'electricite', 'guepes', 'frelons'];
 
