@@ -239,6 +239,9 @@ export default function BureauRapports({ incidents = [], avis = [] }) {
   const [selectedReports, setSelectedReports] = useState([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [reportToDelete, setReportToDelete] = useState(null);
+  const [showLitigeDialog, setShowLitigeDialog] = useState(false);
+  const [selectedIncidentForLitige, setSelectedIncidentForLitige] = useState(null);
+  const [litigeEmail, setLitigeEmail] = useState('');
 
   // Filtres historique
   const [historyFilters, setHistoryFilters] = useState({
