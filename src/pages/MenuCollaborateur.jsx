@@ -6,7 +6,7 @@ import BureauAuthDialog from '../components/BureauAuthDialog';
 import { useTranslation } from '../components/translations';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Wrench, Sparkles, Building2, LogOut, Package, Lock, Bot } from 'lucide-react';
+import { Wrench, Sparkles, Building2, LogOut, Package, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 
@@ -70,15 +70,6 @@ export default function MenuCollaborateur() {
       description: t('desc_bureau'),
       locked: true,
       onClick: handleBureauClick
-    },
-    {
-      title: '🐤 ' + t('aide_ia_piki'),
-      icon: Bot,
-      href: null,
-      color: 'bg-purple-500',
-      textColor: 'text-white',
-      description: t('assistant_intelligent'),
-      comingSoon: true
     }
   ];
 
