@@ -18,6 +18,8 @@ import { format, isWithinInterval, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { createPageUrl } from '../utils';
 import { emplacements, logements } from '../components/accommodationData';
+import ClientInterventionChat from '../components/ClientInterventionChat';
+import ETAEstimation from '../components/ETAEstimation';
 
 const categoryEmojis = {
   gaz: '🔥', eau: '💧', electricite: '⚡', plomberie: '🔧',
