@@ -63,7 +63,7 @@ export default function Home() {
     {
       title: t('client'),
       icon: CustomUsersIcon,
-      href: '/IdentiteClient',
+      href: '/ClientMenu',
       bgColor: 'bg-[#00AEEF]',
       borderColor: 'border-[#00AEEF]',
       iconBg: 'bg-[#FFD700]',

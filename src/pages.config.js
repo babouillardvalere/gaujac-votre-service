@@ -24,6 +24,9 @@ import AvisIdentification from './pages/AvisIdentification';
 import AvisFormulaire from './pages/AvisFormulaire';
 import MeilleursAvis from './pages/MeilleursAvis';
 import Taches from './pages/Taches';
+import ClientMenu from './pages/ClientMenu';
+import ClientArrivee from './pages/ClientArrivee';
+import ClientDepart from './pages/ClientDepart';
 import __Layout from './Layout.jsx';
 
 
@@ -54,6 +57,9 @@ export const PAGES = {
     "AvisFormulaire": AvisFormulaire,
     "MeilleursAvis": MeilleursAvis,
     "Taches": Taches,
+    "ClientMenu": ClientMenu,
+    "ClientArrivee": ClientArrivee,
+    "ClientDepart": ClientDepart,
 }
 
 export const pagesConfig = {
