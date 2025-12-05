@@ -11,8 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { 
   ArrowLeft, MapPin, Home, ChevronRight, Search, Clock, User, 
   CheckCircle, Play, Pause, Send, Star, ChevronDown, ChevronUp,
-  Loader2, ShieldAlert
+  Loader2, ShieldAlert, History, MessageCircle
 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, isWithinInterval, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
