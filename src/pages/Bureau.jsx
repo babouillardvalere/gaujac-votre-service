@@ -167,29 +167,32 @@ export default function Bureau() {
     return true;
   });
 
-  // Tri par priorité: priorite_bureau > urgents non pris > urgents en cours > normaux
+  // Tri par priorité:
+  // 1. priorite_ordre manuel (si défini par Bureau)
+  // 2. Urgents en premier (triés par date chronologique ancienne → récente)
+  // 3. Non-urgents par date chronologique (ancienne → récente)
+  // 4. Résolus en dernier
   const sortedIncidents = [...filteredIncidents].sort((a, b) => {
-    // Priorité bureau d'abord
+    // Les résolus toujours à la fin
+    if (a.statut === 'resolu' && b.statut !== 'resolu') return 1;
+    if (b.statut === 'resolu' && a.statut !== 'resolu') return -1;
+    
+    // Si priorite_ordre est défini, l'utiliser
+    if (a.priorite_ordre !== undefined && b.priorite_ordre !== undefined) {
+      if (a.priorite_ordre !== b.priorite_ordre) return a.priorite_ordre - b.priorite_ordre;
+    }
+    
+    // Priorité bureau manuelle (1=prioritaire, 0=normal, -1=basse)
     const prioA = a.priorite_bureau || 0;
     const prioB = b.priorite_bureau || 0;
     if (prioB !== prioA) return prioB - prioA;
     
-    // Ensuite par urgence et statut
-    const getScore = (i) => {
-      if (i.statut === 'resolu') return 0;
-      if (i.statut === 'en_attente_materiel') return 1;
-      if (i.statut === 'en_cours' && !i.urgent) return 2;
-      if (i.statut === 'en_attente' && !i.urgent) return 3;
-      if (i.statut === 'en_cours' && i.urgent) return 4;
-      if (i.statut === 'en_attente' && i.urgent) return 5;
-      return 0;
-    };
+    // Urgents avant non-urgents
+    if (a.urgent && !b.urgent) return -1;
+    if (!a.urgent && b.urgent) return 1;
     
-    const scoreA = getScore(a);
-    const scoreB = getScore(b);
-    if (scoreB !== scoreA) return scoreB - scoreA;
-    
-    return new Date(b.date_saisie) - new Date(a.date_saisie);
+    // Dans chaque groupe (urgents ou non-urgents), tri chronologique (ancien → récent)
+    return new Date(a.date_saisie) - new Date(b.date_saisie);
   });
 
   // Stats
@@ -521,7 +524,8 @@ export default function Bureau() {
                     <table className="w-full">
                       <thead className="bg-[#FFA500]/10">
                         <tr className="text-left text-xs font-heading text-[#0077A8]">
-                          <th className="p-3">Date</th>
+                          <th className="p-3">N°</th>
+                          <th className="p-3">Date / Heure</th>
                           <th className="p-3">Client</th>
                           <th className="p-3">Hébergement</th>
                           <th className="p-3">Catégorie</th>
@@ -533,11 +537,14 @@ export default function Bureau() {
                         </tr>
                       </thead>
                       <tbody>
-                        {sortedIncidents.slice(0, 100).map(incident => {
+                        {sortedIncidents.slice(0, 100).map((incident, index) => {
                           const temps = incident.date_resolution && incident.date_saisie
                             ? differenceInMinutes(new Date(incident.date_resolution), new Date(incident.date_saisie))
                             : null;
                           const delayStatus = getDelayStatus(incident);
+                          const tempsAttente = incident.date_saisie && incident.statut !== 'resolu'
+                            ? differenceInMinutes(new Date(), new Date(incident.date_saisie))
+                            : null;
                           
                           return (
                             <tr 
@@ -549,9 +556,23 @@ export default function Bureau() {
                               }`}
                               onClick={() => setSelectedIncident(incident)}
                             >
+                              <td className="p-3 text-center">
+                                <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
+                                  incident.urgent ? 'bg-red-500 text-white' : 
+                                  incident.statut === 'resolu' ? 'bg-green-100 text-green-700' :
+                                  'bg-[#00AEEF]/20 text-[#0077A8]'
+                                }`}>
+                                  {incident.priorite_ordre || index + 1}
+                                </span>
+                              </td>
                               <td className="p-3 text-xs">
-                                <div>{incident.date_saisie && format(new Date(incident.date_saisie), 'dd/MM/yy')}</div>
-                                <div className="text-gray-400">{incident.date_saisie && format(new Date(incident.date_saisie), 'HH:mm')}</div>
+                                <div className="font-medium">{incident.date_saisie && format(new Date(incident.date_saisie), 'dd/MM/yy')}</div>
+                                <div className="text-[#00AEEF] font-heading">{incident.date_saisie && format(new Date(incident.date_saisie), 'HH:mm')}</div>
+                                {tempsAttente !== null && incident.statut !== 'resolu' && (
+                                  <div className={`text-xs mt-1 ${tempsAttente > 180 ? 'text-red-500' : tempsAttente > 60 ? 'text-orange-500' : 'text-gray-400'}`}>
+                                    ⏱ {formatDuration(tempsAttente)}
+                                  </div>
+                                )}
                               </td>
                               <td className="p-3 text-sm">
                                 <div>{incident.client_prenom} {incident.client_nom}</div>
@@ -673,6 +694,67 @@ export default function Bureau() {
                 <div className="grid grid-cols-2 gap-2 text-sm font-body">
                   <div><span className="text-gray-500">Type:</span> {selectedIncident.logement ? 'Mobil-home' : 'Emplacement'}</div>
                   <div><span className="text-gray-500">Numéro:</span> <strong>{selectedIncident.logement || selectedIncident.emplacement}</strong></div>
+                </div>
+              </div>
+
+              {/* Chronologie */}
+              <div className="bg-gray-50 rounded-xl p-4">
+                <h4 className="font-heading text-[#0077A8] mb-3">📋 Chronologie détaillée</h4>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-[#00AEEF] flex items-center justify-center flex-shrink-0">
+                      <span className="text-white text-xs">1</span>
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-heading text-sm text-[#0077A8]">Demande créée</p>
+                      <p className="text-xs text-gray-500">{selectedIncident.date_saisie && format(new Date(selectedIncident.date_saisie), 'dd/MM/yyyy à HH:mm')}</p>
+                      {selectedIncident.urgent && <Badge className="bg-red-500 text-white text-xs mt-1">URGENT</Badge>}
+                    </div>
+                  </div>
+                  
+                  {selectedIncident.date_debut && (
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-[#FFA500] flex items-center justify-center flex-shrink-0">
+                        <span className="text-white text-xs">2</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-heading text-sm text-[#0077A8]">Prise en charge</p>
+                        <p className="text-xs text-gray-500">{format(new Date(selectedIncident.date_debut), 'dd/MM/yyyy à HH:mm')}</p>
+                        {selectedIncident.pris_par && <p className="text-xs text-gray-600">par {selectedIncident.pris_par}</p>}
+                        {selectedIncident.temps_prise_en_charge && (
+                          <p className="text-xs text-[#FFA500]">Temps d'attente: {formatDuration(selectedIncident.temps_prise_en_charge)}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {selectedIncident.attente_date && (
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center flex-shrink-0">
+                        <span className="text-white text-xs">⏳</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-heading text-sm text-gray-600">Mise en attente</p>
+                        <p className="text-xs text-gray-500">{format(new Date(selectedIncident.attente_date), 'dd/MM/yyyy à HH:mm')}</p>
+                        {selectedIncident.motif_attente && <p className="text-xs text-gray-600">Motif: {selectedIncident.motif_attente}</p>}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {selectedIncident.date_resolution && (
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                        <span className="text-white text-xs">✓</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-heading text-sm text-green-600">Résolu</p>
+                        <p className="text-xs text-gray-500">{format(new Date(selectedIncident.date_resolution), 'dd/MM/yyyy à HH:mm')}</p>
+                        {selectedIncident.temps_total_intervention && (
+                          <p className="text-xs text-green-600">Temps d'intervention: {formatDuration(selectedIncident.temps_total_intervention)}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
