@@ -34,7 +34,6 @@ export default function InterventionActions({ incident, onUpdate }) {
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [deleteReason, setDeleteReason] = useState('');
   
   const [editForm, setEditForm] = useState({
     categorie: incident.categorie,
@@ -77,16 +76,11 @@ export default function InterventionActions({ incident, onUpdate }) {
   };
 
   const handleDelete = () => {
-    if (!deleteReason.trim()) {
-      toast.error('Veuillez saisir un motif de suppression');
-      return;
-    }
-    // Log the deletion reason (could be stored in a separate entity if needed)
+    // Journal interne automatique
     console.log('Suppression intervention:', {
       incident_id: incident.id,
-      raison_suppression: deleteReason,
-      date_suppression: new Date().toISOString(),
-      supprime_par: 'Bureau'
+      deleted_at: new Date().toISOString(),
+      deleted_by: 'Bureau'
     });
     deleteMutation.mutate();
   };
@@ -402,20 +396,11 @@ export default function InterventionActions({ incident, onUpdate }) {
           <DialogHeader>
             <DialogTitle className="font-heading text-red-600 flex items-center gap-2">
               <AlertTriangle className="w-5 h-5" />
-              Voulez-vous supprimer cette intervention ?
+              Voulez-vous vraiment supprimer cette intervention ?
             </DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4 py-2">
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-              <p className="font-body text-sm text-gray-700">
-                Cette action supprimera définitivement l'intervention.
-              </p>
-              <p className="font-body text-sm text-gray-700 mt-2">
-                Merci de saisir un motif pour éviter les erreurs ou abus.
-              </p>
-            </div>
-
             <div className="bg-gray-50 rounded-xl p-3">
               <p className="text-sm font-body text-gray-600">
                 <strong>Intervention:</strong> #{incident.logement || incident.emplacement} - {categoryLabels[incident.categorie]}
@@ -424,29 +409,19 @@ export default function InterventionActions({ incident, onUpdate }) {
                 <strong>Client:</strong> {incident.client_prenom} {incident.client_nom}
               </p>
             </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-heading text-[#0077A8]">Motif de suppression *</label>
-              <Textarea
-                value={deleteReason}
-                onChange={(e) => setDeleteReason(e.target.value)}
-                placeholder="Saisissez le motif de suppression..."
-                className="border-red-300 rounded-xl font-body min-h-20"
-              />
-            </div>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setShowDeleteDialog(false); setDeleteReason(''); }} className="rounded-xl">
-              ❌ Annuler
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)} className="rounded-xl">
+              Non, annuler
             </Button>
             <Button
               onClick={handleDelete}
-              disabled={!deleteReason.trim() || deleteMutation.isPending}
+              disabled={deleteMutation.isPending}
               className="bg-red-500 hover:bg-red-600 rounded-xl font-heading"
             >
               {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
-              Supprimer définitivement
+              Oui, supprimer
             </Button>
           </DialogFooter>
         </DialogContent>
