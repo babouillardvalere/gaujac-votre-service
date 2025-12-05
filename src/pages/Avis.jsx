@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Logo from '../components/Logo';
 import { useTranslation } from '../components/translations';
 import { base44 } from '@/api/base44Client';
@@ -6,9 +6,10 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Star, CheckCircle, Loader2, Home } from 'lucide-react';
+import { Star, CheckCircle, Loader2, Home, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import { parseISO, isAfter } from 'date-fns';
 
 export default function Avis() {
   const { t } = useTranslation();
@@ -19,6 +20,12 @@ export default function Avis() {
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
+  const [sejourExpire, setSejourExpire] = useState(false);
+
+  // Récupérer les infos client depuis session
+  const sessionUserNom = sessionStorage.getItem('user_nom');
+  const sessionUserPrenom = sessionStorage.getItem('user_prenom');
+  const sessionDateDepart = sessionStorage.getItem('user_date_depart');
 
   const { data: incident, isLoading } = useQuery({
     queryKey: ['avis-incident', incidentId],
@@ -29,6 +36,25 @@ export default function Avis() {
     },
     enabled: !!incidentId
   });
+
+  // Vérifier si le séjour est terminé
+  useEffect(() => {
+    if (incident) {
+      const dateDepart = incident.date_depart || sessionDateDepart;
+      if (dateDepart) {
+        const departDate = parseISO(dateDepart);
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+        if (isAfter(today, departDate)) {
+          // Séjour terminé depuis plus d'un jour
+          const daysDiff = Math.floor((today - departDate) / (1000 * 60 * 60 * 24));
+          if (daysDiff > 7) { // Permettre jusqu'à 7 jours après le départ
+            setSejourExpire(true);
+          }
+        }
+      }
+    }
+  }, [incident, sessionDateDepart]);
 
   const updateMutation = useMutation({
     mutationFn: (data) => base44.entities.Incident.update(incidentId, data),
@@ -86,6 +112,22 @@ export default function Avis() {
     );
   }
 
+  // Séjour expiré
+  if (sejourExpire) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="text-center">
+          <Logo className="h-20 mx-auto mb-6" />
+          <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle className="w-8 h-8 text-orange-500" />
+          </div>
+          <h2 className="font-heading text-xl text-[#0077A8] mb-2">Délai dépassé</h2>
+          <p className="font-body text-gray-600">Votre séjour est terminé depuis plus d'une semaine. Vous ne pouvez plus donner d'avis.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (incident.note_client) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
@@ -128,11 +170,16 @@ export default function Avis() {
           </CardHeader>
           
           <CardContent className="pt-6 space-y-6">
-            <div className="bg-[#e6f7ff] rounded-xl p-4 flex items-center gap-3 border border-[#00AEEF]/30">
-              <Home className="w-5 h-5 text-[#00AEEF]" />
-              <div>
-                <p className="font-heading text-[#0077A8]">{t('hebergement')} #{incident.logement || incident.emplacement}</p>
-                <p className="text-sm font-body text-gray-600">{incident.categorie}</p>
+            <div className="bg-[#e6f7ff] rounded-xl p-4 border border-[#00AEEF]/30">
+              <div className="flex items-center gap-3 mb-2">
+                <Home className="w-5 h-5 text-[#00AEEF]" />
+                <div>
+                  <p className="font-heading text-[#0077A8]">{t('hebergement')} #{incident.logement || incident.emplacement}</p>
+                  <p className="text-sm font-body text-gray-600">{incident.categorie}</p>
+                </div>
+              </div>
+              <div className="text-xs font-body text-[#0077A8]/70 border-t border-[#00AEEF]/20 pt-2 mt-2">
+                <p>👤 {incident.client_prenom || sessionUserPrenom} {incident.client_nom || sessionUserNom}</p>
               </div>
             </div>
 
