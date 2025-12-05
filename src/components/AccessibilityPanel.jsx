@@ -151,6 +151,8 @@ export const useSpeechOnInteraction = () => {
       if (!settings.speechEnabled) return;
       
       const target = e.target;
+      if (!target || !target.getAttribute) return;
+      
       let textToSpeak = '';
       
       // Priorité: aria-label > aria-labelledby > title > alt > textContent
