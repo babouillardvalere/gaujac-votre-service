@@ -453,7 +453,7 @@ export default function Signalement() {
 
             <Button
               onClick={handleSubmit}
-              disabled={!description.trim() || selectedProblems.length === 0 || !autorisationAcces || (autorisationAcces === 'oui' && !clauseAcceptee) || isSubmitting}
+              disabled={!description.trim() || selectedProblems.length === 0 || !autorisationAcces || isSubmitting}
               className="w-full h-14 bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading disabled:opacity-50 text-lg focus:ring-4 focus:ring-[#FFD700]"
               aria-label={isSubmitting ? "Envoi en cours, veuillez patienter" : "Envoyer le signalement"}
               aria-busy={isSubmitting}
