@@ -136,7 +136,7 @@ export default function ClientArriveeIdentite() {
       console.error('Error creating/updating dossier:', error);
     }
 
-    navigate(createPageUrl('ClientArriveeHebergement'));
+    navigate(createPageUrl('ClientArriveeStatistiques'));
   };
 
   return (
