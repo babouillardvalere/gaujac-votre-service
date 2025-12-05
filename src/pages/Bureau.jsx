@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import InterventionActions from '../components/bureau/InterventionActions';
 import BureauStatistiques from '../components/bureau/BureauStatistiques';
+import BureauAvis from '../components/bureau/BureauAvis';
 import { format, differenceInHours, differenceInMinutes, isToday, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -299,6 +300,9 @@ export default function Bureau() {
             <TabsTrigger value="statistiques" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               Statistiques
             </TabsTrigger>
+            <TabsTrigger value="avis" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
+              ⭐ Avis
+            </TabsTrigger>
           </TabsList>
 
           {/* Historique */}
@@ -575,6 +579,11 @@ export default function Bureau() {
           {/* Statistiques */}
           <TabsContent value="statistiques" className="space-y-6">
             <BureauStatistiques incidents={incidents} />
+          </TabsContent>
+
+          {/* Avis */}
+          <TabsContent value="avis" className="space-y-6">
+            <BureauAvis />
           </TabsContent>
         </Tabs>
       </div>
