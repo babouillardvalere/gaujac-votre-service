@@ -1,11 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation, getLanguage } from '../components/translations';
 import Logo from '../components/Logo';
 import HomeAvisSection from '../components/HomeAvisSection';
-import { Users, Star, Briefcase, Search } from 'lucide-react';
-import { motion } from 'framer-motion';
+import AccessibilityPanel, { getAccessibilitySettings, saveAccessibilitySettings, speakText, stopSpeaking } from '../components/AccessibilityPanel';
+import { Users, Star, Briefcase, Search, Accessibility, Plus, Minus, Volume2, VolumeX, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { createPageUrl } from '../utils';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 
 export default function Home() {
   const { t } = useTranslation();
