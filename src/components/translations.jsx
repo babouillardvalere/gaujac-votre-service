@@ -82,7 +82,7 @@ export const translations = {
     choisir_numero: "Choisir un numéro",
 
     // Report / Signalement
-    signalement_title: "Signaler un problème",
+    signalement_title: "Signaler le type d'intervention",
     urgence: "Problème urgent",
     probleme_urgent: "Problème urgent ?",
     intervention_prioritaire: "Une intervention prioritaire sera déclenchée.",
