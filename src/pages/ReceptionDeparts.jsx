@@ -6,15 +6,17 @@ import { useQuery } from '@tanstack/react-query';
 import Logo from '../components/Logo';
 import ReceptionMoisOnglets from '../components/reception/ReceptionMoisOnglets';
 import ReceptionSemaineAccordeon from '../components/reception/ReceptionSemaineAccordeon';
+import ReceptionFicheDepart from '../components/reception/ReceptionFicheDepart';
 import { genererSemaines, filtrerDossiersParSemaine } from '../components/reception/genererSemaines';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Users, Dog, Calendar, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 
 export default function ReceptionDeparts() {
   const { t, lang } = useTranslation();
   const navigate = useNavigate();
+  const [dossierSelectionne, setDossierSelectionne] = useState(null);
 
   const { data: dossiers = [], isLoading } = useQuery({
     queryKey: ['dossiers-depart-reception'],
@@ -31,20 +33,85 @@ export default function ReceptionDeparts() {
       <ReceptionSemaineAccordeon semaines={semaines} lang={lang}>
         {(semaine) => {
           const dossiersSemaine = filtrerDossiersParSemaine(dossiers, semaine);
+          
+          if (dossiersSemaine.length === 0) {
+            return (
+              <Card className="border-2 border-gray-200">
+                <CardContent className="p-6 text-center">
+                  <p className="text-gray-500">
+                    {lang === 'fr' ? 'Aucun départ cette semaine' : 'No departures this week'}
+                  </p>
+                </CardContent>
+              </Card>
+            );
+          }
+
           return (
-            <Card className="border-2 border-gray-200">
-              <CardContent className="p-6">
-                <p className="text-gray-600">
-                  {dossiersSemaine.length} {lang === 'fr' ? 'départ(s)' : 'departure(s)'}
-                </p>
-                {/* TODO: Afficher liste des départs */}
-              </CardContent>
-            </Card>
+            <div className="space-y-2">
+              {dossiersSemaine.map(dossier => {
+                const hasDegats = 
+                  dossier.evaluation_proprete === 'pas_satisfaisant' ||
+                  dossier.objets_modifies?.length > 0 ||
+                  dossier.commentaire_proprete;
+
+                return (
+                  <button
+                    key={dossier.id}
+                    onClick={() => setDossierSelectionne(dossier)}
+                    className="w-full focus:ring-4 focus:ring-[#FFD700] rounded-lg"
+                  >
+                    <Card className={`border-2 ${hasDegats ? 'border-orange-400 bg-orange-50' : 'border-gray-200'} hover:border-[#FFA500] hover:shadow-md transition-all`}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="text-2xl font-bold text-[#FFA500]">
+                              {dossier.numero_logement}
+                            </div>
+                            <div className="text-left">
+                              <p className="font-heading text-gray-900">
+                                {dossier.client_nom} {dossier.client_prenom}
+                              </p>
+                              <div className="flex items-center gap-3 text-sm text-gray-600">
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="w-4 h-4" />
+                                  {dossier.date_depart}
+                                </span>
+                                <span>
+                                  {dossier.categorie_logement}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            {hasDegats && (
+                              <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-700">
+                                <AlertTriangle className="w-3 h-3" />
+                                {lang === 'fr' ? 'Dégâts' : 'Damages'}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </button>
+                );
+              })}
+            </div>
           );
         }}
       </ReceptionSemaineAccordeon>
     );
   };
+
+  if (dossierSelectionne) {
+    return (
+      <ReceptionFicheDepart 
+        dossier={dossierSelectionne}
+        onClose={() => setDossierSelectionne(null)}
+        lang={lang}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen px-6 py-8">
