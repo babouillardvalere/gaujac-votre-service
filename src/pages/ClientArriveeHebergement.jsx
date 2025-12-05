@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../components/translations';
 import { emplacements, logements } from '../components/accommodationData';
+import { getCodeFromCategory } from '../components/categoryCodeMapping';
+import InventaireDisplay from '../components/InventaireDisplay';
 import Logo from '../components/Logo';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -20,6 +22,7 @@ export default function ClientArriveeHebergement() {
   const [categorie, setCategorie] = useState('');
   const [numero, setNumero] = useState('');
   const [availableNumbers, setAvailableNumbers] = useState([]);
+  const [codeCategorie, setCodeCategorie] = useState('');
 
   useEffect(() => {
     // Vérifier que l'identité est en session
@@ -34,9 +37,12 @@ export default function ClientArriveeHebergement() {
       if (typeLogement === 'emplacement') {
         const numbers = emplacements[categorie] || [];
         setAvailableNumbers(numbers);
+        setCodeCategorie('');
       } else {
         const numbers = logements[categorie] || [];
         setAvailableNumbers(numbers);
+        const code = getCodeFromCategory(categorie);
+        setCodeCategorie(code);
       }
       setNumero('');
     }
@@ -205,23 +211,31 @@ export default function ClientArriveeHebergement() {
                     </div>
 
                     {categorie && (
-                      <div>
-                        <label className="font-heading text-[#0077A8] block mb-2">
-                          {lang === 'fr' ? 'Numéro' : 'Number'} *
-                        </label>
-                        <Select value={numero} onValueChange={setNumero}>
-                          <SelectTrigger className="border-2 border-gray-200 focus:border-[#22c55e] rounded-xl">
-                            <SelectValue placeholder={lang === 'fr' ? 'Sélectionner' : 'Select'} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {availableNumbers.map(num => (
-                              <SelectItem key={num} value={num}>
-                                {num}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                      <>
+                        <div>
+                          <label className="font-heading text-[#0077A8] block mb-2">
+                            {lang === 'fr' ? 'Numéro' : 'Number'} *
+                          </label>
+                          <Select value={numero} onValueChange={setNumero}>
+                            <SelectTrigger className="border-2 border-gray-200 focus:border-[#22c55e] rounded-xl">
+                              <SelectValue placeholder={lang === 'fr' ? 'Sélectionner' : 'Select'} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableNumbers.map(num => (
+                                <SelectItem key={num} value={num}>
+                                  {num}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {typeLogement === 'mobilhome' && codeCategorie && (
+                          <div className="mt-4">
+                            <InventaireDisplay codeCategorie={codeCategorie} lang={lang} />
+                          </div>
+                        )}
+                      </>
                     )}
 
                     <Button
