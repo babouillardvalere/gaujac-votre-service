@@ -29,6 +29,7 @@ export default function Signalement() {
   const [urgent, setUrgent] = useState(false);
   const [urgentManuallySet, setUrgentManuallySet] = useState(false);
   const [autorisationAcces, setAutorisationAcces] = useState(null); // 'oui' ou 'non'
+  const [plageHoraire, setPlageHoraire] = useState(null);
   const [photo, setPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -127,6 +128,10 @@ export default function Signalement() {
       toast.error(t('autorisation_obligatoire'));
       return;
     }
+    if (autorisationAcces === 'non' && !plageHoraire) {
+      toast.error(t('plage_horaire_obligatoire'));
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -181,6 +186,7 @@ export default function Signalement() {
         statut: 'en_attente',
         priorite_ordre: nextOrdre,
         autorisation_acces: autorisationAcces,
+        plage_horaire_client: autorisationAcces === 'non' ? plageHoraire : null,
         clause_autorisation_acceptee: autorisationAcces === 'oui'
       });
 
@@ -399,9 +405,27 @@ export default function Signalement() {
               </RadioGroup>
               
               {autorisationAcces === 'non' && (
-                <div className="mt-3 p-3 bg-orange-100 rounded-lg border border-orange-300">
-                  <p className="text-sm font-body text-orange-700">
-                    ⚠️ {t('autorisation_non_message')}
+                <div className="mt-4 p-4 bg-orange-50 rounded-xl border-2 border-orange-300">
+                  <h4 className="font-heading text-[#0077A8] mb-2">{t('plage_horaire_title')}</h4>
+                  <p className="text-sm font-body text-gray-600 mb-3">{t('plage_horaire_subtitle')}</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {['09h00 → 11h00', '11h00 → 13h00', '13h30 → 15h30', '15h30 → 17h30', '17h30 → 19h30'].map((slot) => (
+                      <button
+                        key={slot}
+                        type="button"
+                        onClick={() => setPlageHoraire(slot)}
+                        className={`p-3 rounded-xl border-2 text-sm font-body transition-all ${
+                          plageHoraire === slot
+                            ? 'border-[#00AEEF] bg-[#e6f7ff] text-[#0077A8]'
+                            : 'border-gray-200 bg-white hover:border-[#00AEEF]/50 text-gray-700'
+                        }`}
+                      >
+                        {slot}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs font-body text-gray-500 mt-2 italic">
+                    (les horaires peuvent être adaptés si nécessaire)
                   </p>
                 </div>
               )}
@@ -453,7 +477,7 @@ export default function Signalement() {
 
             <Button
               onClick={handleSubmit}
-              disabled={!description.trim() || selectedProblems.length === 0 || !autorisationAcces || isSubmitting}
+              disabled={!description.trim() || selectedProblems.length === 0 || !autorisationAcces || (autorisationAcces === 'non' && !plageHoraire) || isSubmitting}
               className="w-full h-14 bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading disabled:opacity-50 text-lg focus:ring-4 focus:ring-[#FFD700]"
               aria-label={isSubmitting ? "Envoi en cours, veuillez patienter" : "Envoyer le signalement"}
               aria-busy={isSubmitting}
