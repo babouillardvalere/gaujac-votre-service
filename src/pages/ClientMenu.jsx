@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 
 export default function ClientMenu() {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const navigate = useNavigate();
 
   const menuItems = [
@@ -68,7 +68,7 @@ export default function ClientMenu() {
             {t('client')}
           </h1>
           <p className="text-center text-gray-600 font-body">
-            {t('lang') === 'fr' ? 'Choisissez votre étape' : 'Choose your step'}
+            {lang === 'fr' ? 'Choisissez votre étape' : 'Choose your step'}
           </p>
         </motion.div>
 
@@ -86,12 +86,12 @@ export default function ClientMenu() {
                   <CardContent className="p-0">
                     <div className="flex items-center justify-between p-6 min-h-[100px]">
                       <div>
-                        <h2 className={`font-heading text-2xl ${item.textColor} mb-1`}>
-                          {t('lang') === 'fr' ? item.title : item.titleEn}
+                        <h2 className={`font-heading text-2xl text-gray-700 mb-1`}>
+                          {lang === 'fr' ? item.title : item.titleEn}
                         </h2>
                         {item.comingSoon && (
                           <span className="text-sm bg-yellow-100 text-yellow-700 px-2 py-1 rounded">
-                            {t('lang') === 'fr' ? 'Bientôt disponible' : 'Coming soon'}
+                            {lang === 'fr' ? 'Bientôt disponible' : 'Coming soon'}
                           </span>
                         )}
                       </div>
@@ -110,11 +110,11 @@ export default function ClientMenu() {
                     <CardContent className="p-0">
                       <div className="flex items-center justify-between p-6 min-h-[100px]">
                         <div>
-                          <h2 className={`font-heading text-2xl ${item.textColor} mb-1 group-hover:scale-105 transition-transform`}>
-                            {t('lang') === 'fr' ? item.title : item.titleEn}
+                          <h2 className={`font-heading text-2xl text-[#0077A8] mb-1 group-hover:scale-105 transition-transform`}>
+                            {lang === 'fr' ? item.title : item.titleEn}
                           </h2>
-                          <p className="text-sm text-white/80">
-                            {t('lang') === 'fr' ? 'Cliquez pour continuer' : 'Click to continue'}
+                          <p className="text-sm text-gray-600">
+                            {lang === 'fr' ? 'Cliquez pour continuer' : 'Click to continue'}
                           </p>
                         </div>
                         <div className={`w-16 h-16 rounded-xl ${item.color} flex items-center justify-center text-3xl shadow-lg group-hover:scale-110 transition-transform`}>
