@@ -22,6 +22,7 @@ import Materiel from './pages/Materiel';
 import SuiviIntervention from './pages/SuiviIntervention';
 import AvisIdentification from './pages/AvisIdentification';
 import AvisFormulaire from './pages/AvisFormulaire';
+import MeilleursAvis from './pages/MeilleursAvis';
 import __Layout from './Layout.jsx';
 
 
@@ -50,6 +51,7 @@ export const PAGES = {
     "SuiviIntervention": SuiviIntervention,
     "AvisIdentification": AvisIdentification,
     "AvisFormulaire": AvisFormulaire,
+    "MeilleursAvis": MeilleursAvis,
 }
 
 export const pagesConfig = {

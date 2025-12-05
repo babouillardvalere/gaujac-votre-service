@@ -386,7 +386,26 @@ export const translations = {
     mot_de_passe_bureau: "Mot de passe Bureau",
     mot_de_passe_incorrect_bureau: "Mot de passe incorrect.",
     acces_reserve_direction: "Accès réservé à la réception et à la direction.",
-    verification: "Vérification..."
+    verification: "Vérification...",
+    
+    // Avis publics
+    ils_ont_adore: "Ils ont adoré leur séjour !",
+    voir_plus_avis: "Voir plus d'avis",
+    meilleurs_avis: "Meilleurs avis",
+    trier_par: "Trier par",
+    par_note: "Par note",
+    par_date: "Par date",
+    par_hebergement: "Par hébergement",
+    par_reactivite: "Par réactivité",
+    par_amabilite: "Par amabilité",
+    par_qualite: "Par qualité",
+    sejour_du: "Séjour du",
+    au_date: "au",
+    reactivite: "Réactivité",
+    amabilite: "Amabilité",
+    qualite: "Qualité",
+    note_globale: "Note globale",
+    aucun_avis: "Aucun avis pour le moment"
   },
 
   en: {
@@ -820,7 +839,26 @@ export const translations = {
     // Piki IA
     aide_ia_piki: "PIKI AI Assistant",
     assistant_intelligent: "Smart assistant",
-    bientot: "Coming soon"
+    bientot: "Coming soon",
+    
+    // Avis publics
+    ils_ont_adore: "They Loved Their Stay!",
+    voir_plus_avis: "See more reviews",
+    meilleurs_avis: "Best reviews",
+    trier_par: "Sort by",
+    par_note: "By rating",
+    par_date: "By date",
+    par_hebergement: "By accommodation",
+    par_reactivite: "By responsiveness",
+    par_amabilite: "By friendliness",
+    par_qualite: "By quality",
+    sejour_du: "Stay from",
+    au_date: "to",
+    reactivite: "Responsiveness",
+    amabilite: "Friendliness",
+    qualite: "Quality",
+    note_globale: "Overall rating",
+    aucun_avis: "No reviews yet"
   }
 };
 

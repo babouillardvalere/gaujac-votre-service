@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation, getLanguage } from '../components/translations';
 import Logo from '../components/Logo';
+import HomeAvisSection from '../components/HomeAvisSection';
 import { Users, Star, Briefcase, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
@@ -147,10 +148,13 @@ export default function Home() {
           ))}
         </nav>
 
+        {/* Section Avis */}
+        <HomeAvisSection />
+
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.7 }}
+          transition={{ delay: 1.5 }}
           className="mt-12 text-center"
         >
           <Link 
