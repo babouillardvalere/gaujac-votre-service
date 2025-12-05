@@ -5,6 +5,7 @@ import OfflineBanner from '../components/OfflineBanner';
 import NotificationCenter from '../components/NotificationCenter';
 import MettreEnAttenteDialog from '../components/MettreEnAttenteDialog';
 import InterventionTimer from '../components/InterventionTimer';
+import PhotoInterventionCapture from '../components/PhotoInterventionCapture';
 import { useTranslation } from '../components/translations';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -17,7 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   ArrowLeft, Clock, User, Home, AlertTriangle, CheckCircle, 
-  Play, Copy, Loader2, Flame, Droplets, Zap, Wrench, TreePine, Bug, Pause, DoorOpen, UserCheck
+  Play, Copy, Loader2, Flame, Droplets, Zap, Wrench, TreePine, Bug, Pause, DoorOpen, UserCheck, Camera
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -48,6 +49,9 @@ export default function Technique() {
   const [filter, setFilter] = useState('en_attente');
   const [showAttenteDialog, setShowAttenteDialog] = useState(false);
   const [incidentToWait, setIncidentToWait] = useState(null);
+  const [showPhotoAvant, setShowPhotoAvant] = useState(false);
+  const [showPhotoApres, setShowPhotoApres] = useState(false);
+  const [incidentForPhoto, setIncidentForPhoto] = useState(null);
 
   useEffect(() => {
     const auth = sessionStorage.getItem('collaborateur_authenticated');
@@ -76,40 +80,80 @@ export default function Technique() {
       toast.error(t('champs_obligatoires'));
       return;
     }
+    // Ouvrir la capture photo AVANT obligatoire
+    setIncidentForPhoto(incident);
+    setShowPhotoAvant(true);
+  };
+
+  const handlePhotoAvantUploaded = async (photoData) => {
+    if (!incidentForPhoto) return;
+    
     const now = new Date();
-    const tempsPriseEnCharge = incident.date_saisie 
-      ? differenceInMinutes(now, new Date(incident.date_saisie))
+    const tempsPriseEnCharge = incidentForPhoto.date_saisie 
+      ? differenceInMinutes(now, new Date(incidentForPhoto.date_saisie))
       : 0;
     
+    // Créer un log de prise en charge
+    await base44.entities.InterventionLog.create({
+      incident_id: incidentForPhoto.id,
+      action: 'prise_en_charge',
+      horodatage: now.toISOString(),
+      utilisateur: collaborateurNom,
+      commentaire: 'Intervention prise en charge avec photo AVANT'
+    });
+    
     updateMutation.mutate({
-      id: incident.id,
+      id: incidentForPhoto.id,
       data: {
         pris_par: collaborateurNom,
         date_debut: now.toISOString(),
         statut: 'en_cours',
-        temps_prise_en_charge: tempsPriseEnCharge
+        temps_prise_en_charge: tempsPriseEnCharge,
+        photo_avant_url: photoData.url,
+        photo_avant_timestamp: photoData.timestamp,
+        photo_avant_hash: photoData.hash
       }
     });
+    setIncidentForPhoto(null);
   };
 
   const handleTerminer = (incident) => {
+    // Ouvrir la capture photo APRES obligatoire
+    setIncidentForPhoto(incident);
+    setShowPhotoApres(true);
+  };
+
+  const handlePhotoApresUploaded = async (photoData) => {
+    if (!incidentForPhoto) return;
+    
     const now = new Date();
-    const tempsTotal = incident.date_saisie 
-      ? differenceInMinutes(now, new Date(incident.date_saisie))
-      : 0;
-    const tempsIntervention = incident.date_debut
-      ? differenceInMinutes(now, new Date(incident.date_debut))
+    const tempsTotal = incidentForPhoto.date_saisie 
+      ? differenceInMinutes(now, new Date(incidentForPhoto.date_saisie))
       : 0;
     
+    // Créer un log de résolution
+    await base44.entities.InterventionLog.create({
+      incident_id: incidentForPhoto.id,
+      action: 'resolu',
+      horodatage: now.toISOString(),
+      utilisateur: incidentForPhoto.pris_par || collaborateurNom,
+      commentaire: 'Intervention résolue avec photo APRES'
+    });
+    
     updateMutation.mutate({
-      id: incident.id,
+      id: incidentForPhoto.id,
       data: {
         date_resolution: now.toISOString(),
         statut: 'resolu',
-        commentaire_interne: commentaire || incident.commentaire_interne,
-        temps_total_intervention: tempsTotal
+        commentaire_interne: commentaire || incidentForPhoto.commentaire_interne,
+        temps_total_intervention: tempsTotal,
+        photo_apres_url: photoData.url,
+        photo_apres_timestamp: photoData.timestamp,
+        photo_apres_hash: photoData.hash
       }
     });
+    setIncidentForPhoto(null);
+    setCommentaire('');
   };
 
   const handleCopyAvisLink = (incident) => {
@@ -319,6 +363,32 @@ export default function Technique() {
         onOpenChange={setShowAttenteDialog}
         onConfirm={confirmMettreEnAttente}
         isLoading={updateMutation.isPending}
+      />
+
+      {/* Dialog photo AVANT */}
+      <PhotoInterventionCapture
+        open={showPhotoAvant}
+        onOpenChange={(open) => {
+          setShowPhotoAvant(open);
+          if (!open) setIncidentForPhoto(null);
+        }}
+        type="avant"
+        interventionId={incidentForPhoto?.id || ''}
+        collaborateurNom={collaborateurNom}
+        onPhotoUploaded={handlePhotoAvantUploaded}
+      />
+
+      {/* Dialog photo APRES */}
+      <PhotoInterventionCapture
+        open={showPhotoApres}
+        onOpenChange={(open) => {
+          setShowPhotoApres(open);
+          if (!open) setIncidentForPhoto(null);
+        }}
+        type="apres"
+        interventionId={incidentForPhoto?.id || ''}
+        collaborateurNom={incidentForPhoto?.pris_par || collaborateurNom}
+        onPhotoUploaded={handlePhotoApresUploaded}
       />
 
       <Dialog open={!!selectedIncident} onOpenChange={() => setSelectedIncident(null)}>
