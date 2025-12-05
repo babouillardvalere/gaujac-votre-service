@@ -490,10 +490,6 @@ export default function SuiviIntervention() {
                 <TabsContent value="current" className="space-y-4">
                 {activeIncidents.length > 0 ? (
                   <div className="space-y-4">
-                    <h3 className="font-heading text-lg text-[#0077A8] flex items-center gap-2">
-                      <Clock className="w-5 h-5 text-[#FFA500]" />
-                      {t('interventions_en_cours')} ({activeIncidents.length})
-                    </h3>
                     
                     {activeIncidents.map((incident) => (
                       <Card key={incident.id} className="border-2 border-[#00AEEF] rounded-xl overflow-hidden">
