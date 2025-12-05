@@ -172,7 +172,25 @@ const translations = {
     supprimer_rapport: 'Delete',
     confirmer_suppression: 'Confirm deletion?',
     rapport_supprime: 'Report deleted',
-    exporter_selection: 'Export selection'
+    exporter_selection: 'Export selection',
+    // Litige
+    rapport_litige: 'Dispute Report',
+    generer_litige: 'Generate Dispute Report',
+    selectionner_intervention: 'Select an intervention',
+    aucune_intervention: 'No intervention available',
+    informations_litige: 'Dispute Information',
+    telecharger_dossier: 'Download Complete File',
+    envoyer_email_litige: 'Send by Email',
+    date_intervention: 'Intervention Date',
+    client_info: 'Client',
+    hebergement_info: 'Accommodation',
+    collaborateur_info: 'Technician',
+    photos_preuves: 'Photo Evidence',
+    photo_avant: 'BEFORE Photo',
+    photo_apres: 'AFTER Photo',
+    hash_verification: 'Verification Hash',
+    rapport_litige_genere: 'Dispute report generated',
+    copier_hash: 'Copy Hash'
   }
 };
 
