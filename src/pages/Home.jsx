@@ -165,10 +165,10 @@ export default function Home() {
                         )}
                       </div>
                       <div>
-                        <h2 className={`font-heading text-2xl ${item.textColor} mb-1`}>
+                        <h2 className={`font-heading text-3xl ${item.textColor} mb-1`}>
                           {item.title}
                         </h2>
-                        <p className={`font-body text-sm ${item.subtitleColor}`}>{item.description}</p>
+                        <p className={`font-body text-base ${item.subtitleColor}`}>{item.description}</p>
                       </div>
                     </div>
                     <div className={`${item.arrowColor} group-hover:translate-x-1 transition-all`} aria-hidden="true">
@@ -202,10 +202,10 @@ export default function Home() {
                     <span className="text-3xl" role="img" aria-label="Accessibilité">♿</span>
                   </div>
                   <div className="text-left">
-                    <h2 className="font-heading text-xl text-white mb-1">
+                    <h2 className="font-heading text-2xl text-white mb-1">
                       Accessibilité
                     </h2>
-                    <p className="font-body text-sm text-white/90">Options d'aide</p>
+                    <p className="font-body text-base text-white/90">Options d'aide</p>
                   </div>
                 </div>
                 <div className="text-white group-hover:translate-x-1 transition-all" aria-hidden="true">
