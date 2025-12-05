@@ -483,32 +483,41 @@ export default function SuiviIntervention() {
                             </span>
                           </div>
 
-                          <div className="p-4">
-                            <div className="relative">
-                              {renderTimeline(incident).map((step, index, arr) => (
-                                <div key={index} className="flex gap-4 mb-4 last:mb-0">
-                                  <div className="flex flex-col items-center">
-                                    <div className={`w-10 h-10 rounded-full ${step.color} flex items-center justify-center ${step.status === 'active' ? 'animate-pulse' : ''}`}>
-                                      <step.icon className="w-5 h-5 text-white" />
-                                    </div>
-                                    {index < arr.length - 1 && <div className={`w-0.5 flex-1 mt-2 ${step.status === 'completed' ? 'bg-gray-300' : 'bg-gray-200'}`} />}
+                          <div className="p-4 space-y-4">
+                          {/* Estimation temps d'arrivée */}
+                          <ETAEstimation incident={incident} />
+
+                          <div className="relative">
+                            {renderTimeline(incident).map((step, index, arr) => (
+                              <div key={index} className="flex gap-4 mb-4 last:mb-0">
+                                <div className="flex flex-col items-center">
+                                  <div className={`w-10 h-10 rounded-full ${step.color} flex items-center justify-center ${step.status === 'active' ? 'animate-pulse' : ''}`}>
+                                    <step.icon className="w-5 h-5 text-white" />
                                   </div>
-                                  <div className="flex-1 pb-4">
-                                    <div className="flex items-center justify-between">
-                                      <h4 className="font-heading text-gray-700">{step.title}</h4>
-                                      {step.date && <span className="text-xs text-gray-400">{format(new Date(step.date), 'dd/MM HH:mm', { locale: fr })}</span>}
-                                    </div>
-                                    <div className="mt-1 text-gray-600">{step.details}</div>
-                                  </div>
+                                  {index < arr.length - 1 && <div className={`w-0.5 flex-1 mt-2 ${step.status === 'completed' ? 'bg-gray-300' : 'bg-gray-200'}`} />}
                                 </div>
-                              ))}
-                            </div>
+                                <div className="flex-1 pb-4">
+                                  <div className="flex items-center justify-between">
+                                    <h4 className="font-heading text-gray-700">{step.title}</h4>
+                                    {step.date && <span className="text-xs text-gray-400">{format(new Date(step.date), 'dd/MM HH:mm', { locale: fr })}</span>}
+                                  </div>
+                                  <div className="mt-1 text-gray-600">{step.details}</div>
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
+
+                          {/* Chat avec le technicien */}
+                          <ClientInterventionChat 
+                            incident={incident} 
+                            clientNom={`${userData.prenom || ''} ${userData.nom || ''}`}
+                          />
+                          </div>
+                          </CardContent>
+                          </Card>
+                          ))}
+                          </div>
+                          )}
 
                 {resolvedIncidents.length > 0 && (
                   <div className="space-y-3">
