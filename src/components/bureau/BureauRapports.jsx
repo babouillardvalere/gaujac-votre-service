@@ -97,7 +97,25 @@ const translations = {
     supprimer_rapport: 'Supprimer',
     confirmer_suppression: 'Confirmer la suppression ?',
     rapport_supprime: 'Rapport supprimé',
-    exporter_selection: 'Exporter la sélection'
+    exporter_selection: 'Exporter la sélection',
+    // Litige
+    rapport_litige: 'Rapport de litige',
+    generer_litige: 'Générer un rapport de litige',
+    selectionner_intervention: 'Sélectionner une intervention',
+    aucune_intervention: 'Aucune intervention disponible',
+    informations_litige: 'Informations du litige',
+    telecharger_dossier: 'Télécharger le dossier complet',
+    envoyer_email_litige: 'Envoyer par email',
+    date_intervention: 'Date intervention',
+    client_info: 'Client',
+    hebergement_info: 'Hébergement',
+    collaborateur_info: 'Intervenant',
+    photos_preuves: 'Preuves photographiques',
+    photo_avant: 'Photo AVANT',
+    photo_apres: 'Photo APRÈS',
+    hash_verification: 'Hash de vérification',
+    rapport_litige_genere: 'Rapport de litige généré',
+    copier_hash: 'Copier le hash'
   },
   en: {
     title: 'Automatic Reports',
