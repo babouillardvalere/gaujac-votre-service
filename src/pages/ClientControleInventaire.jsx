@@ -4,6 +4,7 @@ import { useTranslation } from '../components/translations';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { getCodeFromCategory } from '../components/categoryCodeMapping';
+import { getCategorie, isUrgent, getDescriptionProbleme } from '../components/inventaireCategories';
 import Logo from '../components/Logo';
 import SignaturePad from '../components/SignaturePad';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ArrowLeft, Camera, Check, AlertCircle, Smile, Meh, Frown, Send, Loader2 } from 'lucide-react';
+import { ArrowLeft, Camera, Check, AlertCircle, Smile, Meh, Frown, Send, Loader2, Wrench, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
@@ -42,6 +43,8 @@ export default function ClientControleInventaire() {
   const [signature, setSignature] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [showRecapDialog, setShowRecapDialog] = useState(false);
+  const [interventionsPreview, setInterventionsPreview] = useState({ menage: [], technique: [] });
 
   useEffect(() => {
     if (!nom || !categorie) {
@@ -174,7 +177,65 @@ export default function ClientControleInventaire() {
     }
   };
 
-  const handleSubmit = async () => {
+  const analyzeAndPrepareInterventions = () => {
+    const interventionsMenage = [];
+    const interventionsTechnique = [];
+
+    // Analyser les objets non validés
+    const objetsNonValides = inventaireItems.filter(item => !objetsValides.includes(item.id));
+
+    objetsNonValides.forEach(objet => {
+      const categorie = getCategorie(objet.id, lang === 'fr' ? objet.nom_fr : objet.nom_en);
+      const urgent = isUrgent(objet.id, lang === 'fr' ? objet.nom_fr : objet.nom_en);
+      const description = getDescriptionProbleme(lang === 'fr' ? objet.nom_fr : objet.nom_en, lang);
+
+      const intervention = {
+        objet: lang === 'fr' ? objet.nom_fr : objet.nom_en,
+        description,
+        urgent,
+        icon: objet.icon
+      };
+
+      if (categorie === 'menage') {
+        interventionsMenage.push(intervention);
+      } else {
+        interventionsTechnique.push(intervention);
+      }
+    });
+
+    // Ajouter objets déclarés manuellement
+    objetsMissing.forEach(obj => {
+      const categorie = getCategorie(obj.objet, obj.objet);
+      const urgent = isUrgent(obj.objet, obj.objet);
+
+      const intervention = {
+        objet: obj.objet,
+        description: obj.commentaire || getDescriptionProbleme(obj.objet, lang),
+        urgent,
+        photo: obj.photo
+      };
+
+      if (categorie === 'menage') {
+        interventionsMenage.push(intervention);
+      } else {
+        interventionsTechnique.push(intervention);
+      }
+    });
+
+    // Problème de propreté = intervention ménage
+    if (evaluationProprete === 'pas_satisfaisant') {
+      interventionsMenage.push({
+        objet: lang === 'fr' ? 'Propreté insatisfaisante' : 'Unsatisfactory cleanliness',
+        description: commentaireProprete,
+        urgent: false,
+        photo: photoProprete
+      });
+    }
+
+    return { menage: interventionsMenage, technique: interventionsTechnique };
+  };
+
+  const handlePrepareSubmit = () => {
     if (!evaluationProprete) {
       toast.error(lang === 'fr' ? 'Veuillez évaluer la propreté' : 'Please evaluate cleanliness');
       return;
@@ -190,13 +251,24 @@ export default function ClientControleInventaire() {
       return;
     }
 
+    // Analyser et préparer les interventions
+    const interventions = analyzeAndPrepareInterventions();
+    setInterventionsPreview(interventions);
+    setShowRecapDialog(true);
+  };
+
+  const handleFinalSubmit = async () => {
+
     setSubmitting(true);
+    setShowRecapDialog(false);
+    
     try {
       // Upload signature
       const blob = await fetch(signature).then(r => r.blob());
       const signatureFile = new File([blob], 'signature.png', { type: 'image/png' });
       const { file_url: signatureUrl } = await base44.integrations.Core.UploadFile({ file: signatureFile });
 
+      // Créer le contrôle inventaire
       await base44.entities.ControleInventaireArrivee.create({
         numero_locatif: numero,
         categorie_locatif: categorie,
@@ -213,10 +285,59 @@ export default function ClientControleInventaire() {
         remarques_suggestions: remarques,
         signature_url: signatureUrl,
         date_validation: new Date().toISOString(),
-        inventaire_complet: objetsMissing.length === 0
+        inventaire_complet: objetsMissing.length === 0 && evaluationProprete !== 'pas_satisfaisant'
       });
 
+      // Créer les interventions ménage
+      for (const intervention of interventionsPreview.menage) {
+        await base44.entities.Incident.create({
+          type: 'menage',
+          categorie: 'menage',
+          sous_categorie: intervention.objet,
+          description: intervention.description,
+          urgent: intervention.urgent,
+          client_nom: nom,
+          client_prenom: prenom,
+          date_arrivee: dateArrivee,
+          date_depart: dateDepart,
+          logement: numero,
+          photo_url: intervention.photo || '',
+          date_saisie: new Date().toISOString(),
+          statut: 'en_attente',
+          autorisation_acces: 'oui',
+          clause_autorisation_acceptee: true
+        });
+      }
+
+      // Créer les interventions technique
+      for (const intervention of interventionsPreview.technique) {
+        await base44.entities.Incident.create({
+          type: 'technique',
+          categorie: 'divers_technique',
+          sous_categorie: intervention.objet,
+          description: intervention.description,
+          urgent: intervention.urgent,
+          client_nom: nom,
+          client_prenom: prenom,
+          date_arrivee: dateArrivee,
+          date_depart: dateDepart,
+          logement: numero,
+          photo_url: intervention.photo || '',
+          date_saisie: new Date().toISOString(),
+          statut: 'en_attente',
+          autorisation_acces: 'oui',
+          clause_autorisation_acceptee: true
+        });
+      }
+
       toast.success(lang === 'fr' ? '✅ Inventaire envoyé à la réception !' : '✅ Inventory sent to reception!');
+      
+      if (interventionsPreview.menage.length > 0 || interventionsPreview.technique.length > 0) {
+        toast.success(lang === 'fr' 
+          ? `📋 ${interventionsPreview.menage.length + interventionsPreview.technique.length} intervention(s) créée(s) automatiquement`
+          : `📋 ${interventionsPreview.menage.length + interventionsPreview.technique.length} intervention(s) created automatically`
+        );
+      }
       
       // Nettoyer session
       setTimeout(() => {
@@ -522,15 +643,12 @@ export default function ClientControleInventaire() {
 
           {/* Bloc 7 - Validation */}
           <Button
-            onClick={handleSubmit}
+            onClick={handlePrepareSubmit}
             disabled={submitting || !evaluationProprete || !signature}
             className="w-full h-14 bg-[#00AEEF] hover:bg-[#0077A8] text-white rounded-xl font-heading text-lg mt-6"
           >
             <Send className="w-5 h-5 mr-2" />
-            {submitting 
-              ? (lang === 'fr' ? 'Envoi en cours...' : 'Sending...')
-              : (lang === 'fr' ? 'Envoyer à la réception' : 'Send to reception')
-            }
+            {lang === 'fr' ? 'Envoyer à la réception' : 'Send to reception'}
           </Button>
         </motion.div>
 
@@ -616,6 +734,127 @@ export default function ClientControleInventaire() {
                   className="flex-1 bg-[#FFA500] hover:bg-[#FF8C00]"
                 >
                   {lang === 'fr' ? 'Enregistrer' : 'Save'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog Récapitulatif */}
+        <Dialog open={showRecapDialog} onOpenChange={setShowRecapDialog}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="font-heading text-2xl text-[#0077A8]">
+                {lang === 'fr' ? '📋 Récapitulatif avant validation' : '📋 Summary before validation'}
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              {/* Objets validés */}
+              <Card className="border-2 border-green-500/30 bg-green-50">
+                <CardContent className="p-4">
+                  <h3 className="font-heading text-lg text-green-800 mb-2 flex items-center gap-2">
+                    <Check className="w-5 h-5" />
+                    {lang === 'fr' ? 'Objets validés' : 'Validated items'} ({objetsValides.length})
+                  </h3>
+                </CardContent>
+              </Card>
+
+              {/* Interventions ménage */}
+              {interventionsPreview.menage.length > 0 && (
+                <Card className="border-2 border-yellow-500/30 bg-yellow-50">
+                  <CardContent className="p-4">
+                    <h3 className="font-heading text-lg text-yellow-800 mb-3 flex items-center gap-2">
+                      <Sparkles className="w-5 h-5" />
+                      {lang === 'fr' ? '🧹 Interventions Ménage créées' : '🧹 Housekeeping interventions created'} ({interventionsPreview.menage.length})
+                    </h3>
+                    <div className="space-y-2">
+                      {interventionsPreview.menage.map((interv, idx) => (
+                        <div key={idx} className={`p-3 rounded-lg ${interv.urgent ? 'bg-red-100 border-2 border-red-400' : 'bg-white'}`}>
+                          <div className="flex items-center gap-2">
+                            {interv.urgent && <span className="text-red-600 font-bold">🔴 URGENT</span>}
+                            {!interv.urgent && <span className="text-yellow-600">🟡 NORMAL</span>}
+                            <span className="font-heading">{interv.objet}</span>
+                          </div>
+                          <p className="text-sm text-gray-600 mt-1">{interv.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Interventions technique */}
+              {interventionsPreview.technique.length > 0 && (
+                <Card className="border-2 border-blue-500/30 bg-blue-50">
+                  <CardContent className="p-4">
+                    <h3 className="font-heading text-lg text-blue-800 mb-3 flex items-center gap-2">
+                      <Wrench className="w-5 h-5" />
+                      {lang === 'fr' ? '🔧 Interventions Technique créées' : '🔧 Technical interventions created'} ({interventionsPreview.technique.length})
+                    </h3>
+                    <div className="space-y-2">
+                      {interventionsPreview.technique.map((interv, idx) => (
+                        <div key={idx} className={`p-3 rounded-lg ${interv.urgent ? 'bg-red-100 border-2 border-red-400' : 'bg-white'}`}>
+                          <div className="flex items-center gap-2">
+                            {interv.urgent && <span className="text-red-600 font-bold">🔴 URGENT</span>}
+                            {!interv.urgent && <span className="text-blue-600">🟡 NORMAL</span>}
+                            <span className="font-heading">{interv.objet}</span>
+                          </div>
+                          <p className="text-sm text-gray-600 mt-1">{interv.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Photos */}
+              {Object.keys(photosLieux).length > 0 && (
+                <Card className="border-2 border-gray-300">
+                  <CardContent className="p-4">
+                    <h3 className="font-heading text-lg text-gray-800 mb-2">
+                      📸 {lang === 'fr' ? 'Photos jointes' : 'Photos attached'} ({Object.keys(photosLieux).length})
+                    </h3>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Signature */}
+              <Card className="border-2 border-gray-300">
+                <CardContent className="p-4">
+                  <h3 className="font-heading text-lg text-gray-800 flex items-center gap-2">
+                    <Check className="w-5 h-5 text-green-600" />
+                    ✒️ {lang === 'fr' ? 'Signature effectuée' : 'Signature done'}
+                  </h3>
+                </CardContent>
+              </Card>
+
+              {/* Boutons validation */}
+              <div className="flex gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowRecapDialog(false)}
+                  className="flex-1 h-12 border-2"
+                  disabled={submitting}
+                >
+                  {lang === 'fr' ? 'Modifier' : 'Edit'}
+                </Button>
+                <Button
+                  onClick={handleFinalSubmit}
+                  disabled={submitting}
+                  className="flex-1 h-12 bg-[#22c55e] hover:bg-[#16a34a] text-white font-heading"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      {lang === 'fr' ? 'Envoi...' : 'Sending...'}
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-5 h-5 mr-2" />
+                      {lang === 'fr' ? 'Valider et envoyer' : 'Confirm and send'}
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
