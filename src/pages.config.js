@@ -34,6 +34,7 @@ import ClientDepartPhotos from './pages/ClientDepartPhotos';
 import ClientDepartConfirmation from './pages/ClientDepartConfirmation';
 import ClientArriveeIdentite from './pages/ClientArriveeIdentite';
 import ClientArriveeHebergement from './pages/ClientArriveeHebergement';
+import ClientControleInventaire from './pages/ClientControleInventaire';
 import __Layout from './Layout.jsx';
 
 
@@ -74,6 +75,7 @@ export const PAGES = {
     "ClientDepartConfirmation": ClientDepartConfirmation,
     "ClientArriveeIdentite": ClientArriveeIdentite,
     "ClientArriveeHebergement": ClientArriveeHebergement,
+    "ClientControleInventaire": ClientControleInventaire,
 }
 
 export const pagesConfig = {
