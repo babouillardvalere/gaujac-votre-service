@@ -1056,6 +1056,83 @@ export default function Bureau() {
                 </div>
               )}
 
+              {/* Preuves visuelles (photos avant/après) */}
+              {(selectedIncident.photo_avant_url || selectedIncident.photo_apres_url || selectedIncident.photo_url) && (
+                <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
+                  <h4 className="font-heading text-[#0077A8] mb-3 flex items-center gap-2">
+                    📷 Preuves visuelles
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Photo client */}
+                    {selectedIncident.photo_url && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-heading text-gray-600">📸 Photo client (signalement)</p>
+                        <img 
+                          src={selectedIncident.photo_url} 
+                          alt="Photo signalement" 
+                          className="w-full h-32 object-cover rounded-lg border-2 border-gray-300"
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Photo AVANT */}
+                    {selectedIncident.photo_avant_url && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-heading text-orange-600">📷 Photo AVANT intervention</p>
+                        <img 
+                          src={selectedIncident.photo_avant_url} 
+                          alt="Photo avant" 
+                          className="w-full h-32 object-cover rounded-lg border-2 border-orange-300"
+                        />
+                        {selectedIncident.photo_avant_timestamp && (
+                          <p className="text-xs text-gray-500">
+                            {format(new Date(selectedIncident.photo_avant_timestamp), 'dd/MM/yyyy HH:mm:ss')}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Photo APRÈS */}
+                    {selectedIncident.photo_apres_url && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-heading text-green-600">📷 Photo APRÈS intervention</p>
+                        <img 
+                          src={selectedIncident.photo_apres_url} 
+                          alt="Photo après" 
+                          className="w-full h-32 object-cover rounded-lg border-2 border-green-300"
+                        />
+                        {selectedIncident.photo_apres_timestamp && (
+                          <p className="text-xs text-gray-500">
+                            {format(new Date(selectedIncident.photo_apres_timestamp), 'dd/MM/yyyy HH:mm:ss')}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Garanties juridiques */}
+                  {(selectedIncident.photo_avant_hash || selectedIncident.photo_apres_hash) && (
+                    <div className="mt-4 p-3 bg-white rounded-lg border border-blue-200">
+                      <p className="text-xs font-heading text-[#0077A8] mb-2">🔐 Garanties juridiques</p>
+                      <ul className="text-xs text-gray-600 space-y-1">
+                        <li>✓ Filigrane intégré (date, ID, collaborateur)</li>
+                        <li>✓ Hash SHA-256 enregistré</li>
+                        {selectedIncident.photo_avant_hash && (
+                          <li className="font-mono text-xs text-gray-400 truncate">
+                            Avant: {selectedIncident.photo_avant_hash.substring(0, 24)}...
+                          </li>
+                        )}
+                        {selectedIncident.photo_apres_hash && (
+                          <li className="font-mono text-xs text-gray-400 truncate">
+                            Après: {selectedIncident.photo_apres_hash.substring(0, 24)}...
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Avis client */}
               {selectedIncident.note_client && (
                 <div className="bg-[#FFD700]/20 rounded-xl p-4">
