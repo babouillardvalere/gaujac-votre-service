@@ -108,18 +108,10 @@ export default function ClientMenu() {
                 >
                   <Card className="border-2 border-[#00AEEF]/30 hover:border-[#00AEEF] hover:shadow-xl transition-all rounded-xl overflow-hidden">
                     <CardContent className="p-0">
-                      <div className="flex items-center justify-between p-6 min-h-[100px]">
-                        <div>
-                          <h2 className={`font-heading text-2xl text-[#0077A8] mb-1 group-hover:scale-105 transition-transform`}>
-                            {lang === 'fr' ? item.title : item.titleEn}
-                          </h2>
-                          <p className="text-sm text-gray-600">
-                            {lang === 'fr' ? 'Cliquez pour continuer' : 'Click to continue'}
-                          </p>
-                        </div>
-                        <div className={`w-16 h-16 rounded-xl ${item.color} flex items-center justify-center text-3xl shadow-lg group-hover:scale-110 transition-transform`}>
-                          {item.title.split(' ')[0]}
-                        </div>
+                      <div className={`${item.color} p-8 min-h-[120px] flex items-center justify-center`}>
+                        <h2 className={`font-heading text-4xl ${item.textColor} group-hover:scale-105 transition-transform text-center`}>
+                          {lang === 'fr' ? item.title : item.titleEn}
+                        </h2>
                       </div>
                     </CardContent>
                   </Card>
