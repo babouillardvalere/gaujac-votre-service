@@ -70,6 +70,15 @@ export default function MenuCollaborateur() {
       badgeCount: counts.materiel
     },
     {
+      title: 'Tâches',
+      icon: ListTodo,
+      href: 'Taches',
+      color: 'bg-purple-500',
+      textColor: 'text-white',
+      description: 'Gestion des tâches',
+      badgeCount: counts.taches || 0
+    },
+    {
       title: t('menu_bureau'),
       icon: Building2,
       href: 'Bureau',
