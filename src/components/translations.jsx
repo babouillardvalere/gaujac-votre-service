@@ -360,7 +360,33 @@ export const translations = {
     // Piki IA
     aide_ia_piki: "Aide IA PIKI",
     assistant_intelligent: "Assistant intelligent",
-    bientot: "Bientôt"
+    bientot: "Bientôt",
+    
+    // Attente dialog extended
+    motif_attente_label: "Motif de l'attente",
+    motif_attente_obligatoire: "Ce champ est obligatoire",
+    motif_attente_placeholder: "Décrivez la raison de la mise en attente...",
+    suggestion_attente_materiel: "Attente de matériel",
+    suggestion_attente_fournisseur: "Attente du fournisseur",
+    suggestion_client_absent: "Client absent",
+    suggestion_piece_specifique: "Besoin d'une pièce spécifique",
+    suggestion_second_technicien: "Besoin d'un second technicien",
+    intervention_en_attente: "Intervention en attente",
+    motif_label: "Motif",
+    materiel_necessaire: "Matériel nécessaire",
+    mis_en_attente_le: "Mis en attente le",
+    reprendre: "Reprendre",
+    modifier_motif: "Modifier motif",
+    passer_resolu: "Passer en résolu",
+    valider: "Valider",
+    
+    // Bureau auth
+    connexion_bureau: "Connexion Bureau",
+    acces_reserve_bureau: "Accès réservé uniquement à la Réception et à la Direction.",
+    mot_de_passe_bureau: "Mot de passe Bureau",
+    mot_de_passe_incorrect_bureau: "Mot de passe incorrect.",
+    acces_reserve_direction: "Accès réservé à la réception et à la direction.",
+    verification: "Vérification..."
   },
 
   en: {
