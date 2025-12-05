@@ -501,7 +501,7 @@ export const translations = {
     choisir_numero: "Choose a number",
 
     // Report / Signalement
-    signalement_title: "Report a problem",
+    signalement_title: "Report intervention type",
     urgence: "Emergency",
     probleme_urgent: "Emergency issue?",
     intervention_prioritaire: "Priority intervention will be triggered.",
