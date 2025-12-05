@@ -15,8 +15,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { 
   ArrowLeft, Clock, Star, AlertTriangle, TrendingUp, Loader2, 
   Users, Home, Search, Building2, Filter, Calendar, CalendarDays,
-  ChevronDown, ChevronUp, Eye, AlertCircle, MoreVertical, LogOut
+  ChevronDown, ChevronUp, Eye, AlertCircle, MoreVertical, LogOut,
+  Trash2, ArrowUp, ArrowDown, CheckSquare, Square
 } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import InterventionActions from '../components/bureau/InterventionActions';
 import BureauStatistiques from '../components/bureau/BureauStatistiques';
 import BureauAvis from '../components/bureau/BureauAvis';
@@ -54,6 +56,8 @@ export default function Bureau() {
   const [selectedIncident, setSelectedIncident] = useState(null);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [activeView, setActiveView] = useState('all'); // all, today, late
+  const [selectedIds, setSelectedIds] = useState([]); // Sélection multiple
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   const [filters, setFilters] = useState({
     nom: '',
@@ -113,11 +117,108 @@ export default function Bureau() {
     navigate(createPageUrl('MenuCollaborateur'));
   };
 
+  const queryClient = useQueryClient();
+
   const { data: incidents = [], isLoading } = useQuery({
     queryKey: ['bureau-incidents'],
     queryFn: () => base44.entities.Incident.filter({}, '-date_saisie', 1000),
     refetchInterval: 30000
   });
+
+  // Mutations pour actions de groupe
+  const updateIncidentMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Incident.update(id, data),
+  });
+
+  const deleteIncidentMutation = useMutation({
+    mutationFn: (id) => base44.entities.Incident.delete(id),
+  });
+
+  // Sélection
+  const toggleSelect = (id, e) => {
+    e.stopPropagation();
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    const visibleIds = sortedIncidents.slice(0, 100).map(i => i.id);
+    if (selectedIds.length === visibleIds.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(visibleIds);
+    }
+  };
+
+  // Actions de groupe
+  const handleGroupMove = async (direction) => {
+    if (selectedIds.length === 0) return;
+    
+    const selectedIncidents = sortedIncidents.filter(i => selectedIds.includes(i.id));
+    const nonSelectedIncidents = sortedIncidents.filter(i => !selectedIds.includes(i.id) && i.statut !== 'resolu');
+    
+    // Recalculer les ordres
+    const updates = [];
+    
+    if (direction === 'up') {
+      // Trouver le plus petit ordre parmi les sélectionnés
+      const minOrder = Math.min(...selectedIncidents.map(i => i.priorite_ordre || sortedIncidents.indexOf(i) + 1));
+      if (minOrder <= 1) return; // Déjà en haut
+      
+      // Déplacer chaque sélectionné vers le haut
+      selectedIncidents.forEach((inc, idx) => {
+        const currentOrder = inc.priorite_ordre || sortedIncidents.indexOf(inc) + 1;
+        updates.push({ id: inc.id, data: { priorite_ordre: currentOrder - 1 } });
+      });
+      
+      // Décaler les non-sélectionnés qui sont maintenant en conflit
+      nonSelectedIncidents.forEach(inc => {
+        const currentOrder = inc.priorite_ordre || sortedIncidents.indexOf(inc) + 1;
+        const conflicting = selectedIncidents.some(sel => {
+          const selNewOrder = (sel.priorite_ordre || sortedIncidents.indexOf(sel) + 1) - 1;
+          return selNewOrder === currentOrder;
+        });
+        if (conflicting) {
+          updates.push({ id: inc.id, data: { priorite_ordre: currentOrder + 1 } });
+        }
+      });
+    } else {
+      // Descendre
+      const maxOrder = Math.max(...selectedIncidents.map(i => i.priorite_ordre || sortedIncidents.indexOf(i) + 1));
+      const totalNonResolved = sortedIncidents.filter(i => i.statut !== 'resolu').length;
+      if (maxOrder >= totalNonResolved) return; // Déjà en bas
+      
+      selectedIncidents.forEach((inc, idx) => {
+        const currentOrder = inc.priorite_ordre || sortedIncidents.indexOf(inc) + 1;
+        updates.push({ id: inc.id, data: { priorite_ordre: currentOrder + 1 } });
+      });
+      
+      nonSelectedIncidents.forEach(inc => {
+        const currentOrder = inc.priorite_ordre || sortedIncidents.indexOf(inc) + 1;
+        const conflicting = selectedIncidents.some(sel => {
+          const selNewOrder = (sel.priorite_ordre || sortedIncidents.indexOf(sel) + 1) + 1;
+          return selNewOrder === currentOrder;
+        });
+        if (conflicting) {
+          updates.push({ id: inc.id, data: { priorite_ordre: currentOrder - 1 } });
+        }
+      });
+    }
+    
+    // Exécuter les updates
+    await Promise.all(updates.map(u => updateIncidentMutation.mutateAsync(u)));
+    queryClient.invalidateQueries({ queryKey: ['bureau-incidents'] });
+  };
+
+  const handleGroupDelete = async () => {
+    if (selectedIds.length === 0) return;
+    
+    await Promise.all(selectedIds.map(id => deleteIncidentMutation.mutateAsync(id)));
+    setSelectedIds([]);
+    setShowDeleteConfirm(false);
+    queryClient.invalidateQueries({ queryKey: ['bureau-incidents'] });
+  };
 
   // Calcul des délais
   const getDelayStatus = (incident) => {
@@ -512,6 +613,59 @@ export default function Bureau() {
               </CardContent>
             </Card>
 
+            {/* Barre d'actions de groupe */}
+            {selectedIds.length > 0 && (
+              <Card className="border-2 border-[#00AEEF] bg-[#e6f7ff] rounded-xl mb-4">
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between flex-wrap gap-3">
+                    <span className="font-heading text-[#0077A8] text-sm">
+                      {selectedIds.length} intervention(s) sélectionnée(s)
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleGroupMove('up')}
+                        className="border-[#00AEEF] text-[#0077A8] hover:bg-[#00AEEF] hover:text-white"
+                        disabled={updateIncidentMutation.isPending}
+                      >
+                        <ArrowUp className="w-4 h-4 mr-1" />
+                        Monter groupe
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleGroupMove('down')}
+                        className="border-[#00AEEF] text-[#0077A8] hover:bg-[#00AEEF] hover:text-white"
+                        disabled={updateIncidentMutation.isPending}
+                      >
+                        <ArrowDown className="w-4 h-4 mr-1" />
+                        Descendre groupe
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setShowDeleteConfirm(true)}
+                        className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                        disabled={deleteIncidentMutation.isPending}
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Supprimer groupe
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setSelectedIds([])}
+                        className="text-gray-500"
+                      >
+                        Annuler
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Tableau */}
             <Card className="border-2 border-[#FFA500]/30 rounded-xl overflow-hidden">
               <CardContent className="p-0">
@@ -524,6 +678,19 @@ export default function Bureau() {
                     <table className="w-full">
                       <thead className="bg-[#FFA500]/10">
                         <tr className="text-left text-xs font-heading text-[#0077A8]">
+                          <th className="p-3 w-10">
+                            <button
+                              onClick={toggleSelectAll}
+                              className="p-1 hover:bg-[#FFA500]/20 rounded transition-colors"
+                              title="Tout sélectionner"
+                            >
+                              {selectedIds.length === sortedIncidents.slice(0, 100).length && selectedIds.length > 0 ? (
+                                <CheckSquare className="w-5 h-5 text-[#00AEEF]" />
+                              ) : (
+                                <Square className="w-5 h-5 text-gray-400" />
+                              )}
+                            </button>
+                          </th>
                           <th className="p-3">N°</th>
                           <th className="p-3">Date / Heure</th>
                           <th className="p-3">Client</th>
@@ -553,9 +720,21 @@ export default function Bureau() {
                                 delayStatus === 'critique' ? 'bg-red-50' :
                                 delayStatus === 'retard' ? 'bg-orange-50' :
                                 delayStatus === 'lent' ? 'bg-yellow-50' : ''
-                              }`}
+                              } ${selectedIds.includes(incident.id) ? 'bg-[#e6f7ff]' : ''}`}
                               onClick={() => setSelectedIncident(incident)}
                             >
+                              <td className="p-3" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                  onClick={(e) => toggleSelect(incident.id, e)}
+                                  className="p-1 hover:bg-[#00AEEF]/20 rounded transition-colors"
+                                >
+                                  {selectedIds.includes(incident.id) ? (
+                                    <CheckSquare className="w-5 h-5 text-[#00AEEF]" />
+                                  ) : (
+                                    <Square className="w-5 h-5 text-gray-400" />
+                                  )}
+                                </button>
+                              </td>
                               <td className="p-3 text-center">
                                 <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
                                   incident.urgent ? 'bg-red-500 text-white' : 
@@ -667,6 +846,43 @@ export default function Bureau() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Dialog confirmation suppression groupe */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-red-600 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5" />
+              Confirmer la suppression
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="font-body text-gray-700">
+              ⚠️ Voulez-vous vraiment supprimer les <strong>{selectedIds.length}</strong> intervention(s) sélectionnée(s) ?
+            </p>
+            <p className="text-sm text-gray-500 mt-2">Cette action est irréversible.</p>
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirm(false)}
+              className="rounded-xl"
+            >
+              Non
+            </Button>
+            <Button
+              onClick={handleGroupDelete}
+              className="bg-red-500 hover:bg-red-600 text-white rounded-xl"
+              disabled={deleteIncidentMutation.isPending}
+            >
+              {deleteIncidentMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : null}
+              Oui, supprimer
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog détail */}
       <Dialog open={!!selectedIncident} onOpenChange={() => setSelectedIncident(null)}>
