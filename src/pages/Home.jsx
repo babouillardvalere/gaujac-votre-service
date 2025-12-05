@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation, getLanguage } from '../components/translations';
 import Logo from '../components/Logo';
 import HomeAvisSection from '../components/HomeAvisSection';
+import CustomUsersIcon from '../components/CustomUsersIcon';
 import AccessibilityPanel, { getAccessibilitySettings, saveAccessibilitySettings, speakText, stopSpeaking } from '../components/AccessibilityPanel';
 import { Users, Star, Briefcase, Search, Accessibility, Plus, Minus, Volume2, VolumeX, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -61,7 +62,7 @@ export default function Home() {
   const menuItems = [
     {
       title: t('client'),
-      icon: Users,
+      icon: CustomUsersIcon,
       href: '/IdentiteClient',
       bgColor: 'bg-[#00AEEF]',
       borderColor: 'border-[#00AEEF]',
@@ -71,7 +72,8 @@ export default function Home() {
       arrowColor: 'text-white',
       description: t('signaler_probleme'),
       ariaLabel: 'Signaler un problème - Accéder au formulaire client',
-      iconColor: 'text-white'
+      iconColor: 'text-white',
+      customIcon: true
     },
     {
       title: t('suivi_intervention'),
@@ -155,7 +157,11 @@ export default function Home() {
                   <div className="flex items-center justify-between p-6 h-full">
                     <div className="flex items-center gap-4">
                       <div className={`w-14 h-14 rounded-xl ${item.iconBg} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`} aria-hidden="true">
-                        <item.icon className={`w-7 h-7 ${item.iconColor || 'text-white'}`} aria-hidden="true" />
+                        {item.customIcon ? (
+                          <item.icon className="w-7 h-7" aria-hidden="true" />
+                        ) : (
+                          <item.icon className={`w-7 h-7 ${item.iconColor || 'text-white'}`} aria-hidden="true" />
+                        )}
                       </div>
                       <div>
                         <h2 className={`font-heading text-2xl ${item.textColor} mb-1`}>
