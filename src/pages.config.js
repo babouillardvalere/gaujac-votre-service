@@ -32,6 +32,8 @@ import ClientDepartHebergement from './pages/ClientDepartHebergement';
 import ClientDepartChecklist from './pages/ClientDepartChecklist';
 import ClientDepartPhotos from './pages/ClientDepartPhotos';
 import ClientDepartConfirmation from './pages/ClientDepartConfirmation';
+import ClientArriveeIdentite from './pages/ClientArriveeIdentite';
+import ClientArriveeHebergement from './pages/ClientArriveeHebergement';
 import __Layout from './Layout.jsx';
 
 
@@ -70,6 +72,8 @@ export const PAGES = {
     "ClientDepartChecklist": ClientDepartChecklist,
     "ClientDepartPhotos": ClientDepartPhotos,
     "ClientDepartConfirmation": ClientDepartConfirmation,
+    "ClientArriveeIdentite": ClientArriveeIdentite,
+    "ClientArriveeHebergement": ClientArriveeHebergement,
 }
 
 export const pagesConfig = {

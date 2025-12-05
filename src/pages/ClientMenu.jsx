@@ -16,10 +16,10 @@ export default function ClientMenu() {
       title: '🏡 Arrivée',
       titleEn: '🏡 Arrival',
       href: 'ClientArrivee',
-      color: 'bg-gray-300',
-      textColor: 'text-gray-500',
-      disabled: true,
-      comingSoon: true
+      color: 'bg-[#22c55e]',
+      textColor: 'text-white',
+      disabled: false,
+      comingSoon: false
     },
     {
       title: '🌞 Séjour',

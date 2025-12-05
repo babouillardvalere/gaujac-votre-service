@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../components/translations';
 import Logo from '../components/Logo';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Construction } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { ArrowLeft, ArrowRight, Smile } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 
 export default function ClientArrivee() {
-  const { t } = useTranslation();
+  const { lang } = useTranslation();
   const navigate = useNavigate();
 
   return (
@@ -20,34 +21,47 @@ export default function ClientArrivee() {
           transition={{ duration: 0.5 }}
           className="text-center"
         >
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={() => navigate(createPageUrl('ClientMenu'))}
+              className="flex items-center gap-2 text-[#0077A8] hover:text-[#00AEEF]"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="font-heading">
+                {lang === 'fr' ? 'Retour' : 'Back'}
+              </span>
+            </button>
+          </div>
+
           <Logo className="h-20 mb-6" />
           
-          <div className="bg-white rounded-2xl border-2 border-[#FFD700] p-8 shadow-lg">
-            <Construction className="w-20 h-20 text-[#FFD700] mx-auto mb-4" />
-            
-            <h1 className="font-handwritten text-3xl text-[#0077A8] mb-4">
-              🚧 {t('lang') === 'fr' ? 'Fonction en développement' : 'Feature under development'}
-            </h1>
-            
-            <p className="font-body text-gray-600 mb-6">
-              {t('lang') === 'fr' 
-                ? 'Cette section sera bientôt disponible dans l\'application.'
-                : 'This section will be available soon in the application.'
-              }
-            </p>
-            
-            <p className="font-body text-[#00AEEF] text-lg mb-6">
-              {t('lang') === 'fr' ? 'Merci pour votre patience 💙' : 'Thank you for your patience 💙'}
-            </p>
-            
-            <Button
-              onClick={() => navigate(createPageUrl('ClientMenu'))}
-              className="w-full h-12 bg-[#00AEEF] hover:bg-[#0077A8] text-white rounded-xl font-heading"
-            >
-              <ArrowLeft className="w-5 h-5 mr-2" />
-              {t('retour')}
-            </Button>
-          </div>
+          <Card className="border-2 border-[#22c55e] rounded-2xl shadow-lg">
+            <CardContent className="p-8">
+              <Smile className="w-20 h-20 text-[#22c55e] mx-auto mb-4" />
+              
+              <h1 className="font-handwritten text-3xl text-[#0077A8] mb-4">
+                👋 {lang === 'fr' 
+                  ? 'Bienvenue au Camping Paradis – Domaine de Gaujac !'
+                  : 'Welcome to Camping Paradis – Domaine de Gaujac!'
+                }
+              </h1>
+              
+              <p className="font-body text-gray-700 mb-6 text-lg">
+                {lang === 'fr' 
+                  ? 'Merci de remplir ces informations afin de préparer votre arrivée.'
+                  : 'Please fill in this information to prepare your arrival.'
+                }
+              </p>
+              
+              <Button
+                onClick={() => navigate(createPageUrl('ClientArriveeIdentite'))}
+                className="w-full h-14 bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl font-heading text-lg"
+              >
+                {lang === 'fr' ? 'Commencer' : 'Start'}
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </CardContent>
+          </Card>
         </motion.div>
       </div>
     </div>
