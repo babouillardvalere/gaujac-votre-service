@@ -235,9 +235,19 @@ export default function SuiviIntervention() {
     }
 
     if (incident.statut === 'resolu') {
-      const duree = incident.date_debut && incident.date_resolution
+      const dureeTotal = incident.temps_total_intervention || (incident.date_saisie && incident.date_resolution
+        ? Math.round((new Date(incident.date_resolution) - new Date(incident.date_saisie)) / 60000)
+        : null);
+      const dureeIntervention = incident.date_debut && incident.date_resolution
         ? Math.round((new Date(incident.date_resolution) - new Date(incident.date_debut)) / 60000)
         : null;
+      
+      const formatDuree = (mins) => {
+        if (mins < 60) return `${mins} ${t('min')}`;
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        return m > 0 ? `${h}h${m}min` : `${h}h`;
+      };
       
       steps.push({
         status: 'completed',
@@ -248,7 +258,8 @@ export default function SuiviIntervention() {
         details: (
           <div className="text-sm space-y-2">
             <p><span className="font-medium">{t('intervenant')}:</span> {incident.pris_par}</p>
-            {duree && <p><span className="font-medium">{t('temps_traitement')}:</span> {duree} {t('min')}</p>}
+            {dureeTotal && <p><span className="font-medium">⏱ Durée totale:</span> {formatDuree(dureeTotal)}</p>}
+            {dureeIntervention && <p className="text-xs text-gray-500">Intervention: {formatDuree(dureeIntervention)}</p>}
             {!incident.note_client && (
               <Link to={`${createPageUrl('Avis')}?id=${incident.id}`} className="inline-flex items-center gap-1 text-[#00AEEF] hover:underline font-medium">
                 <Star className="w-4 h-4" />
@@ -429,7 +440,8 @@ export default function SuiviIntervention() {
                                 <Badge className={`${getStatusConfig(incident.statut).color} text-white`}>
                                   {getStatusConfig(incident.statut).label}
                                 </Badge>
-                                {incident.urgent && <Badge className="bg-red-500 text-white ml-2">{t('urgent_label')}</Badge>}
+                                {incident.urgent && <Badge className="bg-red-500 text-white ml-2">🚨 {t('urgent_label')}</Badge>}
+                                {incident.priorite_bureau > 0 && <Badge className="bg-purple-500 text-white ml-2">⭐ Prioritaire</Badge>}
                               </div>
                             </div>
                             <span className="text-xs text-gray-500 font-body">
