@@ -22,6 +22,7 @@ import { format, subDays, subWeeks, subMonths, startOfDay, endOfDay, startOfWeek
 import { fr, enUS } from 'date-fns/locale';
 import { toast } from 'sonner';
 import RapportPreview from './RapportPreview';
+import LitigePDFGenerator from './LitigePDFGenerator';
 
 const translations = {
   fr: {
@@ -1776,86 +1777,10 @@ Rapport généré automatiquement par Camping Paradis`;
                   </CardContent>
                 </Card>
 
-                {/* Email pour envoi */}
-                <div>
-                  <label className="text-sm font-heading text-[#0077A8] block mb-2">
-                    {t('envoyer_email_litige')}
-                  </label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="email"
-                      placeholder="email@example.com"
-                      value={litigeEmail}
-                      onChange={(e) => setLitigeEmail(e.target.value)}
-                      className="rounded-xl flex-1"
-                    />
-                    <Button
-                      onClick={async () => {
-                        if (!litigeEmail) {
-                          toast.error('Veuillez saisir un email');
-                          return;
-                        }
-                        const inc = selectedIncidentForLitige;
-                        const body = `
-RAPPORT DE LITIGE - CAMPING PARADIS
-===================================
-
-INTERVENTION #${inc.id}
-
-DATE
-----
-• Signalement: ${inc.date_saisie ? format(new Date(inc.date_saisie), 'dd/MM/yyyy HH:mm') : '-'}
-• Résolution: ${inc.date_resolution ? format(new Date(inc.date_resolution), 'dd/MM/yyyy HH:mm') : '-'}
-
-CLIENT
-------
-• Nom: ${inc.client_prenom} ${inc.client_nom}
-• Séjour: ${inc.date_arrivee} → ${inc.date_depart}
-
-HÉBERGEMENT
------------
-• Type: ${inc.logement ? 'Mobil-home' : 'Emplacement'}
-• Numéro: ${inc.logement || inc.emplacement}
-
-INTERVENANT
------------
-• Collaborateur: ${inc.pris_par || 'Non renseigné'}
-
-DESCRIPTION
------------
-${inc.description}
-
-PREUVES PHOTOGRAPHIQUES
------------------------
-${inc.photo_avant_url ? `• Photo AVANT: ${inc.photo_avant_url}\n  Date: ${inc.photo_avant_timestamp ? format(new Date(inc.photo_avant_timestamp), 'dd/MM/yyyy HH:mm:ss') : '-'}\n  Hash SHA-256: ${inc.photo_avant_hash || '-'}` : '• Photo AVANT: Non disponible'}
-
-${inc.photo_apres_url ? `• Photo APRÈS: ${inc.photo_apres_url}\n  Date: ${inc.photo_apres_timestamp ? format(new Date(inc.photo_apres_timestamp), 'dd/MM/yyyy HH:mm:ss') : '-'}\n  Hash SHA-256: ${inc.photo_apres_hash || '-'}` : '• Photo APRÈS: Non disponible'}
-
-${inc.photo_url ? `• Photo signalement client: ${inc.photo_url}` : ''}
-
----
-Rapport généré le ${format(new Date(), 'dd/MM/yyyy HH:mm')}
-Camping Paradis - Domaine de Gaujac
-                        `.trim();
-
-                        try {
-                          await base44.integrations.Core.SendEmail({
-                            to: litigeEmail,
-                            subject: `Camping Paradis - Rapport de litige #${inc.logement || inc.emplacement} - ${inc.client_nom}`,
-                            body
-                          });
-                          toast.success(t('rapport_litige_genere'));
-                          setLitigeEmail('');
-                        } catch (err) {
-                          toast.error('Erreur lors de l\'envoi');
-                        }
-                      }}
-                      className="bg-red-500 hover:bg-red-600 text-white rounded-xl"
-                    >
-                      <Mail className="w-4 h-4 mr-2" />
-                      Envoyer
-                    </Button>
-                  </div>
+                {/* Générateur PDF Litige */}
+                <div className="border-t pt-4 mt-4">
+                  <h4 className="font-heading text-[#0077A8] mb-3">📄 Générer le rapport PDF</h4>
+                  <LitigePDFGenerator incident={selectedIncidentForLitige} />
                 </div>
               </div>
             )}
