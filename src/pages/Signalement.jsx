@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, Send, AlertTriangle, CheckCircle, Loader2, Camera, Home, Search, DoorOpen, UserCheck } from 'lucide-react';
+import { ArrowLeft, Send, AlertTriangle, CheckCircle, Loader2, Camera, Home, Search, DoorOpen, UserCheck, Lock } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
