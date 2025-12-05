@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Logo from '../components/Logo';
 import OfflineBanner from '../components/OfflineBanner';
-import NotificationBell from '../components/NotificationBell';
+import NotificationCenter from '../components/NotificationCenter';
 import MettreEnAttenteDialog from '../components/MettreEnAttenteDialog';
 import InterventionTimer from '../components/InterventionTimer';
 import { useTranslation } from '../components/translations';
