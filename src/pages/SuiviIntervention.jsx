@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { 
   ArrowLeft, MapPin, Home, ChevronRight, Search, Clock, User, 
   CheckCircle, Play, Pause, Send, Star, ChevronDown, ChevronUp,
-  Loader2, ShieldAlert, History, MessageCircle
+  Loader2, ShieldAlert, History, MessageCircle, DoorOpen, UserCheck
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -190,9 +190,14 @@ export default function SuiviIntervention() {
         <div className="text-sm space-y-1">
           <p><span className="font-medium">{t('client_label')}:</span> {incident.client_prenom} {incident.client_nom}</p>
           <p><span className="font-medium">{t('description')}:</span> {incident.description}</p>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xl">{categoryEmojis[incident.categorie]}</span>
             {incident.urgent && <Badge className="bg-red-500 text-white text-xs">⚠️ {t('urgent_label')}</Badge>}
+            {incident.autorisation_acces && (
+              <Badge className={`text-xs ${incident.autorisation_acces === 'oui' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                {incident.autorisation_acces === 'oui' ? '✅ ' + t('acces_autorise') : '🚪 ' + t('acces_non_autorise')}
+              </Badge>
+            )}
           </div>
         </div>
       )
