@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../components/translations';
+import { base44 } from '@/api/base44Client';
 import Logo from '../components/Logo';
+import ArriveeProgressBar from '../components/ArriveeProgressBar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +16,7 @@ import { toast } from 'sonner';
 export default function ClientArriveeIdentite() {
   const { t, lang } = useTranslation();
   const navigate = useNavigate();
+  const [dossierId, setDossierId] = useState(null);
   
   const [formData, setFormData] = useState({
     nom: '',
@@ -21,6 +24,29 @@ export default function ClientArriveeIdentite() {
     date_arrivee: '',
     date_depart: ''
   });
+
+  useEffect(() => {
+    // Vérifier si un dossier existe déjà
+    const existingDossierId = sessionStorage.getItem('arrivee_dossier_id');
+    if (existingDossierId) {
+      setDossierId(existingDossierId);
+    }
+
+    // Charger les données de session si elles existent
+    const nom = sessionStorage.getItem('arrivee_nom');
+    const prenom = sessionStorage.getItem('arrivee_prenom');
+    const dateArrivee = sessionStorage.getItem('arrivee_date_arrivee');
+    const dateDepart = sessionStorage.getItem('arrivee_date_depart');
+
+    if (nom && prenom && dateArrivee && dateDepart) {
+      setFormData({
+        nom,
+        prenom,
+        date_arrivee: dateArrivee,
+        date_depart: dateDepart
+      });
+    }
+  }, []);
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -60,7 +86,7 @@ export default function ClientArriveeIdentite() {
     return true;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!formData.nom || !formData.prenom || !formData.date_arrivee || !formData.date_depart) {
@@ -77,6 +103,38 @@ export default function ClientArriveeIdentite() {
     sessionStorage.setItem('arrivee_prenom', formData.prenom);
     sessionStorage.setItem('arrivee_date_arrivee', formData.date_arrivee);
     sessionStorage.setItem('arrivee_date_depart', formData.date_depart);
+
+    // Créer ou mettre à jour le dossier d'arrivée
+    try {
+      if (dossierId) {
+        // Mettre à jour le dossier existant
+        await base44.entities.DossierArrivee.update(dossierId, {
+          client_nom: formData.nom,
+          client_prenom: formData.prenom,
+          date_arrivee: formData.date_arrivee,
+          date_depart: formData.date_depart,
+          etape_1_terminee: true,
+          etape_actuelle: 2
+        });
+      } else {
+        // Créer un nouveau dossier
+        const codeDossier = `ARRIVEE-${formData.nom.toUpperCase()}-${formData.date_arrivee}`;
+        const dossier = await base44.entities.DossierArrivee.create({
+          code_dossier: codeDossier,
+          client_nom: formData.nom,
+          client_prenom: formData.prenom,
+          date_arrivee: formData.date_arrivee,
+          date_depart: formData.date_depart,
+          etape_actuelle: 2,
+          etape_1_terminee: true,
+          statut: 'en_cours'
+        });
+        sessionStorage.setItem('arrivee_dossier_id', dossier.id);
+        setDossierId(dossier.id);
+      }
+    } catch (error) {
+      console.error('Error creating/updating dossier:', error);
+    }
 
     navigate(createPageUrl('ClientArriveeHebergement'));
   };
@@ -103,9 +161,15 @@ export default function ClientArriveeIdentite() {
           <h1 className="font-handwritten text-3xl text-[#22c55e] text-center mb-2">
             🏡 {lang === 'fr' ? 'Arrivée' : 'Arrival'}
           </h1>
-          <p className="text-center text-gray-600 font-body mb-6">
-            {lang === 'fr' ? 'Étape 1/2 : Identification' : 'Step 1/2: Identification'}
-          </p>
+
+          {/* Barre de progression */}
+          {dossierId && (
+            <Card className="border-2 border-[#00AEEF]/30 rounded-xl mb-6">
+              <CardContent className="p-4">
+                <ArriveeProgressBar etapeActuelle={1} lang={lang} />
+              </CardContent>
+            </Card>
+          )}
 
           <Card className="border-2 border-[#22c55e]/30 rounded-xl">
             <CardContent className="p-6">

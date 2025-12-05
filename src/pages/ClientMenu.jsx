@@ -1,15 +1,34 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from '../components/translations';
+import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
 import Logo from '../components/Logo';
 import { Card, CardContent } from '@/components/ui/card';
-import { Home, ArrowLeft, Globe } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Home, ArrowLeft, Globe, Eye, Play } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 
 export default function ClientMenu() {
   const { t, lang } = useTranslation();
   const navigate = useNavigate();
+
+  // Vérifier si un dossier d'arrivée existe
+  const dossierId = sessionStorage.getItem('arrivee_dossier_id');
+  const { data: dossierArrivee } = useQuery({
+    queryKey: ['dossier-arrivee-actif', dossierId],
+    queryFn: async () => {
+      if (!dossierId) return null;
+      const dossiers = await base44.entities.DossierArrivee.list();
+      const dossier = dossiers.find(d => d.id === dossierId);
+      if (dossier && dossier.statut === 'en_cours') {
+        return dossier;
+      }
+      return null;
+    },
+    enabled: !!dossierId
+  });
 
   const menuItems = [
     {
@@ -71,6 +90,54 @@ export default function ClientMenu() {
             {lang === 'fr' ? 'Choisissez votre étape' : 'Choose your step'}
           </p>
         </motion.div>
+
+        {/* Dossier d'arrivée en cours */}
+        {dossierArrivee && !dossierArrivee.etape_4_terminee && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+            <Card className="border-2 border-[#FFD700] bg-yellow-50 rounded-xl">
+              <CardContent className="p-6">
+                <h3 className="font-heading text-lg text-[#0077A8] mb-3">
+                  📋 {lang === 'fr' ? 'Arrivée en cours' : 'Arrival in progress'}
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  {lang === 'fr' 
+                    ? `Étape ${dossierArrivee.etape_actuelle}/4`
+                    : `Step ${dossierArrivee.etape_actuelle}/4`}
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => navigate(createPageUrl('ClientArriveeSuivi') + `?id=${dossierArrivee.id}`)}
+                    variant="outline"
+                    className="flex-1 border-2 border-[#00AEEF] text-[#00AEEF]"
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    {lang === 'fr' ? 'Suivi' : 'Track'}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      // Reprendre à l'étape actuelle
+                      if (dossierArrivee.etape_actuelle === 1) {
+                        navigate(createPageUrl('ClientArriveeIdentite'));
+                      } else if (dossierArrivee.etape_actuelle === 2) {
+                        navigate(createPageUrl('ClientArriveeHebergement'));
+                      } else if (dossierArrivee.etape_actuelle === 3) {
+                        navigate(createPageUrl('ClientControleInventaire'));
+                      }
+                    }}
+                    className="flex-1 bg-[#22c55e] hover:bg-[#16a34a]"
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    {lang === 'fr' ? 'Reprendre' : 'Resume'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         {/* Menu Items */}
         <div className="space-y-4">
