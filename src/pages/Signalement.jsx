@@ -212,6 +212,7 @@ export default function Signalement() {
       toast.error(t('autorisation_obligatoire'));
       return;
     }
+    const { lang } = useTranslation();
     if (autorisationAcces === 'oui' && !clauseAcceptee) {
       toast.error(lang === 'fr' ? 'Veuillez accepter la clause d\'autorisation d\'accès' : 'Please accept the access authorization clause');
       return;
