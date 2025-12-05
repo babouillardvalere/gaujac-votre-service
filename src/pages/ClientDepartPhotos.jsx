@@ -132,15 +132,18 @@ export default function ClientDepartPhotos() {
 
           <Card className="border-2 border-[#FFA500]/30 rounded-xl mb-6">
             <CardContent className="p-6">
-              <div className="bg-blue-50 p-4 rounded-lg mb-6">
-                <p className="font-body text-sm text-[#0077A8]">
-                  📸 {lang === 'fr' 
+              <div className="bg-red-50 border-2 border-red-200 p-4 rounded-lg mb-6">
+                <p className="font-heading text-base text-red-800 mb-2">
+                  📸 {lang === 'fr' ? '⚠️ PHOTOS OBLIGATOIRES' : '⚠️ PHOTOS REQUIRED'}
+                </p>
+                <p className="font-body text-sm text-gray-700">
+                  {lang === 'fr' 
                     ? typeLogement === 'mobilhome'
-                      ? 'Merci de prendre une photo de chaque pièce. Cela nous permet de vérifier à distance que tout est en ordre avant votre départ.'
-                      : 'Merci de prendre une photo générale de votre emplacement avant votre départ.'
+                      ? 'Pour prouver que vous avez bien nettoyé et laissé le mobil-home propre, merci de prendre une photo de CHAQUE pièce. Ces photos sont OBLIGATOIRES pour valider votre départ.'
+                      : 'Pour prouver que vous avez bien nettoyé et laissé l\'emplacement propre, merci de prendre une photo générale. Cette photo est OBLIGATOIRE pour valider votre départ.'
                     : typeLogement === 'mobilhome'
-                      ? 'Please take a photo of each room. This allows us to remotely verify that everything is in order before you leave.'
-                      : 'Please take a general photo of your pitch before you leave.'
+                      ? 'To prove that you have cleaned and left the mobile home clean, please take a photo of EACH room. These photos are REQUIRED to validate your checkout.'
+                      : 'To prove that you have cleaned and left the pitch clean, please take a general photo. This photo is REQUIRED to validate your checkout.'
                   }
                 </p>
               </div>
