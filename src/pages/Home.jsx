@@ -10,6 +10,23 @@ export default function Home() {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
+  // Récupération des infos client depuis sessionStorage
+  const userName = sessionStorage.getItem('user_nom');
+  const userPrenom = sessionStorage.getItem('user_prenom');
+  const userDateArrivee = sessionStorage.getItem('user_date_arrivee');
+  const userDateDepart = sessionStorage.getItem('user_date_depart');
+  
+  const hasUserInfo = userName && userPrenom;
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+  };
+
+  const clientInfo = hasUserInfo 
+    ? `${userPrenom} ${userName}${userDateArrivee && userDateDepart ? `, ${formatDate(userDateArrivee)} → ${formatDate(userDateDepart)}` : ''}`
+    : null;
+
   useEffect(() => {
     if (!getLanguage()) {
       navigate('/ChoixLangue');
@@ -23,7 +40,8 @@ export default function Home() {
       href: '/IdentiteClient',
       color: 'bg-[#00AEEF]',
       description: t('signaler_probleme'),
-      ariaLabel: 'Signaler un problème - Accéder au formulaire client'
+      ariaLabel: 'Signaler un problème - Accéder au formulaire client',
+      clientInfo: clientInfo
     },
     {
       title: t('suivi_intervention'),
@@ -31,7 +49,8 @@ export default function Home() {
       href: '/SuiviIntervention',
       color: 'bg-[#0077A8]',
       description: t('suivre_demande'),
-      ariaLabel: 'Suivre votre demande - Voir le statut de votre intervention'
+      ariaLabel: 'Suivre votre demande - Voir le statut de votre intervention',
+      clientInfo: clientInfo
     },
     {
       title: t('avis'),
@@ -40,7 +59,8 @@ export default function Home() {
       color: 'bg-[#FFD700]',
       textColor: 'text-[#0077A8]',
       description: t('donner_avis'),
-      ariaLabel: 'Donner votre avis - Noter une intervention'
+      ariaLabel: 'Donner votre avis - Noter une intervention',
+      clientInfo: hasUserInfo ? `${userPrenom} ${userName}` : null
     },
     {
       title: t('collaborateur'),
@@ -48,7 +68,8 @@ export default function Home() {
       href: '/Collaborateur',
       color: 'bg-[#FFA500]',
       description: t('espace_collaborateurs'),
-      ariaLabel: 'Espace collaborateurs - Accès réservé au personnel'
+      ariaLabel: 'Espace collaborateurs - Accès réservé au personnel',
+      clientInfo: null
     }
   ];
 
@@ -108,6 +129,11 @@ export default function Home() {
                         {item.title}
                       </h2>
                       <p className="font-body text-sm text-gray-600">{item.description}</p>
+                      {item.clientInfo && (
+                        <p className="font-body text-xs text-[#00AEEF] mt-1">
+                          ({item.clientInfo})
+                        </p>
+                      )}
                     </div>
                     <div className="text-[#00AEEF] group-hover:translate-x-1 transition-all" aria-hidden="true">
                       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

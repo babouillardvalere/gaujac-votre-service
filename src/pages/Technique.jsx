@@ -4,6 +4,7 @@ import Logo from '../components/Logo';
 import OfflineBanner from '../components/OfflineBanner';
 import NotificationBell from '../components/NotificationBell';
 import MettreEnAttenteDialog from '../components/MettreEnAttenteDialog';
+import InterventionTimer from '../components/InterventionTimer';
 import { useTranslation } from '../components/translations';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -20,7 +21,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format, differenceInMinutes } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { createPageUrl } from '../utils';
 
@@ -75,23 +76,38 @@ export default function Technique() {
       toast.error(t('champs_obligatoires'));
       return;
     }
+    const now = new Date();
+    const tempsPriseEnCharge = incident.date_saisie 
+      ? differenceInMinutes(now, new Date(incident.date_saisie))
+      : 0;
+    
     updateMutation.mutate({
       id: incident.id,
       data: {
         pris_par: collaborateurNom,
-        date_debut: new Date().toISOString(),
-        statut: 'en_cours'
+        date_debut: now.toISOString(),
+        statut: 'en_cours',
+        temps_prise_en_charge: tempsPriseEnCharge
       }
     });
   };
 
   const handleTerminer = (incident) => {
+    const now = new Date();
+    const tempsTotal = incident.date_saisie 
+      ? differenceInMinutes(now, new Date(incident.date_saisie))
+      : 0;
+    const tempsIntervention = incident.date_debut
+      ? differenceInMinutes(now, new Date(incident.date_debut))
+      : 0;
+    
     updateMutation.mutate({
       id: incident.id,
       data: {
-        date_resolution: new Date().toISOString(),
+        date_resolution: now.toISOString(),
         statut: 'resolu',
-        commentaire_interne: commentaire || incident.commentaire_interne
+        commentaire_interne: commentaire || incident.commentaire_interne,
+        temps_total_intervention: tempsTotal
       }
     });
   };
@@ -126,10 +142,30 @@ export default function Technique() {
     setIncidentToWait(null);
   };
 
-  const filteredIncidents = incidents.filter(i => {
-    if (filter === 'tous') return true;
-    return i.statut === filter;
-  });
+  // Tri par priorité: urgents non pris en charge > urgents en cours > normaux non pris > normaux en cours > attente > résolus
+  const sortByPriority = (a, b) => {
+    const getPriorityScore = (i) => {
+      if (i.statut === 'resolu') return 0;
+      if (i.statut === 'en_attente_materiel') return 1;
+      if (i.statut === 'en_cours' && !i.urgent) return 2;
+      if (i.statut === 'en_attente' && !i.urgent) return 3;
+      if (i.statut === 'en_cours' && i.urgent) return 4;
+      if (i.statut === 'en_attente' && i.urgent) return 5;
+      return 0;
+    };
+    // Prendre en compte priorite_bureau
+    const prioA = (a.priorite_bureau || 0) + getPriorityScore(a);
+    const prioB = (b.priorite_bureau || 0) + getPriorityScore(b);
+    if (prioB !== prioA) return prioB - prioA;
+    return new Date(b.date_saisie) - new Date(a.date_saisie);
+  };
+
+  const filteredIncidents = incidents
+    .filter(i => {
+      if (filter === 'tous') return true;
+      return i.statut === filter;
+    })
+    .sort(sortByPriority);
 
   const getCategoryInfo = (cat) => {
     const info = categoryIcons[cat] || { emoji: '❓', label: 'autres' };
@@ -236,8 +272,11 @@ export default function Technique() {
                         </div>
                       </div>
                       {incident.pris_par && (
-                        <div className="mt-2 pt-2 border-t border-gray-100">
+                        <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between">
                           <p className="text-xs font-body text-[#00AEEF]">{t('pris_en_charge_par')}: {incident.pris_par}</p>
+                          {incident.statut === 'en_cours' && incident.date_debut && (
+                            <InterventionTimer startTime={incident.date_debut} isActive={true} />
+                          )}
                         </div>
                       )}
                     </CardContent>
@@ -319,7 +358,10 @@ export default function Technique() {
 
               {selectedIncident.statut === 'en_cours' && (
                 <div className="space-y-3 pt-4 border-t">
-                  <p className="text-sm font-body text-[#00AEEF]">{t('pris_en_charge_par')}: {selectedIncident.pris_par}</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-body text-[#00AEEF]">{t('pris_en_charge_par')}: {selectedIncident.pris_par}</p>
+                    <InterventionTimer startTime={selectedIncident.date_debut} isActive={true} />
+                  </div>
                   <Textarea
                     value={commentaire}
                     onChange={(e) => setCommentaire(e.target.value)}
