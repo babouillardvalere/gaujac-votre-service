@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import AccessibilityPanel, { getAccessibilitySettings, applyAccessibilityStyles } from './components/AccessibilityPanel';
+import NavigationBar from './components/NavigationBar';
 
 export default function Layout({ children }) {
   useEffect(() => {
