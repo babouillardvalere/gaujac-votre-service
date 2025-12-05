@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Logo from '../components/Logo';
-import NotificationBell from '../components/NotificationBell';
+import NotificationCenter from '../components/NotificationCenter';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -378,7 +378,7 @@ export default function Bureau() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <NotificationBell />
+            <NotificationCenter userType="collaborateur" />
             <Button
               onClick={handleBureauLogout}
               variant="ghost"

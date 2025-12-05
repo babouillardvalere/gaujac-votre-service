@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Logo from '../components/Logo';
 import OfflineBanner from '../components/OfflineBanner';
-import NotificationBell from '../components/NotificationBell';
+import NotificationCenter from '../components/NotificationCenter';
 import MettreEnAttenteDialog from '../components/MettreEnAttenteDialog';
 import { useTranslation } from '../components/translations';
 import { base44 } from '@/api/base44Client';
@@ -187,7 +187,7 @@ export default function Menage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <NotificationBell />
+            <NotificationCenter userType="collaborateur" />
             <Sparkles className="w-8 h-8" />
           </div>
         </div>

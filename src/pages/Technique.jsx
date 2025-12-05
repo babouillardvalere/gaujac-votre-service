@@ -204,7 +204,7 @@ export default function Technique() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <NotificationBell />
+            <NotificationCenter userType="collaborateur" />
             <Wrench className="w-8 h-8" />
           </div>
         </div>
