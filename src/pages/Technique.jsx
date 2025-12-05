@@ -493,8 +493,19 @@ export default function Technique() {
                     {selectedIncident.date_saisie && format(new Date(selectedIncident.date_saisie), 'dd/MM/yyyy HH:mm', { locale: fr })}
                   </span>
                 </div>
+                {/* Priorité */}
+                <div className="flex justify-between items-center">
+                  <span className="text-[#0077A8]/70 font-body">Priorité</span>
+                  {selectedIncident.urgent ? (
+                    <Badge className="bg-red-500 text-white">🔴 Urgent</Badge>
+                  ) : selectedIncident.autorisation_acces === 'non' && selectedIncident.plage_horaire_client ? (
+                    <Badge className="bg-blue-500 text-white">🔵 Programmée</Badge>
+                  ) : (
+                    <Badge className="bg-yellow-500 text-black">🟡 Normal</Badge>
+                  )}
+                </div>
                 {selectedIncident.urgent && (
-                  <div className="flex items-center gap-2 text-white bg-[#FFA500] p-2 rounded-lg mt-2">
+                  <div className="flex items-center gap-2 text-white bg-red-500 p-2 rounded-lg mt-2">
                     <AlertTriangle className="w-4 h-4" />
                     <span className="font-heading">{t('urgent_label')}</span>
                   </div>
