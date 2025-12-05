@@ -181,7 +181,7 @@ export default function Signalement() {
         statut: 'en_attente',
         priorite_ordre: nextOrdre,
         autorisation_acces: autorisationAcces,
-        clause_autorisation_acceptee: autorisationAcces === 'oui' ? clauseAcceptee : false
+        clause_autorisation_acceptee: autorisationAcces === 'oui'
       });
 
       // Créer un log de création
