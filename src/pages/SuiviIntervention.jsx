@@ -550,60 +550,96 @@ export default function SuiviIntervention() {
                           </div>
                           )}
 
-                {resolvedIncidents.length > 0 && (
-                  <div className="space-y-3">
-                    <h3 className="font-heading text-lg text-gray-500 flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-green-500" />
-                      {t('interventions_resolues')} ({resolvedIncidents.length})
-                    </h3>
-                    
-                    {resolvedIncidents.map((incident) => {
-                      const isExpanded = expandedIncidents[incident.id];
-                      return (
-                        <Card key={incident.id} className="border border-gray-200 rounded-xl overflow-hidden">
-                          <CardContent className="p-0">
-                            <button onClick={() => toggleExpand(incident.id)} className="w-full p-4 flex items-center justify-between hover:bg-gray-50">
-                              <div className="flex items-center gap-3">
-                                <span className="text-xl">{categoryEmojis[incident.categorie]}</span>
-                                <div className="text-left">
-                                  <Badge className="bg-green-500 text-white text-xs">{t('resolu')}</Badge>
-                                  <p className="text-sm text-gray-500 font-body mt-1">
-                                    {incident.date_saisie && format(new Date(incident.date_saisie), 'dd/MM/yyyy', { locale: fr })}
-                                  </p>
-                                </div>
-                              </div>
-                              {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
-                            </button>
-
-                            <AnimatePresence>
-                              {isExpanded && (
-                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                                  <div className="p-4 pt-0 border-t">
-                                    {renderTimeline(incident).map((step, index, arr) => (
-                                      <div key={index} className="flex gap-4 mb-3 last:mb-0">
-                                        <div className="flex flex-col items-center">
-                                          <div className={`w-8 h-8 rounded-full ${step.color} flex items-center justify-center`}>
-                                            <step.icon className="w-4 h-4 text-white" />
-                                          </div>
-                                          {index < arr.length - 1 && <div className="w-0.5 flex-1 mt-1 bg-gray-200" />}
-                                        </div>
-                                        <div className="flex-1 pb-2">
-                                          <h4 className="font-heading text-sm text-gray-600">{step.title}</h4>
-                                          <div className="mt-1 text-gray-500 text-xs">{step.details}</div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <CheckCircle className="w-12 h-12 mx-auto mb-2 text-green-300" />
+                    <p className="font-body">{lang === 'en' ? 'No ongoing interventions' : 'Aucune intervention en cours'}</p>
                   </div>
                 )}
-              </>
+                </TabsContent>
+                
+                <TabsContent value="resolved" className="space-y-3">
+                {resolvedIncidents.length > 0 ? (
+                  resolvedIncidents.map((incident) => {
+                    const isExpanded = expandedIncidents[incident.id];
+                    return (
+                      <Card key={incident.id} className="border border-gray-200 rounded-xl overflow-hidden">
+                        <CardContent className="p-0">
+                          <button onClick={() => toggleExpand(incident.id)} className="w-full p-4 flex items-center justify-between hover:bg-gray-50">
+                            <div className="flex items-center gap-3">
+                              <span className="text-xl">{categoryEmojis[incident.categorie]}</span>
+                              <div className="text-left">
+                                <Badge className="bg-green-500 text-white text-xs">{t('resolu')}</Badge>
+                                <p className="text-sm text-gray-500 font-body mt-1">
+                                  {incident.date_saisie && format(new Date(incident.date_saisie), 'dd/MM/yyyy', { locale: fr })}
+                                </p>
+                              </div>
+                            </div>
+                            {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+                          </button>
+
+                          <AnimatePresence>
+                            {isExpanded && (
+                              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                                <div className="p-4 pt-0 border-t">
+                                  {renderTimeline(incident).map((step, index, arr) => (
+                                    <div key={index} className="flex gap-4 mb-3 last:mb-0">
+                                      <div className="flex flex-col items-center">
+                                        <div className={`w-8 h-8 rounded-full ${step.color} flex items-center justify-center`}>
+                                          <step.icon className="w-4 h-4 text-white" />
+                                        </div>
+                                        {index < arr.length - 1 && <div className="w-0.5 flex-1 mt-1 bg-gray-200" />}
+                                      </div>
+                                      <div className="flex-1 pb-2">
+                                        <h4 className="font-heading text-sm text-gray-600">{step.title}</h4>
+                                        <div className="mt-1 text-gray-500 text-xs">{step.details}</div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </CardContent>
+                      </Card>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <History className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                    <p className="font-body">{lang === 'en' ? 'No resolved interventions' : 'Aucune intervention résolue'}</p>
+                  </div>
+                )}
+                </TabsContent>
+                
+                {allPastIncidents.length > 0 && (
+                  <TabsContent value="history" className="space-y-3">
+                    <p className="text-sm text-gray-500 font-body mb-4">
+                      {lang === 'en' 
+                        ? 'Previous interventions on this accommodation' 
+                        : 'Interventions précédentes sur cet hébergement'}
+                    </p>
+                    {allPastIncidents.slice(0, 10).map((incident) => (
+                      <Card key={incident.id} className="border border-gray-100 rounded-xl">
+                        <CardContent className="p-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">{categoryEmojis[incident.categorie]}</span>
+                              <div>
+                                <p className="text-sm font-body text-gray-700 line-clamp-1">{incident.description}</p>
+                                <p className="text-xs text-gray-400">
+                                  {incident.date_saisie && format(new Date(incident.date_saisie), 'dd/MM/yyyy', { locale: fr })}
+                                </p>
+                              </div>
+                            </div>
+                            <Badge className="bg-gray-200 text-gray-600 text-xs">{t('resolu')}</Badge>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </TabsContent>
+                )}
+              </Tabs>
             )}
           </motion.div>
         )}
