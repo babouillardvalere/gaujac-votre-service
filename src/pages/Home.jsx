@@ -95,13 +95,13 @@ export default function Home() {
       href: '/MeilleursAvis',
       bgColor: 'bg-[#FFA500]',
       borderColor: 'border-[#FFA500]',
-      iconBg: 'bg-[#00AEEF]',
+      iconBg: 'bg-white',
       textColor: 'text-white',
       subtitleColor: 'text-white/90',
       arrowColor: 'text-white',
       description: t('donner_avis'),
       ariaLabel: 'Voir les avis clients',
-      iconColor: 'text-white'
+      iconColor: 'text-black'
     },
     {
       title: t('collaborateur'),
