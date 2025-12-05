@@ -29,17 +29,24 @@ const COLORS = ['#00AEEF', '#FFD700', '#FFA500', '#10b981', '#8b5cf6', '#ec4899'
 
 const categoryLabels = {
   gaz: '🔥 Gaz', eau: '💧 Eau/Fuite', electricite: '⚡ Électricité', plomberie: '🔧 Plomberie',
+  chauffe_eau: '🚿 Chauffe-eau', serrure: '🔐 Serrure', climatiseur: '❄️ Climatiseur', chauffage: '🔥 Chauffage',
   espace_vert: '🌿 Espace vert', divers_technique: '🛠 Divers', mobilier: '🧰 Mobilier', structurel: '🏚 Structurel',
+  immobilier: '🏠 Immobilier', materiel: '📦 Matériel',
   souris: '🐭 Souris', guepes: '🐝 Guêpes', frelons: '🐝 Frelons', fourmis: '🐜 Fourmis', moustiques: '🦟 Moustiques',
-  literie: '🛏 Literie', nettoyage: '🧽 Nettoyage', vaisselle: '🍽 Vaisselle', 
-  poubelle: '🗑 Poubelle', produit_manquant: '🧴 Produit manquant'
+  nuisibles: '🐀 Nuisibles',
+  literie: '🛏 Literie', nettoyage: '🧽 Nettoyage', vaisselle: '🍽 Vaisselle', menage: '🧹 Ménage',
+  poubelle: '🗑 Poubelle', produit_manquant: '🧴 Produit manquant',
+  autre: '❓ Autre'
 };
 
 const categoryEmojis = {
   gaz: '🔥', eau: '💧', electricite: '⚡', plomberie: '🔧',
+  chauffe_eau: '🚿', serrure: '🔐', climatiseur: '❄️', chauffage: '🔥',
   espace_vert: '🌿', divers_technique: '🛠', mobilier: '🧰', structurel: '🏚',
+  immobilier: '🏠', materiel: '📦', nuisibles: '🐀',
   souris: '🐭', guepes: '🐝', frelons: '🐝', fourmis: '🐜', moustiques: '🦟',
-  literie: '🛏', nettoyage: '🧽', vaisselle: '🍽', poubelle: '🗑', produit_manquant: '🧴'
+  literie: '🛏', nettoyage: '🧽', vaisselle: '🍽', menage: '🧹',
+  poubelle: '🗑', produit_manquant: '🧴', autre: '❓'
 };
 
 export default function Bureau() {
@@ -52,7 +59,7 @@ export default function Bureau() {
     nom: '',
     logement: '',
     type: 'tous',
-    categorie: 'tous',
+    categories: [], // multiselect
     hebergementType: 'tous',
     statut: 'tous',
     urgent: 'tous',
@@ -60,6 +67,30 @@ export default function Bureau() {
     dateTo: '',
     heure: 'tous'
   });
+
+  const allCategories = [
+    { value: 'gaz', label: '🔥 Gaz' },
+    { value: 'eau', label: '💧 Eau' },
+    { value: 'electricite', label: '⚡ Électricité' },
+    { value: 'chauffe_eau', label: '🚿 Chauffe-eau' },
+    { value: 'serrure', label: '🔐 Serrure' },
+    { value: 'climatiseur', label: '❄️ Climatiseur' },
+    { value: 'chauffage', label: '🔥 Chauffage' },
+    { value: 'menage', label: '🧹 Ménage' },
+    { value: 'nuisibles', label: '🐀 Nuisibles' },
+    { value: 'materiel', label: '📦 Matériel' },
+    { value: 'immobilier', label: '🏠 Immobilier' },
+    { value: 'autre', label: '❓ Autre' }
+  ];
+
+  const toggleCategory = (cat) => {
+    setFilters(f => ({
+      ...f,
+      categories: f.categories.includes(cat)
+        ? f.categories.filter(c => c !== cat)
+        : [...f.categories, cat]
+    }));
+  };
 
   useEffect(() => {
     const collabAuth = sessionStorage.getItem('collaborateur_authenticated');
@@ -115,7 +146,7 @@ export default function Bureau() {
     if (filters.nom && !`${i.client_nom} ${i.client_prenom}`.toLowerCase().includes(filters.nom.toLowerCase())) return false;
     if (filters.logement && !(i.logement || i.emplacement || '').toLowerCase().includes(filters.logement.toLowerCase())) return false;
     if (filters.type !== 'tous' && i.type !== filters.type) return false;
-    if (filters.categorie !== 'tous' && i.categorie !== filters.categorie) return false;
+    if (filters.categories.length > 0 && !filters.categories.includes(i.categorie)) return false;
     if (filters.statut !== 'tous' && i.statut !== filters.statut) return false;
     if (filters.urgent !== 'tous') {
       if (filters.urgent === 'oui' && !i.urgent) return false;
@@ -207,7 +238,7 @@ export default function Bureau() {
 
   const resetFilters = () => {
     setFilters({
-      nom: '', logement: '', type: 'tous', categorie: 'tous',
+      nom: '', logement: '', type: 'tous', categories: [],
       hebergementType: 'tous', statut: 'tous', urgent: 'tous',
       dateFrom: '', dateTo: '', heure: 'tous'
     });
@@ -372,20 +403,36 @@ export default function Bureau() {
 
                 {/* Filtres avancés */}
                 {showAdvancedFilters && (
-                  <div className="space-y-3 pt-3 border-t border-gray-100">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      <Select value={filters.categorie} onValueChange={(v) => setFilters({ ...filters, categorie: v })}>
-                        <SelectTrigger className="border-[#FFA500]/30 rounded-xl font-body">
-                          <SelectValue placeholder="Catégorie" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="tous">Toutes catégories</SelectItem>
-                          {Object.entries(categoryLabels).map(([key, label]) => (
-                            <SelectItem key={key} value={key}>{label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      
+                  <div className="space-y-4 pt-3 border-t border-gray-100">
+                    {/* Filtre par catégories (multiselect) */}
+                    <div>
+                      <label className="text-xs font-heading text-[#0077A8] mb-2 block">Catégories (sélection multiple)</label>
+                      <div className="flex flex-wrap gap-2">
+                        {allCategories.map(cat => (
+                          <button
+                            key={cat.value}
+                            onClick={() => toggleCategory(cat.value)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-body transition-all ${
+                              filters.categories.includes(cat.value)
+                                ? 'bg-[#FFA500] text-white'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                          >
+                            {cat.label}
+                          </button>
+                        ))}
+                      </div>
+                      {filters.categories.length > 0 && (
+                        <button
+                          onClick={() => setFilters(f => ({ ...f, categories: [] }))}
+                          className="text-xs text-red-500 mt-1 hover:underline"
+                        >
+                          Effacer les catégories
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                       <Select value={filters.hebergementType} onValueChange={(v) => setFilters({ ...filters, hebergementType: v })}>
                         <SelectTrigger className="border-[#FFA500]/30 rounded-xl font-body">
                           <SelectValue placeholder="Type hébergement" />
@@ -410,7 +457,7 @@ export default function Bureau() {
 
                       <Select value={filters.heure} onValueChange={(v) => setFilters({ ...filters, heure: v })}>
                         <SelectTrigger className="border-[#FFA500]/30 rounded-xl font-body">
-                          <SelectValue placeholder="Période" />
+                          <SelectValue placeholder="Période journée" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="tous">Toute la journée</SelectItem>
@@ -421,25 +468,37 @@ export default function Bureau() {
                       </Select>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-xs font-body text-gray-500">Du</label>
-                        <Input
-                          type="date"
-                          value={filters.dateFrom}
-                          onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
-                          className="border-[#FFA500]/30 rounded-xl font-body"
-                        />
+                    {/* Filtre par intervalle de dates */}
+                    <div className="bg-[#FFA500]/10 rounded-xl p-3">
+                      <label className="text-xs font-heading text-[#0077A8] mb-2 block">📅 Intervalle de dates</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-xs font-body text-gray-500">Du</label>
+                          <Input
+                            type="date"
+                            value={filters.dateFrom}
+                            onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
+                            className="border-[#FFA500]/30 rounded-xl font-body bg-white"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs font-body text-gray-500">Au</label>
+                          <Input
+                            type="date"
+                            value={filters.dateTo}
+                            onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
+                            className="border-[#FFA500]/30 rounded-xl font-body bg-white"
+                          />
+                        </div>
                       </div>
-                      <div className="space-y-1">
-                        <label className="text-xs font-body text-gray-500">Au</label>
-                        <Input
-                          type="date"
-                          value={filters.dateTo}
-                          onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
-                          className="border-[#FFA500]/30 rounded-xl font-body"
-                        />
-                      </div>
+                      {(filters.dateFrom || filters.dateTo) && (
+                        <button
+                          onClick={() => setFilters(f => ({ ...f, dateFrom: '', dateTo: '' }))}
+                          className="text-xs text-red-500 mt-2 hover:underline"
+                        >
+                          Effacer les dates
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
