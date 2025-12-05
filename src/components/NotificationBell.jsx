@@ -10,10 +10,11 @@ import {
   DropdownMenuContent, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { Bell, Clock, AlertTriangle, Package } from 'lucide-react';
+import { Bell, Clock, AlertTriangle, Package, Check } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { createPageUrl } from '../utils';
+import NotificationCenter from './NotificationCenter';
 
 const categoryEmojis = {
   gaz: '🔥', eau: '💧', electricite: '⚡', plomberie: '🔧',
