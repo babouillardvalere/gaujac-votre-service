@@ -38,10 +38,10 @@ const categoryIcons = {
   frelons: { icon: Bug, emoji: '🐝', label: 'frelons' }
 };
 
-// Catégories nécessitant des photos obligatoires (sécurité)
-const SECURITY_CATEGORIES = ['gaz', 'electricite', 'eau', 'plomberie', 'structurel'];
+// Photos obligatoires uniquement en cas de casse/dégâts matériels
+const CASSE_CATEGORIES = ['mobilier', 'structurel', 'immobilier'];
 
-const isPhotoRequired = (categorie) => SECURITY_CATEGORIES.includes(categorie);
+const isPhotoRequired = (categorie) => CASSE_CATEGORIES.includes(categorie);
 
 export default function Technique() {
   const navigate = useNavigate();
@@ -631,15 +631,25 @@ export default function Technique() {
                     </p>
                     <p className="text-xs text-blue-600 font-body">
                       {isPhotoRequired(selectedIncident.categorie) ? (
-                        <span className="text-red-600 font-medium">⚠️ Photos OBLIGATOIRES pour cette intervention (sécurité : {selectedIncident.categorie})</span>
+                        <span className="text-red-600 font-medium">⚠️ Photos OBLIGATOIRES (casse/dégâts matériels)</span>
                       ) : (
-                        "Facultatives, sauf interventions liées à la sécurité (gaz, électricité, eau, structure)."
+                        "Facultatives mais recommandées. Elles protègent votre travail et garantissent la transparence en cas de contestation."
                       )}
                     </p>
-                    <p className="text-xs text-gray-500 font-body mt-1">
-                      Elles protègent votre travail et garantissent la transparence en cas de contestation.
-                    </p>
                   </div>
+                  
+                  {/* Option photo avant facultative */}
+                  {!isPhotoRequired(selectedIncident.categorie) && (
+                    <Button 
+                      onClick={() => { setIncidentForPhoto(selectedIncident); setShowPhotoAvant(true); }}
+                      variant="outline" 
+                      className="w-full border-blue-300 text-blue-600 rounded-xl font-body text-sm"
+                      disabled={!collaborateurNom.trim()}
+                    >
+                      <Camera className="w-4 h-4 mr-2" />
+                      Prendre en charge avec photo avant (recommandé)
+                    </Button>
+                  )}
                   
                   <Button
                     onClick={() => handlePrendreEnCharge(selectedIncident)}
@@ -669,7 +679,7 @@ export default function Technique() {
                   <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
                     <p className="text-xs text-blue-600 font-body">
                       {isPhotoRequired(selectedIncident.categorie) ? (
-                        <span className="text-red-600 font-medium">⚠️ Photo APRÈS obligatoire pour cette intervention (sécurité)</span>
+                        <span className="text-red-600 font-medium">⚠️ Photo APRÈS obligatoire (casse/dégâts matériels)</span>
                       ) : (
                         "📸 Photo après : facultative mais recommandée pour attester de votre travail."
                       )}
