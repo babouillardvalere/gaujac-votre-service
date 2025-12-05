@@ -215,6 +215,9 @@ export default function Layout({ children }) {
         </p>
       </div>
 
+      {/* Barre de navigation universelle */}
+      <NavigationBar />
+
       {/* Contenu principal */}
       <main id="main-content" className="relative z-0" role="main" tabIndex={-1}>
         {children}
