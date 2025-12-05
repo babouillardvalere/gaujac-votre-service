@@ -1,11 +1,15 @@
-import React, { useEffect } from 'react';
-import AccessibilityPanel, { getAccessibilitySettings, applyAccessibilityStyles } from './components/AccessibilityPanel';
+import React, { useEffect, useState } from 'react';
+import AccessibilityPanel, { getAccessibilitySettings, applyAccessibilityStyles, saveAccessibilitySettings } from './components/AccessibilityPanel';
 import NavigationBar from './components/NavigationBar';
+import VoiceAssistant from './components/VoiceAssistant';
 
 export default function Layout({ children }) {
+  const [accessibilitySettings, setAccessibilitySettings] = useState(getAccessibilitySettings());
+
   useEffect(() => {
     // Appliquer les paramètres d'accessibilité au chargement
     const settings = getAccessibilitySettings();
+    setAccessibilitySettings(settings);
     applyAccessibilityStyles(settings);
 
     // Gestion de la touche Échap pour fermer les modales
@@ -19,8 +23,46 @@ export default function Layout({ children }) {
       }
     };
     document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    
+    // Écouter les changements d'accessibilité
+    const handleAccessibilityChange = (e) => {
+      setAccessibilitySettings(e.detail);
+    };
+    window.addEventListener('accessibilitychange', handleAccessibilityChange);
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('accessibilitychange', handleAccessibilityChange);
+    };
   }, []);
+
+  const handleAccessibilityAction = (action) => {
+    const newSettings = { ...accessibilitySettings };
+    
+    switch(action) {
+      case 'increaseFontSize':
+        if (newSettings.fontSize < 150) {
+          newSettings.fontSize += 10;
+        }
+        break;
+      case 'decreaseFontSize':
+        if (newSettings.fontSize > 80) {
+          newSettings.fontSize -= 10;
+        }
+        break;
+      case 'toggleContrast':
+        newSettings.highContrast = !newSettings.highContrast;
+        break;
+      case 'toggleSpeech':
+        newSettings.speechEnabled = !newSettings.speechEnabled;
+        break;
+      default:
+        break;
+    }
+    
+    setAccessibilitySettings(newSettings);
+    saveAccessibilitySettings(newSettings);
+  };
 
   return (
     <div className="min-h-screen relative" role="application" aria-label="Application Camping Paradis">
@@ -225,6 +267,12 @@ export default function Layout({ children }) {
 
       {/* Panneau d'accessibilité global */}
       <AccessibilityPanel />
+      
+      {/* Assistant vocal */}
+      <VoiceAssistant 
+        enabled={accessibilitySettings.voiceAssistant}
+        onAccessibilityChange={handleAccessibilityAction}
+      />
     </div>
   );
 }

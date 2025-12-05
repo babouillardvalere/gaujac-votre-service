@@ -64,7 +64,11 @@ const translations = {
     send_email: 'Envoyer un email',
     phone_copied: 'Numéro copié',
     call_us: 'Appelez-nous au 04 66 61 67 57',
-    contact_help: 'Pour joindre le camping, appuyez ici pour appeler, ou ici pour envoyer un email.'
+    contact_help: 'Pour joindre le camping, appuyez ici pour appeler, ou ici pour envoyer un email.',
+    voice_assistant: 'Assistant Vocal',
+    voice_assistant_desc: 'Commandes vocales pour naviguer et interagir',
+    voice_enabled: 'Commandes vocales activées',
+    voice_disabled: 'Commandes vocales désactivées'
   },
   en: {
     accessibility: 'Accessibility',
@@ -123,7 +127,11 @@ const translations = {
     send_email: 'Send an email',
     phone_copied: 'Number copied',
     call_us: 'Call us at 04 66 61 67 57',
-    contact_help: 'To contact the campsite, press here to call, or here to send an email.'
+    contact_help: 'To contact the campsite, press here to call, or here to send an email.',
+    voice_assistant: 'Voice Assistant',
+    voice_assistant_desc: 'Voice commands to navigate and interact',
+    voice_enabled: 'Voice commands enabled',
+    voice_disabled: 'Voice commands disabled'
   }
 };
 
@@ -138,7 +146,8 @@ const defaultSettings = {
   hapticFeedback: false,
   subtitles: false,
   cursorSize: 'small', // small, medium, large
-  guidedMode: false
+  guidedMode: false,
+  voiceAssistant: false
 };
 
 export const getAccessibilitySettings = () => {
@@ -590,6 +599,12 @@ export default function AccessibilityPanel() {
     updateSettingWithHaptic('guidedMode', !settings.guidedMode);
   };
 
+  const toggleVoiceAssistant = () => {
+    const newValue = !settings.voiceAssistant;
+    updateSettingWithHaptic('voiceAssistant', newValue);
+    speakText(newValue ? t('voice_enabled') : t('voice_disabled'), true);
+  };
+
   const handleCallCamping = () => {
     const phoneNumber = '0466616757';
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -915,6 +930,23 @@ export default function AccessibilityPanel() {
             <div className="pb-4">
               <h2 className="font-heading text-green-700 text-xl mb-4">🔊 {t('audio_section')}</h2>
             
+            {/* Assistant vocal */}
+            <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl border-2 border-blue-200 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="text-2xl">🗣️</div>
+                <div>
+                  <p className="font-heading text-blue-700">🗣️ {t('voice_assistant')}</p>
+                  <p className="text-sm text-blue-600 font-body">{t('voice_assistant_desc')}</p>
+                </div>
+              </div>
+              <Switch
+                checked={settings.voiceAssistant}
+                onCheckedChange={toggleVoiceAssistant}
+                aria-label={t('voice_assistant')}
+                className="data-[state=checked]:bg-blue-500"
+              />
+            </div>
+
             {/* Lecture vocale interactive */}
             <div className="flex items-center justify-between p-4 bg-green-50 rounded-xl border-2 border-green-200 mb-4">
               <div className="flex items-center gap-3">
