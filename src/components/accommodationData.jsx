@@ -68,8 +68,8 @@ export const problemCategories = {
   ],
   nuisibles: [
     { id: "souris", icon: "Mouse", emoji: "🐭", urgentDefault: false, canUncheck: true },
-    { id: "guepes", icon: "Bug", emoji: "🐝", urgentDefault: true, canUncheck: false },
-    { id: "frelons", icon: "Bug", emoji: "🦟", urgentDefault: true, canUncheck: false }
+    { id: "guepes", icon: "Bug", emoji: "🐝", urgentDefault: false, canUncheck: true, noAstreinte: true },
+    { id: "frelons", icon: "Bug", emoji: "🦟", urgentDefault: false, canUncheck: true, noAstreinte: true }
   ],
   menage: [
     { id: "literie", icon: "Bed", urgentDefault: false, canUncheck: true },
@@ -79,5 +79,8 @@ export const problemCategories = {
   ]
 };
 
-// Catégories urgentes qui cochent automatiquement l'urgence
-export const urgentCategories = ['gaz', 'eau_plomberie', 'electricite', 'guepes', 'frelons'];
+// Catégories urgentes - TOUJOURS décochées par défaut, le client doit cocher manuellement
+export const urgentCategories = [];
+
+// Catégories qui NE SONT PAS en astreinte (guêpes/frelons)
+export const noAstreinteCategories = ['guepes', 'frelons'];
