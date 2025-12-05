@@ -174,12 +174,7 @@ export default function Signalement() {
         ? prev.filter(p => p !== problemId)
         : [...prev, problemId];
       
-      // Si on AJOUTE une catégorie urgente ET que l'utilisateur n'a PAS manuellement décoché
-      const isAddingUrgentCategory = !prev.includes(problemId) && URGENT_CATEGORIES.includes(problemId);
-      if (isAddingUrgentCategory && !urgentManuallySet) {
-        setUrgent(true);
-      }
-      // Note: on ne décoche JAMAIS automatiquement - l'utilisateur garde le contrôle total
+      // Ne plus cocher automatiquement l'urgence - l'utilisateur doit le faire manuellement
       
       return newSelection;
     });
