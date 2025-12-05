@@ -63,7 +63,12 @@ export default function Home() {
       title: t('client'),
       icon: Users,
       href: '/IdentiteClient',
-      color: 'bg-[#00AEEF]',
+      bgColor: 'bg-[#00AEEF]',
+      borderColor: 'border-[#00AEEF]',
+      iconBg: 'bg-white/20',
+      textColor: 'text-white',
+      subtitleColor: 'text-white/90',
+      arrowColor: 'text-white',
       description: t('signaler_probleme'),
       ariaLabel: 'Signaler un problème - Accéder au formulaire client'
     },
@@ -71,7 +76,12 @@ export default function Home() {
       title: t('suivi_intervention'),
       icon: Search,
       href: '/SuiviIntervention',
-      color: 'bg-[#0077A8]',
+      bgColor: 'bg-white',
+      borderColor: 'border-[#FFD700]',
+      iconBg: 'bg-[#FFD700]',
+      textColor: 'text-[#0077A8]',
+      subtitleColor: 'text-gray-600',
+      arrowColor: 'text-[#FFD700]',
       description: t('suivre_demande'),
       ariaLabel: 'Suivre votre demande - Voir le statut de votre intervention'
     },
@@ -79,20 +89,27 @@ export default function Home() {
       title: t('avis'),
       icon: Star,
       href: '/MeilleursAvis',
-      color: 'bg-[#FFD700]',
+      bgColor: 'bg-white',
+      borderColor: 'border-[#00AEEF]',
+      iconBg: 'bg-[#00AEEF]',
       textColor: 'text-[#0077A8]',
+      subtitleColor: 'text-gray-600',
+      arrowColor: 'text-[#00AEEF]',
       description: t('donner_avis'),
-      ariaLabel: 'Voir les avis clients',
-      clientInfo: null
+      ariaLabel: 'Voir les avis clients'
     },
     {
       title: t('collaborateur'),
       icon: Briefcase,
       href: '/Collaborateur',
-      color: 'bg-[#FFA500]',
+      bgColor: 'bg-white',
+      borderColor: 'border-[#FFA500]',
+      iconBg: 'bg-[#FFA500]',
+      textColor: 'text-[#0077A8]',
+      subtitleColor: 'text-gray-600',
+      arrowColor: 'text-[#FFA500]',
       description: t('espace_collaborateurs'),
-      ariaLabel: 'Espace collaborateurs - Accès réservé au personnel',
-      clientInfo: null
+      ariaLabel: 'Espace collaborateurs - Accès réservé au personnel'
     }
   ];
 
@@ -100,62 +117,54 @@ export default function Home() {
     <div className="min-h-screen px-6 py-8" role="main" aria-label="Page d'accueil Camping Paradis">
       <div className="max-w-lg mx-auto">
         <h1 className="sr-only">Bienvenue au Camping Paradis - Domaine de Gaujac</h1>
+        {/* Header / Bannière */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-6"
+          className="text-center mb-8 bg-gradient-to-b from-[#e6f7ff] to-white rounded-2xl p-6 shadow-sm"
         >
-          <Logo className="h-24 md:h-28" />
-        </motion.div>
-
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="text-center mb-10"
-        >
-          <h1 className="font-handwritten text-4xl md:text-5xl text-[#00AEEF] leading-tight">
-            {t('camping_paradis')}
+          <Logo className="h-20 mb-4 mx-auto" />
+          <h1 className="font-handwritten text-4xl md:text-5xl text-[#00AEEF] mb-2">
+            🏕️ {t('camping_paradis')} 🏕️
           </h1>
-          <div className="flex items-center justify-center gap-2 mt-2">
-            <span className="text-[#FFD700] text-xl">⭐</span>
-            <p className="font-handwritten text-2xl text-[#0077A8]">
-              {t('slogan')}
-            </p>
-            <span className="text-[#FFD700] text-xl">⭐</span>
-          </div>
+          <p className="font-heading text-xl text-[#0077A8]">
+            ⭐ {t('slogan')} ⭐
+          </p>
         </motion.div>
 
-        <nav className="space-y-4" role="navigation" aria-label="Menu principal">
+        {/* Boutons principaux - Cartes uniformes */}
+        <nav className="space-y-4 mb-6" role="navigation" aria-label="Menu principal">
           {menuItems.map((item, index) => (
             <motion.div
               key={item.href}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 + index * 0.1 }}
+              transition={{ delay: 0.2 + index * 0.1 }}
             >
               <Link
                 to={createPageUrl(item.href.replace('/', ''))}
-                className="block group focus:outline-none focus:ring-4 focus:ring-[#FFD700] rounded-xl"
+                className="block group focus:outline-none focus:ring-4 focus:ring-[#FFD700] rounded-2xl"
                 aria-label={item.ariaLabel}
                 role="button"
                 tabIndex={0}
               >
-                <div className="bg-white rounded-xl border-2 border-[#00AEEF] shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden">
-                  <div className="flex items-center p-5 min-h-[80px]">
-                    <div className={`w-14 h-14 rounded-xl ${item.color} flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform`} aria-hidden="true">
-                      <item.icon className={`w-7 h-7 ${item.textColor || 'text-white'}`} aria-hidden="true" />
+                <div className={`${item.bgColor} rounded-2xl border-2 ${item.borderColor} shadow-md hover:shadow-xl transition-all duration-300 h-28`}>
+                  <div className="flex items-center justify-between p-6 h-full">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-14 h-14 rounded-xl ${item.iconBg} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`} aria-hidden="true">
+                        <item.icon className={`w-7 h-7 ${item.textColor === 'text-white' ? 'text-white' : 'text-white'}`} aria-hidden="true" />
+                      </div>
+                      <div>
+                        <h2 className={`font-heading text-2xl ${item.textColor} mb-1`}>
+                          {item.title}
+                        </h2>
+                        <p className={`font-body text-sm ${item.subtitleColor}`}>{item.description}</p>
+                      </div>
                     </div>
-                    <div className="ml-5 flex-1">
-                      <h2 className="font-heading text-lg text-[#0077A8] group-hover:text-[#00AEEF] transition-colors">
-                        {item.title}
-                      </h2>
-                      <p className="font-body text-sm text-gray-600">{item.description}</p>
-                    </div>
-                    <div className="text-[#00AEEF] group-hover:translate-x-1 transition-all" aria-hidden="true">
-                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    <div className={`${item.arrowColor} group-hover:translate-x-1 transition-all`} aria-hidden="true">
+                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                       </svg>
                     </div>
                   </div>
@@ -165,24 +174,65 @@ export default function Home() {
           ))}
         </nav>
 
+        {/* Bouton Accessibilité - placé juste après les boutons principaux */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="mb-8"
+        >
+          <button
+            onClick={() => setShowAccessibilityMenu(!showAccessibilityMenu)}
+            className="block w-full group focus:outline-none focus:ring-4 focus:ring-[#FFD700] rounded-2xl"
+            aria-label="Options d'accessibilité"
+          >
+            <div className="bg-[#0077A8] rounded-2xl border-2 border-[#0077A8] shadow-md hover:shadow-xl transition-all duration-300 h-24">
+              <div className="flex items-center justify-between p-5 h-full">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform" aria-hidden="true">
+                    <span className="text-3xl" role="img" aria-label="Accessibilité">♿</span>
+                  </div>
+                  <div className="text-left">
+                    <h2 className="font-heading text-xl text-white mb-1">
+                      Accessibilité
+                    </h2>
+                    <p className="font-body text-sm text-white/90">Options d'aide</p>
+                  </div>
+                </div>
+                <div className="text-white group-hover:translate-x-1 transition-all" aria-hidden="true">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </button>
+        </motion.div>
+
         {/* Section Avis */}
         <HomeAvisSection />
 
 
 
+        {/* Bouton changement de langue - bas de page, centré */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.5 }}
-          className="mt-8 text-center"
+          className="mt-8 mb-4 text-center"
         >
           <Link 
-            to={createPageUrl('ChoixLangue')} 
-            className="inline-flex items-center gap-2 text-sm text-[#0077A8] hover:text-[#00AEEF] transition-colors font-body"
+            to={createPageUrl('ChoixLangue')}
+            className="inline-block"
             aria-label={lang === 'en' ? 'Change language' : 'Changer de langue'}
           >
-            <span>🌐</span>
-            <span>{t('changer_langue')}</span>
+            <Button
+              variant="outline"
+              className="border-2 border-[#00AEEF] text-[#00AEEF] hover:bg-[#00AEEF] hover:text-white font-heading rounded-xl px-6 py-3 text-base shadow-sm"
+            >
+              🌐 Langue / Language
+              <span className="ml-2">🇫🇷 | 🇬🇧</span>
+            </Button>
           </Link>
         </motion.div>
       </div>
