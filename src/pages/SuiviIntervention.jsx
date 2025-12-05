@@ -137,6 +137,9 @@ export default function SuiviIntervention() {
 
   const activeIncidents = filteredIncidents.filter(i => i.statut !== 'resolu');
   const resolvedIncidents = filteredIncidents.filter(i => i.statut === 'resolu');
+  
+  // Historique complet (toutes interventions passées du logement, visible après le séjour actuel)
+  const allPastIncidents = incidents.filter(i => i.statut === 'resolu' && !filteredIncidents.includes(i));
 
   const toggleExpand = (id) => {
     setExpandedIncidents(prev => ({ ...prev, [id]: !prev[id] }));
