@@ -55,7 +55,7 @@ export default function Home() {
     {
       title: t('avis'),
       icon: Star,
-      href: '/SatisfactionClient',
+      href: '/AvisIdentification',
       color: 'bg-[#FFD700]',
       textColor: 'text-[#0077A8]',
       description: t('donner_avis'),
