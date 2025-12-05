@@ -97,7 +97,7 @@ export default function MenuCollaborateur() {
           className="mb-6 flex items-center justify-between"
         >
           <Logo className="h-16" />
-          <NotificationBell />
+          <NotificationCenter userType="collaborateur" />
         </motion.div>
 
         <motion.div
