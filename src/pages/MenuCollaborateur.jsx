@@ -8,7 +8,7 @@ import { useNotifications } from '../components/useNotifications';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Wrench, Sparkles, Building2, LogOut, Package, Lock } from 'lucide-react';
+import { Wrench, Sparkles, Building2, LogOut, Package, Lock, ListTodo } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 
