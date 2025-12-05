@@ -27,6 +27,11 @@ import Taches from './pages/Taches';
 import ClientMenu from './pages/ClientMenu';
 import ClientArrivee from './pages/ClientArrivee';
 import ClientDepart from './pages/ClientDepart';
+import ClientDepartIdentite from './pages/ClientDepartIdentite';
+import ClientDepartHebergement from './pages/ClientDepartHebergement';
+import ClientDepartChecklist from './pages/ClientDepartChecklist';
+import ClientDepartPhotos from './pages/ClientDepartPhotos';
+import ClientDepartConfirmation from './pages/ClientDepartConfirmation';
 import __Layout from './Layout.jsx';
 
 
@@ -60,6 +65,11 @@ export const PAGES = {
     "ClientMenu": ClientMenu,
     "ClientArrivee": ClientArrivee,
     "ClientDepart": ClientDepart,
+    "ClientDepartIdentite": ClientDepartIdentite,
+    "ClientDepartHebergement": ClientDepartHebergement,
+    "ClientDepartChecklist": ClientDepartChecklist,
+    "ClientDepartPhotos": ClientDepartPhotos,
+    "ClientDepartConfirmation": ClientDepartConfirmation,
 }
 
 export const pagesConfig = {

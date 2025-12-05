@@ -32,11 +32,11 @@ export default function ClientMenu() {
     {
       title: '🚗 Départ',
       titleEn: '🚗 Departure',
-      href: 'ClientDepart',
-      color: 'bg-gray-300',
-      textColor: 'text-gray-500',
-      disabled: true,
-      comingSoon: true
+      href: 'ClientDepartIdentite',
+      color: 'bg-[#FFA500]',
+      textColor: 'text-white',
+      disabled: false,
+      comingSoon: false
     }
   ];
 
