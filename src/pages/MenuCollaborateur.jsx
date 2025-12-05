@@ -66,7 +66,7 @@ export default function MenuCollaborateur() {
       href: 'Reception',
       color: 'bg-[#22c55e]',
       textColor: 'text-white',
-      description: 'Arrivées & Départs',
+      description: 'Arrivées & Départs • Assistance client',
       badgeCount: 0
     },
     {
