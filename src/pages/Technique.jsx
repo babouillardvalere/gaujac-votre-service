@@ -17,7 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   ArrowLeft, Clock, User, Home, AlertTriangle, CheckCircle, 
-  Play, Copy, Loader2, Flame, Droplets, Zap, Wrench, TreePine, Bug, Pause
+  Play, Copy, Loader2, Flame, Droplets, Zap, Wrench, TreePine, Bug, Pause, DoorOpen, UserCheck
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -274,6 +274,21 @@ export default function Technique() {
                           {incident.date_saisie && format(new Date(incident.date_saisie), 'dd/MM HH:mm', { locale: fr })}
                         </div>
                       </div>
+                      {/* Badge autorisation d'accès */}
+                      {incident.autorisation_acces && (
+                        <div className={`mt-2 inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-body ${
+                          incident.autorisation_acces === 'oui' 
+                            ? 'bg-green-100 text-green-700' 
+                            : 'bg-orange-100 text-orange-700'
+                        }`}>
+                          {incident.autorisation_acces === 'oui' ? (
+                            <UserCheck className="w-3 h-3" />
+                          ) : (
+                            <DoorOpen className="w-3 h-3" />
+                          )}
+                          {incident.autorisation_acces === 'oui' ? t('acces_autorise') : t('acces_non_autorise')}
+                        </div>
+                      )}
                       {incident.pris_par && (
                         <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between">
                           <p className="text-xs font-body text-[#00AEEF]">{t('pris_en_charge_par')}: {incident.pris_par}</p>
@@ -334,6 +349,23 @@ export default function Technique() {
                     <span className="font-heading">{t('urgent_label')}</span>
                   </div>
                 )}
+                {/* Autorisation d'accès */}
+                <div className={`flex items-center gap-2 p-2 rounded-lg mt-2 ${
+                  selectedIncident.autorisation_acces === 'oui' 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'bg-orange-100 text-orange-700'
+                }`}>
+                  {selectedIncident.autorisation_acces === 'oui' ? (
+                    <UserCheck className="w-4 h-4" />
+                  ) : (
+                    <DoorOpen className="w-4 h-4" />
+                  )}
+                  <span className="font-body text-sm">
+                    {selectedIncident.autorisation_acces === 'oui' 
+                      ? t('acces_autorise')
+                      : t('acces_non_autorise')}
+                  </span>
+                </div>
               </div>
 
               <div>
