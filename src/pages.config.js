@@ -43,6 +43,8 @@ import ClientDepartInventaire from './pages/ClientDepartInventaire';
 import ClientArriveeStatistiques from './pages/ClientArriveeStatistiques';
 import ReceptionAssistance from './pages/ReceptionAssistance';
 import ReceptionAideArrivee from './pages/ReceptionAideArrivee';
+import ReceptionAideSejour from './pages/ReceptionAideSejour';
+import ReceptionAideDepart from './pages/ReceptionAideDepart';
 import __Layout from './Layout.jsx';
 
 
@@ -92,6 +94,8 @@ export const PAGES = {
     "ClientArriveeStatistiques": ClientArriveeStatistiques,
     "ReceptionAssistance": ReceptionAssistance,
     "ReceptionAideArrivee": ReceptionAideArrivee,
+    "ReceptionAideSejour": ReceptionAideSejour,
+    "ReceptionAideDepart": ReceptionAideDepart,
 }
 
 export const pagesConfig = {
