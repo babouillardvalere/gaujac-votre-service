@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
-import NotificationBell from '../components/NotificationBell';
+import NotificationCenter from '../components/NotificationCenter';
 import BureauAuthDialog from '../components/BureauAuthDialog';
 import { useTranslation } from '../components/translations';
 import { useNotifications } from '../components/useNotifications';
