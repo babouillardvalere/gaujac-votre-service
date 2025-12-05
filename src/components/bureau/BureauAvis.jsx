@@ -7,16 +7,27 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Star, Filter, Calendar, User, MapPin, Eye, EyeOff, Award, ChevronDown, ChevronUp, Loader2, Zap, Smile, Sparkles } from 'lucide-react';
-import { format } from 'date-fns';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend, PieChart, Pie, Cell } from 'recharts';
+import { format, startOfWeek, startOfMonth, getWeek, getMonth, getYear } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend, PieChart, Pie, Cell, Area, AreaChart, ReferenceLine } from 'recharts';
 import { toast } from 'sonner';
 
 const COLORS = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e'];
+const CAMPING_BLUE = '#00AEEF';
+
+const getSeason = (date) => {
+  const month = date.getMonth();
+  if (month >= 2 && month <= 4) return 'Printemps';
+  if (month >= 5 && month <= 7) return 'Été';
+  if (month >= 8 && month <= 10) return 'Automne';
+  return 'Hiver';
+};
 
 export default function BureauAvis() {
   const queryClient = useQueryClient();
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState('recent');
+  const [evolutionPeriod, setEvolutionPeriod] = useState('month');
   const [filters, setFilters] = useState({
     nom: '',
     dateFrom: '',
@@ -107,6 +118,97 @@ export default function BureauAvis() {
   const distributionReactivite = getDistribution('note_reactivite');
   const distributionAmabilite = getDistribution('note_amabilite');
   const distributionQualite = getDistribution('note_intervention');
+
+  // Évolution de la note globale par période (basé sur les avis filtrés)
+  const getEvolutionData = () => {
+    const dataMap = {};
+    
+    filteredAvis.forEach(a => {
+      if (!a.created_date || !a.note_globale) return;
+      const date = new Date(a.created_date);
+      let key;
+      
+      switch (evolutionPeriod) {
+        case 'day':
+          key = format(date, 'dd/MM');
+          break;
+        case 'week':
+          key = `S${getWeek(date, { locale: fr })} ${getYear(date)}`;
+          break;
+        case 'month':
+          key = format(date, 'MMM yyyy', { locale: fr });
+          break;
+        case 'season':
+          key = `${getSeason(date)} ${getYear(date)}`;
+          break;
+        default:
+          key = format(date, 'MMM yyyy', { locale: fr });
+      }
+      
+      if (!dataMap[key]) {
+        dataMap[key] = { period: key, total: 0, count: 0, notes: [] };
+      }
+      dataMap[key].total += a.note_globale;
+      dataMap[key].count += 1;
+      dataMap[key].notes.push(a.note_globale);
+    });
+    
+    return Object.values(dataMap)
+      .map(d => ({
+        period: d.period,
+        moyenne: parseFloat((d.total / d.count).toFixed(2)),
+        count: d.count,
+        min: Math.min(...d.notes),
+        max: Math.max(...d.notes)
+      }))
+      .sort((a, b) => {
+        // Tri chronologique approximatif
+        const avis1 = filteredAvis.find(av => {
+          if (!av.created_date) return false;
+          const date = new Date(av.created_date);
+          let key;
+          switch (evolutionPeriod) {
+            case 'day': key = format(date, 'dd/MM'); break;
+            case 'week': key = `S${getWeek(date, { locale: fr })} ${getYear(date)}`; break;
+            case 'month': key = format(date, 'MMM yyyy', { locale: fr }); break;
+            case 'season': key = `${getSeason(date)} ${getYear(date)}`; break;
+            default: key = format(date, 'MMM yyyy', { locale: fr });
+          }
+          return key === a.period;
+        });
+        const avis2 = filteredAvis.find(av => {
+          if (!av.created_date) return false;
+          const date = new Date(av.created_date);
+          let key;
+          switch (evolutionPeriod) {
+            case 'day': key = format(date, 'dd/MM'); break;
+            case 'week': key = `S${getWeek(date, { locale: fr })} ${getYear(date)}`; break;
+            case 'month': key = format(date, 'MMM yyyy', { locale: fr }); break;
+            case 'season': key = `${getSeason(date)} ${getYear(date)}`; break;
+            default: key = format(date, 'MMM yyyy', { locale: fr });
+          }
+          return key === b.period;
+        });
+        if (!avis1 || !avis2) return 0;
+        return new Date(avis1.created_date) - new Date(avis2.created_date);
+      });
+  };
+
+  const evolutionData = getEvolutionData();
+  
+  // Moyenne globale des avis filtrés
+  const filteredMoyenne = filteredAvis.length > 0 
+    ? (filteredAvis.reduce((s, a) => s + (a.note_globale || 0), 0) / filteredAvis.length).toFixed(2) 
+    : 0;
+
+  // Tableau récapitulatif par période
+  const tableauRecap = evolutionData.map(d => ({
+    periode: d.period,
+    nbAvis: d.count,
+    moyenne: d.moyenne,
+    meilleure: d.max,
+    pire: d.min
+  }));
 
   const toggleMisEnAvant = (avisItem) => {
     updateAvisMutation.mutate({
@@ -255,6 +357,126 @@ export default function BureauAvis() {
           average={moyenneQualite}
         />
       </div>
+
+      {/* Graphique Note Globale Moyenne - Évolution */}
+      <Card className="border-2 border-[#00AEEF] rounded-xl">
+        <CardHeader className="pb-2">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <CardTitle className="text-base font-heading text-[#0077A8] flex items-center gap-2">
+              <Star className="w-5 h-5 text-[#00AEEF]" />
+              Note Globale Moyenne (toutes interventions)
+            </CardTitle>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 bg-[#00AEEF]/10 px-4 py-2 rounded-xl">
+                <Star className="w-5 h-5 text-[#FFD700] fill-[#FFD700]" />
+                <span className="font-heading text-xl text-[#0077A8]">{filteredMoyenne}/5</span>
+              </div>
+              <Select value={evolutionPeriod} onValueChange={setEvolutionPeriod}>
+                <SelectTrigger className="w-36 border-[#00AEEF]/30 rounded-xl">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="day">Par jour</SelectItem>
+                  <SelectItem value="week">Par semaine</SelectItem>
+                  <SelectItem value="month">Par mois</SelectItem>
+                  <SelectItem value="season">Par saison</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">Évolution de la note moyenne globale des interventions</p>
+        </CardHeader>
+        <CardContent>
+          {evolutionData.length > 0 ? (
+            <>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={evolutionData}>
+                    <defs>
+                      <linearGradient id="colorMoyenne" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={CAMPING_BLUE} stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor={CAMPING_BLUE} stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="period" fontSize={10} tick={{ fill: '#6b7280' }} />
+                    <YAxis domain={[0, 5]} fontSize={10} tick={{ fill: '#6b7280' }} />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'white', 
+                        border: `2px solid ${CAMPING_BLUE}`,
+                        borderRadius: '12px',
+                        fontSize: '12px'
+                      }}
+                      formatter={(value, name) => [
+                        name === 'moyenne' ? `${value}/5` : value,
+                        name === 'moyenne' ? 'Note moyenne' : name === 'count' ? 'Nb avis' : name
+                      ]}
+                    />
+                    <ReferenceLine y={parseFloat(filteredMoyenne)} stroke="#FFD700" strokeDasharray="5 5" label={{ value: `Moy: ${filteredMoyenne}`, fill: '#FFD700', fontSize: 10 }} />
+                    <Area 
+                      type="monotone" 
+                      dataKey="moyenne" 
+                      stroke={CAMPING_BLUE} 
+                      strokeWidth={3}
+                      fill="url(#colorMoyenne)"
+                      dot={{ fill: CAMPING_BLUE, strokeWidth: 2, r: 4 }}
+                      activeDot={{ r: 6, fill: '#FFD700' }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="count" 
+                      stroke="#FFD700" 
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      dot={false}
+                      yAxisId="right"
+                      hide
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Tableau récapitulatif */}
+              <div className="mt-6 overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-[#00AEEF]/10">
+                      <th className="px-3 py-2 text-left font-heading text-[#0077A8] rounded-tl-lg">Période</th>
+                      <th className="px-3 py-2 text-center font-heading text-[#0077A8]">Nombre d'avis</th>
+                      <th className="px-3 py-2 text-center font-heading text-[#0077A8]">Note moyenne</th>
+                      <th className="px-3 py-2 text-center font-heading text-[#0077A8]">Meilleure note</th>
+                      <th className="px-3 py-2 text-center font-heading text-[#0077A8] rounded-tr-lg">Pire note</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tableauRecap.map((row, idx) => (
+                      <tr key={idx} className={idx % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                        <td className="px-3 py-2 font-body text-gray-700">{row.periode}</td>
+                        <td className="px-3 py-2 text-center font-body text-gray-600">{row.nbAvis}</td>
+                        <td className="px-3 py-2 text-center">
+                          <span className={`font-heading ${row.moyenne >= 4 ? 'text-green-600' : row.moyenne >= 3 ? 'text-yellow-600' : 'text-red-600'}`}>
+                            ⭐ {row.moyenne}/5
+                          </span>
+                        </td>
+                        <td className="px-3 py-2 text-center font-body text-green-600">⭐ {row.meilleure}/5</td>
+                        <td className="px-3 py-2 text-center font-body text-red-600">⭐ {row.pire}/5</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {tableauRecap.length === 0 && (
+                  <p className="text-center text-gray-500 py-4">Aucune donnée pour la période sélectionnée</p>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="h-64 flex items-center justify-center text-gray-500">
+              Aucune donnée disponible pour afficher l'évolution
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Filtres et tri */}
       <Card className="border-2 border-[#FFA500]/30 rounded-xl">
