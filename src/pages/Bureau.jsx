@@ -121,12 +121,28 @@ export default function Bureau() {
     return true;
   });
 
-  // Tri par urgence puis date
+  // Tri par priorité: priorite_bureau > urgents non pris > urgents en cours > normaux
   const sortedIncidents = [...filteredIncidents].sort((a, b) => {
-    if (activeView === 'today' || activeView === 'late') {
-      if (a.urgent && !b.urgent) return -1;
-      if (!a.urgent && b.urgent) return 1;
-    }
+    // Priorité bureau d'abord
+    const prioA = a.priorite_bureau || 0;
+    const prioB = b.priorite_bureau || 0;
+    if (prioB !== prioA) return prioB - prioA;
+    
+    // Ensuite par urgence et statut
+    const getScore = (i) => {
+      if (i.statut === 'resolu') return 0;
+      if (i.statut === 'en_attente_materiel') return 1;
+      if (i.statut === 'en_cours' && !i.urgent) return 2;
+      if (i.statut === 'en_attente' && !i.urgent) return 3;
+      if (i.statut === 'en_cours' && i.urgent) return 4;
+      if (i.statut === 'en_attente' && i.urgent) return 5;
+      return 0;
+    };
+    
+    const scoreA = getScore(a);
+    const scoreB = getScore(b);
+    if (scoreB !== scoreA) return scoreB - scoreA;
+    
     return new Date(b.date_saisie) - new Date(a.date_saisie);
   });
 
@@ -493,7 +509,14 @@ export default function Bureau() {
                                 </Badge>
                               </td>
                               <td className="p-3 text-sm">
-                                {temps !== null ? formatDuration(temps) : '-'}
+                                <div className="space-y-1">
+                                  {temps !== null && <div>Total: {formatDuration(temps)}</div>}
+                                  {incident.temps_prise_en_charge && (
+                                    <div className="text-xs text-gray-400">
+                                      Attente: {formatDuration(incident.temps_prise_en_charge)}
+                                    </div>
+                                  )}
+                                </div>
                               </td>
                               <td className="p-3">
                                 {incident.note_client && (
@@ -504,7 +527,7 @@ export default function Bureau() {
                                 )}
                               </td>
                               <td className="p-3">
-                                <InterventionActions incident={incident} />
+                                <InterventionActions incident={incident} onRefresh={() => {}} />
                               </td>
                             </tr>
                           );
