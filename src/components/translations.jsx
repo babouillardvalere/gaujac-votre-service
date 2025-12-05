@@ -371,6 +371,10 @@ export const translations = {
     autorisation_obligatoire: "Veuillez indiquer si vous autorisez l'accès",
     acces_autorise: "Accès autorisé",
     acces_non_autorise: "Présence client requise",
+    plage_horaire_title: "⏰ Quand souhaitez-vous que notre équipe intervienne ?",
+    plage_horaire_subtitle: "Merci de sélectionner une plage horaire compatible avec votre présence :",
+    plage_horaire_obligatoire: "Veuillez sélectionner une plage horaire",
+    plage_demandee: "Plage demandée",
     
     // Attente dialog extended
     motif_attente_label: "Motif de l'attente",
@@ -860,6 +864,10 @@ export const translations = {
     autorisation_obligatoire: "Please indicate if you authorize access",
     acces_autorise: "Access authorized",
     acces_non_autorise: "Client presence required",
+    plage_horaire_title: "⏰ When would you like our team to intervene?",
+    plage_horaire_subtitle: "Please select a time slot compatible with your presence:",
+    plage_horaire_obligatoire: "Please select a time slot",
+    plage_demandee: "Requested slot",
     
     // Avis publics
     ils_ont_adore: "They Loved Their Stay!",
