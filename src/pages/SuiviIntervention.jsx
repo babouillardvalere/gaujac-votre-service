@@ -453,15 +453,42 @@ export default function SuiviIntervention() {
               <div className="flex justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-[#00AEEF]" />
               </div>
-            ) : filteredIncidents.length === 0 ? (
+            ) : filteredIncidents.length === 0 && allPastIncidents.length === 0 ? (
               <div className="text-center py-12">
                 <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="font-heading text-xl text-[#0077A8] mb-2">{t('aucun_signalement')}</h3>
                 <p className="font-body text-gray-600">{t('aucun_signalement_detail')}</p>
               </div>
             ) : (
-              <>
-                {activeIncidents.length > 0 && (
+              <Tabs defaultValue="current" className="w-full">
+                <TabsList className="w-full bg-[#e6f7ff] p-1 rounded-xl border border-[#00AEEF]/30 mb-4">
+                  <TabsTrigger 
+                    value="current" 
+                    className="flex-1 rounded-lg font-heading text-sm data-[state=active]:bg-[#00AEEF] data-[state=active]:text-white"
+                  >
+                    <Clock className="w-4 h-4 mr-1" />
+                    {lang === 'en' ? 'Current' : 'En cours'} ({activeIncidents.length})
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="resolved" 
+                    className="flex-1 rounded-lg font-heading text-sm data-[state=active]:bg-green-500 data-[state=active]:text-white"
+                  >
+                    <CheckCircle className="w-4 h-4 mr-1" />
+                    {lang === 'en' ? 'Resolved' : 'Résolues'} ({resolvedIncidents.length})
+                  </TabsTrigger>
+                  {allPastIncidents.length > 0 && (
+                    <TabsTrigger 
+                      value="history" 
+                      className="flex-1 rounded-lg font-heading text-sm data-[state=active]:bg-gray-500 data-[state=active]:text-white"
+                    >
+                      <History className="w-4 h-4 mr-1" />
+                      {lang === 'en' ? 'History' : 'Historique'}
+                    </TabsTrigger>
+                  )}
+                </TabsList>
+                
+                <TabsContent value="current" className="space-y-4">
+                {activeIncidents.length > 0 ? (
                   <div className="space-y-4">
                     <h3 className="font-heading text-lg text-[#0077A8] flex items-center gap-2">
                       <Clock className="w-5 h-5 text-[#FFA500]" />
