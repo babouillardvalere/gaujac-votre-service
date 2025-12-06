@@ -8,7 +8,7 @@ import ReceptionDeparts from './ReceptionDeparts';
 import ReceptionAssistance from './ReceptionAssistance';
 import ReceptionSuivi from './ReceptionSuivi';
 import CollaborateurNotificationBell from '../components/CollaborateurNotificationBell';
-import { ArrowLeft, LogIn, LogOut, HeadphonesIcon, Home, ClipboardList } from 'lucide-react';
+import { ArrowLeft, LogIn, LogOut, HeadphonesIcon, Home, ClipboardList, Calendar } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { base44 } from '@/api/base44Client';
@@ -47,7 +47,17 @@ export default function Reception() {
               <Home className="w-5 h-5 text-[#00AEEF]" />
               <span className="font-heading text-[#0077A8]">{lang === 'fr' ? 'Menu' : 'Menu'}</span>
             </button>
-            <CollaborateurNotificationBell />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigate(createPageUrl('CalendrierReservations'))}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#00AEEF] hover:bg-[#0077A8] text-white transition-all shadow-sm"
+                title="Calendrier réservations"
+              >
+                <Calendar className="w-5 h-5" />
+                <span className="font-heading">{lang === 'fr' ? 'Calendrier' : 'Calendar'}</span>
+              </button>
+              <CollaborateurNotificationBell />
+            </div>
           </div>
 
           <Logo className="h-16 mb-6" />

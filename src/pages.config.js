@@ -52,6 +52,7 @@ import AvisMenu from './pages/AvisMenu';
 import Notifications from './pages/Notifications';
 import ReceptionSuivi from './pages/ReceptionSuivi';
 import NotificationPreferences from './pages/NotificationPreferences';
+import CalendrierReservations from './pages/CalendrierReservations';
 import __Layout from './Layout.jsx';
 
 
@@ -110,6 +111,7 @@ export const PAGES = {
     "Notifications": Notifications,
     "ReceptionSuivi": ReceptionSuivi,
     "NotificationPreferences": NotificationPreferences,
+    "CalendrierReservations": CalendrierReservations,
 }
 
 export const pagesConfig = {
