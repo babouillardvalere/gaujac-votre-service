@@ -79,14 +79,6 @@ export default function MenuCollaborateur() {
       badgeCount: counts.materiel
     },
     {
-      title: '📊 Statistiques',
-      icon: TrendingUp,
-      href: 'Statistiques',
-      color: 'bg-gradient-to-br from-blue-500 to-cyan-500',
-      textColor: 'text-white',
-      description: 'Rapports & Données'
-    },
-    {
       title: t('menu_bureau'),
       icon: Building2,
       href: 'Bureau',

@@ -17,7 +17,7 @@ import moment from 'moment';
 
 const COLORS = ['#00AEEF', '#22c55e', '#FFD700', '#FFA500', '#8B5CF6', '#EC4899'];
 
-export default function Statistiques() {
+export default function Statistiques({ embedded = false }) {
   const { t, lang } = useTranslation();
   const navigate = useNavigate();
 
@@ -219,12 +219,12 @@ export default function Statistiques() {
       : 0
   }), [dossiersFiltres, incidentsFiltres]);
 
-  return (
-    <div className="min-h-screen px-6 py-8 bg-gradient-to-b from-gray-50 to-white">
-      <div className="max-w-7xl mx-auto">
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+  const content = (
+    <>
+      {!embedded && (
+        <>
           <button
-            onClick={() => navigate(createPageUrl('Home'))}
+            onClick={() => navigate(createPageUrl('MenuCollaborateur'))}
             className="flex items-center gap-2 text-[#0077A8] hover:text-[#00AEEF] mb-4"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -239,6 +239,8 @@ export default function Statistiques() {
           <p className="text-center text-gray-600 mb-6">
             {lang === 'fr' ? 'Vue d\'ensemble des données du camping' : 'Overview of camping data'}
           </p>
+        </>
+      )}
 
           {/* Filtres de date */}
           <Card className="mb-6 border-2 border-[#00AEEF]/30">
@@ -537,6 +539,18 @@ export default function Statistiques() {
               </Card>
             </TabsContent>
           </Tabs>
+    </>
+  );
+
+  if (embedded) {
+    return <div className="px-4 py-4">{content}</div>;
+  }
+
+  return (
+    <div className="min-h-screen px-6 py-8 bg-gradient-to-b from-gray-50 to-white">
+      <div className="max-w-7xl mx-auto">
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+          {content}
         </motion.div>
       </div>
     </div>
