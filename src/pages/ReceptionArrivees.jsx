@@ -20,7 +20,8 @@ export default function ReceptionArrivees({ embedded = false }) {
 
   const { data: dossiers = [], isLoading } = useQuery({
     queryKey: ['dossiers-arrivee-reception'],
-    queryFn: () => base44.entities.DossierArrivee.list()
+    queryFn: () => base44.entities.DossierArrivee.list(),
+    refetchInterval: 10000
   });
 
   // Période glissante : Décembre année en cours → Novembre année suivante
