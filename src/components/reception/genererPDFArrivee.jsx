@@ -106,6 +106,80 @@ export async function genererPDFArrivee(dossier, inventaire, interventions, lang
       });
     }
     
+    // Photos des pièces
+    if (inventaire.photos_pieces && Object.keys(inventaire.photos_pieces).length > 0) {
+      if (y > 230) {
+        doc.addPage();
+        y = 20;
+      }
+      y += 5;
+      doc.setTextColor(0, 119, 168);
+      doc.text(`${isFrench ? 'Photos des pièces' : 'Room photos'}:`, 20, y);
+      y += 7;
+      doc.setTextColor(0, 0, 0);
+      
+      const photoEntries = Object.entries(inventaire.photos_pieces);
+      for (let i = 0; i < photoEntries.length; i++) {
+        const [piece, url] = photoEntries[i];
+        try {
+          // Ajouter l'image au PDF
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          await new Promise((resolve, reject) => {
+            img.onload = () => resolve();
+            img.onerror = () => reject();
+            img.src = url;
+          });
+          
+          if (y > 200) {
+            doc.addPage();
+            y = 20;
+          }
+          
+          doc.text(piece, 20, y);
+          y += 5;
+          doc.addImage(img, 'JPEG', 20, y, 80, 60);
+          y += 65;
+        } catch (error) {
+          doc.text(`${piece}: ${isFrench ? 'Photo non disponible' : 'Photo unavailable'}`, 20, y);
+          y += 7;
+        }
+      }
+    }
+    
+    // Signature
+    if (inventaire.signature_url) {
+      if (y > 230) {
+        doc.addPage();
+        y = 20;
+      }
+      y += 5;
+      doc.setTextColor(0, 119, 168);
+      doc.text(`${isFrench ? 'Signature client' : 'Guest signature'}:`, 20, y);
+      y += 7;
+      doc.setTextColor(0, 0, 0);
+      
+      try {
+        const signImg = new Image();
+        signImg.crossOrigin = 'anonymous';
+        await new Promise((resolve, reject) => {
+          signImg.onload = () => resolve();
+          signImg.onerror = () => reject();
+          signImg.src = inventaire.signature_url;
+        });
+        
+        doc.addImage(signImg, 'PNG', 20, y, 60, 20);
+        y += 25;
+        doc.setFontSize(8);
+        doc.text(`${isFrench ? 'Signé le' : 'Signed on'} ${new Date(inventaire.date_validation).toLocaleString(lang)}`, 20, y);
+        doc.setFontSize(10);
+        y += 7;
+      } catch (error) {
+        doc.text(isFrench ? 'Signature non disponible' : 'Signature unavailable', 20, y);
+        y += 7;
+      }
+    }
+    
     y += 5;
   }
   
