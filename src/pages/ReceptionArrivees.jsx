@@ -42,6 +42,7 @@ export default function ReceptionArrivees({ embedded = false }) {
       <ReceptionSemaineAccordeon semaines={semaines} lang={lang}>
         {(semaine) => {
           const dossiersSemaine = filtrerDossiersParSemaine(dossiers, semaine);
+          console.log('🔍 Semaine', semaine.label, '→', dossiersSemaine.length, 'dossiers');
           return (
             <ReceptionListeLogements 
               dossiers={dossiersSemaine}
@@ -94,9 +95,21 @@ export default function ReceptionArrivees({ embedded = false }) {
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#00AEEF]"></div>
         </div>
       ) : (
-        <ReceptionMoisOnglets lang={lang} startYear={startYear} endYear={endYear}>
-          {renderSemaines}
-        </ReceptionMoisOnglets>
+        <>
+          <div className="mb-4 p-4 bg-blue-50 rounded-xl border-2 border-blue-200">
+            <p className="text-sm text-blue-800 font-heading">
+              📊 Total dossiers : <strong>{dossiers.length}</strong>
+              {dossiers.length > 0 && (
+                <span className="ml-2">
+                  • {dossiers.filter(d => d.inventaire_id).length} avec inventaire
+                </span>
+              )}
+            </p>
+          </div>
+          <ReceptionMoisOnglets lang={lang} startYear={startYear} endYear={endYear}>
+            {renderSemaines}
+          </ReceptionMoisOnglets>
+        </>
       )}
     </>
   );
