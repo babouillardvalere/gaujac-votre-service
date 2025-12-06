@@ -34,6 +34,8 @@ export default function ClientMenu() {
     {
       title: '🏡 Arrivée',
       titleEn: '🏡 Arrival',
+      description: 'Conditions d\'arrivée',
+      descriptionEn: 'Arrival conditions',
       href: 'ClientArrivee',
       color: 'bg-[#22c55e]',
       textColor: 'text-white',
@@ -43,6 +45,8 @@ export default function ClientMenu() {
     {
       title: '🌞 Séjour',
       titleEn: '🌞 Stay',
+      description: 'Signaler un problème',
+      descriptionEn: 'Report an issue',
       href: 'IdentiteClient',
       color: 'bg-[#00AEEF]',
       textColor: 'text-white',
@@ -51,6 +55,8 @@ export default function ClientMenu() {
     {
       title: '🚗 Départ',
       titleEn: '🚗 Departure',
+      description: 'Conditions de départ',
+      descriptionEn: 'Departure conditions',
       href: 'ClientDepartIdentite',
       color: 'bg-[#FFA500]',
       textColor: 'text-white',
@@ -175,10 +181,13 @@ export default function ClientMenu() {
                 >
                   <Card className="border-2 border-[#00AEEF]/30 hover:border-[#00AEEF] hover:shadow-xl transition-all rounded-xl overflow-hidden">
                     <CardContent className="p-0">
-                      <div className={`${item.color} p-8 min-h-[120px] flex items-center justify-center`}>
-                        <h2 className={`font-heading text-4xl ${item.textColor} group-hover:scale-105 transition-transform text-center`}>
+                      <div className={`${item.color} p-8 min-h-[120px] flex flex-col items-center justify-center`}>
+                        <h2 className={`font-heading text-4xl ${item.textColor} group-hover:scale-105 transition-transform text-center mb-2`}>
                           {lang === 'fr' ? item.title : item.titleEn}
                         </h2>
+                        <p className={`text-sm ${item.textColor} opacity-90 font-body`}>
+                          {lang === 'fr' ? item.description : item.descriptionEn}
+                        </p>
                       </div>
                     </CardContent>
                   </Card>
