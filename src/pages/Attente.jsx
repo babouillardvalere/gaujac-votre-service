@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Logo from '../components/Logo';
-import NotificationCenter from '../components/NotificationCenter';
+import CollaborateurNotificationBell from '../components/CollaborateurNotificationBell';
 import { useNotifications } from '../components/useNotifications';
 import MettreEnAttenteDialog from '../components/MettreEnAttenteDialog';
 import { useTranslation } from '../components/translations';
@@ -118,14 +118,7 @@ export default function Attente() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {incidents.length > 0 && (
-              <div className="relative">
-                <div className="absolute -top-2 -right-2 min-w-5 h-5 flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-red-500 text-white shadow-lg z-10">
-                  {incidents.length}
-                </div>
-              </div>
-            )}
-            <NotificationCenter userType="collaborateur" />
+            <CollaborateurNotificationBell />
             <Clock className="w-8 h-8" />
           </div>
         </div>

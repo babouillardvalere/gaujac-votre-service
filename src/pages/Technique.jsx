@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Logo from '../components/Logo';
 import OfflineBanner from '../components/OfflineBanner';
-import NotificationCenter from '../components/NotificationCenter';
+import CollaborateurNotificationBell from '../components/CollaborateurNotificationBell';
 import { useNotifications } from '../components/useNotifications';
 import MettreEnAttenteDialog from '../components/MettreEnAttenteDialog';
 import InterventionTimer from '../components/InterventionTimer';
@@ -374,14 +374,7 @@ export default function Technique() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {counts.technique > 0 && (
-              <div className="relative">
-                <div className="absolute -top-2 -right-2 min-w-5 h-5 flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-red-500 text-white shadow-lg z-10">
-                  {counts.technique}
-                </div>
-              </div>
-            )}
-            <NotificationCenter userType="collaborateur" />
+            <CollaborateurNotificationBell />
             <Wrench className="w-8 h-8" />
           </div>
         </div>
@@ -390,17 +383,29 @@ export default function Technique() {
       <div className="max-w-4xl mx-auto px-4 py-6">
         <Tabs value={filter} onValueChange={setFilter} className="mb-6">
           <TabsList className="bg-[#e6f7ff] p-1 rounded-xl border border-[#00AEEF]/30 w-full grid grid-cols-4">
-            <TabsTrigger value="en_attente" className="rounded-lg font-heading text-xs data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              {t('en_attente')} ({incidents.filter(i => i.statut === 'en_attente').length})
+            <TabsTrigger value="en_attente" className="rounded-lg font-heading text-xs data-[state=active]:bg-[#FFA500] data-[state=active]:text-white relative">
+              {t('en_attente')}
+              <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
+                {incidents.filter(i => i.statut === 'en_attente').length}
+              </span>
             </TabsTrigger>
-            <TabsTrigger value="en_cours" className="rounded-lg font-heading text-xs data-[state=active]:bg-[#00AEEF] data-[state=active]:text-white">
-              {t('en_cours')} ({incidents.filter(i => i.statut === 'en_cours').length})
+            <TabsTrigger value="en_cours" className="rounded-lg font-heading text-xs data-[state=active]:bg-[#00AEEF] data-[state=active]:text-white relative">
+              {t('en_cours')}
+              <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
+                {incidents.filter(i => i.statut === 'en_cours').length}
+              </span>
             </TabsTrigger>
-            <TabsTrigger value="en_attente_materiel" className="rounded-lg font-heading text-xs data-[state=active]:bg-gray-500 data-[state=active]:text-white">
-              ⏳ {t('menu_attente')} ({incidents.filter(i => i.statut === 'en_attente_materiel').length})
+            <TabsTrigger value="en_attente_materiel" className="rounded-lg font-heading text-xs data-[state=active]:bg-gray-500 data-[state=active]:text-white relative">
+              ⏳ {t('menu_attente')}
+              <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
+                {incidents.filter(i => i.statut === 'en_attente_materiel').length}
+              </span>
             </TabsTrigger>
-            <TabsTrigger value="resolu" className="rounded-lg font-heading text-xs data-[state=active]:bg-green-500 data-[state=active]:text-white">
-              {t('resolu')} ({incidents.filter(i => i.statut === 'resolu').length})
+            <TabsTrigger value="resolu" className="rounded-lg font-heading text-xs data-[state=active]:bg-green-500 data-[state=active]:text-white relative">
+              {t('resolu')}
+              <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
+                {incidents.filter(i => i.statut === 'resolu').length}
+              </span>
             </TabsTrigger>
           </TabsList>
         </Tabs>

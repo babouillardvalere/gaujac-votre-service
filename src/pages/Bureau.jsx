@@ -27,7 +27,7 @@ import BureauRapports from '../components/bureau/BureauRapports';
 import BureauFrequentation from '../components/bureau/BureauFrequentation';
 import BureauDemographie from '../components/bureau/BureauDemographie';
 import BureauFichesPDF from '../components/bureau/BureauFichesPDF';
-import BureauAvisApplication from '../components/bureau/BureauAvisApplication';
+
 import Statistiques from './Statistiques';
 import { format, differenceInHours, differenceInMinutes, isToday, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -454,9 +454,6 @@ export default function Bureau() {
             <TabsTrigger value="statistiques" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               📊 {t('statistiques')}
             </TabsTrigger>
-            <TabsTrigger value="satisfaction" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              📱 {lang === 'fr' ? 'Avis App' : 'App Reviews'}
-            </TabsTrigger>
             <TabsTrigger value="demographie" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               👨‍👩‍👧 {lang === 'fr' ? 'Démographie' : 'Demographics'}
             </TabsTrigger>
@@ -879,11 +876,6 @@ export default function Bureau() {
           {/* Statistiques Globales */}
           <TabsContent value="statistiques" className="space-y-6">
             <Statistiques embedded={true} />
-          </TabsContent>
-
-          {/* Avis Application uniquement */}
-          <TabsContent value="satisfaction" className="space-y-6">
-            <BureauAvisApplication lang={lang} />
           </TabsContent>
 
           {/* Démographie */}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Logo from '../components/Logo';
-import NotificationCenter from '../components/NotificationCenter';
+import CollaborateurNotificationBell from '../components/CollaborateurNotificationBell';
 import { useNotifications } from '../components/useNotifications';
 import { useTranslation } from '../components/translations';
 import { base44 } from '@/api/base44Client';
@@ -146,6 +146,7 @@ export default function Materiel() {
   };
 
   const stockAlerts = stock.filter(s => s.quantite <= s.seuil_alerte);
+  const { counts } = useNotifications();
 
   return (
     <div className="min-h-screen pb-8" role="main" aria-label="Gestion du matériel et du stock">
@@ -164,14 +165,7 @@ export default function Materiel() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {counts.materiel > 0 && (
-              <div className="relative">
-                <div className="absolute -top-2 -right-2 min-w-5 h-5 flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-red-500 text-white shadow-lg z-10">
-                  {counts.materiel}
-                </div>
-              </div>
-            )}
-            <NotificationCenter userType="collaborateur" />
+            <CollaborateurNotificationBell />
             <Package className="w-8 h-8" />
           </div>
         </div>
@@ -180,13 +174,19 @@ export default function Materiel() {
       <div className="max-w-6xl mx-auto px-4 py-6">
         <Tabs defaultValue="demandes" className="space-y-6">
           <TabsList className="bg-[#0077A8]/10 p-1 rounded-xl border border-[#0077A8]/30">
-            <TabsTrigger value="demandes" className="rounded-lg font-heading data-[state=active]:bg-[#0077A8] data-[state=active]:text-white">
+            <TabsTrigger value="demandes" className="rounded-lg font-heading data-[state=active]:bg-[#0077A8] data-[state=active]:text-white relative">
               <Clock className="w-4 h-4 mr-2" />
-              {t('demandes')} ({incidentsAttente.length})
+              {t('demandes')}
+              <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
+                {incidentsAttente.length}
+              </span>
             </TabsTrigger>
-            <TabsTrigger value="stock" className="rounded-lg font-heading data-[state=active]:bg-[#0077A8] data-[state=active]:text-white">
+            <TabsTrigger value="stock" className="rounded-lg font-heading data-[state=active]:bg-[#0077A8] data-[state=active]:text-white relative">
               <Package className="w-4 h-4 mr-2" />
               {t('stock')}
+              <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
+                {stockAlerts.length}
+              </span>
             </TabsTrigger>
             <TabsTrigger value="historique" className="rounded-lg font-heading data-[state=active]:bg-[#0077A8] data-[state=active]:text-white">
               <History className="w-4 h-4 mr-2" />

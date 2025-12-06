@@ -6,8 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ReceptionArrivees from './ReceptionArrivees';
 import ReceptionDeparts from './ReceptionDeparts';
 import ReceptionAssistance from './ReceptionAssistance';
-import NotificationCenter from '../components/NotificationCenter';
-import { useNotifications } from '../components/useNotifications';
+import CollaborateurNotificationBell from '../components/CollaborateurNotificationBell';
 import { ArrowLeft, LogIn, LogOut, HeadphonesIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
@@ -18,7 +17,6 @@ export default function Reception() {
   const { t, lang } = useTranslation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('arrivees');
-  const { counts } = useNotifications();
 
   // Compter arrivées et départs en cours
   const { data: arrivees = [] } = useQuery({
@@ -46,14 +44,7 @@ export default function Reception() {
               <span className="font-heading">{t('retour')}</span>
             </button>
             <div className="flex items-center gap-2">
-              {(arrivees.length + departs.length) > 0 && (
-                <div className="relative">
-                  <div className="absolute -top-2 -right-2 min-w-5 h-5 flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-red-500 text-white shadow-lg z-10">
-                    {arrivees.length + departs.length}
-                  </div>
-                </div>
-              )}
-              <NotificationCenter userType="collaborateur" />
+              <CollaborateurNotificationBell />
             </div>
           </div>
 
@@ -71,20 +62,16 @@ export default function Reception() {
               <TabsTrigger value="arrivees" className="flex items-center gap-2 text-base font-heading relative">
                 <LogIn className="w-4 h-4" />
                 🏡 {lang === 'fr' ? 'Arrivées' : 'Arrivals'}
-                {arrivees.length > 0 && (
-                  <span className="ml-1 min-w-5 h-5 flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-red-500 text-white">
-                    {arrivees.length}
-                  </span>
-                )}
+                <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
+                  {arrivees.length}
+                </span>
               </TabsTrigger>
               <TabsTrigger value="departs" className="flex items-center gap-2 text-base font-heading relative">
                 <LogOut className="w-4 h-4" />
                 🚗 {lang === 'fr' ? 'Départs' : 'Departures'}
-                {departs.length > 0 && (
-                  <span className="ml-1 min-w-5 h-5 flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-red-500 text-white">
-                    {departs.length}
-                  </span>
-                )}
+                <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
+                  {departs.length}
+                </span>
               </TabsTrigger>
               <TabsTrigger value="assistance" className="flex items-center gap-2 text-base font-heading">
                 <HeadphonesIcon className="w-4 h-4" />

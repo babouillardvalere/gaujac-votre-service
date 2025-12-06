@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Logo from '../components/Logo';
 import OfflineBanner from '../components/OfflineBanner';
-import NotificationCenter from '../components/NotificationCenter';
+import CollaborateurNotificationBell from '../components/CollaborateurNotificationBell';
 import { useNotifications } from '../components/useNotifications';
 import MettreEnAttenteDialog from '../components/MettreEnAttenteDialog';
 import PhotoInterventionCapture from '../components/PhotoInterventionCapture';
@@ -332,14 +332,7 @@ export default function Menage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {counts.menage > 0 && (
-              <div className="relative">
-                <div className="absolute -top-2 -right-2 min-w-5 h-5 flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-red-500 text-white shadow-lg z-10">
-                  {counts.menage}
-                </div>
-              </div>
-            )}
-            <NotificationCenter userType="collaborateur" />
+            <CollaborateurNotificationBell />
             <Sparkles className="w-8 h-8" />
           </div>
         </div>
@@ -348,17 +341,29 @@ export default function Menage() {
       <div className="max-w-4xl mx-auto px-4 py-6">
         <Tabs value={filter} onValueChange={setFilter} className="mb-6">
           <TabsList className="bg-[#FFF4B2] p-1 rounded-xl border border-[#FFD700]/50 w-full grid grid-cols-4">
-            <TabsTrigger value="en_attente" className="rounded-lg font-heading text-xs data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              {t('en_attente')} ({incidents.filter(i => i.statut === 'en_attente').length})
+            <TabsTrigger value="en_attente" className="rounded-lg font-heading text-xs data-[state=active]:bg-[#FFA500] data-[state=active]:text-white relative">
+              {t('en_attente')}
+              <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
+                {incidents.filter(i => i.statut === 'en_attente').length}
+              </span>
             </TabsTrigger>
-            <TabsTrigger value="en_cours" className="rounded-lg font-heading text-xs data-[state=active]:bg-[#FFD700] data-[state=active]:text-[#0077A8]">
-              {t('en_cours')} ({incidents.filter(i => i.statut === 'en_cours').length})
+            <TabsTrigger value="en_cours" className="rounded-lg font-heading text-xs data-[state=active]:bg-[#FFD700] data-[state=active]:text-[#0077A8] relative">
+              {t('en_cours')}
+              <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
+                {incidents.filter(i => i.statut === 'en_cours').length}
+              </span>
             </TabsTrigger>
-            <TabsTrigger value="en_attente_materiel" className="rounded-lg font-heading text-xs data-[state=active]:bg-gray-500 data-[state=active]:text-white">
-              ⏳ {t('menu_attente')} ({incidents.filter(i => i.statut === 'en_attente_materiel').length})
+            <TabsTrigger value="en_attente_materiel" className="rounded-lg font-heading text-xs data-[state=active]:bg-gray-500 data-[state=active]:text-white relative">
+              ⏳ {t('menu_attente')}
+              <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
+                {incidents.filter(i => i.statut === 'en_attente_materiel').length}
+              </span>
             </TabsTrigger>
-            <TabsTrigger value="resolu" className="rounded-lg font-heading text-xs data-[state=active]:bg-green-500 data-[state=active]:text-white">
-              {t('resolu')} ({incidents.filter(i => i.statut === 'resolu').length})
+            <TabsTrigger value="resolu" className="rounded-lg font-heading text-xs data-[state=active]:bg-green-500 data-[state=active]:text-white relative">
+              {t('resolu')}
+              <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
+                {incidents.filter(i => i.statut === 'resolu').length}
+              </span>
             </TabsTrigger>
           </TabsList>
         </Tabs>
