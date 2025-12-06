@@ -93,7 +93,7 @@ export default function ReceptionListeLogements({ dossiers, onSelectDossier, lan
                               </div>
                             </div>
                           </div>
-                          <div className="text-right">
+                          <div className="text-right flex flex-col gap-1 items-end">
                             <div className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
                               dossier.statut === 'finalise' ? 'bg-green-100 text-green-700' :
                               dossier.statut === 'en_cours' ? 'bg-yellow-100 text-yellow-700' :
@@ -101,6 +101,16 @@ export default function ReceptionListeLogements({ dossiers, onSelectDossier, lan
                             }`}>
                               {dossier.statut === 'finalise' ? '✔' : '⏳'}
                             </div>
+                            {dossier.inventaire_id && (
+                              <div className="inline-block px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
+                                📋 {lang === 'fr' ? 'Inventaire' : 'Inventory'}
+                              </div>
+                            )}
+                            {(dossier.interventions_menage?.length > 0 || dossier.interventions_technique?.length > 0) && (
+                              <div className="inline-block px-2 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700">
+                                🔧 {(dossier.interventions_menage?.length || 0) + (dossier.interventions_technique?.length || 0)}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </CardContent>
