@@ -92,7 +92,7 @@ export default function Home() {
     {
       title: t('avis'),
       icon: Star,
-      href: '/MeilleursAvis',
+      href: '/AvisMenu',
       bgColor: 'bg-[#FFA500]',
       borderColor: 'border-[#FFA500]',
       iconBg: 'bg-white',
