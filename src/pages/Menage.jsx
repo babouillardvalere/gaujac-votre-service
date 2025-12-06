@@ -25,6 +25,7 @@ import { format, differenceInMinutes } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { createPageUrl } from '../utils';
 import InterventionTimer from '../components/InterventionTimer';
+import { notifierClientPriseEnCharge, notifierClientResolution } from '../components/notificationService';
 
 const categoryIcons = {
   literie: { emoji: '🛏️', label: 'literie' },
@@ -106,6 +107,9 @@ export default function Menage() {
         temps_prise_en_charge: tempsPriseEnCharge
       }
     });
+    
+    // 🔔 Notifier le client
+    await notifierClientPriseEnCharge(incident, collaborateurNom);
   };
 
   const handlePhotoAvantUploaded = async (photoData) => {
@@ -168,6 +172,9 @@ export default function Menage() {
       }
     });
     setCommentaire('');
+    
+    // 🔔 Notifier le client de la résolution
+    await notifierClientResolution(incident);
   };
 
   const handlePhotoApresUploaded = async (photoData) => {
