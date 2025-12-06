@@ -32,7 +32,8 @@ export default function Reception() {
   });
 
   return (
-    <div className="min-h-screen px-6 py-8">
+    <div className="min-h-screen px-6 py-8" role="main" aria-label="Page d'accueil > Collaborateur > Réception">
+      <h1 className="sr-only">Page d'accueil > Collaborateur > Réception - Arrivées, départs et assistance</h1>
       <div className="max-w-6xl mx-auto">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
           <div className="flex items-center justify-between mb-4">
