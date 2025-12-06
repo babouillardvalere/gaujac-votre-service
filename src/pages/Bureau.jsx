@@ -24,6 +24,10 @@ import BureauStatistiques from '../components/bureau/BureauStatistiques';
 import BureauStatistiquesClients from '../components/bureau/BureauStatistiquesClients';
 import BureauAvis from '../components/bureau/BureauAvis';
 import BureauRapports from '../components/bureau/BureauRapports';
+import BureauFrequentation from '../components/bureau/BureauFrequentation';
+import BureauDemographie from '../components/bureau/BureauDemographie';
+import BureauFichesPDF from '../components/bureau/BureauFichesPDF';
+import BureauAvisApplication from '../components/bureau/BureauAvisApplication';
 import { format, differenceInHours, differenceInMinutes, isToday, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -435,21 +439,27 @@ export default function Bureau() {
         </div>
 
         <Tabs defaultValue="historique" className="space-y-6">
-          <TabsList className="bg-[#FFA500]/20 p-1 rounded-xl border border-[#FFA500]/30">
+          <TabsList className="bg-[#FFA500]/20 p-1 rounded-xl border border-[#FFA500]/30 flex-wrap h-auto">
             <TabsTrigger value="historique" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              Historique
+              📋 Historique
+            </TabsTrigger>
+            <TabsTrigger value="frequentation" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
+              🔹 Fréquentation
             </TabsTrigger>
             <TabsTrigger value="statistiques" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              Statistiques
+              🔹 Interventions
             </TabsTrigger>
-            <TabsTrigger value="stats-clients" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              👥 Clients
+            <TabsTrigger value="satisfaction" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
+              ⭐ Satisfaction
             </TabsTrigger>
-            <TabsTrigger value="avis" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              ⭐ Avis
+            <TabsTrigger value="demographie" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
+              👨‍👩‍👧 Démographie
+            </TabsTrigger>
+            <TabsTrigger value="fiches" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
+              📄 Fiches PDF
             </TabsTrigger>
             <TabsTrigger value="rapports" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              📊 Rapports
+              📦 Rapports
             </TabsTrigger>
           </TabsList>
 
@@ -848,19 +858,46 @@ export default function Bureau() {
             </Card>
           </TabsContent>
 
-          {/* Statistiques */}
+          {/* Fréquentation */}
+          <TabsContent value="frequentation" className="space-y-6">
+            <BureauFrequentation lang="fr" />
+          </TabsContent>
+
+          {/* Statistiques Interventions */}
           <TabsContent value="statistiques" className="space-y-6">
             <BureauStatistiques incidents={incidents} />
           </TabsContent>
 
-          {/* Statistiques Clients */}
-          <TabsContent value="stats-clients" className="space-y-6">
-            <BureauStatistiquesClients lang="fr" />
+          {/* Satisfaction & Avis */}
+          <TabsContent value="satisfaction" className="space-y-6">
+            <Tabs defaultValue="avis-interventions" className="space-y-4">
+              <TabsList className="bg-gray-100 p-1 rounded-lg">
+                <TabsTrigger value="avis-interventions" className="rounded-lg font-body text-sm">
+                  ⭐ Avis Interventions
+                </TabsTrigger>
+                <TabsTrigger value="avis-application" className="rounded-lg font-body text-sm">
+                  📱 Avis Application
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="avis-interventions">
+                <BureauAvis />
+              </TabsContent>
+              
+              <TabsContent value="avis-application">
+                <BureauAvisApplication lang="fr" />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
-          {/* Avis */}
-          <TabsContent value="avis" className="space-y-6">
-            <BureauAvis />
+          {/* Démographie */}
+          <TabsContent value="demographie" className="space-y-6">
+            <BureauDemographie lang="fr" />
+          </TabsContent>
+
+          {/* Fiches PDF */}
+          <TabsContent value="fiches" className="space-y-6">
+            <BureauFichesPDF lang="fr" />
           </TabsContent>
 
           {/* Rapports */}
