@@ -131,7 +131,8 @@ export default function ClientDepartInventaire() {
           logement: dossierArrivee.numero_logement,
           photo_url: photoProprete,
           statut: 'en_attente',
-          autorisation_acces: 'oui'
+          autorisation_acces: 'oui',
+          origine: 'depart'
         });
       }
 

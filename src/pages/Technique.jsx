@@ -418,10 +418,14 @@ export default function Technique() {
             normal: 'border-yellow-500 bg-yellow-500/10'
             };
 
+            const origineColor = incident.origine === 'arrivee' ? 'border-l-8 border-l-green-500' : 
+                                 incident.origine === 'depart' ? 'border-l-8 border-l-orange-500' : 
+                                 'border-l-8 border-l-blue-500';
+            
             return (
             <motion.div key={incident.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
               <Card 
-                className={`border-2 rounded-xl cursor-pointer hover:shadow-lg transition-all ${priorityStyles[priorityType]}`}
+                className={`border-2 rounded-xl cursor-pointer hover:shadow-lg transition-all ${priorityStyles[priorityType]} ${origineColor}`}
                 onClick={() => setSelectedIncident(incident)}
               >
                     <CardContent className="p-4">
@@ -439,6 +443,12 @@ export default function Technique() {
                               )}
                               {priorityType === 'normal' && (
                                 <Badge className="bg-yellow-500 text-black text-xs">🛠️ Normal</Badge>
+                              )}
+                              {incident.origine === 'arrivee' && (
+                                <Badge className="bg-green-600 text-white text-xs">🏁 {t('date_arrivee')}</Badge>
+                              )}
+                              {incident.origine === 'depart' && (
+                                <Badge className="bg-orange-600 text-white text-xs">🚪 {t('date_depart')}</Badge>
                               )}
                             </div>
                             <p className="text-sm font-body text-gray-600">{catInfo.label}</p>

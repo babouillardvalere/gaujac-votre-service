@@ -307,7 +307,8 @@ export default function ClientControleInventaire() {
           date_saisie: new Date().toISOString(),
           statut: 'en_attente',
           autorisation_acces: 'oui',
-          clause_autorisation_acceptee: true
+          clause_autorisation_acceptee: true,
+          origine: 'arrivee'
         });
         interventionsMenageIds.push(incident.id);
       }
@@ -330,7 +331,8 @@ export default function ClientControleInventaire() {
           date_saisie: new Date().toISOString(),
           statut: 'en_attente',
           autorisation_acces: 'oui',
-          clause_autorisation_acceptee: true
+          clause_autorisation_acceptee: true,
+          origine: 'arrivee'
         });
         interventionsTechniqueIds.push(incident.id);
       }

@@ -187,7 +187,8 @@ export default function Signalement() {
         priorite_ordre: nextOrdre,
         autorisation_acces: autorisationAcces,
         plage_horaire_client: autorisationAcces === 'non' ? plageHoraire : null,
-        clause_autorisation_acceptee: autorisationAcces === 'oui'
+        clause_autorisation_acceptee: autorisationAcces === 'oui',
+        origine: 'signalement'
       });
 
       // Créer un log de création
