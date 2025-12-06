@@ -68,11 +68,11 @@ export default function ReceptionAssistance() {
                 className="focus:ring-4 focus:ring-[#FFD700] rounded-xl"
               >
                 <Card className={`${option.color} border-0 rounded-xl h-full transition-all`}>
-                  <CardContent className="p-6 text-white">
-                    <h2 className="font-heading text-xl mb-3">
+                  <CardContent className="p-6">
+                    <h2 className="font-heading text-xl mb-3 text-white">
                       {option.title}
                     </h2>
-                    <p className="text-sm text-white/90">
+                    <p className="text-sm text-white">
                       {option.description}
                     </p>
                   </CardContent>
