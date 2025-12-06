@@ -61,20 +61,6 @@ export default function Breadcrumbs() {
   }
 
   const breadcrumbs = [];
-  
-  // Supprimer définitivement les breadcrumbs en zone collaborateur
-  const isCollaboratorArea = currentPage.includes('Collaborateur') || 
-                             currentPage.includes('Technique') || 
-                             currentPage.includes('Menage') || 
-                             currentPage.includes('Reception') || 
-                             currentPage.includes('Materiel') || 
-                             currentPage.includes('Bureau') ||
-                             currentPage.includes('Notifications') ||
-                             currentPage.includes('Attente');
-  
-  if (isCollaboratorArea) {
-    return null;
-  }
 
   // Ajouter un breadcrumb pour le menu collaborateur si nécessaire
   if (isCollaboratorArea() && pathSegments[0] !== 'Collaborateur' && pathSegments[0] !== 'MenuCollaborateur') {
