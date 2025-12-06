@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { genererPDFArrivee } from './genererPDFArrivee';
+import { getInventaireParCategorie } from '../categoryCodeMapping';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Download, Mail, Users, Dog, Calendar, Home, CheckCircle, XCircle, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Download, Mail, Users, Dog, Calendar, Home, CheckCircle, XCircle, Image as ImageIcon, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import {
@@ -82,7 +83,20 @@ export default function ReceptionFicheArrivee({ dossier, onClose, lang = 'fr' })
     }
   };
 
-  const totalPersonnes = (dossier.nombre_adultes || 0) + (dossier.nombre_enfants || 0);
+  const totalPersonnes = (dossier.nombre_adultes || 0) + (dossier.nombre_adolescents || 0) + (dossier.nombre_enfants || 0) + (dossier.nombre_bebes || 0);
+
+  // Récupérer l'inventaire complet de la catégorie
+  const inventaireComplet = dossier.categorie_logement 
+    ? getInventaireParCategorie(dossier.categorie_logement, lang)
+    : null;
+
+  // Vérifier si le dossier est complet
+  const dossierComplet = !!(
+    dossier.inventaire_id &&
+    inventaire &&
+    inventaire.evaluation_proprete &&
+    inventaire.signature_url
+  );
 
   return (
     <div className="min-h-screen px-6 py-8">
@@ -99,6 +113,27 @@ export default function ReceptionFicheArrivee({ dossier, onClose, lang = 'fr' })
           <h1 className="font-handwritten text-3xl text-[#22c55e] text-center mb-6">
             📋 {lang === 'fr' ? 'Dossier Arrivée' : 'Arrival File'}
           </h1>
+
+          {/* Alerte si dossier incomplet */}
+          {!dossierComplet && (
+            <Card className="border-2 border-orange-400 bg-orange-50 rounded-xl mb-6">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="w-6 h-6 text-orange-600 flex-shrink-0" />
+                  <div>
+                    <p className="font-heading text-orange-900">
+                      {lang === 'fr' ? '⚠️ Dossier incomplet' : '⚠️ Incomplete file'}
+                    </p>
+                    <p className="text-sm text-orange-700">
+                      {lang === 'fr' 
+                        ? 'Le client n\'a pas encore terminé le processus d\'arrivée (inventaire, photos, signature).'
+                        : 'The guest has not yet completed the arrival process (inventory, photos, signature).'}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Informations client */}
           <Card className="border-2 border-[#00AEEF]/30 rounded-xl mb-6">
@@ -134,8 +169,8 @@ export default function ReceptionFicheArrivee({ dossier, onClose, lang = 'fr' })
                   <p className="font-heading flex items-center gap-2">
                     <Users className="w-4 h-4" />
                     {totalPersonnes} {lang === 'fr' ? 'pers' : 'ppl'}
-                    {dossier.nombre_adultes && dossier.nombre_enfants && 
-                      ` (${dossier.nombre_adultes}A / ${dossier.nombre_enfants}E)`}
+                    {totalPersonnes > 0 && 
+                      ` (${dossier.nombre_adultes || 0}A / ${dossier.nombre_adolescents || 0}Ado / ${dossier.nombre_enfants || 0}E / ${dossier.nombre_bebes || 0}B)`}
                   </p>
                 </div>
                 {dossier.nombre_animaux > 0 && (
@@ -152,26 +187,60 @@ export default function ReceptionFicheArrivee({ dossier, onClose, lang = 'fr' })
           </Card>
 
           {/* Inventaire */}
-          {inventaire && (
+          {inventaire ? (
             <Card className="border-2 border-blue-300 rounded-xl mb-6">
               <CardContent className="p-6">
                 <h2 className="font-heading text-xl text-[#0077A8] mb-4">
                   ✔️ {lang === 'fr' ? 'Contrôle Inventaire' : 'Inventory Check'}
                 </h2>
                 <div className="space-y-6">
-                  {/* Objets validés */}
-                  <div>
-                    <p className="text-sm text-gray-600 mb-2">
-                      {lang === 'fr' ? 'Objets validés' : 'Validated items'} ({inventaire.objets_valides?.length || 0})
-                    </p>
-                    {inventaire.objets_valides?.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {inventaire.objets_valides.map((obj, idx) => (
-                          <Badge key={idx} className="bg-green-100 text-green-700 hover:bg-green-100">
-                            <CheckCircle className="w-3 h-3 mr-1" />
-                            {obj}
-                          </Badge>
-                        ))}
+                  {/* Inventaire complet avec icônes */}
+                  {inventaireComplet && (
+                    <div>
+                      <p className="text-sm font-heading text-gray-700 mb-3">
+                        {lang === 'fr' ? '📦 Inventaire complet' : '📦 Complete inventory'}
+                      </p>
+                      <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
+                        {inventaireComplet.objets.map((objet) => {
+                          const estValide = inventaire.objets_valides?.includes(objet.id);
+                          const estManquant = inventaire.objets_manquants?.some(obj => obj.objet === objet.id);
+                          
+                          return (
+                            <div
+                              key={objet.id}
+                              className={`p-3 rounded-lg border-2 text-center transition-all ${
+                                estManquant
+                                  ? 'border-red-400 bg-red-50'
+                                  : estValide
+                                  ? 'border-green-400 bg-green-50'
+                                  : 'border-gray-200 bg-gray-50'
+                              }`}
+                            >
+                              <div className="text-3xl mb-1">{objet.icon}</div>
+                              <p className="text-xs font-heading">{objet.label}</p>
+                              {estValide && <CheckCircle className="w-4 h-4 mx-auto mt-1 text-green-600" />}
+                              {estManquant && <XCircle className="w-4 h-4 mx-auto mt-1 text-red-600" />}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Résumé */}
+                  <div className="flex gap-4 p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <span className="text-sm font-heading">
+                        {inventaire.objets_valides?.length || 0} {lang === 'fr' ? 'validés' : 'validated'}
+                      </span>
+                    </div>
+                    {inventaire.objets_manquants?.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <XCircle className="w-5 h-5 text-red-600" />
+                        <span className="text-sm font-heading">
+                          {inventaire.objets_manquants.length} {lang === 'fr' ? 'manquants' : 'missing'}
+                        </span>
                       </div>
                     )}
                   </div>

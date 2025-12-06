@@ -29,3 +29,51 @@ export const categoryToCodeMapping = {
 export const getCodeFromCategory = (category) => {
   return categoryToCodeMapping[category] || null;
 };
+
+// Fonction pour récupérer l'inventaire d'une catégorie
+export const getInventaireParCategorie = (categorie, lang = 'fr') => {
+  const code = getCodeFromCategory(categorie);
+  if (!code) return null;
+  
+  // Import dynamique des inventaires
+  const inventairesData = {
+    'MH_PREMIUM_2CH': {
+      titre_fr: 'Mobil-home Premium 2 chambres',
+      titre_en: 'Premium Mobile Home 2 bedrooms',
+      objets: [
+        { id: 'assiettes_plates', icon: '🍽️', label_fr: 'Assiettes plates', label_en: 'Dinner plates' },
+        { id: 'assiettes_creuses', icon: '🥣', label_fr: 'Assiettes creuses', label_en: 'Soup plates' },
+        { id: 'verres', icon: '🥤', label_fr: 'Verres', label_en: 'Glasses' },
+        { id: 'tasses', icon: '☕', label_fr: 'Tasses', label_en: 'Cups' },
+        { id: 'couverts', icon: '🍴', label_fr: 'Couverts', label_en: 'Cutlery' },
+        { id: 'casseroles', icon: '🍲', label_fr: 'Casseroles', label_en: 'Pots' },
+        { id: 'poeles', icon: '🍳', label_fr: 'Poêles', label_en: 'Pans' },
+        { id: 'plat', icon: '🍛', label_fr: 'Plats', label_en: 'Dishes' },
+        { id: 'saladier', icon: '🥗', label_fr: 'Saladiers', label_en: 'Salad bowls' },
+        { id: 'cafetiere', icon: '☕', label_fr: 'Cafetière', label_en: 'Coffee maker' },
+        { id: 'bouilloire', icon: '🫖', label_fr: 'Bouilloire', label_en: 'Kettle' },
+        { id: 'micro_ondes', icon: '📻', label_fr: 'Micro-ondes', label_en: 'Microwave' },
+        { id: 'frigo', icon: '🧊', label_fr: 'Réfrigérateur', label_en: 'Refrigerator' },
+        { id: 'tv', icon: '📺', label_fr: 'TV', label_en: 'TV' },
+        { id: 'clim', icon: '❄️', label_fr: 'Climatisation', label_en: 'Air conditioning' },
+        { id: 'table_exterieure', icon: '🪑', label_fr: 'Table extérieure', label_en: 'Outdoor table' },
+        { id: 'chaises_exterieure', icon: '🪑', label_fr: 'Chaises extérieures', label_en: 'Outdoor chairs' },
+        { id: 'parasol', icon: '⛱️', label_fr: 'Parasol', label_en: 'Umbrella' },
+        { id: 'balai', icon: '🧹', label_fr: 'Balai', label_en: 'Broom' },
+        { id: 'serpilliere', icon: '🧽', label_fr: 'Serpillière', label_en: 'Mop' },
+      ]
+    }
+  };
+  
+  const inventaire = inventairesData[code];
+  if (!inventaire) return null;
+  
+  return {
+    titre: lang === 'fr' ? inventaire.titre_fr : inventaire.titre_en,
+    objets: inventaire.objets.map(obj => ({
+      id: obj.id,
+      icon: obj.icon,
+      label: lang === 'fr' ? obj.label_fr : obj.label_en
+    }))
+  };
+};
