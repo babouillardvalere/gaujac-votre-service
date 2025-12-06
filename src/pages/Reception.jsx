@@ -49,6 +49,14 @@ export default function Reception() {
             </button>
             <div className="flex items-center gap-2">
               <button
+                onClick={() => navigate(createPageUrl('GestionReservationsReception'))}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white transition-all shadow-md"
+                title="Réservations"
+              >
+                <span className="text-lg">🎫</span>
+                <span className="font-heading">{lang === 'fr' ? 'Réservations' : 'Bookings'}</span>
+              </button>
+              <button
                 onClick={() => navigate(createPageUrl('DashboardReception'))}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#00AEEF] to-[#0077A8] hover:from-[#0077A8] hover:to-[#005580] text-white transition-all shadow-md"
                 title="Tableau de bord"
