@@ -55,6 +55,8 @@ import NotificationPreferences from './pages/NotificationPreferences';
 import CalendrierReservations from './pages/CalendrierReservations';
 import DashboardReception from './pages/DashboardReception';
 import GestionUtilisateurs from './pages/GestionUtilisateurs';
+import Reservations from './pages/Reservations';
+import PaiementReservation from './pages/PaiementReservation';
 import __Layout from './Layout.jsx';
 
 
@@ -116,6 +118,8 @@ export const PAGES = {
     "CalendrierReservations": CalendrierReservations,
     "DashboardReception": DashboardReception,
     "GestionUtilisateurs": GestionUtilisateurs,
+    "Reservations": Reservations,
+    "PaiementReservation": PaiementReservation,
 }
 
 export const pagesConfig = {
