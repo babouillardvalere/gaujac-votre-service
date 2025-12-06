@@ -22,7 +22,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import InterventionActions from '../components/bureau/InterventionActions';
 import BureauStatistiques from '../components/bureau/BureauStatistiques';
 import BureauStatistiquesClients from '../components/bureau/BureauStatistiquesClients';
-import BureauAvis from '../components/bureau/BureauAvis';
 import BureauRapports from '../components/bureau/BureauRapports';
 import BureauFrequentation from '../components/bureau/BureauFrequentation';
 import BureauDemographie from '../components/bureau/BureauDemographie';
@@ -454,7 +453,7 @@ export default function Bureau() {
               📊 Statistiques
             </TabsTrigger>
             <TabsTrigger value="satisfaction" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              ⭐ Satisfaction
+              📱 Avis App
             </TabsTrigger>
             <TabsTrigger value="demographie" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               👨‍👩‍👧 Démographie
@@ -877,26 +876,9 @@ export default function Bureau() {
             <Statistiques embedded={true} />
           </TabsContent>
 
-          {/* Satisfaction & Avis */}
+          {/* Avis Application uniquement */}
           <TabsContent value="satisfaction" className="space-y-6">
-            <Tabs defaultValue="avis-interventions" className="space-y-4">
-              <TabsList className="bg-gray-100 p-1 rounded-lg">
-                <TabsTrigger value="avis-interventions" className="rounded-lg font-body text-sm">
-                  ⭐ Avis Interventions
-                </TabsTrigger>
-                <TabsTrigger value="avis-application" className="rounded-lg font-body text-sm">
-                  📱 Avis Application
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="avis-interventions">
-                <BureauAvis />
-              </TabsContent>
-              
-              <TabsContent value="avis-application">
-                <BureauAvisApplication lang="fr" />
-              </TabsContent>
-            </Tabs>
+            <BureauAvisApplication lang="fr" />
           </TabsContent>
 
           {/* Démographie */}
