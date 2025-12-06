@@ -259,8 +259,84 @@ export default function ConditionsDepart() {
         </Card>
       </motion.div>
 
-      {/* 3.7 Remarques */}
+      {/* 3.7 Tri & Poubelles */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
+        <Card className="border-2 border-green-600 rounded-xl">
+          <CardHeader className="bg-green-50 pb-3">
+            <CardTitle className="text-lg flex items-center gap-2 text-green-700">
+              ♻️ {isFrench ? 'Tri & Poubelles' : 'Sorting & Trash'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4 space-y-3">
+            <div className="bg-red-100 p-4 rounded-lg border-2 border-red-400">
+              <p className="font-heading text-red-800 text-lg mb-2">
+                ⚠ {isFrench ? 'Poubelles à vider obligatoirement' : 'Trash must be emptied'}
+              </p>
+              <p className="font-body text-red-700">
+                {isFrench 
+                  ? 'Avant votre départ, merci de vider vos poubelles dans les conteneurs de tri.' 
+                  : 'Before leaving, please empty your trash into the sorting containers.'}
+              </p>
+            </div>
+            <div className="bg-green-100 p-4 rounded-lg border-2 border-green-400">
+              <p className="font-heading text-green-800 text-lg mb-3">
+                ♻️ {isFrench ? 'Tri sélectif (obligatoire)' : 'Selective sorting (mandatory)'}
+              </p>
+              <p className="font-body text-green-700 mb-3">
+                {isFrench 
+                  ? 'Point de tri situé entre les hébergements :' 
+                  : 'Sorting point located between accommodations:'}
+              </p>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 bg-yellow-50 p-3 rounded-lg border border-yellow-400">
+                <div className="w-12 h-12 rounded-full bg-yellow-400 flex items-center justify-center flex-shrink-0">
+                  <span className="text-2xl">🟡</span>
+                </div>
+                <div>
+                  <p className="font-heading text-yellow-800">
+                    {isFrench ? 'Poubelle jaune' : 'Yellow bin'}
+                  </p>
+                  <p className="text-sm font-body text-yellow-700">
+                    {isFrench ? 'Recyclage (carton, plastique, métal)' : 'Recycling (cardboard, plastic, metal)'}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 bg-green-50 p-3 rounded-lg border border-green-400">
+                <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                  <span className="text-2xl">🟢</span>
+                </div>
+                <div>
+                  <p className="font-heading text-green-800">
+                    {isFrench ? 'Poubelle verte' : 'Green bin'}
+                  </p>
+                  <p className="text-sm font-body text-green-700">
+                    {isFrench ? 'Ordures ménagères' : 'Household waste'}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 bg-blue-50 p-3 rounded-lg border border-blue-400">
+                <div className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center flex-shrink-0">
+                  <span className="text-2xl">♻️</span>
+                </div>
+                <div>
+                  <p className="font-heading text-blue-800">
+                    {isFrench ? 'Conteneur verre' : 'Glass container'}
+                  </p>
+                  <p className="text-sm font-body text-blue-700">
+                    {isFrench ? 'Bouteilles / bocaux' : 'Bottles / jars'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* 3.8 Remarques */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
         <Card className="border-2 border-purple-500 rounded-xl">
           <CardHeader className="bg-purple-50 pb-3">
             <CardTitle className="text-lg flex items-center gap-2 text-purple-700">
@@ -278,8 +354,8 @@ export default function ConditionsDepart() {
         </Card>
       </motion.div>
 
-      {/* 3.8 Signature électronique */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
+      {/* 3.9 Signature électronique */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}>
         <Card className="border-2 border-[#00AEEF] rounded-xl">
           <CardHeader className="bg-[#e6f7ff] pb-3">
             <CardTitle className="text-lg flex items-center gap-2 text-[#0077A8]">
