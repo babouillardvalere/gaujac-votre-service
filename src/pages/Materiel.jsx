@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { 
   ArrowLeft, Package, Plus, Edit, Trash2, AlertTriangle, CheckCircle,
-  Loader2, Clock, History
+  Loader2, Clock, History, Home
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -161,6 +161,13 @@ export default function Materiel() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate(createPageUrl('MenuCollaborateur'))}
+              className="p-2 hover:bg-white/20 rounded-lg"
+              title="Retour menu collaborateur"
+            >
+              <Home className="w-6 h-6" />
+            </button>
             <CollaborateurNotificationBell />
             <Package className="w-8 h-8" />
           </div>

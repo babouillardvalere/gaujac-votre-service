@@ -17,7 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  ArrowLeft, Clock, User, CheckCircle, Play, Loader2, Sparkles, Bed, UtensilsCrossed, Pause, DoorOpen, UserCheck, Camera
+  ArrowLeft, Clock, User, CheckCircle, Play, Loader2, Sparkles, Bed, UtensilsCrossed, Pause, DoorOpen, UserCheck, Camera, Home
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -329,6 +329,13 @@ export default function Menage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate(createPageUrl('MenuCollaborateur'))}
+              className="p-2 hover:bg-white/30 rounded-lg"
+              title="Retour menu collaborateur"
+            >
+              <Home className="w-6 h-6" />
+            </button>
             <CollaborateurNotificationBell />
             <Sparkles className="w-8 h-8" />
           </div>

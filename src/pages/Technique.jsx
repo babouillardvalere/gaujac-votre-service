@@ -18,8 +18,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  ArrowLeft, Clock, User, Home, AlertTriangle, CheckCircle, 
-  Play, Copy, Loader2, Flame, Droplets, Zap, Wrench, TreePine, Bug, Pause, DoorOpen, UserCheck, Camera
+  ArrowLeft, Clock, User, Home as HomeIcon, AlertTriangle, CheckCircle, 
+  Play, Copy, Loader2, Flame, Droplets, Zap, Wrench, TreePine, Bug, Pause, DoorOpen, UserCheck, Camera, Home
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -371,6 +371,13 @@ export default function Technique() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate(createPageUrl('MenuCollaborateur'))}
+              className="p-2 hover:bg-white/20 rounded-lg"
+              title="Retour menu collaborateur"
+            >
+              <Home className="w-6 h-6" />
+            </button>
             <CollaborateurNotificationBell />
             <Wrench className="w-8 h-8" />
           </div>

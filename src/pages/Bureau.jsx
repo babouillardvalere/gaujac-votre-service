@@ -15,9 +15,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Checkbox } from '@/components/ui/checkbox';
 import { 
   ArrowLeft, Clock, Star, AlertTriangle, TrendingUp, Loader2, 
-  Users, Home, Search, Building2, Filter, Calendar, CalendarDays,
+  Users, Home as HomeIcon, Search, Building2, Filter, Calendar, CalendarDays,
   ChevronDown, ChevronUp, Eye, AlertCircle, MoreVertical, LogOut,
-  Trash2, ArrowUp, ArrowDown, CheckSquare, Square
+  Trash2, ArrowUp, ArrowDown, CheckSquare, Square, Home
 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import InterventionActions from '../components/bureau/InterventionActions';
@@ -385,6 +385,13 @@ export default function Bureau() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate(createPageUrl('MenuCollaborateur'))}
+              className="p-2 hover:bg-white/20 rounded-lg"
+              title="Retour menu collaborateur"
+            >
+              <Home className="w-6 h-6" />
+            </button>
             <CollaborateurNotificationBell />
             <Button
               onClick={handleBureauLogout}

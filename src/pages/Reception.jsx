@@ -7,7 +7,7 @@ import ReceptionArrivees from './ReceptionArrivees';
 import ReceptionDeparts from './ReceptionDeparts';
 import ReceptionAssistance from './ReceptionAssistance';
 import CollaborateurNotificationBell from '../components/CollaborateurNotificationBell';
-import { ArrowLeft, LogIn, LogOut, HeadphonesIcon } from 'lucide-react';
+import { ArrowLeft, LogIn, LogOut, HeadphonesIcon, Home } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { base44 } from '@/api/base44Client';
@@ -36,7 +36,14 @@ export default function Reception() {
       <h1 className="sr-only">Accueil > Collaborateur > Réception - Arrivées, départs et assistance</h1>
       <div className="max-w-6xl mx-auto">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="flex items-center justify-end mb-4">
+          <div className="flex items-center justify-end gap-2 mb-4">
+            <button
+              onClick={() => navigate(createPageUrl('MenuCollaborateur'))}
+              className="p-2 hover:bg-[#00AEEF]/20 rounded-lg"
+              title="Retour menu collaborateur"
+            >
+              <Home className="w-6 h-6 text-[#00AEEF]" />
+            </button>
             <CollaborateurNotificationBell />
           </div>
 

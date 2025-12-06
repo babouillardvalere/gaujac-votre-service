@@ -15,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { 
   ArrowLeft, Clock, User, CheckCircle, Play, Loader2, Package, 
-  AlertTriangle, Edit, Home
+  AlertTriangle, Edit, Home as HomeIcon, Home
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -115,6 +115,13 @@ export default function Attente() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate(createPageUrl('MenuCollaborateur'))}
+              className="p-2 hover:bg-white/20 rounded-lg"
+              title="Retour menu collaborateur"
+            >
+              <Home className="w-6 h-6" />
+            </button>
             <CollaborateurNotificationBell />
             <Clock className="w-8 h-8" />
           </div>

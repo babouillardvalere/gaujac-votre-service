@@ -53,6 +53,7 @@ export default function NavigationBar() {
                              currentPage.includes('Reception') || 
                              currentPage.includes('Materiel') || 
                              currentPage.includes('Bureau') ||
+                             currentPage.includes('Notifications') ||
                              currentPage.includes('Statistiques');
 
   return (
