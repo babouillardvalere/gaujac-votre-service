@@ -403,7 +403,7 @@ export const translations = {
     verification: "Vérification...",
     
     // Avis publics
-    ils_ont_adore: "Votre avis nous aide à mieux vous servir !",
+    ils_ont_adore: "Nos clients témoignent",
     voir_plus_avis: "Voir plus d'avis",
     meilleurs_avis: "Meilleurs avis",
     trier_par: "Trier par",
@@ -870,7 +870,7 @@ export const translations = {
     plage_demandee: "Requested slot",
     
     // Avis publics
-    ils_ont_adore: "Your feedback helps us serve you better!",
+    ils_ont_adore: "Guest reviews",
     voir_plus_avis: "See more reviews",
     meilleurs_avis: "Best reviews",
     trier_par: "Sort by",
