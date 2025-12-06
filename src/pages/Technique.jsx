@@ -26,6 +26,7 @@ import { toast } from 'sonner';
 import { format, differenceInMinutes } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { createPageUrl } from '../utils';
+import { notifierClientPriseEnCharge, notifierClientResolution } from '../components/notificationService';
 
 const categoryIcons = {
   gaz: { icon: Flame, emoji: '🔥', label: 'gaz' },
@@ -121,6 +122,9 @@ export default function Technique() {
         temps_prise_en_charge: tempsPriseEnCharge
       }
     });
+    
+    // 🔔 Notifier le client
+    await notifierClientPriseEnCharge(incident, collaborateurNom);
   };
 
   const handlePhotoAvantUploaded = async (photoData) => {
@@ -190,6 +194,9 @@ export default function Technique() {
       }
     });
     setCommentaire('');
+    
+    // 🔔 Notifier le client de la résolution
+    await notifierClientResolution(incident);
   };
 
   const handlePhotoApresUploaded = async (photoData) => {
