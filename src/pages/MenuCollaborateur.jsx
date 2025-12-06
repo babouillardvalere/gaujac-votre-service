@@ -8,7 +8,7 @@ import { useNotifications } from '../components/useNotifications';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Wrench, Sparkles, Building2, LogOut, Package, Lock, ClipboardList } from 'lucide-react';
+import { Wrench, Sparkles, Building2, LogOut, Package, Lock, ClipboardList, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 
@@ -77,6 +77,14 @@ export default function MenuCollaborateur() {
       textColor: 'text-white',
       description: t('desc_materiel'),
       badgeCount: counts.materiel
+    },
+    {
+      title: '📊 Statistiques',
+      icon: TrendingUp,
+      href: 'Statistiques',
+      color: 'bg-gradient-to-br from-blue-500 to-cyan-500',
+      textColor: 'text-white',
+      description: 'Rapports & Données'
     },
     {
       title: t('menu_bureau'),
