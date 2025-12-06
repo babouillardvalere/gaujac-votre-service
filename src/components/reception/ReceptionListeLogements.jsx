@@ -56,7 +56,7 @@ export default function ReceptionListeLogements({ dossiers, onSelectDossier, lan
               {dossiersCat.map(dossier => {
                 const duree = calculerDuree(dossier.date_arrivee, dossier.date_depart);
                 const jourArrivee = formaterJourArrivee(dossier.date_arrivee);
-                const totalPersonnes = (dossier.nombre_adultes || 0) + (dossier.nombre_enfants || 0);
+                const totalPersonnes = (dossier.nombre_adultes || 0) + (dossier.nombre_adolescents || 0) + (dossier.nombre_enfants || 0) + (dossier.nombre_bebes || 0);
 
                 return (
                   <button
@@ -79,13 +79,11 @@ export default function ReceptionListeLogements({ dossiers, onSelectDossier, lan
                                 <span className="flex items-center gap-1">
                                   <Users className="w-4 h-4" />
                                   {totalPersonnes} {lang === 'fr' ? 'pers' : 'ppl'}
-                                  {dossier.nombre_adultes && dossier.nombre_enfants ? 
-                                    ` (${dossier.nombre_adultes}A / ${dossier.nombre_enfants}E)` : ''}
                                 </span>
-                                {dossier.nombre_animaux > 0 && (
+                                {(dossier.nombre_animaux > 0 || dossier.nombre_chiens > 0 || dossier.nombre_chats > 0) && (
                                   <span className="flex items-center gap-1">
                                     <Dog className="w-4 h-4" />
-                                    {dossier.nombre_animaux}
+                                    {dossier.nombre_animaux || (dossier.nombre_chiens + dossier.nombre_chats)}
                                   </span>
                                 )}
                                 <span className="flex items-center gap-1">
