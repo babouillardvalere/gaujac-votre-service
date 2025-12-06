@@ -2,7 +2,7 @@
 export const categoryToCodeMapping = {
   // Chalets
   "Chalet Eco": "CHALET_ECO_1CH",
-  "Chalet Classique": "CHALET_CLASSIQUE_1CH",
+  "Chalet Classique": "CHALET_CLASSIQUE",
   
   // Mobil-homes Éco
   "Mobil-home Eco": "MH_ECO_2CH",
@@ -23,7 +23,7 @@ export const categoryToCodeMapping = {
   "Premium Twins": "MH_PREMIUM_TWINS",
   
   // Cottage
-  "Cottage Premium": "COTTAGE_PREMIUM_2CH"
+  "Cottage Premium": "COTTAGE_PREMIUM"
 };
 
 export const getCodeFromCategory = (category) => {
