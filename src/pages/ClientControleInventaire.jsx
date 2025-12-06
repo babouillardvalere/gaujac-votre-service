@@ -182,36 +182,40 @@ export default function ClientControleInventaire() {
     const interventionsMenage = [];
     const interventionsTechnique = [];
 
-    // Analyser les objets non validés
-    const objetsNonValides = inventaireItems.filter(item => !objetsValides.includes(item.id));
+    // Analyser TOUS les objets de l'inventaire
+    inventaireItems.forEach(item => {
+      const isValidated = objetsValides.includes(item.id);
+      
+      // Si l'objet N'EST PAS validé = objet manquant ou cassé
+      if (!isValidated) {
+        const categorie = getCategorie(item.id, lang === 'fr' ? item.nom_fr : item.nom_en);
+        const urgent = isUrgent(item.id, lang === 'fr' ? item.nom_fr : item.nom_en);
+        const description = getDescriptionProbleme(lang === 'fr' ? item.nom_fr : item.nom_en, lang);
 
-    objetsNonValides.forEach(objet => {
-      const categorie = getCategorie(objet.id, lang === 'fr' ? objet.nom_fr : objet.nom_en);
-      const urgent = isUrgent(objet.id, lang === 'fr' ? objet.nom_fr : objet.nom_en);
-      const description = getDescriptionProbleme(lang === 'fr' ? objet.nom_fr : objet.nom_en, lang);
+        const intervention = {
+          objet: lang === 'fr' ? item.nom_fr : item.nom_en,
+          description: description || `${lang === 'fr' ? 'Objet manquant ou abîmé' : 'Missing or damaged item'}: ${lang === 'fr' ? item.nom_fr : item.nom_en}`,
+          urgent,
+          icon: item.icon,
+          photo: null
+        };
 
-      const intervention = {
-        objet: lang === 'fr' ? objet.nom_fr : objet.nom_en,
-        description,
-        urgent,
-        icon: objet.icon
-      };
-
-      if (categorie === 'menage') {
-        interventionsMenage.push(intervention);
-      } else {
-        interventionsTechnique.push(intervention);
+        if (categorie === 'menage') {
+          interventionsMenage.push(intervention);
+        } else {
+          interventionsTechnique.push(intervention);
+        }
       }
     });
 
-    // Ajouter objets déclarés manuellement
+    // Ajouter objets déclarés manuellement avec photos
     objetsMissing.forEach(obj => {
       const categorie = getCategorie(obj.objet, obj.objet);
       const urgent = isUrgent(obj.objet, obj.objet);
 
       const intervention = {
         objet: obj.objet,
-        description: obj.commentaire || getDescriptionProbleme(obj.objet, lang),
+        description: obj.commentaire || `${lang === 'fr' ? 'Objet déclaré manquant/cassé' : 'Item declared missing/broken'}: ${obj.objet}`,
         urgent,
         photo: obj.photo
       };
@@ -227,8 +231,8 @@ export default function ClientControleInventaire() {
     if (evaluationProprete === 'pas_satisfaisant') {
       interventionsMenage.push({
         objet: lang === 'fr' ? 'Propreté insatisfaisante' : 'Unsatisfactory cleanliness',
-        description: commentaireProprete,
-        urgent: false,
+        description: commentaireProprete || (lang === 'fr' ? 'Propreté du logement non satisfaisante constatée à l\'arrivée' : 'Unsatisfactory cleanliness found on arrival'),
+        urgent: true,
         photo: photoProprete
       });
     }
