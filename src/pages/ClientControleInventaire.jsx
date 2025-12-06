@@ -19,7 +19,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
 import { notifierInventaireSoumis, notifierInterventionCreee, notifierDossierFinalise } from '../components/notificationService';
-import { notifierInventaireSoumis, notifierInterventionCreee, notifierDossierFinalise } from '../utils/notificationService';
 
 export default function ClientControleInventaire() {
   const { t, lang } = useTranslation();
