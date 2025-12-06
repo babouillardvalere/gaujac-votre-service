@@ -52,10 +52,18 @@ export default function CollaborateurNotificationBell() {
 
   const totalNotifications = incidents.length + stockAlerts.length;
 
-  // Trier : urgents d'abord, puis par date
+  // Trier : 1️⃣ urgents, 2️⃣ service (technique/ménage), 3️⃣ date
   const sortedIncidents = [...incidents].sort((a, b) => {
+    // 1️⃣ Urgence
     if (a.urgent && !b.urgent) return -1;
     if (!a.urgent && b.urgent) return 1;
+    
+    // 2️⃣ Service (technique avant ménage)
+    if (a.type !== b.type) {
+      return a.type === 'technique' ? -1 : 1;
+    }
+    
+    // 3️⃣ Date d'émission (plus récent en premier)
     return new Date(b.date_saisie) - new Date(a.date_saisie);
   });
 
@@ -125,50 +133,52 @@ export default function CollaborateurNotificationBell() {
             {/* Interventions */}
             {sortedIncidents.slice(0, 20).map((incident) => {
               const emoji = categoryEmojis[incident.categorie] || '❓';
-              const typeIcon = incident.type === 'technique' ? Wrench : Sparkles;
-              const TypeIcon = typeIcon;
+              const typeEmoji = incident.type === 'technique' ? '🔧' : '🧹';
+              const typeLabel = incident.type === 'technique' ? 'Technique' : 'Ménage';
+              const locationLabel = incident.logement || incident.emplacement || 'N/A';
+              const dateStr = incident.date_saisie && format(new Date(incident.date_saisie), 'HH:mm', { locale: fr });
               
               return (
                 <Card
                   key={incident.id}
-                  className={`border cursor-pointer hover:shadow-md transition-all ${
+                  className={`border hover:shadow-md transition-all ${
                     incident.urgent 
                       ? 'border-red-400 bg-red-50' 
                       : 'border-gray-200 hover:border-[#00AEEF]'
                   }`}
-                  onClick={() => handleIncidentClick(incident)}
                 >
                   <CardContent className="p-3">
-                    <div className="flex items-start gap-2">
-                      <span className="text-xl">{emoji}</span>
+                    <div className="flex items-start gap-2 mb-2">
+                      <span className="text-lg">{emoji}</span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <TypeIcon className={`w-3 h-3 ${incident.type === 'technique' ? 'text-[#00AEEF]' : 'text-[#FFD700]'}`} />
-                          <span className="font-heading text-sm text-[#0077A8]">
-                            {incident.logement || incident.emplacement}
-                          </span>
                           {incident.urgent && (
-                            <Badge className="bg-red-500 text-white text-xs h-4">
+                            <Badge className="bg-red-500 text-white text-xs h-4 font-medium">
                               <AlertTriangle className="w-2 h-2 mr-1" />
-                              {lang === 'fr' ? 'URGENT' : 'URGENT'}
+                              URGENT
                             </Badge>
                           )}
                           {incident.origine === 'arrivee' && (
-                            <Badge className="bg-green-600 text-white text-xs h-4">🏁</Badge>
+                            <Badge className="bg-green-600 text-white text-xs h-4">🏡 Arrivée</Badge>
                           )}
                           {incident.origine === 'depart' && (
-                            <Badge className="bg-orange-600 text-white text-xs h-4">🚪</Badge>
+                            <Badge className="bg-orange-600 text-white text-xs h-4">🚗 Départ</Badge>
                           )}
                         </div>
-                        <p className="text-xs text-gray-600 font-body line-clamp-1">
-                          {incident.client_prenom} {incident.client_nom} • {incident.description}
+                        <p className="text-sm font-medium text-gray-800 font-body">
+                          {typeEmoji} {typeLabel} – {incident.categorie} • {locationLabel} • {incident.client_prenom} {incident.client_nom} • {dateStr}
                         </p>
-                        <p className="text-xs text-gray-400 mt-1">
-                          {incident.date_saisie && format(new Date(incident.date_saisie), 'dd/MM HH:mm', { locale: fr })}
+                        <p className="text-xs text-gray-600 line-clamp-1 mt-1">
+                          {incident.description}
                         </p>
                       </div>
-                      <ExternalLink className="w-4 h-4 text-gray-400 flex-shrink-0" />
                     </div>
+                    <button
+                      onClick={() => handleIncidentClick(incident)}
+                      className="w-full px-3 py-1.5 bg-[#00AEEF] hover:bg-[#0077A8] text-white text-xs font-medium rounded transition-colors flex items-center justify-center gap-1"
+                    >
+                      📋 Voir la fiche
+                    </button>
                   </CardContent>
                 </Card>
               );
