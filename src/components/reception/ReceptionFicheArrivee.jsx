@@ -354,6 +354,19 @@ export default function ReceptionFicheArrivee({ dossier, onClose, lang = 'fr' })
                 </div>
               </CardContent>
             </Card>
+          ) : (
+            <Card className="border-2 border-gray-300 rounded-xl mb-6">
+              <CardContent className="p-6">
+                <h2 className="font-heading text-xl text-gray-500 mb-4">
+                  ⏳ {lang === 'fr' ? 'En attente d\'inventaire' : 'Waiting for inventory'}
+                </h2>
+                <p className="text-gray-600">
+                  {lang === 'fr'
+                    ? 'Le client n\'a pas encore complété le contrôle d\'inventaire à l\'arrivée.'
+                    : 'The guest has not yet completed the arrival inventory check.'}
+                </p>
+              </CardContent>
+            </Card>
           )}
 
           {/* Dialog pour afficher les photos en grand */}
