@@ -464,6 +464,9 @@ export default function Bureau() {
             <TabsTrigger value="rapports" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               📦 Rapports
             </TabsTrigger>
+            <TabsTrigger value="collaborateurs" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
+              👷 Collaborateurs
+            </TabsTrigger>
           </TabsList>
 
           {/* Historique */}
@@ -894,6 +897,172 @@ export default function Bureau() {
           {/* Rapports */}
           <TabsContent value="rapports" className="space-y-6">
             <BureauRapports incidents={incidents} avis={avis} />
+          </TabsContent>
+
+          {/* Collaborateurs */}
+          <TabsContent value="collaborateurs" className="space-y-6">
+            {(() => {
+              // Grouper les interventions par collaborateur
+              const interventionsParCollab = {};
+              
+              incidents.forEach(inc => {
+                if (inc.statut === 'resolu') return; // Ignorer les résolus
+                
+                const collab = inc.pris_par || 'Non assigné';
+                if (!interventionsParCollab[collab]) {
+                  interventionsParCollab[collab] = {
+                    enAttente: [],
+                    enCours: [],
+                    reportees: []
+                  };
+                }
+                
+                if (inc.statut === 'en_attente') {
+                  interventionsParCollab[collab].enAttente.push(inc);
+                } else if (inc.statut === 'en_cours') {
+                  interventionsParCollab[collab].enCours.push(inc);
+                } else if (inc.statut === 'en_attente_materiel') {
+                  interventionsParCollab[collab].reportees.push(inc);
+                }
+              });
+              
+              const collabsList = Object.entries(interventionsParCollab).sort((a, b) => {
+                const totalA = a[1].enAttente.length + a[1].enCours.length + a[1].reportees.length;
+                const totalB = b[1].enAttente.length + b[1].enCours.length + b[1].reportees.length;
+                return totalB - totalA;
+              });
+              
+              return (
+                <div className="space-y-4">
+                  <Card className="border-2 border-[#00AEEF] rounded-xl">
+                    <CardHeader>
+                      <CardTitle className="text-xl font-heading text-[#0077A8]">
+                        👷 Interventions par collaborateur
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-gray-600 mb-4">
+                        Vue d'ensemble des interventions actives de chaque collaborateur
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {collabsList.map(([collab, data]) => {
+                      const total = data.enAttente.length + data.enCours.length + data.reportees.length;
+                      const hasUrgent = [...data.enAttente, ...data.enCours, ...data.reportees].some(i => i.urgent);
+                      
+                      return (
+                        <Card key={collab} className={`border-2 rounded-xl ${hasUrgent ? 'border-red-500 animate-pulse' : 'border-[#00AEEF]/30'}`}>
+                          <CardHeader className="pb-3">
+                            <div className="flex items-center justify-between">
+                              <CardTitle className="text-base font-heading text-[#0077A8]">
+                                👤 {collab}
+                              </CardTitle>
+                              {total > 0 && (
+                                <Badge className={hasUrgent ? 'bg-red-500 text-white' : 'bg-[#00AEEF] text-white'}>
+                                  {total}
+                                </Badge>
+                              )}
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            {/* En attente */}
+                            {data.enAttente.length > 0 && (
+                              <div className="bg-[#FFA500]/10 rounded-lg p-3">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-xs font-heading text-[#FFA500]">🟠 En attente</span>
+                                  <Badge className="bg-[#FFA500] text-white text-xs">{data.enAttente.length}</Badge>
+                                </div>
+                                <div className="space-y-1 max-h-32 overflow-y-auto">
+                                  {data.enAttente.map(inc => (
+                                    <div key={inc.id} className="text-xs bg-white rounded p-2 flex items-start justify-between">
+                                      <div className="flex-1">
+                                        <span className="font-heading text-[#0077A8]">{inc.logement || inc.emplacement}</span>
+                                        <span className="text-gray-500 ml-2">{categoryEmojis[inc.categorie]}</span>
+                                        {inc.urgent && <span className="ml-1 text-red-500">🚨</span>}
+                                      </div>
+                                      <span className="text-gray-400 text-xs">
+                                        {differenceInHours(new Date(), new Date(inc.date_saisie))}h
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* En cours */}
+                            {data.enCours.length > 0 && (
+                              <div className="bg-[#00AEEF]/10 rounded-lg p-3">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-xs font-heading text-[#00AEEF]">🔵 En cours</span>
+                                  <Badge className="bg-[#00AEEF] text-white text-xs">{data.enCours.length}</Badge>
+                                </div>
+                                <div className="space-y-1 max-h-32 overflow-y-auto">
+                                  {data.enCours.map(inc => (
+                                    <div key={inc.id} className="text-xs bg-white rounded p-2 flex items-start justify-between">
+                                      <div className="flex-1">
+                                        <span className="font-heading text-[#0077A8]">{inc.logement || inc.emplacement}</span>
+                                        <span className="text-gray-500 ml-2">{categoryEmojis[inc.categorie]}</span>
+                                        {inc.urgent && <span className="ml-1 text-red-500">🚨</span>}
+                                      </div>
+                                      <span className="text-gray-400 text-xs">
+                                        {inc.date_debut && differenceInMinutes(new Date(), new Date(inc.date_debut))}min
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Reportées */}
+                            {data.reportees.length > 0 && (
+                              <div className="bg-gray-100 rounded-lg p-3">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-xs font-heading text-gray-600">⏳ Reportées</span>
+                                  <Badge className="bg-gray-500 text-white text-xs">{data.reportees.length}</Badge>
+                                </div>
+                                <div className="space-y-1 max-h-32 overflow-y-auto">
+                                  {data.reportees.map(inc => (
+                                    <div key={inc.id} className="text-xs bg-white rounded p-2">
+                                      <div className="flex items-start justify-between">
+                                        <div className="flex-1">
+                                          <span className="font-heading text-[#0077A8]">{inc.logement || inc.emplacement}</span>
+                                          <span className="text-gray-500 ml-2">{categoryEmojis[inc.categorie]}</span>
+                                        </div>
+                                      </div>
+                                      {inc.motif_attente && (
+                                        <p className="text-gray-400 mt-1 truncate" title={inc.motif_attente}>
+                                          {inc.motif_attente}
+                                        </p>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {total === 0 && (
+                              <p className="text-center text-gray-400 text-sm py-4">
+                                ✓ Aucune intervention active
+                              </p>
+                            )}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                  
+                  {collabsList.length === 0 && (
+                    <Card className="border-2 border-gray-200 rounded-xl">
+                      <CardContent className="py-12 text-center">
+                        <p className="text-gray-500">Aucune intervention active pour le moment</p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              );
+            })()}
           </TabsContent>
         </Tabs>
       </div>
