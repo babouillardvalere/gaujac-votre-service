@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from '../components/translations';
 import Logo from '../components/Logo';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -17,7 +17,17 @@ import { useQuery } from '@tanstack/react-query';
 export default function Reception() {
   const { t, lang } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState('assistance');
+
+  // Gérer les paramètres URL pour activer le bon onglet
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
+    if (tab && ['assistance', 'suivi', 'arrivees', 'departs'].includes(tab)) {
+      setActiveTab(tab);
+    }
+  }, [location.search]);
 
   // Compter arrivées et départs en cours
   const { data: arrivees = [] } = useQuery({
