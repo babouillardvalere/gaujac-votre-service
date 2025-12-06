@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { genererPDFDepart } from './genererPDFDepart';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,13 +19,37 @@ export default function ReceptionFicheDepart({ dossier, onClose, lang = 'fr' }) 
     dossier.commentaire_proprete;
 
   const handleGenererPDF = async () => {
-    toast.info(lang === 'fr' ? 'Génération du PDF...' : 'Generating PDF...');
-    // TODO: Implémenter génération PDF
+    try {
+      toast.info(lang === 'fr' ? 'Génération du PDF...' : 'Generating PDF...');
+      const pdf = await genererPDFDepart(dossier, lang);
+      pdf.save(`Depart_${dossier.client_nom}_${dossier.numero_logement}_${dossier.date_depart}.pdf`);
+      toast.success(lang === 'fr' ? 'PDF généré avec succès' : 'PDF generated successfully');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error(lang === 'fr' ? 'Erreur lors de la génération du PDF' : 'Error generating PDF');
+    }
   };
 
   const handleEnvoyerEmail = async () => {
-    toast.info(lang === 'fr' ? 'Envoi par email...' : 'Sending by email...');
-    // TODO: Implémenter envoi email
+    try {
+      toast.info(lang === 'fr' ? 'Préparation de l\'email...' : 'Preparing email...');
+      
+      const pdf = await genererPDFDepart(dossier, lang);
+      const pdfBlob = pdf.output('blob');
+      
+      const { file_url } = await base44.integrations.Core.UploadFile({ file: pdfBlob });
+      
+      const emailBody = lang === 'fr' 
+        ? `Bonjour ${dossier.client_prenom} ${dossier.client_nom},\n\nVeuillez trouver ci-joint votre fiche de départ.\n\nCordialement,\nL'équipe Camping Paradis`
+        : `Hello ${dossier.client_prenom} ${dossier.client_nom},\n\nPlease find attached your departure form.\n\nBest regards,\nCamping Paradis Team`;
+      
+      toast.success(lang === 'fr' ? 'PDF prêt à être envoyé' : 'PDF ready to send');
+      
+      window.open(`mailto:?subject=${encodeURIComponent(lang === 'fr' ? 'Votre fiche de départ' : 'Your departure form')}&body=${encodeURIComponent(emailBody + '\n\n' + file_url)}`);
+    } catch (error) {
+      console.error('Error sending email:', error);
+      toast.error(lang === 'fr' ? 'Erreur lors de l\'envoi' : 'Error sending email');
+    }
   };
 
   const totalPersonnes = (dossier.nombre_adultes || 0) + (dossier.nombre_enfants || 0);
