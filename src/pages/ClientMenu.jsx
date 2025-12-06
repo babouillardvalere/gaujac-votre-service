@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import Logo from '../components/Logo';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Home, ArrowLeft, Globe, Eye, Play } from 'lucide-react';
+import { Home, ArrowLeft, Globe, Eye, Play, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 
@@ -31,6 +31,15 @@ export default function ClientMenu() {
   });
 
   const menuItems = [
+    {
+      title: 'ℹ️ Infos Pratiques',
+      titleEn: 'ℹ️ Practical Info',
+      href: 'InfosPratiques',
+      color: 'bg-gradient-to-br from-blue-500 to-cyan-500',
+      textColor: 'text-white',
+      disabled: false,
+      comingSoon: false
+    },
     {
       title: '🏡 Arrivée',
       titleEn: '🏡 Arrival',
