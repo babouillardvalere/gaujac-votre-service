@@ -49,8 +49,16 @@ export default function Reception() {
             </button>
             <div className="flex items-center gap-2">
               <button
+                onClick={() => navigate(createPageUrl('DashboardReception'))}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#00AEEF] to-[#0077A8] hover:from-[#0077A8] hover:to-[#005580] text-white transition-all shadow-md"
+                title="Tableau de bord"
+              >
+                <ClipboardList className="w-5 h-5" />
+                <span className="font-heading">{lang === 'fr' ? 'Dashboard' : 'Dashboard'}</span>
+              </button>
+              <button
                 onClick={() => navigate(createPageUrl('CalendrierReservations'))}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#00AEEF] hover:bg-[#0077A8] text-white transition-all shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border-2 border-[#00AEEF] hover:bg-[#e6f7ff] text-[#0077A8] transition-all shadow-sm"
                 title="Calendrier réservations"
               >
                 <Calendar className="w-5 h-5" />

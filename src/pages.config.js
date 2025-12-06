@@ -53,6 +53,7 @@ import Notifications from './pages/Notifications';
 import ReceptionSuivi from './pages/ReceptionSuivi';
 import NotificationPreferences from './pages/NotificationPreferences';
 import CalendrierReservations from './pages/CalendrierReservations';
+import DashboardReception from './pages/DashboardReception';
 import __Layout from './Layout.jsx';
 
 
@@ -112,6 +113,7 @@ export const PAGES = {
     "ReceptionSuivi": ReceptionSuivi,
     "NotificationPreferences": NotificationPreferences,
     "CalendrierReservations": CalendrierReservations,
+    "DashboardReception": DashboardReception,
 }
 
 export const pagesConfig = {
