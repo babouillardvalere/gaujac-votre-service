@@ -270,7 +270,7 @@ export default function ClientControleInventaire() {
       const { file_url: signatureUrl } = await base44.integrations.Core.UploadFile({ file: signatureFile });
 
       // Créer le contrôle inventaire
-      await base44.entities.ControleInventaireArrivee.create({
+      const inventaire = await base44.entities.ControleInventaireArrivee.create({
         numero_locatif: numero,
         categorie_locatif: categorie,
         client_nom: nom,
