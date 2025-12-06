@@ -57,28 +57,28 @@ export default function ClientArriveeIdentite() {
     today.setHours(0, 0, 0, 0);
     
     const arrivee = new Date(formData.date_arrivee);
+    arrivee.setHours(0, 0, 0, 0);
+    
     const depart = new Date(formData.date_depart);
+    depart.setHours(0, 0, 0, 0);
 
-    if (arrivee > today) {
+    // La date d'arrivée ne doit pas être dans le futur de plus de 7 jours
+    const maxArrival = new Date(today);
+    maxArrival.setDate(maxArrival.getDate() + 7);
+    
+    if (arrivee > maxArrival) {
       toast.error(lang === 'fr' 
-        ? "La date d'arrivée doit être aujourd'hui ou avant"
-        : "Arrival date must be today or before"
+        ? "La date d'arrivée ne peut pas être si loin dans le futur"
+        : "Arrival date cannot be so far in the future"
       );
       return false;
     }
 
-    if (depart < today) {
+    // La date de départ doit être après la date d'arrivée
+    if (depart <= arrivee) {
       toast.error(lang === 'fr'
-        ? "La date de départ doit être aujourd'hui ou après"
-        : "Departure date must be today or after"
-      );
-      return false;
-    }
-
-    if (arrivee >= depart) {
-      toast.error(lang === 'fr'
-        ? "La date d'arrivée doit être avant la date de départ"
-        : "Arrival date must be before departure date"
+        ? "La date de départ doit être après la date d'arrivée"
+        : "Departure date must be after arrival date"
       );
       return false;
     }
@@ -106,6 +106,8 @@ export default function ClientArriveeIdentite() {
 
     // Créer ou mettre à jour le dossier d'arrivée
     try {
+      let currentDossierId = dossierId;
+      
       if (dossierId) {
         // Mettre à jour le dossier existant
         await base44.entities.DossierArrivee.update(dossierId, {
@@ -118,7 +120,7 @@ export default function ClientArriveeIdentite() {
         });
       } else {
         // Créer un nouveau dossier
-        const codeDossier = `ARRIVEE-${formData.nom.toUpperCase()}-${formData.date_arrivee}`;
+        const codeDossier = `ARRIVEE-${formData.nom.toUpperCase()}-${Date.now()}`;
         const dossier = await base44.entities.DossierArrivee.create({
           code_dossier: codeDossier,
           client_nom: formData.nom,
@@ -129,14 +131,20 @@ export default function ClientArriveeIdentite() {
           etape_1_terminee: true,
           statut: 'en_cours'
         });
+        currentDossierId = dossier.id;
         sessionStorage.setItem('arrivee_dossier_id', dossier.id);
         setDossierId(dossier.id);
       }
+
+      // Navigation vers l'étape suivante
+      navigate(createPageUrl('ClientArriveeStatistiques'));
     } catch (error) {
       console.error('Error creating/updating dossier:', error);
+      toast.error(lang === 'fr' 
+        ? 'Erreur lors de l\'enregistrement. Veuillez réessayer.'
+        : 'Error saving. Please try again.'
+      );
     }
-
-    navigate(createPageUrl('ClientArriveeStatistiques'));
   };
 
   return (
