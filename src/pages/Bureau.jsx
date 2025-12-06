@@ -33,6 +33,7 @@ import { format, differenceInHours, differenceInMinutes, isToday, parseISO } fro
 import { fr } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { createPageUrl } from '../utils';
+import { useQuery as useReactQuery } from '@tanstack/react-query';
 
 const COLORS = ['#00AEEF', '#FFD700', '#FFA500', '#10b981', '#8b5cf6', '#ec4899'];
 
@@ -126,6 +127,12 @@ export default function Bureau() {
   };
 
   const queryClient = useQueryClient();
+
+  // Récupérer l'utilisateur connecté
+  const { data: user } = useReactQuery({
+    queryKey: ['current-user'],
+    queryFn: () => base44.auth.me(),
+  });
 
   const { data: incidents = [], isLoading } = useQuery({
     queryKey: ['bureau-incidents'],
@@ -408,6 +415,26 @@ export default function Bureau() {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-6">
+        {/* Bouton Gestion Utilisateurs (Admin uniquement) */}
+        {user?.role === 'admin' && (
+          <Card 
+            className="border-2 border-purple-300 rounded-xl hover:shadow-lg transition-all cursor-pointer mb-6"
+            onClick={() => navigate(createPageUrl('GestionUtilisateurs'))}
+          >
+            <CardContent className="p-6 text-center">
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <span className="text-3xl">👥</span>
+              </div>
+              <h3 className="font-heading text-xl text-purple-900 mb-2">
+                {lang === 'fr' ? 'Gestion Utilisateurs' : 'User Management'}
+              </h3>
+              <p className="text-sm text-gray-600">
+                {lang === 'fr' ? 'Rôles et permissions' : 'Roles and permissions'}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Boutons d'accès rapide */}
         <div className="grid grid-cols-3 gap-3 mb-6">
           <Button
