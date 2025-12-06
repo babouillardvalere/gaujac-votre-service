@@ -4,6 +4,7 @@ import Logo from '../components/Logo';
 import NotificationCenter from '../components/NotificationCenter';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from '../components/translations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -59,6 +60,7 @@ const categoryEmojis = {
 
 export default function Bureau() {
   const navigate = useNavigate();
+  const { t, lang } = useTranslation();
   const [selectedIncident, setSelectedIncident] = useState(null);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [activeView, setActiveView] = useState('all'); // all, today, late
@@ -378,8 +380,8 @@ export default function Bureau() {
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
-              <h1 className="font-heading text-xl">Bureau - Gestion & Historique</h1>
-              <p className="text-white/80 text-sm font-body">{incidents.length} intervention(s) au total</p>
+              <h1 className="font-heading text-xl">{t('bureau_title')} - {lang === 'fr' ? 'Gestion & Historique' : 'Management & History'}</h1>
+              <p className="text-white/80 text-sm font-body">{incidents.length} {lang === 'fr' ? 'intervention(s) au total' : 'total intervention(s)'}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -389,7 +391,7 @@ export default function Bureau() {
               variant="ghost"
               size="sm"
               className="text-white hover:bg-white/20 rounded-lg"
-              title="Déconnexion Bureau"
+              title={lang === 'fr' ? 'Déconnexion Bureau' : 'Office Logout'}
             >
               <LogOut className="w-5 h-5" />
             </Button>
@@ -408,7 +410,7 @@ export default function Bureau() {
           >
             <div className="text-center">
               <CalendarDays className="w-5 h-5 mx-auto mb-1" />
-              <span className="text-xs font-heading block">Aujourd'hui</span>
+              <span className="text-xs font-heading block">{t('aujourd_hui')}</span>
               <Badge className="bg-white/20 text-inherit mt-1">{todayCount}</Badge>
             </div>
           </Button>
@@ -420,7 +422,7 @@ export default function Bureau() {
           >
             <div className="text-center">
               <AlertTriangle className="w-5 h-5 mx-auto mb-1" />
-              <span className="text-xs font-heading block">En retard</span>
+              <span className="text-xs font-heading block">{t('en_retard')}</span>
               <Badge className="bg-white/20 text-inherit mt-1">{lateCount}</Badge>
             </div>
           </Button>
@@ -432,7 +434,7 @@ export default function Bureau() {
           >
             <div className="text-center">
               <AlertCircle className="w-5 h-5 mx-auto mb-1" />
-              <span className="text-xs font-heading block">Critiques (+3j)</span>
+              <span className="text-xs font-heading block">{lang === 'fr' ? 'Critiques (+3j)' : 'Critical (+3d)'}</span>
               <Badge className="bg-white/20 text-inherit mt-1">{critiqueCount}</Badge>
             </div>
           </Button>
@@ -441,31 +443,31 @@ export default function Bureau() {
         <Tabs defaultValue="historique" className="space-y-6">
           <TabsList className="bg-[#FFA500]/20 p-1 rounded-xl border border-[#FFA500]/30 flex-wrap h-auto">
             <TabsTrigger value="historique" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              📋 Historique
+              📋 {t('historique')}
             </TabsTrigger>
             <TabsTrigger value="frequentation" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              🔹 Fréquentation
+              🔹 {lang === 'fr' ? 'Fréquentation' : 'Attendance'}
             </TabsTrigger>
             <TabsTrigger value="interventions" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              🔹 Interventions
+              🔹 {t('interventions')}
             </TabsTrigger>
             <TabsTrigger value="statistiques" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              📊 Statistiques
+              📊 {t('statistiques')}
             </TabsTrigger>
             <TabsTrigger value="satisfaction" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              📱 Avis App
+              📱 {lang === 'fr' ? 'Avis App' : 'App Reviews'}
             </TabsTrigger>
             <TabsTrigger value="demographie" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              👨‍👩‍👧 Démographie
+              👨‍👩‍👧 {lang === 'fr' ? 'Démographie' : 'Demographics'}
             </TabsTrigger>
             <TabsTrigger value="fiches" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              📄 Fiches PDF
+              📄 {lang === 'fr' ? 'Fiches PDF' : 'PDF Files'}
             </TabsTrigger>
             <TabsTrigger value="rapports" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              📦 Rapports
+              📦 {lang === 'fr' ? 'Rapports' : 'Reports'}
             </TabsTrigger>
             <TabsTrigger value="collaborateurs" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              👷 Collaborateurs
+              👷 {lang === 'fr' ? 'Collaborateurs' : 'Staff'}
             </TabsTrigger>
           </TabsList>
 
@@ -477,11 +479,11 @@ export default function Bureau() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base font-heading text-[#0077A8] flex items-center gap-2">
                     <Filter className="w-4 h-4" />
-                    Recherche & Filtres
+                    {t('recherche_avancee')}
                   </CardTitle>
                   <div className="flex items-center gap-2">
                     <Button variant="ghost" size="sm" onClick={resetFilters} className="text-xs text-gray-500">
-                      Réinitialiser
+                      {lang === 'fr' ? 'Réinitialiser' : 'Reset'}
                     </Button>
                     <Button 
                       variant="ghost" 
@@ -490,7 +492,7 @@ export default function Bureau() {
                       className="text-[#00AEEF]"
                     >
                       {showAdvancedFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                      Avancé
+                      {lang === 'fr' ? 'Avancé' : 'Advanced'}
                     </Button>
                   </div>
                 </div>
@@ -499,37 +501,37 @@ export default function Bureau() {
                 {/* Ligne 1: Filtres basiques */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <Input
-                    placeholder="Nom client"
+                    placeholder={lang === 'fr' ? 'Nom client' : 'Guest name'}
                     value={filters.nom}
                     onChange={(e) => setFilters({ ...filters, nom: e.target.value })}
                     className="border-[#FFA500]/30 rounded-xl font-body"
                   />
                   <Input
-                    placeholder="N° logement/emplacement"
+                    placeholder={lang === 'fr' ? 'N° logement/emplacement' : 'Accommodation number'}
                     value={filters.logement}
                     onChange={(e) => setFilters({ ...filters, logement: e.target.value })}
                     className="border-[#FFA500]/30 rounded-xl font-body"
                   />
                   <Select value={filters.type} onValueChange={(v) => setFilters({ ...filters, type: v })}>
                     <SelectTrigger className="border-[#FFA500]/30 rounded-xl font-body">
-                      <SelectValue placeholder="Type" />
+                      <SelectValue placeholder={lang === 'fr' ? 'Type' : 'Type'} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="tous">Tous types</SelectItem>
-                      <SelectItem value="technique">🛠 Technique</SelectItem>
-                      <SelectItem value="menage">🧹 Ménage</SelectItem>
+                      <SelectItem value="tous">{lang === 'fr' ? 'Tous types' : 'All types'}</SelectItem>
+                      <SelectItem value="technique">🛠 {t('technique')}</SelectItem>
+                      <SelectItem value="menage">🧹 {t('menage')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <Select value={filters.statut} onValueChange={(v) => setFilters({ ...filters, statut: v })}>
                     <SelectTrigger className="border-[#FFA500]/30 rounded-xl font-body">
-                      <SelectValue placeholder="Statut" />
+                      <SelectValue placeholder={t('statut')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="tous">Tous statuts</SelectItem>
-                      <SelectItem value="en_attente">🟠 En attente</SelectItem>
-                      <SelectItem value="en_cours">🔵 En cours</SelectItem>
-                      <SelectItem value="en_attente_materiel">⏳ En attente (reporté)</SelectItem>
-                      <SelectItem value="resolu">✅ Résolu</SelectItem>
+                      <SelectItem value="tous">{lang === 'fr' ? 'Tous statuts' : 'All statuses'}</SelectItem>
+                      <SelectItem value="en_attente">🟠 {t('en_attente')}</SelectItem>
+                      <SelectItem value="en_cours">🔵 {t('en_cours')}</SelectItem>
+                      <SelectItem value="en_attente_materiel">⏳ {lang === 'fr' ? 'Reporté' : 'Postponed'}</SelectItem>
+                      <SelectItem value="resolu">✅ {t('resolu')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -539,7 +541,7 @@ export default function Bureau() {
                   <div className="space-y-4 pt-3 border-t border-gray-100">
                     {/* Filtre par catégories (multiselect) */}
                     <div>
-                      <label className="text-xs font-heading text-[#0077A8] mb-2 block">Catégories (sélection multiple)</label>
+                      <label className="text-xs font-heading text-[#0077A8] mb-2 block">{lang === 'fr' ? 'Catégories (sélection multiple)' : 'Categories (multiple selection)'}</label>
                       <div className="flex flex-wrap gap-2">
                         {allCategories.map(cat => (
                           <button
@@ -560,7 +562,7 @@ export default function Bureau() {
                           onClick={() => setFilters(f => ({ ...f, categories: [] }))}
                           className="text-xs text-red-500 mt-1 hover:underline"
                         >
-                          Effacer les catégories
+                          {lang === 'fr' ? 'Effacer les catégories' : 'Clear categories'}
                         </button>
                       )}
                     </div>
@@ -629,7 +631,7 @@ export default function Bureau() {
                           onClick={() => setFilters(f => ({ ...f, dateFrom: '', dateTo: '' }))}
                           className="text-xs text-red-500 mt-2 hover:underline"
                         >
-                          Effacer les dates
+                          {lang === 'fr' ? 'Effacer les dates' : 'Clear dates'}
                         </button>
                       )}
                     </div>
@@ -637,7 +639,7 @@ export default function Bureau() {
                 )}
 
                 <p className="text-xs text-gray-500 font-body">
-                  {sortedIncidents.length} résultat(s) trouvé(s)
+                  {sortedIncidents.length} {lang === 'fr' ? 'résultat(s) trouvé(s)' : 'result(s) found'}
                 </p>
               </CardContent>
             </Card>
@@ -648,7 +650,7 @@ export default function Bureau() {
                 <CardContent className="p-3">
                   <div className="flex items-center justify-between flex-wrap gap-3">
                     <span className="font-heading text-[#0077A8] text-sm">
-                      {selectedIds.length} intervention(s) sélectionnée(s)
+                      {selectedIds.length} {lang === 'fr' ? 'intervention(s) sélectionnée(s)' : 'intervention(s) selected'}
                     </span>
                     <div className="flex items-center gap-2">
                       <Button
@@ -659,7 +661,7 @@ export default function Bureau() {
                         disabled={updateIncidentMutation.isPending}
                       >
                         <ArrowUp className="w-4 h-4 mr-1" />
-                        Monter groupe
+                        {lang === 'fr' ? 'Monter groupe' : 'Move up'}
                       </Button>
                       <Button
                         size="sm"
@@ -669,7 +671,7 @@ export default function Bureau() {
                         disabled={updateIncidentMutation.isPending}
                       >
                         <ArrowDown className="w-4 h-4 mr-1" />
-                        Descendre groupe
+                        {lang === 'fr' ? 'Descendre groupe' : 'Move down'}
                       </Button>
                       <Button
                         size="sm"
@@ -679,7 +681,7 @@ export default function Bureau() {
                         disabled={deleteIncidentMutation.isPending}
                       >
                         <Trash2 className="w-4 h-4 mr-1" />
-                        Supprimer groupe
+                        {t('supprimer')} {lang === 'fr' ? 'groupe' : 'group'}
                       </Button>
                       <Button
                         size="sm"
@@ -687,7 +689,7 @@ export default function Bureau() {
                         onClick={() => setSelectedIds([])}
                         className="text-gray-500"
                       >
-                        Annuler
+                        {t('annuler')}
                       </Button>
                     </div>
                   </div>
@@ -866,7 +868,7 @@ export default function Bureau() {
 
           {/* Fréquentation */}
           <TabsContent value="frequentation" className="space-y-6">
-            <BureauFrequentation lang="fr" />
+            <BureauFrequentation lang={lang} />
           </TabsContent>
 
           {/* Statistiques Interventions */}
@@ -881,17 +883,17 @@ export default function Bureau() {
 
           {/* Avis Application uniquement */}
           <TabsContent value="satisfaction" className="space-y-6">
-            <BureauAvisApplication lang="fr" />
+            <BureauAvisApplication lang={lang} />
           </TabsContent>
 
           {/* Démographie */}
           <TabsContent value="demographie" className="space-y-6">
-            <BureauDemographie lang="fr" />
+            <BureauDemographie lang={lang} />
           </TabsContent>
 
           {/* Fiches PDF */}
           <TabsContent value="fiches" className="space-y-6">
-            <BureauFichesPDF lang="fr" />
+            <BureauFichesPDF lang={lang} />
           </TabsContent>
 
           {/* Rapports */}
@@ -937,12 +939,12 @@ export default function Bureau() {
                   <Card className="border-2 border-[#00AEEF] rounded-xl">
                     <CardHeader>
                       <CardTitle className="text-xl font-heading text-[#0077A8]">
-                        👷 Interventions par collaborateur
+                        👷 {lang === 'fr' ? 'Interventions par collaborateur' : 'Interventions by staff member'}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <p className="text-sm text-gray-600 mb-4">
-                        Vue d'ensemble des interventions actives de chaque collaborateur
+                        {lang === 'fr' ? 'Vue d\'ensemble des interventions actives de chaque collaborateur' : 'Overview of active interventions for each staff member'}
                       </p>
                     </CardContent>
                   </Card>
@@ -971,7 +973,7 @@ export default function Bureau() {
                             {data.enAttente.length > 0 && (
                               <div className="bg-[#FFA500]/10 rounded-lg p-3">
                                 <div className="flex items-center justify-between mb-2">
-                                  <span className="text-xs font-heading text-[#FFA500]">🟠 En attente</span>
+                                  <span className="text-xs font-heading text-[#FFA500]">🟠 {t('en_attente')}</span>
                                   <Badge className="bg-[#FFA500] text-white text-xs">{data.enAttente.length}</Badge>
                                 </div>
                                 <div className="space-y-1 max-h-32 overflow-y-auto">
@@ -995,7 +997,7 @@ export default function Bureau() {
                             {data.enCours.length > 0 && (
                               <div className="bg-[#00AEEF]/10 rounded-lg p-3">
                                 <div className="flex items-center justify-between mb-2">
-                                  <span className="text-xs font-heading text-[#00AEEF]">🔵 En cours</span>
+                                  <span className="text-xs font-heading text-[#00AEEF]">🔵 {t('en_cours')}</span>
                                   <Badge className="bg-[#00AEEF] text-white text-xs">{data.enCours.length}</Badge>
                                 </div>
                                 <div className="space-y-1 max-h-32 overflow-y-auto">
@@ -1019,7 +1021,7 @@ export default function Bureau() {
                             {data.reportees.length > 0 && (
                               <div className="bg-gray-100 rounded-lg p-3">
                                 <div className="flex items-center justify-between mb-2">
-                                  <span className="text-xs font-heading text-gray-600">⏳ Reportées</span>
+                                  <span className="text-xs font-heading text-gray-600">⏳ {lang === 'fr' ? 'Reportées' : 'Postponed'}</span>
                                   <Badge className="bg-gray-500 text-white text-xs">{data.reportees.length}</Badge>
                                 </div>
                                 <div className="space-y-1 max-h-32 overflow-y-auto">
@@ -1044,7 +1046,7 @@ export default function Bureau() {
                             
                             {total === 0 && (
                               <p className="text-center text-gray-400 text-sm py-4">
-                                ✓ Aucune intervention active
+                                ✓ {lang === 'fr' ? 'Aucune intervention active' : 'No active intervention'}
                               </p>
                             )}
                           </CardContent>
@@ -1056,7 +1058,7 @@ export default function Bureau() {
                   {collabsList.length === 0 && (
                     <Card className="border-2 border-gray-200 rounded-xl">
                       <CardContent className="py-12 text-center">
-                        <p className="text-gray-500">Aucune intervention active pour le moment</p>
+                        <p className="text-gray-500">{lang === 'fr' ? 'Aucune intervention active pour le moment' : 'No active intervention at the moment'}</p>
                       </CardContent>
                     </Card>
                   )}
@@ -1073,14 +1075,18 @@ export default function Bureau() {
           <DialogHeader>
             <DialogTitle className="font-heading text-red-600 flex items-center gap-2">
               <AlertTriangle className="w-5 h-5" />
-              Confirmer la suppression
+              {lang === 'fr' ? 'Confirmer la suppression' : 'Confirm deletion'}
             </DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <p className="font-body text-gray-700">
-              ⚠️ Voulez-vous vraiment supprimer les <strong>{selectedIds.length}</strong> intervention(s) sélectionnée(s) ?
+              ⚠️ {lang === 'fr' 
+                ? `Voulez-vous vraiment supprimer les ${selectedIds.length} intervention(s) sélectionnée(s) ?`
+                : `Do you really want to delete the ${selectedIds.length} selected intervention(s)?`}
             </p>
-            <p className="text-sm text-gray-500 mt-2">Cette action est irréversible.</p>
+            <p className="text-sm text-gray-500 mt-2">
+              {lang === 'fr' ? 'Cette action est irréversible.' : 'This action is irreversible.'}
+            </p>
           </div>
           <div className="flex justify-end gap-3">
             <Button
@@ -1088,7 +1094,7 @@ export default function Bureau() {
               onClick={() => setShowDeleteConfirm(false)}
               className="rounded-xl"
             >
-              Non
+              {t('non')}
             </Button>
             <Button
               onClick={handleGroupDelete}
@@ -1098,7 +1104,7 @@ export default function Bureau() {
               {deleteIncidentMutation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
               ) : null}
-              Oui, supprimer
+              {lang === 'fr' ? 'Oui, supprimer' : 'Yes, delete'}
             </Button>
           </div>
         </DialogContent>
@@ -1110,32 +1116,32 @@ export default function Bureau() {
           <DialogHeader>
             <DialogTitle className="font-heading text-[#0077A8] flex items-center gap-2">
               <span className="text-xl">{selectedIncident && categoryEmojis[selectedIncident.categorie]}</span>
-              Fiche intervention #{selectedIncident?.logement || selectedIncident?.emplacement}
+              {lang === 'fr' ? 'Fiche intervention' : 'Intervention details'} #{selectedIncident?.logement || selectedIncident?.emplacement}
             </DialogTitle>
           </DialogHeader>
           {selectedIncident && (
             <div className="space-y-4">
               {/* Client */}
               <div className="bg-[#e6f7ff] rounded-xl p-4">
-                <h4 className="font-heading text-[#0077A8] mb-2">👤 Client</h4>
+                <h4 className="font-heading text-[#0077A8] mb-2">👤 {t('client_label')}</h4>
                 <div className="grid grid-cols-2 gap-2 text-sm font-body">
-                  <div><span className="text-gray-500">Nom:</span> {selectedIncident.client_prenom} {selectedIncident.client_nom}</div>
-                  <div><span className="text-gray-500">Séjour:</span> {selectedIncident.date_arrivee && format(new Date(selectedIncident.date_arrivee), 'dd/MM/yyyy')} → {selectedIncident.date_depart && format(new Date(selectedIncident.date_depart), 'dd/MM/yyyy')}</div>
+                  <div><span className="text-gray-500">{t('nom')}:</span> {selectedIncident.client_prenom} {selectedIncident.client_nom}</div>
+                  <div><span className="text-gray-500">{lang === 'fr' ? 'Séjour' : 'Stay'}:</span> {selectedIncident.date_arrivee && format(new Date(selectedIncident.date_arrivee), 'dd/MM/yyyy')} → {selectedIncident.date_depart && format(new Date(selectedIncident.date_depart), 'dd/MM/yyyy')}</div>
                 </div>
               </div>
 
               {/* Hébergement */}
               <div className="bg-gray-50 rounded-xl p-4">
-                <h4 className="font-heading text-[#0077A8] mb-2">🏠 Hébergement</h4>
+                <h4 className="font-heading text-[#0077A8] mb-2">🏠 {t('hebergement')}</h4>
                 <div className="grid grid-cols-2 gap-2 text-sm font-body">
-                  <div><span className="text-gray-500">Type:</span> {selectedIncident.logement ? 'Mobil-home' : 'Emplacement'}</div>
-                  <div><span className="text-gray-500">Numéro:</span> <strong>{selectedIncident.logement || selectedIncident.emplacement}</strong></div>
+                  <div><span className="text-gray-500">{lang === 'fr' ? 'Type' : 'Type'}:</span> {selectedIncident.logement ? (lang === 'fr' ? 'Mobil-home' : 'Mobile home') : (lang === 'fr' ? 'Emplacement' : 'Pitch')}</div>
+                  <div><span className="text-gray-500">{lang === 'fr' ? 'Numéro' : 'Number'}:</span> <strong>{selectedIncident.logement || selectedIncident.emplacement}</strong></div>
                 </div>
               </div>
 
               {/* Chronologie */}
               <div className="bg-gray-50 rounded-xl p-4">
-                <h4 className="font-heading text-[#0077A8] mb-3">📋 Chronologie détaillée</h4>
+                <h4 className="font-heading text-[#0077A8] mb-3">📋 {lang === 'fr' ? 'Chronologie détaillée' : 'Detailed timeline'}</h4>
                 <div className="space-y-3">
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 rounded-full bg-[#00AEEF] flex items-center justify-center flex-shrink-0">
@@ -1196,7 +1202,7 @@ export default function Bureau() {
 
               {/* Intervention */}
               <div className="bg-gray-50 rounded-xl p-4">
-                <h4 className="font-heading text-[#0077A8] mb-2">🛠 Intervention</h4>
+                <h4 className="font-heading text-[#0077A8] mb-2">🛠 {lang === 'fr' ? 'Intervention' : 'Intervention'}</h4>
                 <div className="space-y-2 text-sm font-body">
                   <div className="flex items-center gap-2">
                     <span className="text-gray-500">Catégorie:</span>
@@ -1342,7 +1348,7 @@ export default function Bureau() {
               {/* Avis client */}
               {selectedIncident.note_client && (
                 <div className="bg-[#FFD700]/20 rounded-xl p-4">
-                  <h4 className="font-heading text-[#0077A8] mb-2">⭐ Avis client</h4>
+                  <h4 className="font-heading text-[#0077A8] mb-2">⭐ {lang === 'fr' ? 'Avis client' : 'Guest review'}</h4>
                   <div className="flex items-center gap-1 mb-2">
                     {[1,2,3,4,5].map(s => (
                       <Star key={s} className={`w-5 h-5 ${s <= selectedIncident.note_client ? 'text-[#FFD700] fill-[#FFD700]' : 'text-gray-300'}`} />
