@@ -17,9 +17,14 @@ export default function ReceptionListeLogements({ dossiers, onSelectDossier, lan
 
   const dossiersParCategorie = {};
   Object.keys(categories).forEach(cat => {
-    dossiersParCategorie[cat] = dossiers.filter(d => 
-      categories[cat].includes(d.categorie_logement)
-    );
+    dossiersParCategorie[cat] = dossiers.filter(d => {
+      // Support à la fois categorie_logement et categorie
+      const categorieDossier = d.categorie_logement || d.categorie;
+      return categories[cat].some(catName => 
+        catName.toLowerCase().includes(categorieDossier?.toLowerCase() || '') ||
+        categorieDossier?.toLowerCase().includes(catName.toLowerCase())
+      );
+    });
   });
 
   const calculerDuree = (dateArrivee, dateDepart) => {
