@@ -1,19 +1,35 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Smartphone, TrendingUp, AlertCircle, ThumbsUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Smartphone, TrendingUp, AlertCircle, ThumbsUp, Trash2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const COLORS = ['#22c55e', '#FFA500', '#ef4444'];
 
 export default function BureauAvisApplication({ lang }) {
   const isFrench = lang === 'fr';
+  const queryClient = useQueryClient();
 
   const { data: avisApp = [] } = useQuery({
     queryKey: ['avis-application'],
     queryFn: () => base44.entities.AvisApplication.list()
   });
+
+  const deleteAvisMutation = useMutation({
+    mutationFn: (id) => base44.entities.AvisApplication.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['avis-application'] });
+    }
+  });
+
+  const handleDelete = async (id, e) => {
+    e.stopPropagation();
+    if (window.confirm(isFrench ? 'Supprimer cet avis ?' : 'Delete this feedback?')) {
+      await deleteAvisMutation.mutateAsync(id);
+    }
+  };
 
   // Statistiques globales
   const stats = {
@@ -201,7 +217,7 @@ export default function BureauAvisApplication({ lang }) {
               avisApp.slice(0, 20).map(avis => (
                 <div key={avis.id} className="border rounded-lg p-4">
                   <div className="flex items-start justify-between mb-2">
-                    <div>
+                    <div className="flex-1">
                       <p className="font-heading text-[#0077A8]">
                         {avis.client_prenom} {avis.client_nom}
                       </p>
@@ -209,23 +225,34 @@ export default function BureauAvisApplication({ lang }) {
                         {new Date(avis.created_date).toLocaleDateString()}
                       </p>
                     </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <span className={`px-2 py-1 rounded text-xs font-heading ${
-                        avis.note_intuitivite === 'tres_intuitive' ? 'bg-green-100 text-green-700' :
-                        avis.note_intuitivite === 'moyenne' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-red-100 text-red-700'
-                      }`}>
-                        {avis.note_intuitivite === 'tres_intuitive' ? '😄' : 
-                         avis.note_intuitivite === 'moyenne' ? '😐' : '😠'}
-                      </span>
-                      <span className={`px-2 py-1 rounded text-xs font-heading ${
-                        avis.aide_pendant_sejour === 'oui' ? 'bg-green-100 text-green-700' :
-                        avis.aide_pendant_sejour === 'un_peu' ? 'bg-orange-100 text-orange-700' :
-                        'bg-red-100 text-red-700'
-                      }`}>
-                        {avis.aide_pendant_sejour === 'oui' ? '✔' : 
-                         avis.aide_pendant_sejour === 'un_peu' ? '🟧' : '❌'}
-                      </span>
+                    <div className="flex items-start gap-2">
+                      <div className="flex flex-col items-end gap-1">
+                        <span className={`px-2 py-1 rounded text-xs font-heading ${
+                          avis.note_intuitivite === 'tres_intuitive' ? 'bg-green-100 text-green-700' :
+                          avis.note_intuitivite === 'moyenne' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>
+                          {avis.note_intuitivite === 'tres_intuitive' ? '😄' : 
+                           avis.note_intuitivite === 'moyenne' ? '😐' : '😠'}
+                        </span>
+                        <span className={`px-2 py-1 rounded text-xs font-heading ${
+                          avis.aide_pendant_sejour === 'oui' ? 'bg-green-100 text-green-700' :
+                          avis.aide_pendant_sejour === 'un_peu' ? 'bg-orange-100 text-orange-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>
+                          {avis.aide_pendant_sejour === 'oui' ? '✔' : 
+                           avis.aide_pendant_sejour === 'un_peu' ? '🟧' : '❌'}
+                        </span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => handleDelete(avis.id, e)}
+                        disabled={deleteAvisMutation.isPending}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
                   {avis.ameliorations && (
