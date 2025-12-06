@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import Logo from '../components/Logo';
 import OfflineBanner from '../components/OfflineBanner';
 import NotificationCenter from '../components/NotificationCenter';
+import { useNotifications } from '../components/useNotifications';
 import MettreEnAttenteDialog from '../components/MettreEnAttenteDialog';
 import PhotoInterventionCapture from '../components/PhotoInterventionCapture';
 import { useTranslation } from '../components/translations';
@@ -39,6 +40,7 @@ export default function Menage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
+  const { counts } = useNotifications();
   
   const [selectedIncident, setSelectedIncident] = useState(null);
   const [collaborateurNom, setCollaborateurNom] = useState('');
@@ -330,6 +332,13 @@ export default function Menage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {counts.menage > 0 && (
+              <div className="relative">
+                <div className="absolute -top-2 -right-2 min-w-5 h-5 flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-red-500 text-white shadow-lg z-10">
+                  {counts.menage}
+                </div>
+              </div>
+            )}
             <NotificationCenter userType="collaborateur" />
             <Sparkles className="w-8 h-8" />
           </div>
