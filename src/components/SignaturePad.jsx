@@ -12,6 +12,10 @@ export default function SignaturePad({ onSave, disabled = false, lang = 'fr' }) 
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    // Redimensionner le canvas à sa taille d'affichage
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
     const ctx = canvas.getContext('2d');
     ctx.strokeStyle = '#0077A8';
     ctx.lineWidth = 2;
@@ -28,8 +32,11 @@ export default function SignaturePad({ onSave, disabled = false, lang = 'fr' }) 
     setIsDrawing(true);
     setHasSignature(true);
     
-    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+    // Calcul précis des coordonnées avec le ratio canvas/affichage
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = ((e.touches ? e.touches[0].clientX : e.clientX) - rect.left) * scaleX;
+    const y = ((e.touches ? e.touches[0].clientY : e.clientY) - rect.top) * scaleY;
     
     ctx.beginPath();
     ctx.moveTo(x, y);
@@ -43,8 +50,11 @@ export default function SignaturePad({ onSave, disabled = false, lang = 'fr' }) 
     const rect = canvas.getBoundingClientRect();
     const ctx = canvas.getContext('2d');
     
-    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+    // Calcul précis des coordonnées avec le ratio canvas/affichage
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = ((e.touches ? e.touches[0].clientX : e.clientX) - rect.left) * scaleX;
+    const y = ((e.touches ? e.touches[0].clientY : e.clientY) - rect.top) * scaleY;
     
     ctx.lineTo(x, y);
     ctx.stroke();
@@ -77,9 +87,8 @@ export default function SignaturePad({ onSave, disabled = false, lang = 'fr' }) 
         <div className="border-2 border-dashed border-gray-300 rounded-lg bg-white mb-4">
           <canvas
             ref={canvasRef}
-            width={400}
-            height={200}
             className="w-full touch-none cursor-crosshair"
+            style={{ transform: 'none', height: '200px' }}
             onMouseDown={startDrawing}
             onMouseMove={draw}
             onMouseUp={stopDrawing}
