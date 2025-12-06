@@ -54,6 +54,7 @@ import ReceptionSuivi from './pages/ReceptionSuivi';
 import NotificationPreferences from './pages/NotificationPreferences';
 import CalendrierReservations from './pages/CalendrierReservations';
 import DashboardReception from './pages/DashboardReception';
+import GestionUtilisateurs from './pages/GestionUtilisateurs';
 import __Layout from './Layout.jsx';
 
 
@@ -114,6 +115,7 @@ export const PAGES = {
     "NotificationPreferences": NotificationPreferences,
     "CalendrierReservations": CalendrierReservations,
     "DashboardReception": DashboardReception,
+    "GestionUtilisateurs": GestionUtilisateurs,
 }
 
 export const pagesConfig = {
