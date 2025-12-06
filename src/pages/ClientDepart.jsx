@@ -2,8 +2,9 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../components/translations';
 import Logo from '../components/Logo';
+import ConditionsDepart from '../components/ConditionsDepart';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Construction } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 
@@ -11,43 +12,42 @@ export default function ClientDepart() {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
+  const { lang } = useTranslation();
+
   return (
-    <div className="min-h-screen px-6 py-8 flex items-center justify-center">
-      <div className="max-w-md mx-auto">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="text-center"
+    <div className="min-h-screen px-6 py-8">
+      <div className="max-w-3xl mx-auto">
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={() => navigate(createPageUrl('ClientMenu'))}
+            className="flex items-center gap-2 text-[#0077A8] hover:text-[#00AEEF]"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span className="font-heading">
+              {lang === 'fr' ? 'Retour' : 'Back'}
+            </span>
+          </button>
+        </div>
+
+        <Logo className="h-16 mb-6 mx-auto" />
+
+        {/* Conditions de départ */}
+        <ConditionsDepart />
+        
+        {/* Bouton démarrer */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          transition={{ delay: 0.8 }}
+          className="mt-6"
         >
-          <Logo className="h-20 mb-6" />
-          
-          <div className="bg-white rounded-2xl border-2 border-[#FFD700] p-8 shadow-lg">
-            <Construction className="w-20 h-20 text-[#FFD700] mx-auto mb-4" />
-            
-            <h1 className="font-handwritten text-3xl text-[#0077A8] mb-4">
-              🚧 {t('lang') === 'fr' ? 'Fonction en développement' : 'Feature under development'}
-            </h1>
-            
-            <p className="font-body text-gray-600 mb-6">
-              {t('lang') === 'fr' 
-                ? 'Cette section sera bientôt disponible dans l\'application.'
-                : 'This section will be available soon in the application.'
-              }
-            </p>
-            
-            <p className="font-body text-[#00AEEF] text-lg mb-6">
-              {t('lang') === 'fr' ? 'Merci pour votre patience 💙' : 'Thank you for your patience 💙'}
-            </p>
-            
-            <Button
-              onClick={() => navigate(createPageUrl('ClientMenu'))}
-              className="w-full h-12 bg-[#00AEEF] hover:bg-[#0077A8] text-white rounded-xl font-heading"
-            >
-              <ArrowLeft className="w-5 h-5 mr-2" />
-              {t('retour')}
-            </Button>
-          </div>
+          <Button
+            onClick={() => navigate(createPageUrl('ClientDepartIdentite'))}
+            className="w-full h-14 bg-[#FFA500] hover:bg-[#e69500] text-white rounded-xl font-heading text-lg"
+          >
+            {lang === 'fr' ? 'Commencer le départ' : 'Start departure'}
+            <ArrowRight className="w-5 h-5 ml-2" />
+          </Button>
         </motion.div>
       </div>
     </div>
