@@ -28,6 +28,7 @@ import BureauFrequentation from '../components/bureau/BureauFrequentation';
 import BureauDemographie from '../components/bureau/BureauDemographie';
 import BureauFichesPDF from '../components/bureau/BureauFichesPDF';
 import BureauAvisApplication from '../components/bureau/BureauAvisApplication';
+import Statistiques from './Statistiques';
 import { format, differenceInHours, differenceInMinutes, isToday, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -446,8 +447,11 @@ export default function Bureau() {
             <TabsTrigger value="frequentation" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               🔹 Fréquentation
             </TabsTrigger>
-            <TabsTrigger value="statistiques" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
+            <TabsTrigger value="interventions" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               🔹 Interventions
+            </TabsTrigger>
+            <TabsTrigger value="statistiques" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
+              📊 Statistiques
             </TabsTrigger>
             <TabsTrigger value="satisfaction" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               ⭐ Satisfaction
@@ -864,8 +868,13 @@ export default function Bureau() {
           </TabsContent>
 
           {/* Statistiques Interventions */}
-          <TabsContent value="statistiques" className="space-y-6">
+          <TabsContent value="interventions" className="space-y-6">
             <BureauStatistiques incidents={incidents} />
+          </TabsContent>
+
+          {/* Statistiques Globales */}
+          <TabsContent value="statistiques" className="space-y-6">
+            <Statistiques embedded={true} />
           </TabsContent>
 
           {/* Satisfaction & Avis */}
