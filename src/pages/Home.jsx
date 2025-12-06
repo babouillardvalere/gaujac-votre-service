@@ -5,7 +5,7 @@ import Logo from '../components/Logo';
 import HomeAvisSection from '../components/HomeAvisSection';
 import CustomUsersIcon from '../components/CustomUsersIcon';
 import AccessibilityPanel, { getAccessibilitySettings, saveAccessibilitySettings, speakText, stopSpeaking } from '../components/AccessibilityPanel';
-import { Users, Star, Briefcase, Search, Accessibility, Plus, Minus, Volume2, VolumeX, X } from 'lucide-react';
+import { Users, Star, Briefcase, Search, Accessibility, Plus, Minus, Volume2, VolumeX, X, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { Button } from '@/components/ui/button';
@@ -103,7 +103,20 @@ export default function Home() {
       ariaLabel: 'Voir les avis clients',
       iconColor: 'text-black'
     },
-
+    {
+      title: lang === 'fr' ? '📖 Infos Pratiques' : '📖 Practical Info',
+      icon: BookOpen,
+      href: '/InfosPratiques',
+      bgColor: 'bg-[#22c55e]',
+      borderColor: 'border-[#22c55e]',
+      iconBg: 'bg-white',
+      textColor: 'text-white',
+      subtitleColor: 'text-white/90',
+      arrowColor: 'text-white',
+      description: lang === 'fr' ? 'Services & Informations' : 'Services & Information',
+      ariaLabel: lang === 'fr' ? 'Informations pratiques du camping' : 'Practical camping information',
+      iconColor: 'text-[#22c55e]'
+    },
     {
       title: t('collaborateur'),
       icon: Briefcase,
