@@ -60,9 +60,7 @@ export default function Breadcrumbs() {
     return null; // Pas de breadcrumbs sur la page d'accueil
   }
 
-  const breadcrumbs = [
-    { label: '🏠', path: 'Home', isHome: true }
-  ];
+  const breadcrumbs = [];
 
   // Ajouter un breadcrumb pour le menu collaborateur si nécessaire
   if (isCollaboratorArea() && pathSegments[0] !== 'Collaborateur' && pathSegments[0] !== 'MenuCollaborateur') {
