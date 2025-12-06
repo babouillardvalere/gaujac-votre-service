@@ -32,15 +32,6 @@ export default function ClientMenu() {
 
   const menuItems = [
     {
-      title: 'ℹ️ Infos Pratiques',
-      titleEn: 'ℹ️ Practical Info',
-      href: 'InfosPratiques',
-      color: 'bg-gradient-to-br from-blue-500 to-cyan-500',
-      textColor: 'text-white',
-      disabled: false,
-      comingSoon: false
-    },
-    {
       title: '🏡 Arrivée',
       titleEn: '🏡 Arrival',
       href: 'ClientArrivee',
