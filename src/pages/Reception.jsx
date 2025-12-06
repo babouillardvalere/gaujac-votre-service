@@ -6,8 +6,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ReceptionArrivees from './ReceptionArrivees';
 import ReceptionDeparts from './ReceptionDeparts';
 import ReceptionAssistance from './ReceptionAssistance';
+import ReceptionSuivi from './ReceptionSuivi';
 import CollaborateurNotificationBell from '../components/CollaborateurNotificationBell';
-import { ArrowLeft, LogIn, LogOut, HeadphonesIcon, Home } from 'lucide-react';
+import { ArrowLeft, LogIn, LogOut, HeadphonesIcon, Home, ClipboardList } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { base44 } from '@/api/base44Client';
@@ -57,26 +58,38 @@ export default function Reception() {
           </p>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-8">
-              <TabsTrigger value="arrivees" className="flex items-center gap-2 text-base font-heading relative">
+            <TabsList className="grid w-full grid-cols-4 mb-8">
+              <TabsTrigger value="assistance" className="flex items-center gap-2 text-sm font-heading">
+                <HeadphonesIcon className="w-4 h-4" />
+                🆘 {lang === 'fr' ? 'Assistance' : 'Assistance'}
+              </TabsTrigger>
+              <TabsTrigger value="suivi" className="flex items-center gap-2 text-sm font-heading">
+                <ClipboardList className="w-4 h-4" />
+                📊 {lang === 'fr' ? 'Suivi' : 'Tracking'}
+              </TabsTrigger>
+              <TabsTrigger value="arrivees" className="flex items-center gap-2 text-sm font-heading relative">
                 <LogIn className="w-4 h-4" />
                 🏡 {lang === 'fr' ? 'Arrivées' : 'Arrivals'}
                 <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
                   {arrivees.length}
                 </span>
               </TabsTrigger>
-              <TabsTrigger value="departs" className="flex items-center gap-2 text-base font-heading relative">
+              <TabsTrigger value="departs" className="flex items-center gap-2 text-sm font-heading relative">
                 <LogOut className="w-4 h-4" />
                 🚗 {lang === 'fr' ? 'Départs' : 'Departures'}
                 <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
                   {departs.length}
                 </span>
               </TabsTrigger>
-              <TabsTrigger value="assistance" className="flex items-center gap-2 text-base font-heading">
-                <HeadphonesIcon className="w-4 h-4" />
-                🆘 {lang === 'fr' ? 'Assistance' : 'Assistance'}
-              </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="assistance">
+              <ReceptionAssistance embedded={true} />
+            </TabsContent>
+
+            <TabsContent value="suivi">
+              <ReceptionSuivi embedded={true} />
+            </TabsContent>
 
             <TabsContent value="arrivees">
               <ReceptionArrivees embedded={true} />
@@ -84,10 +97,6 @@ export default function Reception() {
 
             <TabsContent value="departs">
               <ReceptionDeparts embedded={true} />
-            </TabsContent>
-
-            <TabsContent value="assistance">
-              <ReceptionAssistance embedded={true} />
             </TabsContent>
           </Tabs>
         </motion.div>
