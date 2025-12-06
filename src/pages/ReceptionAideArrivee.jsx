@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../components/translations';
 import { base44 } from '@/api/base44Client';
 import { getCodeFromCategory } from '../components/categoryCodeMapping';
+import SelecteurHebergement from '../components/reception/SelecteurHebergement';
 import Logo from '../components/Logo';
 import PhotoManagerReception from '../components/reception/PhotoManagerReception';
 import DemanderPhotosDialog from '../components/reception/DemanderPhotosDialog';
@@ -11,33 +12,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, ArrowRight, CheckCircle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
-
-const emplacementCategories = [
-  { value: 'Emplacement 6A', label: 'Électricité 6A' },
-  { value: 'Emplacement 10A', label: 'Électricité 10A' },
-  { value: 'Emplacement Eau+10A', label: 'Eau + 10A' }
-];
-
-const mobilhomeCategories = [
-  { value: 'Chalet Eco', label: 'Chalet Éco 1 ch' },
-  { value: 'Chalet Classique', label: 'Chalet Classique 1 ch' },
-  { value: 'Mobil-home Eco', label: 'MH Éco 2 ch' },
-  { value: 'Mobil-home Eco Clim', label: 'MH Éco Clim' },
-  { value: 'Mobil-home Classique', label: 'MH Classique' },
-  { value: 'Mobil-home Classique Clim', label: 'MH Classique Clim' },
-  { value: 'Mobil-home Classique 3ch', label: 'MH Classique 3 ch' },
-  { value: 'Confort+ 2ch', label: 'MH Confort+ 2 ch' },
-  { value: 'Confort+ 3ch', label: 'MH Confort+ 3 ch' },
-  { value: 'Premium 2ch', label: 'MH Premium 2 ch' },
-  { value: 'Premium 3ch', label: 'MH Premium 3 ch' },
-  { value: 'Premium Twins', label: 'MH Premium Twins' },
-  { value: 'Cottage Premium', label: 'Cottage Premium 2 ch' }
-];
 
 export default function ReceptionAideArrivee() {
   const { t, lang } = useTranslation();
@@ -255,47 +233,19 @@ export default function ReceptionAideArrivee() {
                     </div>
 
                     <div>
-                      <Label>{lang === 'fr' ? 'Type d\'hébergement' : 'Accommodation type'} *</Label>
-                      <Select value={formData.type_logement} onValueChange={(val) => handleChange('type_logement', val)}>
-                        <SelectTrigger className="border-2 border-gray-200 rounded-xl">
-                          <SelectValue placeholder={lang === 'fr' ? 'Sélectionner' : 'Select'} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="emplacement">⛺ {lang === 'fr' ? 'Emplacement' : 'Pitch'}</SelectItem>
-                          <SelectItem value="mobilhome">🏠 {lang === 'fr' ? 'Mobil-home' : 'Mobile home'}</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <h3 className="font-heading text-[#0077A8] mb-3">
+                        {lang === 'fr' ? 'Hébergement' : 'Accommodation'} *
+                      </h3>
+                      <SelecteurHebergement 
+                        onSelect={(sel) => {
+                          const typeLogement = sel.type === 'Emplacement' ? 'emplacement' : 'mobilhome';
+                          handleChange('type_logement', typeLogement);
+                          handleChange('categorie_logement', sel.categorie);
+                          handleChange('numero_logement', sel.numero);
+                        }}
+                        lang={lang}
+                      />
                     </div>
-
-                    {formData.type_logement && (
-                      <>
-                        <div>
-                          <Label>{lang === 'fr' ? 'Catégorie' : 'Category'} *</Label>
-                          <Select value={formData.categorie_logement} onValueChange={(val) => handleChange('categorie_logement', val)}>
-                            <SelectTrigger className="border-2 border-gray-200 rounded-xl">
-                              <SelectValue placeholder={lang === 'fr' ? 'Sélectionner' : 'Select'} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {(formData.type_logement === 'emplacement' ? emplacementCategories : mobilhomeCategories).map(cat => (
-                                <SelectItem key={cat.value} value={cat.value}>
-                                  {cat.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div>
-                          <Label>{lang === 'fr' ? 'Numéro de locatif' : 'Accommodation number'} *</Label>
-                          <Input
-                            value={formData.numero_logement}
-                            onChange={(e) => handleChange('numero_logement', e.target.value.toUpperCase())}
-                            placeholder="Ex: R01, D14, E23"
-                            className="border-2 border-gray-200 rounded-xl"
-                          />
-                        </div>
-                      </>
-                    )}
 
                     <Button onClick={() => setEtape(2)} className="w-full bg-[#22c55e] hover:bg-[#16a34a]">
                       {t('suivant')} <ArrowRight className="w-5 h-5 ml-2" />
