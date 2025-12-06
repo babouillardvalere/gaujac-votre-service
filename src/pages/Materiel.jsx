@@ -146,7 +146,6 @@ export default function Materiel() {
   };
 
   const stockAlerts = stock.filter(s => s.quantite <= s.seuil_alerte);
-  const { counts } = useNotifications();
 
   return (
     <div className="min-h-screen pb-8" role="main" aria-label="Gestion du matériel et du stock">
