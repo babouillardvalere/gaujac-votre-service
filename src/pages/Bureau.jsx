@@ -370,8 +370,8 @@ export default function Bureau() {
   };
 
   return (
-    <div className="min-h-screen pb-8" role="main" aria-label="Accueil > Collaborateur > Bureau">
-      <h1 className="sr-only">Accueil > Collaborateur > Bureau - Historique et statistiques</h1>
+    <div className="min-h-screen pb-8" role="main" aria-label="Page d'accueil > Collaborateur > Bureau">
+      <h1 className="sr-only">Page d'accueil > Collaborateur > Bureau - Historique et statistiques</h1>
       {/* Header */}
       <div className="bg-[#FFA500] text-white px-4 py-4 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
