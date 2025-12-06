@@ -10,7 +10,7 @@ import { ArrowLeft, Bell, Save } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
-import { getNotificationPreferences, saveNotificationPreferences, ROLES } from '../utils/notificationService';
+import { getNotificationPreferences, saveNotificationPreferences, ROLES } from '../components/notificationService';
 
 export default function NotificationPreferences() {
   const { t, lang } = useTranslation();
