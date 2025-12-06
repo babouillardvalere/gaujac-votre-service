@@ -52,6 +52,17 @@ export default function BureauFichesPDF({ lang }) {
     }
   };
 
+  // Si un dossier est sélectionné, afficher sa fiche
+  if (selectedDossier) {
+    return (
+      <ReceptionFicheArrivee 
+        dossier={selectedDossier} 
+        onClose={() => setSelectedDossier(null)}
+        lang={lang}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Barre de recherche et filtres */}
