@@ -41,7 +41,7 @@ export default function ReceptionArrivees({ embedded = false }) {
     return (
       <ReceptionSemaineAccordeon semaines={semaines} lang={lang}>
         {(semaine) => {
-          const dossiersSemaine = filtrerDossiersParSemaine(dossiers, semaine);
+          const dossiersSemaine = filtrerDossiersParSemaine(dossiers, semaine, 'date_arrivee', 'date_depart');
           console.log('🔍 Semaine', semaine.label, '→', dossiersSemaine.length, 'dossiers');
           return (
             <ReceptionListeLogements 
