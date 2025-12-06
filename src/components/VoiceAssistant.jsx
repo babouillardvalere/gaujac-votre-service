@@ -97,23 +97,58 @@ export default function VoiceAssistant({
     }
 
     const recognitionInstance = new SpeechRecognition();
-    recognitionInstance.continuous = false;
-    recognitionInstance.interimResults = false;
+    recognitionInstance.continuous = true;
+    recognitionInstance.interimResults = true;
     recognitionInstance.lang = lang === 'en' ? 'en-US' : 'fr-FR';
+    recognitionInstance.maxAlternatives = 3;
+
+    let silenceTimer;
+    let finalTranscript = '';
 
     recognitionInstance.onresult = (event) => {
-      const result = event.results[0][0].transcript;
-      setTranscript(result);
-      handleVoiceCommand(result.toLowerCase());
+      let interimTranscript = '';
+      
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          finalTranscript += result[0].transcript + ' ';
+        } else {
+          interimTranscript += result[0].transcript;
+        }
+      }
+
+      // Afficher le transcript en cours
+      setTranscript(finalTranscript + interimTranscript);
+
+      // Réinitialiser le timer de silence
+      clearTimeout(silenceTimer);
+      
+      // Si on a un transcript final, attendre 1.5 secondes de silence avant de traiter
+      if (finalTranscript.trim()) {
+        silenceTimer = setTimeout(() => {
+          const command = finalTranscript.trim();
+          if (command) {
+            setTranscript(command);
+            handleVoiceCommand(command.toLowerCase());
+            finalTranscript = '';
+            recognitionInstance.stop();
+          }
+        }, 1500);
+      }
     };
 
     recognitionInstance.onerror = (event) => {
       console.error('Speech recognition error:', event.error);
+      if (event.error === 'no-speech') {
+        speak(t('command_not_understood'));
+      }
       setIsListening(false);
+      clearTimeout(silenceTimer);
     };
 
     recognitionInstance.onend = () => {
       setIsListening(false);
+      clearTimeout(silenceTimer);
     };
 
     setRecognition(recognitionInstance);
@@ -348,13 +383,20 @@ export default function VoiceAssistant({
     if (isListening) {
       recognition.stop();
       setIsListening(false);
+      setTranscript('');
     } else {
       try {
+        setTranscript('');
         recognition.start();
         setIsListening(true);
-        speak(t('hey_camping'));
+        
+        // Parler après un petit délai pour ne pas interférer avec la reconnaissance
+        setTimeout(() => {
+          speak(t('hey_camping'));
+        }, 300);
       } catch (error) {
         console.error('Error starting recognition:', error);
+        setIsListening(false);
       }
     }
   };
@@ -383,8 +425,15 @@ export default function VoiceAssistant({
 
       {/* Listening indicator */}
       {isListening && (
-        <div className="fixed bottom-52 left-4 z-40 bg-red-500 text-white px-3 py-2 rounded-lg text-sm font-bold shadow-lg animate-pulse">
-          🎤 {t('listening')}
+        <div className="fixed bottom-52 left-4 z-40 bg-red-500 text-white px-4 py-3 rounded-lg text-sm font-bold shadow-lg animate-pulse">
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1">
+              <span className="w-2 h-4 bg-white rounded animate-bounce" style={{ animationDelay: '0ms' }}></span>
+              <span className="w-2 h-4 bg-white rounded animate-bounce" style={{ animationDelay: '150ms' }}></span>
+              <span className="w-2 h-4 bg-white rounded animate-bounce" style={{ animationDelay: '300ms' }}></span>
+            </div>
+            <span>🎤 {t('listening')}</span>
+          </div>
         </div>
       )}
 
