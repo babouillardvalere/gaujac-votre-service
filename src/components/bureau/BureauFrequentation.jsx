@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Users, Home, Calendar, TrendingUp, PawPrint } from 'lucide-react';
+import { startOfWeek, endOfWeek, isWithinInterval, parseISO, getMonth, getYear, getISOWeek } from 'date-fns';
 
 const COLORS = ['#00AEEF', '#FFD700', '#FFA500', '#22c55e', '#8b5cf6'];
 
@@ -61,6 +62,86 @@ export default function BureauFrequentation({ lang }) {
   });
 
   const durationChartData = Object.entries(durationData).map(([name, value]) => ({ name, value }));
+
+  // Taux par tranche d'âge par mois
+  const tauxParMois = useMemo(() => {
+    const moisData = {};
+    
+    dossiersArrivee.forEach(d => {
+      if (!d.date_arrivee) return;
+      const month = getMonth(parseISO(d.date_arrivee));
+      const year = getYear(parseISO(d.date_arrivee));
+      const key = `${year}-${month + 1}`;
+      
+      if (!moisData[key]) {
+        moisData[key] = {
+          mois: `${['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc'][month]} ${year}`,
+          adultes: 0,
+          adolescents: 0,
+          enfants: 0,
+          bebes: 0,
+          total: 0
+        };
+      }
+      
+      moisData[key].adultes += d.nombre_adultes || 0;
+      moisData[key].adolescents += d.nombre_adolescents || 0;
+      moisData[key].enfants += d.nombre_enfants || 0;
+      moisData[key].bebes += d.nombre_bebes || 0;
+      moisData[key].total += (d.nombre_adultes || 0) + (d.nombre_adolescents || 0) + (d.nombre_enfants || 0) + (d.nombre_bebes || 0);
+    });
+    
+    return Object.entries(moisData)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([key, data]) => ({
+        ...data,
+        tauxAdultes: data.total > 0 ? ((data.adultes / data.total) * 100).toFixed(1) : 0,
+        tauxAdolescents: data.total > 0 ? ((data.adolescents / data.total) * 100).toFixed(1) : 0,
+        tauxEnfants: data.total > 0 ? ((data.enfants / data.total) * 100).toFixed(1) : 0,
+        tauxBebes: data.total > 0 ? ((data.bebes / data.total) * 100).toFixed(1) : 0
+      }));
+  }, [dossiersArrivee]);
+
+  // Taux par tranche d'âge par semaine
+  const tauxParSemaine = useMemo(() => {
+    const semaineData = {};
+    
+    dossiersArrivee.forEach(d => {
+      if (!d.date_arrivee) return;
+      const date = parseISO(d.date_arrivee);
+      const year = getYear(date);
+      const week = getISOWeek(date);
+      const key = `${year}-W${week}`;
+      
+      if (!semaineData[key]) {
+        semaineData[key] = {
+          semaine: `S${week} ${year}`,
+          adultes: 0,
+          adolescents: 0,
+          enfants: 0,
+          bebes: 0,
+          total: 0
+        };
+      }
+      
+      semaineData[key].adultes += d.nombre_adultes || 0;
+      semaineData[key].adolescents += d.nombre_adolescents || 0;
+      semaineData[key].enfants += d.nombre_enfants || 0;
+      semaineData[key].bebes += d.nombre_bebes || 0;
+      semaineData[key].total += (d.nombre_adultes || 0) + (d.nombre_adolescents || 0) + (d.nombre_enfants || 0) + (d.nombre_bebes || 0);
+    });
+    
+    return Object.entries(semaineData)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([key, data]) => ({
+        ...data,
+        tauxAdultes: data.total > 0 ? ((data.adultes / data.total) * 100).toFixed(1) : 0,
+        tauxAdolescents: data.total > 0 ? ((data.adolescents / data.total) * 100).toFixed(1) : 0,
+        tauxEnfants: data.total > 0 ? ((data.enfants / data.total) * 100).toFixed(1) : 0,
+        tauxBebes: data.total > 0 ? ((data.bebes / data.total) * 100).toFixed(1) : 0
+      }))
+      .slice(-12); // 12 dernières semaines
+  }, [dossiersArrivee]);
 
   return (
     <div className="space-y-6">
@@ -188,6 +269,107 @@ export default function BureauFrequentation({ lang }) {
                 <Bar dataKey="value" fill="#00AEEF" />
               </BarChart>
             </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tableaux taux par tranche d'âge */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Par mois */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">
+              {isFrench ? '👥 Taux par tranche d\'âge par mois' : '👥 Age group rates by month'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="p-2 text-left font-heading">Mois</th>
+                    <th className="p-2 text-right font-heading">Adultes</th>
+                    <th className="p-2 text-right font-heading">Ados</th>
+                    <th className="p-2 text-right font-heading">Enfants</th>
+                    <th className="p-2 text-right font-heading">Bébés</th>
+                    <th className="p-2 text-right font-heading">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tauxParMois.map((row, idx) => (
+                    <tr key={idx} className="border-t hover:bg-gray-50">
+                      <td className="p-2 font-body">{row.mois}</td>
+                      <td className="p-2 text-right">
+                        <span className="font-heading text-[#0077A8]">{row.tauxAdultes}%</span>
+                        <span className="text-xs text-gray-500 ml-1">({row.adultes})</span>
+                      </td>
+                      <td className="p-2 text-right">
+                        <span className="font-heading text-[#00AEEF]">{row.tauxAdolescents}%</span>
+                        <span className="text-xs text-gray-500 ml-1">({row.adolescents})</span>
+                      </td>
+                      <td className="p-2 text-right">
+                        <span className="font-heading text-[#FFD700]">{row.tauxEnfants}%</span>
+                        <span className="text-xs text-gray-500 ml-1">({row.enfants})</span>
+                      </td>
+                      <td className="p-2 text-right">
+                        <span className="font-heading text-[#FFA500]">{row.tauxBebes}%</span>
+                        <span className="text-xs text-gray-500 ml-1">({row.bebes})</span>
+                      </td>
+                      <td className="p-2 text-right font-bold">{row.total}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Par semaine */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">
+              {isFrench ? '👥 Taux par tranche d\'âge par semaine' : '👥 Age group rates by week'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="p-2 text-left font-heading">Semaine</th>
+                    <th className="p-2 text-right font-heading">Adultes</th>
+                    <th className="p-2 text-right font-heading">Ados</th>
+                    <th className="p-2 text-right font-heading">Enfants</th>
+                    <th className="p-2 text-right font-heading">Bébés</th>
+                    <th className="p-2 text-right font-heading">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tauxParSemaine.map((row, idx) => (
+                    <tr key={idx} className="border-t hover:bg-gray-50">
+                      <td className="p-2 font-body">{row.semaine}</td>
+                      <td className="p-2 text-right">
+                        <span className="font-heading text-[#0077A8]">{row.tauxAdultes}%</span>
+                        <span className="text-xs text-gray-500 ml-1">({row.adultes})</span>
+                      </td>
+                      <td className="p-2 text-right">
+                        <span className="font-heading text-[#00AEEF]">{row.tauxAdolescents}%</span>
+                        <span className="text-xs text-gray-500 ml-1">({row.adolescents})</span>
+                      </td>
+                      <td className="p-2 text-right">
+                        <span className="font-heading text-[#FFD700]">{row.tauxEnfants}%</span>
+                        <span className="text-xs text-gray-500 ml-1">({row.enfants})</span>
+                      </td>
+                      <td className="p-2 text-right">
+                        <span className="font-heading text-[#FFA500]">{row.tauxBebes}%</span>
+                        <span className="text-xs text-gray-500 ml-1">({row.bebes})</span>
+                      </td>
+                      <td className="p-2 text-right font-bold">{row.total}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </CardContent>
         </Card>
       </div>
