@@ -316,8 +316,8 @@ export default function Menage() {
   };
 
   return (
-    <div className="min-h-screen pb-8" role="main" aria-label="Page d'accueil > Collaborateur > Ménage">
-      <h1 className="sr-only">Page d'accueil > Collaborateur > Ménage - Demandes de ménage</h1>
+    <div className="min-h-screen pb-8" role="main" aria-label="Accueil > Collaborateur > Ménage">
+      <h1 className="sr-only">Accueil > Collaborateur > Ménage - Demandes de ménage</h1>
       <OfflineBanner />
       
       <div className="bg-[#FFD700] text-[#0077A8] px-4 py-4 sticky top-0 z-10">
