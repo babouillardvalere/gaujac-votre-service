@@ -51,6 +51,7 @@ import AvisApplicationForm from './pages/AvisApplicationForm';
 import AvisMenu from './pages/AvisMenu';
 import Notifications from './pages/Notifications';
 import ReceptionSuivi from './pages/ReceptionSuivi';
+import NotificationPreferences from './pages/NotificationPreferences';
 import __Layout from './Layout.jsx';
 
 
@@ -108,6 +109,7 @@ export const PAGES = {
     "AvisMenu": AvisMenu,
     "Notifications": Notifications,
     "ReceptionSuivi": ReceptionSuivi,
+    "NotificationPreferences": NotificationPreferences,
 }
 
 export const pagesConfig = {

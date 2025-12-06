@@ -18,6 +18,7 @@ import { ArrowLeft, Camera, Check, AlertCircle, Smile, Meh, Frown, Send, Loader2
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
+import { notifierInventaireSoumis, notifierInterventionCreee, notifierDossierFinalise } from '../utils/notificationService';
 
 export default function ClientControleInventaire() {
   const { t, lang } = useTranslation();
@@ -293,6 +294,9 @@ export default function ClientControleInventaire() {
         inventaire_complet: objetsMissing.length === 0 && evaluationProprete !== 'pas_satisfaisant'
       });
 
+      // 🔔 Notifier la réception de l'inventaire soumis
+      await notifierInventaireSoumis(inventaire);
+
       // Créer les interventions ménage
       const interventionsMenageIds = [];
       for (const intervention of interventionsPreview.menage) {
@@ -315,6 +319,9 @@ export default function ClientControleInventaire() {
           origine: 'arrivee'
         });
         interventionsMenageIds.push(incident.id);
+        
+        // 🔔 Notifier l'équipe ménage
+        await notifierInterventionCreee(incident);
       }
 
       // Créer les interventions technique
@@ -339,12 +346,15 @@ export default function ClientControleInventaire() {
           origine: 'arrivee'
         });
         interventionsTechniqueIds.push(incident.id);
+        
+        // 🔔 Notifier l'équipe technique
+        await notifierInterventionCreee(incident);
       }
 
       // Mettre à jour le dossier d'arrivée
       const dossierId = sessionStorage.getItem('arrivee_dossier_id');
       if (dossierId) {
-        await base44.entities.DossierArrivee.update(dossierId, {
+        const dossierUpdated = await base44.entities.DossierArrivee.update(dossierId, {
           etape_3_terminee: true,
           etape_4_terminee: true,
           etape_actuelle: 4,
@@ -354,6 +364,13 @@ export default function ClientControleInventaire() {
           statut: 'finalise',
           date_finalisation: new Date().toISOString(),
           remarques_client: remarques
+        });
+        
+        // 🔔 Notifier la réception du dossier finalisé
+        await notifierDossierFinalise(dossierUpdated, {
+          interventions_menage: interventionsMenageIds.length,
+          interventions_technique: interventionsTechniqueIds.length,
+          inventaire_complet: inventaire.inventaire_complet
         });
       }
 
