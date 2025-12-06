@@ -22,13 +22,9 @@ export default function ReceptionSuivi({ embedded = false }) {
     refetchInterval: 15000
   });
 
-  // Filtrer interventions par origine
-  const interventionsReception = interventions.filter(i => 
-    i.origine === 'arrivee' || i.origine === 'depart' || i.created_by?.includes('reception')
-  );
-
-  const interventionsTechnique = interventionsReception.filter(i => i.type === 'technique');
-  const interventionsMenage = interventionsReception.filter(i => i.type === 'menage');
+  // Afficher TOUTES les interventions (pas de filtre d'origine)
+  const interventionsTechnique = interventions.filter(i => i.type === 'technique');
+  const interventionsMenage = interventions.filter(i => i.type === 'menage');
 
   const getStatusBadge = (statut, urgent) => {
     const config = {

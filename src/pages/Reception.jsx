@@ -73,14 +73,14 @@ export default function Reception() {
                 </div>
                 <div className="text-center">
                   <p className="font-heading text-lg text-gray-900">
-                    {lang === 'fr' ? 'Assistance' : 'Assistance'}
+                    {lang === 'fr' ? 'Assistance Clients' : 'Guest Assistance'}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {lang === 'fr' ? 'Aider un client' : 'Help a guest'}
+                    {lang === 'fr' ? 'Arrivée/Départ/Séjour' : 'Arrival/Departure/Stay'}
                   </p>
                 </div>
               </TabsTrigger>
-              
+
               <TabsTrigger 
                 value="suivi" 
                 className="flex flex-col items-center gap-3 p-6 rounded-2xl border-2 bg-white data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:shadow-lg transition-all h-auto"
@@ -90,14 +90,14 @@ export default function Reception() {
                 </div>
                 <div className="text-center">
                   <p className="font-heading text-lg text-gray-900">
-                    {lang === 'fr' ? 'Suivi' : 'Tracking'}
+                    {lang === 'fr' ? 'Suivi Interventions' : 'Intervention Tracking'}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {lang === 'fr' ? 'Interventions' : 'Interventions'}
+                    {lang === 'fr' ? 'Toutes origines' : 'All sources'}
                   </p>
                 </div>
               </TabsTrigger>
-              
+
               <TabsTrigger 
                 value="arrivees" 
                 className="flex flex-col items-center gap-3 p-6 rounded-2xl border-2 bg-white data-[state=active]:border-green-500 data-[state=active]:bg-green-50 data-[state=active]:shadow-lg transition-all h-auto relative"
@@ -115,11 +115,11 @@ export default function Reception() {
                     {lang === 'fr' ? 'Arrivées' : 'Arrivals'}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {lang === 'fr' ? 'Check-in' : 'Check-in'}
+                    {lang === 'fr' ? 'Dossiers & inventaires' : 'Files & inventories'}
                   </p>
                 </div>
               </TabsTrigger>
-              
+
               <TabsTrigger 
                 value="departs" 
                 className="flex flex-col items-center gap-3 p-6 rounded-2xl border-2 bg-white data-[state=active]:border-orange-500 data-[state=active]:bg-orange-50 data-[state=active]:shadow-lg transition-all h-auto relative"
@@ -137,7 +137,7 @@ export default function Reception() {
                     {lang === 'fr' ? 'Départs' : 'Departures'}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {lang === 'fr' ? 'Check-out' : 'Check-out'}
+                    {lang === 'fr' ? 'Dossiers & états' : 'Files & conditions'}
                   </p>
                 </div>
               </TabsTrigger>
