@@ -1,13 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Download, Mail, Users, Dog, Calendar, Home } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ArrowLeft, Download, Mail, Users, Dog, Calendar, Home, CheckCircle, XCircle, Image as ImageIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 export default function ReceptionFicheArrivee({ dossier, onClose, lang = 'fr' }) {
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  
   const { data: inventaire } = useQuery({
     queryKey: ['inventaire-arrivee', dossier.inventaire_id],
     queryFn: async () => {
@@ -111,41 +120,155 @@ export default function ReceptionFicheArrivee({ dossier, onClose, lang = 'fr' })
 
           {/* Inventaire */}
           {inventaire && (
-            <Card className="border-2 border-gray-300 rounded-xl mb-6">
+            <Card className="border-2 border-blue-300 rounded-xl mb-6">
               <CardContent className="p-6">
                 <h2 className="font-heading text-xl text-[#0077A8] mb-4">
                   ✔️ {lang === 'fr' ? 'Contrôle Inventaire' : 'Inventory Check'}
                 </h2>
-                <div className="space-y-4">
+                <div className="space-y-6">
+                  {/* Objets validés */}
                   <div>
-                    <p className="text-sm text-gray-600">{lang === 'fr' ? 'Objets validés' : 'Validated items'}</p>
-                    <p className="font-heading">{inventaire.objets_valides?.length || 0}</p>
+                    <p className="text-sm text-gray-600 mb-2">
+                      {lang === 'fr' ? 'Objets validés' : 'Validated items'} ({inventaire.objets_valides?.length || 0})
+                    </p>
+                    {inventaire.objets_valides?.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {inventaire.objets_valides.map((obj, idx) => (
+                          <Badge key={idx} className="bg-green-100 text-green-700 hover:bg-green-100">
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            {obj}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                   </div>
+
+                  {/* Objets manquants */}
                   {inventaire.objets_manquants?.length > 0 && (
                     <div>
-                      <p className="text-sm text-gray-600 mb-2">{lang === 'fr' ? 'Objets manquants/cassés' : 'Missing/broken items'}</p>
+                      <p className="text-sm text-gray-600 mb-2">
+                        {lang === 'fr' ? '⚠️ Objets manquants/cassés' : '⚠️ Missing/broken items'} ({inventaire.objets_manquants.length})
+                      </p>
                       <div className="space-y-2">
                         {inventaire.objets_manquants.map((obj, idx) => (
-                          <div key={idx} className="p-3 bg-red-50 rounded-lg border border-red-200">
-                            <p className="font-heading text-sm">{obj.objet}</p>
-                            {obj.commentaire && <p className="text-xs text-gray-600">{obj.commentaire}</p>}
+                          <div key={idx} className="p-3 bg-red-50 rounded-lg border-2 border-red-300 flex items-start gap-2">
+                            <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                            <div className="flex-1">
+                              <p className="font-heading text-sm text-red-900">{obj.objet}</p>
+                              {obj.commentaire && (
+                                <p className="text-xs text-gray-700 mt-1">{obj.commentaire}</p>
+                              )}
+                            </div>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
-                  <div>
-                    <p className="text-sm text-gray-600">{lang === 'fr' ? 'Propreté' : 'Cleanliness'}</p>
-                    <p className="font-heading">
-                      {inventaire.evaluation_proprete === 'tres_propre' ? '😊 ' + (lang === 'fr' ? 'Très propre' : 'Very clean') :
-                       inventaire.evaluation_proprete === 'correct' ? '😐 ' + (lang === 'fr' ? 'Correct' : 'Correct') :
-                       '😞 ' + (lang === 'fr' ? 'Pas satisfaisant' : 'Not satisfactory')}
-                    </p>
+
+                  {/* Photos des pièces */}
+                  {inventaire.photos_pieces && Object.keys(inventaire.photos_pieces).length > 0 && (
+                    <div>
+                      <p className="text-sm text-gray-600 mb-2">
+                        📸 {lang === 'fr' ? 'Photos des pièces' : 'Room photos'}
+                      </p>
+                      <div className="grid grid-cols-3 gap-3">
+                        {Object.entries(inventaire.photos_pieces).map(([piece, url]) => (
+                          <button
+                            key={piece}
+                            onClick={() => setSelectedPhoto({ piece, url })}
+                            className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 hover:border-[#00AEEF] transition-all group"
+                          >
+                            <img 
+                              src={url} 
+                              alt={piece}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center">
+                              <ImageIcon className="w-6 h-6 text-white opacity-0 group-hover:opacity-100" />
+                            </div>
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                              <p className="text-xs text-white font-heading">{piece}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Évaluation propreté */}
+                  <div className="border-t pt-4">
+                    <p className="text-sm text-gray-600 mb-2">{lang === 'fr' ? '🧹 Évaluation propreté' : '🧹 Cleanliness rating'}</p>
+                    <div className={`p-4 rounded-lg border-2 ${
+                      inventaire.evaluation_proprete === 'tres_propre' ? 'bg-green-50 border-green-300' :
+                      inventaire.evaluation_proprete === 'correct' ? 'bg-yellow-50 border-yellow-300' :
+                      'bg-red-50 border-red-300'
+                    }`}>
+                      <p className="font-heading text-lg">
+                        {inventaire.evaluation_proprete === 'tres_propre' ? '😊 ' + (lang === 'fr' ? 'Très propre' : 'Very clean') :
+                         inventaire.evaluation_proprete === 'correct' ? '😐 ' + (lang === 'fr' ? 'Correct' : 'Correct') :
+                         '😞 ' + (lang === 'fr' ? 'Pas satisfaisant' : 'Not satisfactory')}
+                      </p>
+                      {inventaire.commentaire_proprete && (
+                        <p className="text-sm text-gray-700 mt-2">{inventaire.commentaire_proprete}</p>
+                      )}
+                      {inventaire.photo_proprete && (
+                        <button
+                          onClick={() => setSelectedPhoto({ piece: lang === 'fr' ? 'Propreté' : 'Cleanliness', url: inventaire.photo_proprete })}
+                          className="mt-2 text-sm text-blue-600 hover:underline flex items-center gap-1"
+                        >
+                          <ImageIcon className="w-4 h-4" />
+                          {lang === 'fr' ? 'Voir photo' : 'View photo'}
+                        </button>
+                      )}
+                    </div>
                   </div>
+
+                  {/* Remarques client */}
+                  {inventaire.remarques_suggestions && (
+                    <div className="border-t pt-4">
+                      <p className="text-sm text-gray-600 mb-2">💬 {lang === 'fr' ? 'Remarques du client' : 'Guest remarks'}</p>
+                      <div className="p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
+                        <p className="text-sm text-gray-800">{inventaire.remarques_suggestions}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Signature */}
+                  {inventaire.signature_url && (
+                    <div className="border-t pt-4">
+                      <p className="text-sm text-gray-600 mb-2">✍️ {lang === 'fr' ? 'Signature client' : 'Guest signature'}</p>
+                      <div className="border-2 border-gray-300 rounded-lg p-2 bg-white inline-block">
+                        <img 
+                          src={inventaire.signature_url} 
+                          alt="Signature"
+                          className="h-20"
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {lang === 'fr' ? 'Signé le' : 'Signed on'} {new Date(inventaire.date_validation).toLocaleString(lang)}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
           )}
+
+          {/* Dialog pour afficher les photos en grand */}
+          <Dialog open={!!selectedPhoto} onOpenChange={() => setSelectedPhoto(null)}>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>{selectedPhoto?.piece}</DialogTitle>
+              </DialogHeader>
+              {selectedPhoto && (
+                <img 
+                  src={selectedPhoto.url} 
+                  alt={selectedPhoto.piece}
+                  className="w-full rounded-lg"
+                />
+              )}
+            </DialogContent>
+          </Dialog>
 
           {/* Interventions générées */}
           {interventions.length > 0 && (
