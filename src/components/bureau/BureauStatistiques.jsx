@@ -416,50 +416,7 @@ export default function BureauStatistiques({ incidents }) {
           </CardContent>
         </Card>
 
-        {/* Répartition des avis */}
-        <Card className="border-2 border-[#00AEEF]/30 rounded-xl lg:col-span-2">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-heading text-[#0077A8] flex items-center gap-2">
-              <Star className="w-4 h-4" />
-              ⭐ Répartition des avis clients
-              <Badge className="bg-[#FFD700] text-[#0077A8] ml-2">Moyenne: {scoreMoyen}/5</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={avisStats.filter(a => a.value > 0)} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}>
-                      {avisStats.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="space-y-3">
-                {avisStats.map((avis, idx) => (
-                  <div key={avis.note}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-body">{avis.name}</span>
-                      <span className="font-heading text-[#0077A8]">{avis.value} ({totalAvis > 0 ? Math.round(avis.value / totalAvis * 100) : 0}%)</span>
-                    </div>
-                    <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                      <div className="h-full transition-all" style={{ width: `${totalAvis > 0 ? (avis.value / totalAvis * 100) : 0}%`, backgroundColor: COLORS[idx] }} />
-                    </div>
-                  </div>
-                ))}
-                <div className="mt-4 p-3 bg-[#FFD700]/20 rounded-xl">
-                  <p className="text-sm font-body text-[#0077A8]">
-                    <strong>Total avis:</strong> {totalAvis} | <strong>Score global:</strong> {scoreMoyen}/5 ⭐
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+
       </div>
     </div>
   );
