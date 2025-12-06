@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Logo from '../components/Logo';
-import NotificationCenter from '../components/NotificationCenter';
+import CollaborateurNotificationBell from '../components/CollaborateurNotificationBell';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from '../components/translations';
@@ -370,8 +370,8 @@ export default function Bureau() {
   };
 
   return (
-    <div className="min-h-screen pb-8" role="main" aria-label="Bureau - Gestion et historique des interventions">
-      <h1 className="sr-only">Bureau - Historique et statistiques des interventions</h1>
+    <div className="min-h-screen pb-8" role="main" aria-label="Accueil > Collaborateur > Bureau">
+      <h1 className="sr-only">Accueil > Collaborateur > Bureau - Historique et statistiques</h1>
       {/* Header */}
       <div className="bg-[#FFA500] text-white px-4 py-4 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
@@ -385,7 +385,7 @@ export default function Bureau() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <NotificationCenter userType="collaborateur" />
+            <CollaborateurNotificationBell />
             <Button
               onClick={handleBureauLogout}
               variant="ghost"
