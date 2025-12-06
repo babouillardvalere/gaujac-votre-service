@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import ReceptionFicheArrivee from '../reception/ReceptionFicheArrivee';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +12,7 @@ export default function BureauFichesPDF({ lang }) {
   const isFrench = lang === 'fr';
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('all'); // all, arrivee, depart
+  const [selectedDossier, setSelectedDossier] = useState(null);
 
   const { data: dossiersArrivee = [] } = useQuery({
     queryKey: ['dossiers-fiches'],
@@ -132,7 +134,7 @@ export default function BureauFichesPDF({ lang }) {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleViewPDF(dossier, 'arrivee')}
+                        onClick={() => setSelectedDossier(dossier)}
                         className="rounded-lg"
                       >
                         <Eye className="w-4 h-4 mr-1" />
