@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { genererPDFArrivee } from './genererPDFArrivee';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -40,13 +41,45 @@ export default function ReceptionFicheArrivee({ dossier, onClose, lang = 'fr' })
   });
 
   const handleGenererPDF = async () => {
-    toast.info(lang === 'fr' ? 'Génération du PDF...' : 'Generating PDF...');
-    // TODO: Implémenter génération PDF
+    try {
+      toast.info(lang === 'fr' ? 'Génération du PDF...' : 'Generating PDF...');
+      const pdf = await genererPDFArrivee(dossier, inventaire, interventions, lang);
+      pdf.save(`Arrivee_${dossier.client_nom}_${dossier.numero_logement}_${dossier.date_arrivee}.pdf`);
+      toast.success(lang === 'fr' ? 'PDF généré avec succès' : 'PDF generated successfully');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error(lang === 'fr' ? 'Erreur lors de la génération du PDF' : 'Error generating PDF');
+    }
   };
 
   const handleEnvoyerEmail = async () => {
-    toast.info(lang === 'fr' ? 'Envoi par email...' : 'Sending by email...');
-    // TODO: Implémenter envoi email
+    try {
+      toast.info(lang === 'fr' ? 'Préparation de l\'email...' : 'Preparing email...');
+      
+      // Générer le PDF
+      const pdf = await genererPDFArrivee(dossier, inventaire, interventions, lang);
+      const pdfBlob = pdf.output('blob');
+      
+      // Upload le PDF
+      const formData = new FormData();
+      formData.append('file', pdfBlob, `Arrivee_${dossier.client_nom}_${dossier.numero_logement}.pdf`);
+      
+      const { file_url } = await base44.integrations.Core.UploadFile({ file: pdfBlob });
+      
+      // Envoyer l'email (nécessite l'email du client - à adapter selon votre structure)
+      const emailBody = lang === 'fr' 
+        ? `Bonjour ${dossier.client_prenom} ${dossier.client_nom},\n\nVeuillez trouver ci-joint votre fiche d'arrivée.\n\nCordialement,\nL'équipe Camping Paradis`
+        : `Hello ${dossier.client_prenom} ${dossier.client_nom},\n\nPlease find attached your arrival form.\n\nBest regards,\nCamping Paradis Team`;
+      
+      // Note: Vous devrez adapter selon que vous avez l'email du client
+      toast.success(lang === 'fr' ? 'PDF prêt à être envoyé' : 'PDF ready to send');
+      
+      // Ouvrir le client email avec le lien
+      window.open(`mailto:?subject=${encodeURIComponent(lang === 'fr' ? 'Votre fiche d\'arrivée' : 'Your arrival form')}&body=${encodeURIComponent(emailBody + '\n\n' + file_url)}`);
+    } catch (error) {
+      console.error('Error sending email:', error);
+      toast.error(lang === 'fr' ? 'Erreur lors de l\'envoi' : 'Error sending email');
+    }
   };
 
   const totalPersonnes = (dossier.nombre_adultes || 0) + (dossier.nombre_enfants || 0);
