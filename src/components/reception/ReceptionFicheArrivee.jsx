@@ -361,8 +361,8 @@ export default function ReceptionFicheArrivee({ dossier, onClose, lang = 'fr' })
                   ⏳ {lang === 'fr' ? 'En attente d\'inventaire' : 'Waiting for inventory'}
                 </h2>
                 <p className="text-gray-600">
-                  {lang === 'fr'
-                    ? 'Le client n\'a pas encore complété le contrôle d\'inventaire à l\'arrivée.'
+                  {lang === 'fr' 
+                    ? 'Le client n\'a pas encore complété le contrôle d\'inventaire à l\'arrivée.' 
                     : 'The guest has not yet completed the arrival inventory check.'}
                 </p>
               </CardContent>
