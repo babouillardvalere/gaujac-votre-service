@@ -61,34 +61,6 @@ export default function Home() {
 
   const menuItems = [
     {
-      title: lang === 'fr' ? '📅 Réserver' : '📅 Book now',
-      icon: BookOpen,
-      href: '/Reservations',
-      bgColor: 'bg-[#22c55e]',
-      borderColor: 'border-[#22c55e]',
-      iconBg: 'bg-white',
-      textColor: 'text-white',
-      subtitleColor: 'text-white/90',
-      arrowColor: 'text-white',
-      description: lang === 'fr' ? 'Réservation en ligne' : 'Online booking',
-      ariaLabel: lang === 'fr' ? 'Réserver un hébergement' : 'Book accommodation',
-      iconColor: 'text-[#22c55e]'
-    },
-    {
-      title: lang === 'fr' ? '📋 Mes réservations' : '📋 My bookings',
-      icon: BookOpen,
-      href: '/MesReservations',
-      bgColor: 'bg-[#8b5cf6]',
-      borderColor: 'border-[#8b5cf6]',
-      iconBg: 'bg-white',
-      textColor: 'text-white',
-      subtitleColor: 'text-white/90',
-      arrowColor: 'text-white',
-      description: lang === 'fr' ? 'Gérer mes réservations' : 'Manage my bookings',
-      ariaLabel: lang === 'fr' ? 'Voir mes réservations' : 'View my bookings',
-      iconColor: 'text-[#8b5cf6]'
-    },
-    {
       title: t('client'),
       icon: CustomUsersIcon,
       href: '/ClientMenu',
