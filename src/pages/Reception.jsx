@@ -36,17 +36,8 @@ export default function Reception() {
       <h1 className="sr-only">Accueil > Collaborateur > Réception - Arrivées, départs et assistance</h1>
       <div className="max-w-6xl mx-auto">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={() => navigate(createPageUrl('MenuCollaborateur'))}
-              className="flex items-center gap-2 text-[#0077A8] hover:text-[#00AEEF]"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span className="font-heading">{t('retour')}</span>
-            </button>
-            <div className="flex items-center gap-2">
-              <CollaborateurNotificationBell />
-            </div>
+          <div className="flex items-center justify-end mb-4">
+            <CollaborateurNotificationBell />
           </div>
 
           <Logo className="h-16 mb-4" />
