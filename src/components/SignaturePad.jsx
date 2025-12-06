@@ -84,11 +84,11 @@ export default function SignaturePad({ onSave, disabled = false, lang = 'fr' }) 
           ✒️ {lang === 'fr' ? 'Signature électronique' : 'Electronic signature'}
         </h3>
         
-        <div className="border-2 border-dashed border-gray-300 rounded-lg bg-white mb-4">
+        <div className="border-2 border-dashed border-gray-300 rounded-lg bg-white mb-4 relative">
           <canvas
             ref={canvasRef}
-            className="w-full touch-none cursor-crosshair"
-            style={{ transform: 'none', height: '200px' }}
+            className="w-full touch-none"
+            style={{ height: '200px', cursor: 'crosshair' }}
             onMouseDown={startDrawing}
             onMouseMove={draw}
             onMouseUp={stopDrawing}
@@ -97,6 +97,13 @@ export default function SignaturePad({ onSave, disabled = false, lang = 'fr' }) 
             onTouchMove={draw}
             onTouchEnd={stopDrawing}
           />
+          {!hasSignature && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <p className="text-gray-400 text-sm font-body">
+                {lang === 'fr' ? '✍️ Signez ici' : '✍️ Sign here'}
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-2">

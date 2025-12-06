@@ -36,15 +36,15 @@ export function dateEstDansSemaine(date, semaine) {
 }
 
 // Récupère les dossiers d'une semaine donnée
+// RÈGLE: Classement basé UNIQUEMENT sur la date d'arrivée
 export function filtrerDossiersParSemaine(dossiers, semaine) {
   return dossiers.filter(dossier => {
     // Support multiple champs de date pour compatibilité
     const dateArrivee = new Date(dossier.date_arrivee || dossier.arrival_date);
-    const dateDepart = new Date(dossier.date_depart || dossier.departure_date);
     
-    // Vérifier que les dates sont valides
-    if (isNaN(dateArrivee.getTime()) || isNaN(dateDepart.getTime())) {
-      console.warn('Invalid dates for dossier:', dossier.id, dossier);
+    // Vérifier que la date d'arrivée est valide
+    if (isNaN(dateArrivee.getTime())) {
+      console.warn('Invalid arrival date for dossier:', dossier.id, dossier);
       return false;
     }
     
@@ -55,10 +55,8 @@ export function filtrerDossiersParSemaine(dossiers, semaine) {
     fin.setHours(23, 59, 59, 999);
     
     dateArrivee.setHours(0, 0, 0, 0);
-    dateDepart.setHours(23, 59, 59, 999);
     
-    // Le séjour chevauche la semaine si :
-    // - l'arrivée est avant ou pendant la semaine ET le départ est après ou pendant la semaine
-    return dateArrivee <= fin && dateDepart >= debut;
+    // Le dossier apparaît dans la semaine si la date d'arrivée tombe dedans
+    return dateArrivee >= debut && dateArrivee <= fin;
   });
 }
