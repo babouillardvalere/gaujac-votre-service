@@ -13,7 +13,7 @@ import { ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 
-export default function ReceptionArrivees() {
+export default function ReceptionArrivees({ embedded = false }) {
   const { t, lang } = useTranslation();
   const navigate = useNavigate();
   const [dossierSelectionne, setDossierSelectionne] = useState(null);
@@ -23,11 +23,19 @@ export default function ReceptionArrivees() {
     queryFn: () => base44.entities.DossierArrivee.list()
   });
 
-  const anneeEnCours = new Date().getFullYear();
+  // Période glissante : Décembre année en cours → Novembre année suivante
+  const now = new Date();
+  const currentMonth = now.getMonth(); // 0-11
+  const currentYear = now.getFullYear();
+  
+  // Si on est avant décembre, afficher décembre année précédente → novembre année en cours
+  // Si on est en décembre ou après, afficher décembre année en cours → novembre année suivante
+  const startYear = currentMonth < 11 ? currentYear - 1 : currentYear;
+  const endYear = startYear + 1;
 
-  const renderSemaines = (moisStr) => {
+  const renderSemaines = (moisStr, annee) => {
     const mois = parseInt(moisStr);
-    const semaines = genererSemaines(anneeEnCours, mois);
+    const semaines = genererSemaines(annee, mois);
 
     return (
       <ReceptionSemaineAccordeon semaines={semaines} lang={lang}>
@@ -55,10 +63,10 @@ export default function ReceptionArrivees() {
     );
   }
 
-  return (
-    <div className="min-h-screen px-6 py-8">
-      <div className="max-w-4xl mx-auto">
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+  const content = (
+    <>
+      {!embedded && (
+        <>
           <div className="flex items-center justify-between mb-4">
             <button
               onClick={() => navigate(createPageUrl('Reception'))}
@@ -77,16 +85,30 @@ export default function ReceptionArrivees() {
           <p className="text-center text-gray-600 font-body mb-8">
             {lang === 'fr' ? 'Gestion des dossiers d\'arrivée' : 'Arrival files management'}
           </p>
+        </>
+      )}
 
-          {isLoading ? (
-            <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#00AEEF]"></div>
-            </div>
-          ) : (
-            <ReceptionMoisOnglets lang={lang}>
-              {renderSemaines}
-            </ReceptionMoisOnglets>
-          )}
+      {isLoading ? (
+        <div className="text-center py-12">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#00AEEF]"></div>
+        </div>
+      ) : (
+        <ReceptionMoisOnglets lang={lang} startYear={startYear} endYear={endYear}>
+          {renderSemaines}
+        </ReceptionMoisOnglets>
+      )}
+    </>
+  );
+
+  if (embedded) {
+    return <div>{content}</div>;
+  }
+
+  return (
+    <div className="min-h-screen px-6 py-8">
+      <div className="max-w-4xl mx-auto">
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+          {content}
         </motion.div>
       </div>
     </div>
