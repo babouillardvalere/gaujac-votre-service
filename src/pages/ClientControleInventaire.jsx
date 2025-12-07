@@ -726,29 +726,37 @@ export default function ClientControleInventaire() {
                 <label className="text-sm font-heading text-[#0077A8] mb-2 block">
                   {lang === 'fr' ? 'Photo (recommandée)' : 'Photo (recommended)'}
                 </label>
-                <label className="block">
+                <label className="block cursor-pointer">
                   <input
                     type="file"
                     accept="image/*"
                     capture="environment"
                     className="hidden"
                     onChange={(e) => handleUploadMissingPhoto(e.target.files[0])}
+                    disabled={uploading}
                   />
-                  <Button variant="outline" className="w-full" asChild>
-                    <span>
-                      {missingItem.photo ? (
-                        <>
-                          <Check className="w-4 h-4 mr-2" />
-                          {lang === 'fr' ? 'Photo ajoutée' : 'Photo added'}
-                        </>
-                      ) : (
-                        <>
-                          <Camera className="w-4 h-4 mr-2" />
-                          {lang === 'fr' ? 'Ajouter photo' : 'Add photo'}
-                        </>
-                      )}
-                    </span>
-                  </Button>
+                  <div className={`w-full inline-flex items-center justify-center rounded-md text-sm font-medium border-2 h-10 px-4 py-2 ${
+                    missingItem.photo 
+                      ? 'border-green-500 text-green-600 bg-white hover:bg-green-50' 
+                      : 'border-gray-300 bg-white hover:bg-gray-50'
+                  } ${uploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                    {uploading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        {lang === 'fr' ? 'Upload...' : 'Uploading...'}
+                      </>
+                    ) : missingItem.photo ? (
+                      <>
+                        <Check className="w-4 h-4 mr-2" />
+                        {lang === 'fr' ? 'Photo ajoutée' : 'Photo added'}
+                      </>
+                    ) : (
+                      <>
+                        <Camera className="w-4 h-4 mr-2" />
+                        {lang === 'fr' ? 'Ajouter photo' : 'Add photo'}
+                      </>
+                    )}
+                  </div>
                 </label>
               </div>
 
