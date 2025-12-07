@@ -5,10 +5,13 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Zap, Database, AlertTriangle, CheckCircle, 
-  TrendingUp, Activity, Download, Play, StopCircle 
+  TrendingUp, Activity, Download, Play, StopCircle,
+  Camera, FileText, Clock
 } from 'lucide-react';
 import { generateAllTestData } from '../components/loadtesting/seed-test-data';
 import { runAutoArchiving } from '../components/reception/ArchivageService';
+import testSurchargePDF from '../components/loadtesting/test-surcharge-pdf';
+import testUploadMassif from '../components/loadtesting/test-upload-massif';
 import { 
   POINTS_FORTS, 
   POINTS_CRITIQUES, 
@@ -18,11 +21,24 @@ import {
   PERFORMANCE_ESTIMATES,
   SUCCESS_CRITERIA
 } from '../components/loadtesting/RAPPORT_ANALYSE_PERFORMANCE';
+import { 
+  TEST_SURCHARGE_PDF,
+  TEST_UPLOAD_MASSIF,
+  TEST_LONGUE_DUREE,
+  TEST_MODULE_RECEPTION,
+  TEST_OPTIMISATION_IMAGES
+} from '../components/loadtesting/TESTS_COMPLEMENTAIRES';
 
 export default function AdminLoadTest() {
   const [seeding, setSeeding] = useState(false);
   const [seedResult, setSeedResult] = useState(null);
   const [archiving, setArchiving] = useState(false);
+
+  // Exposer tests dans window pour console
+  React.useEffect(() => {
+    window.testSurchargePDF = testSurchargePDF;
+    window.testUploadMassif = testUploadMassif;
+  }, []);
 
   const handleSeedData = async () => {
     const confirmed = window.confirm(
@@ -109,6 +125,23 @@ export default function AdminLoadTest() {
               {archiving ? 'Archivage...' : '📦 Lancer archivage automatique (>30j)'}
             </Button>
 
+            <div className="bg-purple-50 p-4 rounded-lg border-2 border-purple-300">
+              <p className="text-sm font-bold text-purple-900 mb-2">🧪 Tests Complémentaires</p>
+              <p className="text-xs text-purple-700 mb-3">
+                Exécuter dans la console navigateur (F12)
+              </p>
+              <div className="space-y-2 text-xs">
+                <div className="bg-white p-2 rounded border border-purple-200">
+                  <code className="text-purple-800">await window.testSurchargePDF(50)</code>
+                  <p className="text-gray-600 mt-1">Test 50 PDFs simultanés</p>
+                </div>
+                <div className="bg-white p-2 rounded border border-purple-200">
+                  <code className="text-purple-800">await window.testUploadMassif(200, 50)</code>
+                  <p className="text-gray-600 mt-1">Test 200 photos en batch de 50</p>
+                </div>
+              </div>
+            </div>
+
             <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-300">
               <p className="text-sm font-bold text-blue-900 mb-2">📥 Documentation Complète</p>
               <p className="text-xs text-blue-700 mb-3">
@@ -122,7 +155,16 @@ export default function AdminLoadTest() {
                   className="border-blue-500 w-full"
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  Script K6 (500 users)
+                  Script K6 Standard (500 users)
+                </Button>
+                <Button
+                  onClick={() => window.open('/components/loadtesting/k6-longue-duree.js', '_blank')}
+                  variant="outline"
+                  size="sm"
+                  className="border-purple-500 w-full"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Script K6 Longue Durée (6h)
                 </Button>
                 <Button
                   onClick={() => window.open('/components/loadtesting/SECURITE_ET_ISOLATION.jsx', '_blank')}
@@ -132,6 +174,15 @@ export default function AdminLoadTest() {
                 >
                   <Download className="w-4 h-4 mr-2" />
                   🔒 Sécurité & Isolation
+                </Button>
+                <Button
+                  onClick={() => window.open('/components/loadtesting/TESTS_COMPLEMENTAIRES.jsx', '_blank')}
+                  variant="outline"
+                  size="sm"
+                  className="border-green-500 w-full"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  📋 Tests Complémentaires
                 </Button>
               </div>
             </div>
@@ -162,6 +213,118 @@ export default function AdminLoadTest() {
                   </p>
                 </div>
               ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Tests complémentaires */}
+        <Card className="mb-6 border-2 border-purple-500">
+          <CardHeader className="bg-purple-50">
+            <CardTitle className="flex items-center gap-2 text-purple-800">
+              <Activity className="w-6 h-6" />
+              🧪 Tests Complémentaires Techniques
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <div className="space-y-4">
+              <div className="bg-red-50 p-4 rounded-lg border-2 border-red-300">
+                <div className="flex items-start gap-3">
+                  <FileText className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" />
+                  <div>
+                    <h3 className="font-heading text-lg text-red-900 mb-1">
+                      Test 1: Surcharge PDF (30-50 simultanés)
+                    </h3>
+                    <p className="text-sm text-red-700 mb-2">
+                      {TEST_SURCHARGE_PDF.objectif}
+                    </p>
+                    <Badge className="bg-red-600 mb-2">CRITIQUE</Badge>
+                    <div className="text-xs text-gray-700 space-y-1 mt-2">
+                      <p><strong>Scénario:</strong> Samedi 10h-12h, 40-50 PDFs en 30 min</p>
+                      <p><strong>Métriques:</strong> Temps génération P95 &lt; 10s, taux erreur 0%</p>
+                      <p><strong>Exécution:</strong> <code className="bg-white px-1 rounded">await window.testSurchargePDF(50)</code></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-300">
+                <div className="flex items-start gap-3">
+                  <Camera className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
+                  <div>
+                    <h3 className="font-heading text-lg text-blue-900 mb-1">
+                      Test 2: Upload massif photos (150-200 images)
+                    </h3>
+                    <p className="text-sm text-blue-700 mb-2">
+                      {TEST_UPLOAD_MASSIF.objectif}
+                    </p>
+                    <Badge className="bg-blue-600 mb-2">HAUTE</Badge>
+                    <div className="text-xs text-gray-700 space-y-1 mt-2">
+                      <p><strong>Scénario:</strong> 40 inventaires × 5 photos = 200 uploads</p>
+                      <p><strong>Métriques:</strong> Compression &lt; 2s/photo, upload &lt; 5s/photo</p>
+                      <p><strong>Exécution:</strong> <code className="bg-white px-1 rounded">await window.testUploadMassif(200, 50)</code></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-orange-50 p-4 rounded-lg border-2 border-orange-300">
+                <div className="flex items-start gap-3">
+                  <Clock className="w-6 h-6 text-orange-600 flex-shrink-0 mt-1" />
+                  <div>
+                    <h3 className="font-heading text-lg text-orange-900 mb-1">
+                      Test 3: Charge longue durée (6 heures)
+                    </h3>
+                    <p className="text-sm text-orange-700 mb-2">
+                      {TEST_LONGUE_DUREE.objectif}
+                    </p>
+                    <Badge className="bg-orange-600 mb-2">HAUTE</Badge>
+                    <div className="text-xs text-gray-700 space-y-1 mt-2">
+                      <p><strong>Scénario:</strong> 200 users constants pendant 6h</p>
+                      <p><strong>Métriques:</strong> Mémoire stable, CPU &lt; 60%, pas de dégradation</p>
+                      <p><strong>Exécution:</strong> <code className="bg-white px-1 rounded">k6 run k6-longue-duree.js</code></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-green-50 p-4 rounded-lg border-2 border-green-300">
+                <div className="flex items-start gap-3">
+                  <Activity className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" />
+                  <div>
+                    <h3 className="font-heading text-lg text-green-900 mb-1">
+                      Test 4: Navigation réelle Module Réception
+                    </h3>
+                    <p className="text-sm text-green-700 mb-2">
+                      Parcours complet: mois → semaine → dossier → inventaire → PDF
+                    </p>
+                    <Badge className="bg-green-600 mb-2">MOYENNE</Badge>
+                    <div className="text-xs text-gray-700 space-y-1 mt-2">
+                      <p><strong>Scénario:</strong> 10 agents réception × 10 dossiers chacun</p>
+                      <p><strong>Métriques:</strong> Temps chargement, transitions, isolation données</p>
+                      <p><strong>Méthode:</strong> Script Puppeteer/Playwright ou test manuel</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-yellow-50 p-4 rounded-lg border-2 border-yellow-300">
+                <div className="flex items-start gap-3">
+                  <Camera className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-1" />
+                  <div>
+                    <h3 className="font-heading text-lg text-yellow-900 mb-1">
+                      Test 5: Optimisation images & cache
+                    </h3>
+                    <p className="text-sm text-yellow-700 mb-2">
+                      Audit format, compression, CDN, chargement
+                    </p>
+                    <Badge className="bg-yellow-600 mb-2">MOYENNE</Badge>
+                    <div className="text-xs text-gray-700 space-y-1 mt-2">
+                      <p><strong>Vérifier:</strong> WebP, compression, cache CDN, lazy loading</p>
+                      <p><strong>Objectif:</strong> Photos &lt; 400KB, gain stockage 70-80%</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -333,6 +496,10 @@ export default function AdminLoadTest() {
             <p>✅ Script K6: <code className="bg-white px-2 py-1 rounded">components/loadtesting/k6-load-test.js</code></p>
             <p>✅ Seed données: <code className="bg-white px-2 py-1 rounded">components/loadtesting/seed-test-data.js</code></p>
             <p>✅ Index BDD: <code className="bg-white px-2 py-1 rounded">components/DATABASE_INDEXING.jsx</code></p>
+            <p>🧪 Tests complémentaires: <code className="bg-white px-2 py-1 rounded">components/loadtesting/TESTS_COMPLEMENTAIRES.jsx</code></p>
+            <p>🔥 Test surcharge PDF: <code className="bg-white px-2 py-1 rounded">components/loadtesting/test-surcharge-pdf.js</code></p>
+            <p>📸 Test upload massif: <code className="bg-white px-2 py-1 rounded">components/loadtesting/test-upload-massif.js</code></p>
+            <p>⏱️ Script K6 6h: <code className="bg-white px-2 py-1 rounded">components/loadtesting/k6-longue-duree.js</code></p>
           </div>
         </div>
       </div>
