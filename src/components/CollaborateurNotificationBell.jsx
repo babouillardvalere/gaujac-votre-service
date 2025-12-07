@@ -24,41 +24,63 @@ export default function CollaborateurNotificationBell() {
   const { t, lang } = useTranslation();
   const navigate = useNavigate();
 
+  // Polling à 30s pour les incidents normaux
   const { data: incidents = [] } = useQuery({
     queryKey: ['collab-notif-incidents'],
     queryFn: () => base44.entities.Incident.filter({ statut: 'en_attente' }, '-date_saisie', 100),
-    refetchInterval: 10000
+    refetchInterval: 30000 // 30 secondes
   });
 
+  // Polling à 15s pour les urgents
   const { data: incidentsUrgents = [] } = useQuery({
     queryKey: ['collab-notif-urgents'],
     queryFn: () => base44.entities.Incident.filter({ urgent: true, statut: 'en_attente' }, '-date_saisie', 50),
-    refetchInterval: 10000
+    refetchInterval: 15000 // 15 secondes
   });
 
+  // Polling à 120s pour le stock (moins urgent)
   const { data: stockAlerts = [] } = useQuery({
     queryKey: ['collab-notif-stock'],
     queryFn: async () => {
       const stock = await base44.entities.Stock.list();
       return stock.filter(s => s.quantite <= s.seuil_alerte);
     },
-    refetchInterval: 30000
+    refetchInterval: 120000 // 120 secondes
   });
+
+  // Compter les urgences critiques (eau, gaz, électricité)
+  const criticalIncidents = incidents.filter(i => {
+    const categorie = i.categorie?.toLowerCase() || '';
+    return ['eau', 'gaz', 'electricite', 'eau_plomberie'].includes(categorie);
+  });
+  
+  const hasCritical = criticalIncidents.length > 0;
+  const hasUrgent = incidentsUrgents.length > 0;
 
   const totalNotifications = incidents.length + stockAlerts.length;
 
-  // Trier : 1️⃣ urgents, 2️⃣ service (technique/ménage), 3️⃣ date
+  // Trier : 1️⃣ CRITIQUES (eau/gaz/élec), 2️⃣ urgents, 3️⃣ service (technique/ménage), 4️⃣ date
   const sortedIncidents = [...incidents].sort((a, b) => {
-    // 1️⃣ Urgence
+    // 1️⃣ Urgences CRITIQUES
+    const categA = a.categorie?.toLowerCase() || '';
+    const categB = b.categorie?.toLowerCase();
+    const criticalCategories = ['eau', 'gaz', 'electricite', 'eau_plomberie'];
+    const isCriticalA = criticalCategories.includes(categA);
+    const isCriticalB = criticalCategories.includes(categB);
+    
+    if (isCriticalA && !isCriticalB) return -1;
+    if (!isCriticalA && isCriticalB) return 1;
+    
+    // 2️⃣ Urgence
     if (a.urgent && !b.urgent) return -1;
     if (!a.urgent && b.urgent) return 1;
     
-    // 2️⃣ Service (technique avant ménage)
+    // 3️⃣ Service (technique avant ménage)
     if (a.type !== b.type) {
       return a.type === 'technique' ? -1 : 1;
     }
     
-    // 3️⃣ Date d'émission (plus récent en premier)
+    // 4️⃣ Date d'émission (plus récent en premier)
     return new Date(b.date_saisie) - new Date(a.date_saisie);
   });
 
@@ -74,10 +96,24 @@ export default function CollaborateurNotificationBell() {
       className="relative p-2 hover:bg-white/20 rounded-lg transition-colors"
       aria-label={`${totalNotifications} ${lang === 'fr' ? 'notifications' : 'notifications'}`}
     >
-      <Bell className="w-6 h-6 text-white" />
-      <span className={`absolute -top-1 -right-1 min-w-5 h-5 flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-red-500 text-white shadow-lg ${totalNotifications > 0 ? 'animate-pulse' : ''}`}>
-        {totalNotifications}
-      </span>
+      <Bell 
+        className={`w-6 h-6 ${
+          hasCritical ? 'text-red-400 animate-pulse' :
+          hasUrgent ? 'text-orange-300 animate-pulse' : 
+          'text-white'
+        }`} 
+      />
+      {totalNotifications > 0 && (
+        <span 
+          className={`absolute -top-1 -right-1 min-w-5 h-5 flex items-center justify-center text-xs font-bold rounded-full px-1.5 text-white shadow-lg ${
+            hasCritical ? 'bg-red-600 animate-pulse' :
+            hasUrgent ? 'bg-orange-500 animate-pulse' :
+            'bg-[#00AEEF]'
+          }`}
+        >
+          {totalNotifications > 99 ? '99+' : totalNotifications}
+        </span>
+      )}
     </button>
   );
 }
