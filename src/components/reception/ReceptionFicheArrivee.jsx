@@ -222,7 +222,7 @@ export default function ReceptionFicheArrivee({ fiche, onClose, lang }) {
         <CardHeader className="bg-gradient-to-r from-[#00AEEF] to-[#0077A8] text-white">
           <CardTitle className="text-2xl flex items-center gap-2">
             <FileText className="w-6 h-6" />
-            {lang === 'fr' ? 'Dossier d\'arrivée' : 'Arrival file'}
+            {lang === 'fr' ? `Dossier d'arrivée - ${fiche.client_prenom} ${fiche.client_nom}` : `Arrival file - ${fiche.client_prenom} ${fiche.client_nom}`}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6 space-y-6">

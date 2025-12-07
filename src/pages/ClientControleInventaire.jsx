@@ -425,7 +425,7 @@ export default function ClientControleInventaire() {
           <Logo className="h-16 mb-4" />
           
           <h1 className="font-handwritten text-3xl text-[#22c55e] text-center mb-2">
-            ✔️ {lang === 'fr' ? 'Contrôle Inventaire' : 'Inventory Check'}
+            ✔️ {lang === 'fr' ? `Contrôle Inventaire - ${nom} ${prenom}` : `Inventory Check - ${prenom} ${nom}`}
           </h1>
 
           {/* Barre de progression */}
