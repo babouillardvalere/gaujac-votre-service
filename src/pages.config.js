@@ -36,24 +36,15 @@ import ClientArriveeIdentite from './pages/ClientArriveeIdentite';
 import ClientArriveeHebergement from './pages/ClientArriveeHebergement';
 import ClientControleInventaire from './pages/ClientControleInventaire';
 import ClientArriveeSuivi from './pages/ClientArriveeSuivi';
-import Reception from './pages/Reception';
-import ReceptionArrivees from './pages/ReceptionArrivees';
-import ReceptionDeparts from './pages/ReceptionDeparts';
 import ClientDepartInventaire from './pages/ClientDepartInventaire';
 import ClientArriveeStatistiques from './pages/ClientArriveeStatistiques';
-import ReceptionAssistance from './pages/ReceptionAssistance';
-import ReceptionAideArrivee from './pages/ReceptionAideArrivee';
-import ReceptionAideSejour from './pages/ReceptionAideSejour';
-import ReceptionAideDepart from './pages/ReceptionAideDepart';
 import Statistiques from './pages/Statistiques';
 import InfosPratiques from './pages/InfosPratiques';
 import AvisApplicationForm from './pages/AvisApplicationForm';
 import AvisMenu from './pages/AvisMenu';
 import Notifications from './pages/Notifications';
-import ReceptionSuivi from './pages/ReceptionSuivi';
 import NotificationPreferences from './pages/NotificationPreferences';
 import CalendrierReservations from './pages/CalendrierReservations';
-import DashboardReception from './pages/DashboardReception';
 import GestionUtilisateurs from './pages/GestionUtilisateurs';
 import Reservations from './pages/Reservations';
 import PaiementReservation from './pages/PaiementReservation';
@@ -101,24 +92,15 @@ export const PAGES = {
     "ClientArriveeHebergement": ClientArriveeHebergement,
     "ClientControleInventaire": ClientControleInventaire,
     "ClientArriveeSuivi": ClientArriveeSuivi,
-    "Reception": Reception,
-    "ReceptionArrivees": ReceptionArrivees,
-    "ReceptionDeparts": ReceptionDeparts,
     "ClientDepartInventaire": ClientDepartInventaire,
     "ClientArriveeStatistiques": ClientArriveeStatistiques,
-    "ReceptionAssistance": ReceptionAssistance,
-    "ReceptionAideArrivee": ReceptionAideArrivee,
-    "ReceptionAideSejour": ReceptionAideSejour,
-    "ReceptionAideDepart": ReceptionAideDepart,
     "Statistiques": Statistiques,
     "InfosPratiques": InfosPratiques,
     "AvisApplicationForm": AvisApplicationForm,
     "AvisMenu": AvisMenu,
     "Notifications": Notifications,
-    "ReceptionSuivi": ReceptionSuivi,
     "NotificationPreferences": NotificationPreferences,
     "CalendrierReservations": CalendrierReservations,
-    "DashboardReception": DashboardReception,
     "GestionUtilisateurs": GestionUtilisateurs,
     "Reservations": Reservations,
     "PaiementReservation": PaiementReservation,
