@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../components/translations';
-import SelecteurHebergement from '../components/reception/SelecteurHebergement';
+import HebergementSelector from '../components/HebergementSelector';
 import Logo from '../components/Logo';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
@@ -60,7 +60,7 @@ export default function ClientDepartHebergement() {
             {lang === 'fr' ? 'Étape 2/4 : Hébergement' : 'Step 2/4: Accommodation'}
           </p>
 
-          <SelecteurHebergement 
+          <HebergementSelector 
             onSelect={setSelection}
             lang={lang}
           />

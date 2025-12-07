@@ -12,13 +12,19 @@ export default function SignaturePad({ onSave, disabled = false, lang = 'fr' }) 
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Redimensionner le canvas à sa taille d'affichage
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-
+    // Définir la résolution du canvas en fonction du device pixel ratio
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    
+    // Mise à l'échelle du contexte pour correspondre au DPR
     const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    
     ctx.strokeStyle = '#0077A8';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
   }, []);
@@ -32,11 +38,9 @@ export default function SignaturePad({ onSave, disabled = false, lang = 'fr' }) 
     setIsDrawing(true);
     setHasSignature(true);
     
-    // Calcul précis des coordonnées avec le ratio canvas/affichage
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const x = ((e.touches ? e.touches[0].clientX : e.clientX) - rect.left) * scaleX;
-    const y = ((e.touches ? e.touches[0].clientY : e.clientY) - rect.top) * scaleY;
+    // Coordonnées relatives à la taille d'affichage (pas au canvas interne)
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
     
     ctx.beginPath();
     ctx.moveTo(x, y);
@@ -50,11 +54,9 @@ export default function SignaturePad({ onSave, disabled = false, lang = 'fr' }) 
     const rect = canvas.getBoundingClientRect();
     const ctx = canvas.getContext('2d');
     
-    // Calcul précis des coordonnées avec le ratio canvas/affichage
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const x = ((e.touches ? e.touches[0].clientX : e.clientX) - rect.left) * scaleX;
-    const y = ((e.touches ? e.touches[0].clientY : e.clientY) - rect.top) * scaleY;
+    // Coordonnées relatives à la taille d'affichage (pas au canvas interne)
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
     
     ctx.lineTo(x, y);
     ctx.stroke();

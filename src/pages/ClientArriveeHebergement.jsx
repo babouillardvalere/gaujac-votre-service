@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../components/translations';
 import { base44 } from '@/api/base44Client';
-import SelecteurHebergement from '../components/reception/SelecteurHebergement';
+import HebergementSelector from '../components/HebergementSelector';
 import { getCodeFromCategory } from '../components/categoryCodeMapping';
 import InventaireDisplay from '../components/InventaireDisplay';
 import Logo from '../components/Logo';
@@ -98,7 +98,7 @@ export default function ClientArriveeHebergement() {
             </CardContent>
           </Card>
 
-          <SelecteurHebergement 
+          <HebergementSelector 
             onSelect={setSelection}
             lang={lang}
           />
