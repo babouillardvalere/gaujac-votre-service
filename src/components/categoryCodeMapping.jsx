@@ -26,6 +26,8 @@ export const categoryToCodeMapping = {
   "Cottage Premium": "COTTAGE_PREMIUM"
 };
 
+import { getCachedInventaire, setCachedInventaire } from './inventaireCache';
+
 export const getCodeFromCategory = (category) => {
   return categoryToCodeMapping[category] || null;
 };
@@ -34,6 +36,13 @@ export const getCodeFromCategory = (category) => {
 export const getInventaireParCategorie = (categorie, lang = 'fr') => {
   const code = getCodeFromCategory(categorie);
   if (!code) return null;
+  
+  // Vérifier le cache d'abord
+  const cacheKey = `${code}_${lang}`;
+  const cached = getCachedInventaire(cacheKey);
+  if (cached) {
+    return cached;
+  }
   
   // Import dynamique des inventaires
   const inventairesData = {
@@ -68,7 +77,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
   const inventaire = inventairesData[code];
   if (!inventaire) return null;
   
-  return {
+  const result = {
     titre: lang === 'fr' ? inventaire.titre_fr : inventaire.titre_en,
     objets: inventaire.objets.map(obj => ({
       id: obj.id,
@@ -76,4 +85,9 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       label: lang === 'fr' ? obj.label_fr : obj.label_en
     }))
   };
+  
+  // Mettre en cache
+  setCachedInventaire(cacheKey, result);
+  
+  return result;
 };
