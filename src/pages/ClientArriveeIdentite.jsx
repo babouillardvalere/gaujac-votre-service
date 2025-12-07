@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, ArrowRight, Calendar } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
@@ -103,6 +104,15 @@ export default function ClientArriveeIdentite() {
     sessionStorage.setItem('arrivee_prenom', formData.prenom);
     sessionStorage.setItem('arrivee_date_arrivee', formData.date_arrivee);
     sessionStorage.setItem('arrivee_date_depart', formData.date_depart);
+    sessionStorage.setItem('arrivee_nb_adultes', formData.nb_adultes);
+    sessionStorage.setItem('arrivee_nb_adolescents', formData.nb_adolescents);
+    sessionStorage.setItem('arrivee_nb_enfants', formData.nb_enfants);
+    sessionStorage.setItem('arrivee_nb_bebes', formData.nb_bebes);
+    sessionStorage.setItem('arrivee_nb_animaux', formData.nb_animaux);
+    sessionStorage.setItem('arrivee_nombre_chiens', formData.nombre_chiens);
+    sessionStorage.setItem('arrivee_nombre_chats', formData.nombre_chats);
+    sessionStorage.setItem('arrivee_autres_animaux', formData.autres_animaux);
+    sessionStorage.setItem('arrivee_remarque', formData.remarque_arrivee);
 
     // Créer ou mettre à jour le dossier d'arrivée
     try {
@@ -110,13 +120,23 @@ export default function ClientArriveeIdentite() {
       
       if (dossierId) {
         // Mettre à jour le dossier existant
+        const totalAnimaux = formData.nombre_chiens + formData.nombre_chats;
         await base44.entities.DossierArrivee.update(dossierId, {
           client_nom: formData.nom,
           client_prenom: formData.prenom,
           date_arrivee: formData.date_arrivee,
           date_depart: formData.date_depart,
+          nombre_adultes: formData.nb_adultes,
+          nombre_adolescents: formData.nb_adolescents,
+          nombre_enfants: formData.nb_enfants,
+          nombre_bebes: formData.nb_bebes,
+          nombre_animaux: totalAnimaux,
+          nombre_chiens: formData.nombre_chiens,
+          nombre_chats: formData.nombre_chats,
+          autres_animaux: formData.autres_animaux,
           etape_1_terminee: true,
-          etape_actuelle: 2
+          etape_2_terminee: true,
+          etape_actuelle: 3
         });
       } else {
         // Créer un nouveau dossier
@@ -137,7 +157,7 @@ export default function ClientArriveeIdentite() {
       }
 
       // Navigation vers l'étape suivante (statistiques puis hébergement)
-      navigate(createPageUrl('ClientArriveeStatistiques'));
+      navigate(createPageUrl('ClientArriveeHebergement'));
     } catch (error) {
       console.error('Error creating/updating dossier:', error);
       toast.error(lang === 'fr' 
