@@ -129,8 +129,10 @@ export default function ClientMenu() {
                       if (dossierArrivee.etape_actuelle === 1) {
                         navigate(createPageUrl('ClientArriveeIdentite'));
                       } else if (dossierArrivee.etape_actuelle === 2) {
-                        navigate(createPageUrl('ClientArriveeHebergement'));
+                        navigate(createPageUrl('ClientArriveeStatistiques'));
                       } else if (dossierArrivee.etape_actuelle === 3) {
+                        navigate(createPageUrl('ClientArriveeHebergement'));
+                      } else if (dossierArrivee.etape_actuelle === 4) {
                         navigate(createPageUrl('ClientControleInventaire'));
                       }
                     }}
