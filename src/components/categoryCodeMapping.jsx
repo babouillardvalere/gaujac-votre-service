@@ -454,7 +454,8 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     objets: inventaire.objets.map(obj => ({
       id: obj.id,
       icon: obj.icon,
-      label: lang === 'fr' ? obj.label_fr : obj.label_en
+      label: lang === 'fr' ? obj.label_fr : obj.label_en,
+      quantity: obj.quantity
     }))
   };
   
