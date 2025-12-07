@@ -50,6 +50,7 @@ import Reservations from './pages/Reservations';
 import PaiementReservation from './pages/PaiementReservation';
 import MesReservations from './pages/MesReservations';
 import GestionReservationsReception from './pages/GestionReservationsReception';
+import Reception from './pages/Reception';
 import __Layout from './Layout.jsx';
 
 
@@ -106,6 +107,7 @@ export const PAGES = {
     "PaiementReservation": PaiementReservation,
     "MesReservations": MesReservations,
     "GestionReservationsReception": GestionReservationsReception,
+    "Reception": Reception,
 }
 
 export const pagesConfig = {
