@@ -68,7 +68,7 @@ export default function Reception() {
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 gap-3 mb-8 bg-transparent p-0 h-auto">
+            <TabsList className="grid w-full grid-cols-3 gap-3 mb-8 bg-transparent p-0 h-auto">
               <TabsTrigger 
                 value="arrivees" 
                 className="flex flex-col items-center gap-3 p-6 rounded-2xl border-2 bg-white data-[state=active]:border-green-500 data-[state=active]:bg-green-50 data-[state=active]:shadow-lg transition-all h-auto"
@@ -102,6 +102,23 @@ export default function Reception() {
                   </p>
                 </div>
               </TabsTrigger>
+
+              <TabsTrigger 
+                value="journal" 
+                className="flex flex-col items-center gap-3 p-6 rounded-2xl border-2 bg-white data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:shadow-lg transition-all h-auto"
+              >
+                <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Archive className="w-8 h-8 text-blue-600" />
+                </div>
+                <div className="text-center">
+                  <p className="font-heading text-lg text-gray-900">
+                    {lang === 'fr' ? 'Journal' : 'Log'}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {lang === 'fr' ? 'Interventions inventaire' : 'Inventory interventions'}
+                  </p>
+                </div>
+              </TabsTrigger>
             </TabsList>
 
             <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-200 p-6">
@@ -111,6 +128,10 @@ export default function Reception() {
 
               <TabsContent value="departs" className="mt-0">
                 <ReceptionDeparts lang={lang} />
+              </TabsContent>
+
+              <TabsContent value="journal" className="mt-0">
+                <JournalInterventions lang={lang} />
               </TabsContent>
             </div>
           </Tabs>
