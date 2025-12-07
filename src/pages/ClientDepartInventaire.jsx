@@ -100,8 +100,9 @@ export default function ClientDepartInventaire() {
       const signatureFile = new File([blob], 'signature.png', { type: 'image/png' });
       const { file_url: signatureUrl } = await base44.integrations.Core.UploadFile({ file: signatureFile });
 
-      // Créer DepartCheck
-      await base44.entities.DepartCheck.create({
+      // Créer DossierDepart
+      const dossierDepart = await base44.entities.DossierDepart.create({
+        code_dossier: `DEPART-${dossierArrivee.client_nom.toUpperCase()}-${Date.now()}`,
         client_nom: dossierArrivee.client_nom,
         client_prenom: dossierArrivee.client_prenom,
         date_arrivee: dossierArrivee.date_arrivee,
@@ -109,15 +110,44 @@ export default function ClientDepartInventaire() {
         type_logement: dossierArrivee.type_logement,
         categorie_logement: dossierArrivee.categorie_logement,
         numero_logement: dossierArrivee.numero_logement,
-        photos_json: { proprete: photoProprete },
-        objets_modifies: objetsModifies,
+        inventaire_json: {
+          objets_valides_arrivee: inventaireArrivee?.objets_valides || [],
+          objets_modifies: objetsModifies
+        },
+        photos: { proprete: photoProprete },
         evaluation_proprete: proprete,
-        commentaire_proprete: commentaireProprete,
-        signature_url: signatureUrl,
-        date_soumission: new Date().toISOString()
+        remarques: commentaireProprete,
+        signature: signatureUrl,
+        etape_1_terminee: true,
+        etape_2_terminee: true,
+        etape_3_terminee: true,
+        etape_4_terminee: true,
+        checklist_termine: true,
+        photos_termine: true,
+        degats_signales: objetsModifies.length > 0 || proprete === 'pas_satisfaisant',
+        statut: 'termine',
+        horodatage_creation: new Date().toISOString()
       });
 
-      // Créer intervention si propreté insatisfaisante
+      // Créer FicheDepart pour la réception
+      await base44.entities.FicheDepart.create({
+        client_nom: dossierArrivee.client_nom,
+        client_prenom: dossierArrivee.client_prenom,
+        date_arrivee: dossierArrivee.date_arrivee,
+        date_depart: dossierArrivee.date_depart,
+        numero_logement: dossierArrivee.numero_logement,
+        categorie_logement: dossierArrivee.categorie_logement,
+        type_logement: dossierArrivee.type_logement,
+        inventaire_objets_etat: objetsModifies.map(o => ({ objet: o, etat: 'modifié' })),
+        photos_depart: { proprete: photoProprete },
+        evaluation_proprete: proprete,
+        remarques_staff: commentaireProprete,
+        signature_url: signatureUrl,
+        degats_signales: objetsModifies.length > 0 || proprete === 'pas_satisfaisant',
+        date_validation: new Date().toISOString()
+      });
+
+      // Créer intervention si propreté insatisfaisante ou dégâts
       if (proprete === 'pas_satisfaisant') {
         await base44.entities.Incident.create({
           type: 'menage',
@@ -136,7 +166,25 @@ export default function ClientDepartInventaire() {
         });
       }
 
-      toast.success(lang === 'fr' ? '✅ Départ enregistré !' : '✅ Departure registered!');
+      // Créer intervention pour chaque objet modifié/cassé
+      for (const objet of objetsModifies) {
+        await base44.entities.Incident.create({
+          type: 'technique',
+          categorie: 'mobilier',
+          description: `Objet cassé/manquant au départ: ${objet}`,
+          urgent: false,
+          client_nom: dossierArrivee.client_nom,
+          client_prenom: dossierArrivee.client_prenom,
+          date_arrivee: dossierArrivee.date_arrivee,
+          date_depart: dossierArrivee.date_depart,
+          logement: dossierArrivee.numero_logement,
+          statut: 'en_attente',
+          autorisation_acces: 'oui',
+          origine: 'depart'
+        });
+      }
+
+      toast.success(lang === 'fr' ? '✅ Départ enregistré et remontée en Réception !' : '✅ Departure registered and sent to Reception!');
       
       setTimeout(() => {
         sessionStorage.removeItem('depart_dossier_arrivee_id');

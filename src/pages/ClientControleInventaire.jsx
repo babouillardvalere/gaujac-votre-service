@@ -358,19 +358,48 @@ export default function ClientControleInventaire() {
           etape_3_terminee: true,
           etape_4_terminee: true,
           etape_actuelle: 4,
-          inventaire_id: inventaire.id,
-          interventions_menage: interventionsMenageIds,
-          interventions_technique: interventionsTechniqueIds,
-          statut: 'finalise',
-          date_finalisation: new Date().toISOString(),
-          remarques_client: remarques
+          inventaire_json: { 
+            objets_valides: objetsValides,
+            objets_manquants: objetsMissing 
+          },
+          photos: photosLieux,
+          evaluation_proprete: evaluationProprete,
+          remarques: commentaireProprete || remarques,
+          signature: signatureUrl,
+          inventaire_termine: true,
+          statut: 'termine',
+          horodatage_creation: new Date().toISOString()
+        });
+
+        // Créer la FicheArrivee pour la réception
+        await base44.entities.FicheArrivee.create({
+          client_nom: nom,
+          client_prenom: prenom,
+          date_arrivee: dateArrivee,
+          date_depart: dateDepart,
+          numero_logement: numero,
+          categorie_logement: categorie,
+          type_logement: typeLogement,
+          nombre_adultes: sessionStorage.getItem('arrivee_nombre_adultes') || 0,
+          nombre_adolescents: sessionStorage.getItem('arrivee_nombre_adolescents') || 0,
+          nombre_enfants: sessionStorage.getItem('arrivee_nombre_enfants') || 0,
+          nombre_bebes: sessionStorage.getItem('arrivee_nombre_bebes') || 0,
+          nombre_animaux: sessionStorage.getItem('arrivee_nombre_animaux') || 0,
+          inventaire_objets_valides: objetsValides,
+          inventaire_objets_manquants: objetsMissing,
+          evaluation_proprete: evaluationProprete,
+          commentaire_proprete: commentaireProprete,
+          photos_pieces: photosLieux,
+          remarques_client: remarques,
+          signature_url: signatureUrl,
+          date_validation: new Date().toISOString()
         });
         
         // 🔔 Notifier la réception du dossier finalisé
         await notifierDossierFinalise(dossierUpdated, {
           interventions_menage: interventionsMenageIds.length,
           interventions_technique: interventionsTechniqueIds.length,
-          inventaire_complet: inventaire.inventaire_complet
+          inventaire_complet: objetsMissing.length === 0 && evaluationProprete !== 'pas_satisfaisant'
         });
       }
 
