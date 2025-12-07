@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import AccessibilityPanel, { getAccessibilitySettings, applyAccessibilityStyles, saveAccessibilitySettings } from './components/AccessibilityPanel';
 import NavigationBar from './components/NavigationBar';
 import VoiceAssistant from './components/VoiceAssistant';
+import RealtimeNotificationProvider from './components/RealtimeNotificationProvider';
+import { base44 } from '@/api/base44Client';
 
 export default function Layout({ children }) {
   const [accessibilitySettings, setAccessibilitySettings] = useState(getAccessibilitySettings());
@@ -64,7 +66,25 @@ export default function Layout({ children }) {
     saveAccessibilitySettings(newSettings);
   };
 
+  // Déterminer le rôle utilisateur pour le provider de notifications
+  const [userRole, setUserRole] = useState('client');
+  
+  useEffect(() => {
+    const checkUserRole = async () => {
+      try {
+        const user = await base44.auth.me();
+        if (user?.role === 'admin') {
+          setUserRole('reception');
+        }
+      } catch {
+        setUserRole('client');
+      }
+    };
+    checkUserRole();
+  }, []);
+
   return (
+    <RealtimeNotificationProvider userRole={userRole}>
     <div className="min-h-screen relative" role="application" aria-label="Application Camping Paradis">
       {/* Import des polices + styles accessibilité */}
       <style>{`
@@ -274,5 +294,6 @@ export default function Layout({ children }) {
         onAccessibilityChange={handleAccessibilityAction}
       />
     </div>
+    </RealtimeNotificationProvider>
   );
 }
