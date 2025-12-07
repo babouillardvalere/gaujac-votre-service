@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../components/translations';
 import Logo from '../components/Logo';
@@ -6,14 +6,31 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ReceptionArrivees from '../components/reception/ReceptionArrivees';
 import ReceptionDeparts from '../components/reception/ReceptionDeparts';
 import CollaborateurNotificationBell from '../components/CollaborateurNotificationBell';
-import { Home, LogIn, LogOut } from 'lucide-react';
+import { runAutoArchiving } from '../components/reception/ArchivageService';
+import { Home, LogIn, LogOut, Archive } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
+import { Badge } from '@/components/ui/badge';
 
 export default function Reception() {
   const { t, lang } = useTranslation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('arrivees');
+  const [isArchiving, setIsArchiving] = useState(false);
+
+  // Lancer l'archivage automatique au chargement de la page
+  useEffect(() => {
+    const runArchiving = async () => {
+      setIsArchiving(true);
+      await runAutoArchiving({ showToast: true });
+      setIsArchiving(false);
+    };
+    
+    // Archiver après 2 secondes (laisser le temps à la page de charger)
+    const timer = setTimeout(runArchiving, 2000);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white px-6 py-8">
@@ -40,6 +57,12 @@ export default function Reception() {
             <p className="text-gray-600 font-body text-lg">
               {lang === 'fr' ? 'Gestion des arrivées et départs' : 'Arrivals and departures management'}
             </p>
+            {isArchiving && (
+              <Badge variant="outline" className="mt-2">
+                <Archive className="w-3 h-3 mr-1 animate-pulse" />
+                {lang === 'fr' ? 'Archivage en cours...' : 'Archiving...'}
+              </Badge>
+            )}
           </div>
 
           {/* Tabs */}
