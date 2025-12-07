@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useTranslation } from './translations';
+import { useRealtimeNotifications } from './RealtimeNotificationProvider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,6 +12,7 @@ import { Bell, Wrench, Sparkles, Package, Clock, AlertTriangle, ExternalLink } f
 import { createPageUrl } from '../utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import RealtimeIndicator from './RealtimeIndicator';
 
 const categoryEmojis = {
   gaz: '🔥', eau: '💧', electricite: '⚡', plomberie: '🔧',
@@ -23,29 +25,31 @@ const categoryEmojis = {
 export default function CollaborateurNotificationBell() {
   const { t, lang } = useTranslation();
   const navigate = useNavigate();
+  const { isConnected } = useRealtimeNotifications();
 
-  // Polling à 30s pour les incidents normaux
+  // Polling optimisé géré par RealtimeNotificationProvider (5s pour urgents, 10s pour normaux)
   const { data: incidents = [] } = useQuery({
     queryKey: ['collab-notif-incidents'],
     queryFn: () => base44.entities.Incident.filter({ statut: 'en_attente' }, '-date_saisie', 100),
-    refetchInterval: 30000 // 30 secondes
+    refetchInterval: 10000, // 10 secondes (géré par le provider en temps réel)
+    enabled: isConnected
   });
 
-  // Polling à 15s pour les urgents
   const { data: incidentsUrgents = [] } = useQuery({
     queryKey: ['collab-notif-urgents'],
     queryFn: () => base44.entities.Incident.filter({ urgent: true, statut: 'en_attente' }, '-date_saisie', 50),
-    refetchInterval: 15000 // 15 secondes
+    refetchInterval: 5000, // 5 secondes pour les urgents (temps réel critique)
+    enabled: isConnected
   });
 
-  // Polling à 120s pour le stock (moins urgent)
   const { data: stockAlerts = [] } = useQuery({
     queryKey: ['collab-notif-stock'],
     queryFn: async () => {
       const stock = await base44.entities.Stock.list();
       return stock.filter(s => s.quantite <= s.seuil_alerte);
     },
-    refetchInterval: 120000 // 120 secondes
+    refetchInterval: 60000, // 60 secondes pour le stock
+    enabled: isConnected
   });
 
   // Compter les urgences critiques (eau, gaz, électricité)
@@ -91,29 +95,33 @@ export default function CollaborateurNotificationBell() {
   };
 
   return (
-    <button
-      onClick={handleClick}
-      className="relative p-2 hover:bg-white/20 rounded-lg transition-colors"
-      aria-label={`${totalNotifications} ${lang === 'fr' ? 'notifications' : 'notifications'}`}
-    >
-      <Bell 
-        className={`w-6 h-6 ${
-          hasCritical ? 'text-red-400 animate-pulse' :
-          hasUrgent ? 'text-orange-300 animate-pulse' : 
-          'text-white'
-        }`} 
-      />
-      {totalNotifications > 0 && (
-        <span 
-          className={`absolute -top-1 -right-1 min-w-5 h-5 flex items-center justify-center text-xs font-bold rounded-full px-1.5 text-white shadow-lg ${
-            hasCritical ? 'bg-red-600 animate-pulse' :
-            hasUrgent ? 'bg-orange-500 animate-pulse' :
-            'bg-[#00AEEF]'
-          }`}
-        >
-          {totalNotifications > 99 ? '99+' : totalNotifications}
-        </span>
-      )}
-    </button>
+    <div className="flex items-center gap-2">
+      <RealtimeIndicator isConnected={isConnected} showPulse={hasUrgent || hasCritical} />
+      
+      <button
+        onClick={handleClick}
+        className="relative p-2 hover:bg-white/20 rounded-lg transition-colors"
+        aria-label={`${totalNotifications} ${lang === 'fr' ? 'notifications' : 'notifications'}`}
+      >
+        <Bell 
+          className={`w-6 h-6 ${
+            hasCritical ? 'text-red-400 animate-pulse' :
+            hasUrgent ? 'text-orange-300 animate-pulse' : 
+            'text-white'
+          }`} 
+        />
+        {totalNotifications > 0 && (
+          <span 
+            className={`absolute -top-1 -right-1 min-w-5 h-5 flex items-center justify-center text-xs font-bold rounded-full px-1.5 text-white shadow-lg ${
+              hasCritical ? 'bg-red-600 animate-pulse' :
+              hasUrgent ? 'bg-orange-500 animate-pulse' :
+              'bg-[#00AEEF]'
+            }`}
+          >
+            {totalNotifications > 99 ? '99+' : totalNotifications}
+          </span>
+        )}
+      </button>
+    </div>
   );
 }
