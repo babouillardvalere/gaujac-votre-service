@@ -9,10 +9,35 @@ import { ArrowLeft, Download, Mail, FileText, AlertTriangle, CheckCircle, Calend
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 
-export default function ReceptionFicheDepart({ fiche, onClose, lang }) {
+export default function ReceptionFicheDepart({ ficheId, onClose, lang }) {
+  const [fiche, setFiche] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
   const queryClient = useQueryClient();
+
+  React.useEffect(() => {
+    const loadFiche = async () => {
+      try {
+        const ficheComplete = await base44.entities.FicheDepart.get(ficheId);
+        console.log('📄 Fiche départ chargée:', ficheComplete);
+        setFiche(ficheComplete);
+      } catch (error) {
+        console.error('Erreur chargement fiche départ:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadFiche();
+  }, [ficheId]);
+
+  if (loading || !fiche) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-gray-500">{lang === 'fr' ? 'Chargement...' : 'Loading...'}</p>
+      </div>
+    );
+  }
 
   const genererPDF = async () => {
     setGeneratingPDF(true);
