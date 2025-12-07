@@ -28,6 +28,12 @@ import {
   TEST_MODULE_RECEPTION,
   TEST_OPTIMISATION_IMAGES
 } from '../components/loadtesting/TESTS_COMPLEMENTAIRES';
+import {
+  PROBLEMES_IDENTIFIES,
+  PROCEDURE_TEST_COMPLETE,
+  CHECKLIST_VALIDATION,
+  MESSAGE_SYNTHESE
+} from '../components/loadtesting/VERIFICATION_MODULES_CRITIQUES';
 
 export default function AdminLoadTest() {
   const [seeding, setSeeding] = useState(false);
@@ -86,6 +92,46 @@ export default function AdminLoadTest() {
             NE JAMAIS utiliser en production !
           </AlertDescription>
         </Alert>
+
+        {/* Alertes problèmes critiques */}
+        <Card className="mb-6 border-2 border-red-600 bg-red-50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-red-900">
+              <AlertTriangle className="w-6 h-6" />
+              🔴 PROBLÈMES CRITIQUES DÉTECTÉS
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {Object.entries(PROBLEMES_IDENTIFIES).map(([key, prob]) => (
+              <div key={key} className="bg-white border-2 border-red-400 rounded-lg p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="font-heading text-lg text-red-900">
+                    {key.replace(/_/g, ' ')}
+                  </h3>
+                  <Badge className="bg-red-600">{prob.statut}</Badge>
+                </div>
+                <div className="space-y-2 text-sm">
+                  {prob.problemes.map((p, idx) => (
+                    <p key={idx} className="text-red-700">{p}</p>
+                  ))}
+                  <p className="text-red-800 font-bold mt-3">
+                    ⚠️ Impact: {prob.impact}
+                  </p>
+                  <p className="text-gray-700">
+                    🔍 Cause probable: {prob.cause_probable}
+                  </p>
+                </div>
+              </div>
+            ))}
+            
+            <Alert className="border-yellow-500 bg-yellow-50">
+              <AlertDescription className="text-yellow-900">
+                <strong>📅 Ces problèmes doivent être corrigés AVANT les tests de charge.</strong>
+                <br />Voir VERIFICATION_MODULES_CRITIQUES.jsx pour procédure détaillée.
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
 
         {/* Actions rapides */}
         <Card className="mb-6 border-2 border-[#00AEEF]">
