@@ -65,14 +65,49 @@ export default function ReceptionFicheDepart({ ficheId, onClose, lang }) {
 
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      doc.text(lang === 'fr' ? 'État du logement' : 'Accommodation condition', 15, yPos);
+      doc.text(lang === 'fr' ? 'État du logement au départ' : 'Accommodation condition on departure', 15, yPos);
       yPos += 8;
       doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
 
+      // Inventaire état
+      if (fiche.inventaire_objets_etat && fiche.inventaire_objets_etat.length > 0) {
+        const objetsOK = fiche.inventaire_objets_etat.filter(o => o.etat === 'ok').length;
+        const objetsCasses = fiche.inventaire_objets_etat.filter(o => o.etat === 'casse_ou_manquant').length;
+        const objetsDejaManquants = fiche.inventaire_objets_etat.filter(o => o.etat === 'deja_manquant_arrivee').length;
+        
+        doc.setTextColor(0, 128, 0);
+        doc.text(`${lang === 'fr' ? '✓ Objets en bon état' : '✓ Items in good condition'}: ${objetsOK}`, 15, yPos);
+        doc.setTextColor(0, 0, 0);
+        yPos += 6;
+        
+        if (objetsCasses > 0) {
+          doc.setTextColor(255, 0, 0);
+          doc.text(`${lang === 'fr' ? '✗ Objets cassés/manquants au départ' : '✗ Items broken/missing on departure'}: ${objetsCasses}`, 15, yPos);
+          yPos += 6;
+          doc.setFontSize(9);
+          fiche.inventaire_objets_etat.filter(o => o.etat === 'casse_ou_manquant').forEach(obj => {
+            doc.text(`  • ${obj.objet}`, 20, yPos);
+            yPos += 5;
+          });
+          doc.setTextColor(0, 0, 0);
+          doc.setFontSize(11);
+          yPos += 3;
+        }
+        
+        if (objetsDejaManquants > 0) {
+          doc.setTextColor(255, 140, 0);
+          doc.text(`${lang === 'fr' ? '⚠ Déjà signalés à l\'arrivée' : '⚠ Already reported on arrival'}: ${objetsDejaManquants}`, 15, yPos);
+          doc.setTextColor(0, 0, 0);
+          yPos += 8;
+        }
+      }
+
       if (fiche.degats_signales) {
         doc.setTextColor(255, 0, 0);
+        doc.setFont('helvetica', 'bold');
         doc.text(lang === 'fr' ? '⚠️ DÉGÂTS SIGNALÉS' : '⚠️ DAMAGES REPORTED', 15, yPos);
+        doc.setFont('helvetica', 'normal');
         doc.setTextColor(0, 0, 0);
         yPos += 8;
       }
@@ -207,13 +242,55 @@ export default function ReceptionFicheDepart({ ficheId, onClose, lang }) {
 
           <Separator />
 
-          {fiche.degats_signales && (
-            <div className="bg-red-50 border-2 border-red-300 p-4 rounded-lg">
-              <p className="font-heading text-red-700 text-lg flex items-center gap-2">
-                <AlertTriangle className="w-6 h-6" />
-                {lang === 'fr' ? 'Dégâts signalés' : 'Damages reported'}
-              </p>
+          {/* Inventaire départ */}
+          {fiche.inventaire_objets_etat && fiche.inventaire_objets_etat.length > 0 && (
+            <div>
+              <h3 className="font-heading text-lg text-[#0077A8] mb-3">
+                {lang === 'fr' ? '📋 État inventaire au départ' : '📋 Inventory condition on departure'}
+              </h3>
+              <div className="space-y-3">
+                {fiche.inventaire_objets_etat.filter(o => o.etat === 'ok').length > 0 && (
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <p className="font-heading text-green-700 mb-2 flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5" />
+                      {lang === 'fr' ? 'Objets en bon état' : 'Items in good condition'} ({fiche.inventaire_objets_etat.filter(o => o.etat === 'ok').length})
+                    </p>
+                  </div>
+                )}
+                {fiche.inventaire_objets_etat.filter(o => o.etat === 'casse_ou_manquant').length > 0 && (
+                  <div className="bg-red-50 p-4 rounded-lg border-2 border-red-300">
+                    <p className="font-heading text-red-700 mb-2 flex items-center gap-2">
+                      <AlertTriangle className="w-5 h-5" />
+                      {lang === 'fr' ? 'Cassés/manquants au départ' : 'Broken/missing on departure'} ({fiche.inventaire_objets_etat.filter(o => o.etat === 'casse_ou_manquant').length})
+                    </p>
+                    <div className="space-y-1 text-sm">
+                      {fiche.inventaire_objets_etat.filter(o => o.etat === 'casse_ou_manquant').map((obj, i) => (
+                        <div key={i} className="text-red-600">• {obj.objet}</div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {fiche.inventaire_objets_etat.filter(o => o.etat === 'deja_manquant_arrivee').length > 0 && (
+                  <div className="bg-orange-50 p-4 rounded-lg border border-orange-300">
+                    <p className="font-heading text-orange-700 mb-2">
+                      {lang === 'fr' ? '⚠ Déjà signalés à l\'arrivée' : '⚠ Already reported on arrival'} ({fiche.inventaire_objets_etat.filter(o => o.etat === 'deja_manquant_arrivee').length})
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
+          )}
+
+          {fiche.degats_signales && (
+            <>
+              <Separator />
+              <div className="bg-red-50 border-2 border-red-300 p-4 rounded-lg">
+                <p className="font-heading text-red-700 text-lg flex items-center gap-2">
+                  <AlertTriangle className="w-6 h-6" />
+                  {lang === 'fr' ? 'Dégâts signalés' : 'Damages reported'}
+                </p>
+              </div>
+            </>
           )}
 
           {fiche.evaluation_proprete && (

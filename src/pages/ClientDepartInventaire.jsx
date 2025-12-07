@@ -17,7 +17,7 @@ export default function ClientDepartInventaire() {
   const { t, lang } = useTranslation();
   const navigate = useNavigate();
 
-  const dossierArriveId = sessionStorage.getItem('depart_dossier_arrivee_id');
+  const ficheArriveeId = sessionStorage.getItem('depart_fiche_arrivee_id');
   const [objetsModifies, setObjetsModifies] = useState([]);
   const [problemeSignale, setProblemeSignale] = useState(null);
   const [proprete, setProprete] = useState('');
@@ -27,30 +27,24 @@ export default function ClientDepartInventaire() {
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const { data: dossierArrivee, isLoading } = useQuery({
-    queryKey: ['dossier-arrivee-depart', dossierArriveId],
-    queryFn: async () => {
-      const dossiers = await base44.entities.DossierArrivee.list();
-      return dossiers.find(d => d.id === dossierArriveId);
-    },
-    enabled: !!dossierArriveId
-  });
 
-  const { data: inventaireArrivee } = useQuery({
-    queryKey: ['inventaire-arrivee-depart', dossierArrivee?.inventaire_id],
+
+  const { data: ficheArrivee, isLoading } = useQuery({
+    queryKey: ['fiche-arrivee-depart', ficheArriveeId],
     queryFn: async () => {
-      if (!dossierArrivee?.inventaire_id) return null;
-      const inventaires = await base44.entities.ControleInventaireArrivee.list();
-      return inventaires.find(inv => inv.id === dossierArrivee.inventaire_id);
+      if (!ficheArriveeId) return null;
+      const fiche = await base44.entities.FicheArrivee.get(ficheArriveeId);
+      console.log('📄 Fiche arrivée récupérée pour départ:', fiche);
+      return fiche;
     },
-    enabled: !!dossierArrivee?.inventaire_id
+    enabled: !!ficheArriveeId
   });
 
   useEffect(() => {
-    if (!dossierArriveId) {
+    if (!ficheArriveeId) {
       navigate(createPageUrl('ClientDepartIdentite'));
     }
-  }, [dossierArriveId, navigate]);
+  }, [ficheArriveeId, navigate]);
 
   const toggleObjet = (objet) => {
     if (objetsModifies.includes(objet)) {
@@ -102,17 +96,18 @@ export default function ClientDepartInventaire() {
 
       // Créer DossierDepart
       const dossierDepart = await base44.entities.DossierDepart.create({
-        code_dossier: `DEPART-${dossierArrivee.client_nom.toUpperCase()}-${Date.now()}`,
-        client_nom: dossierArrivee.client_nom,
-        client_prenom: dossierArrivee.client_prenom,
-        date_arrivee: dossierArrivee.date_arrivee,
-        date_depart: dossierArrivee.date_depart,
-        type_logement: dossierArrivee.type_logement,
-        categorie_logement: dossierArrivee.categorie_logement,
-        numero_logement: dossierArrivee.numero_logement,
+        code_dossier: `DEPART-${sessionStorage.getItem('depart_nom')?.toUpperCase()}-${Date.now()}`,
+        client_nom: sessionStorage.getItem('depart_nom'),
+        client_prenom: sessionStorage.getItem('depart_prenom'),
+        date_arrivee: ficheArrivee?.date_arrivee || '',
+        date_depart: ficheArrivee?.date_depart || '',
+        type_logement: sessionStorage.getItem('depart_type_logement') || 'mobilhome',
+        categorie_logement: sessionStorage.getItem('depart_categorie'),
+        numero_logement: sessionStorage.getItem('depart_numero'),
         inventaire_json: {
-          objets_valides_arrivee: inventaireArrivee?.objets_valides || [],
-          objets_modifies: objetsModifies
+          objets_valides_arrivee: ficheArrivee?.inventaire_objets_valides || [],
+          objets_manquants_arrivee: ficheArrivee?.inventaire_objets_manquants || [],
+          objets_casses_depart: objetsModifies
         },
         photos: { proprete: photoProprete },
         evaluation_proprete: proprete,
@@ -131,14 +126,23 @@ export default function ClientDepartInventaire() {
 
       // Créer FicheDepart pour la réception
       await base44.entities.FicheDepart.create({
-        client_nom: dossierArrivee.client_nom,
-        client_prenom: dossierArrivee.client_prenom,
-        date_arrivee: dossierArrivee.date_arrivee,
-        date_depart: dossierArrivee.date_depart,
-        numero_logement: dossierArrivee.numero_logement,
-        categorie_logement: dossierArrivee.categorie_logement,
-        type_logement: dossierArrivee.type_logement,
-        inventaire_objets_etat: objetsModifies.map(o => ({ objet: o, etat: 'modifié' })),
+        client_nom: sessionStorage.getItem('depart_nom'),
+        client_prenom: sessionStorage.getItem('depart_prenom'),
+        date_arrivee: ficheArrivee?.date_arrivee || '',
+        date_depart: ficheArrivee?.date_depart || '',
+        numero_logement: sessionStorage.getItem('depart_numero'),
+        categorie_logement: sessionStorage.getItem('depart_categorie'),
+        type_logement: sessionStorage.getItem('depart_type_logement') || 'mobilhome',
+        inventaire_objets_etat: [
+          ...((ficheArrivee?.inventaire_objets_valides || []).map(o => ({ 
+            objet: o, 
+            etat: objetsModifies.includes(o) ? 'casse_ou_manquant' : 'ok' 
+          }))),
+          ...((ficheArrivee?.inventaire_objets_manquants || []).map(o => ({
+            objet: typeof o === 'string' ? o : o.objet,
+            etat: 'deja_manquant_arrivee'
+          })))
+        ],
         photos_depart: { proprete: photoProprete },
         evaluation_proprete: proprete,
         remarques_staff: commentaireProprete,
@@ -154,11 +158,11 @@ export default function ClientDepartInventaire() {
           categorie: 'nettoyage',
           description: `Propreté non satisfaisante au départ - ${commentaireProprete}`,
           urgent: true,
-          client_nom: dossierArrivee.client_nom,
-          client_prenom: dossierArrivee.client_prenom,
-          date_arrivee: dossierArrivee.date_arrivee,
-          date_depart: dossierArrivee.date_depart,
-          logement: dossierArrivee.numero_logement,
+          client_nom: sessionStorage.getItem('depart_nom'),
+          client_prenom: sessionStorage.getItem('depart_prenom'),
+          date_arrivee: ficheArrivee?.date_arrivee || '',
+          date_depart: ficheArrivee?.date_depart || '',
+          logement: sessionStorage.getItem('depart_numero'),
           photo_url: photoProprete,
           statut: 'en_attente',
           autorisation_acces: 'oui',
@@ -173,11 +177,11 @@ export default function ClientDepartInventaire() {
           categorie: 'mobilier',
           description: `Objet cassé/manquant au départ: ${objet}`,
           urgent: false,
-          client_nom: dossierArrivee.client_nom,
-          client_prenom: dossierArrivee.client_prenom,
-          date_arrivee: dossierArrivee.date_arrivee,
-          date_depart: dossierArrivee.date_depart,
-          logement: dossierArrivee.numero_logement,
+          client_nom: sessionStorage.getItem('depart_nom'),
+          client_prenom: sessionStorage.getItem('depart_prenom'),
+          date_arrivee: ficheArrivee?.date_arrivee || '',
+          date_depart: ficheArrivee?.date_depart || '',
+          logement: sessionStorage.getItem('depart_numero'),
           statut: 'en_attente',
           autorisation_acces: 'oui',
           origine: 'depart'
@@ -225,7 +229,7 @@ export default function ClientDepartInventaire() {
           <Logo className="h-16 mb-4" />
           
           <h1 className="font-handwritten text-3xl text-[#FFA500] text-center mb-6">
-            ✅ {lang === 'fr' ? `Inventaire Départ - ${dossierArrivee?.client_prenom || ''} ${dossierArrivee?.client_nom || ''}` : `Departure Inventory - ${dossierArrivee?.client_prenom || ''} ${dossierArrivee?.client_nom || ''}`}
+            ✅ {lang === 'fr' ? `Inventaire Départ - ${sessionStorage.getItem('depart_prenom')} ${sessionStorage.getItem('depart_nom')}` : `Departure Inventory - ${sessionStorage.getItem('depart_prenom')} ${sessionStorage.getItem('depart_nom')}`}
           </h1>
 
           {/* Info pré-remplissage */}
@@ -239,30 +243,64 @@ export default function ClientDepartInventaire() {
             </CardContent>
           </Card>
 
-          {/* Objets validés à l'arrivée */}
-          {inventaireArrivee?.objets_valides && (
+          {/* Objets validés à l'arrivée - PRÉREMPLISSAGE */}
+          {ficheArrivee?.inventaire_objets_valides && ficheArrivee.inventaire_objets_valides.length > 0 && (
             <Card className="border-2 border-[#22c55e]/30 rounded-xl mb-6">
               <CardContent className="p-6">
-                <h2 className="font-heading text-xl text-[#0077A8] mb-4">
-                  {lang === 'fr' ? 'Objets validés à l\'arrivée' : 'Items validated on arrival'}
+                <h2 className="font-heading text-xl text-[#0077A8] mb-2">
+                  ✅ {lang === 'fr' ? 'Objets validés à l\'arrivée' : 'Items validated on arrival'}
                 </h2>
-                <div className="flex flex-wrap gap-3">
-                  {inventaireArrivee.objets_valides.map(objet => {
-                    const isModified = objetsModifies.includes(objet);
+                <p className="text-sm text-gray-600 mb-4">
+                  {lang === 'fr' 
+                    ? '👇 Touchez un objet si cassé/manquant maintenant'
+                    : '👇 Tap an item if broken/missing now'}
+                </p>
+                <div className="grid grid-cols-3 gap-3">
+                  {ficheArrivee.inventaire_objets_valides.map(objetId => {
+                    const isModified = objetsModifies.includes(objetId);
                     return (
                       <button
-                        key={objet}
-                        onClick={() => toggleObjet(objet)}
-                        className={`text-4xl p-3 rounded-xl border-2 transition-all ${
+                        key={objetId}
+                        onClick={() => toggleObjet(objetId)}
+                        className={`p-3 rounded-xl border-2 transition-all ${
                           isModified 
-                            ? 'bg-red-100 border-red-400 opacity-60' 
+                            ? 'bg-red-100 border-red-400' 
                             : 'bg-green-100 border-green-400'
                         }`}
                       >
-                        {objet}
+                        <div className="text-sm font-heading text-[#0077A8] break-words">
+                          {objetId}
+                        </div>
+                        {isModified && (
+                          <AlertCircle className="w-4 h-4 text-red-600 mx-auto mt-1" />
+                        )}
                       </button>
                     );
                   })}
+                </div>
+                {objetsModifies.length > 0 && (
+                  <div className="mt-4 p-3 bg-red-50 border border-red-300 rounded-lg">
+                    <p className="text-sm font-heading text-red-800">
+                      ⚠️ {objetsModifies.length} {lang === 'fr' ? 'objet(s) signalé(s) cassé(s)/manquant(s)' : 'item(s) reported broken/missing'}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Objets manquants dès l'arrivée */}
+          {ficheArrivee?.inventaire_objets_manquants && ficheArrivee.inventaire_objets_manquants.length > 0 && (
+            <Card className="border-2 border-orange-400 bg-orange-50 rounded-xl mb-6">
+              <CardContent className="p-4">
+                <h3 className="font-heading text-orange-800 mb-2 flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5" />
+                  {lang === 'fr' ? 'Déjà signalés à l\'arrivée' : 'Already reported on arrival'}
+                </h3>
+                <div className="text-sm text-orange-700 space-y-1">
+                  {ficheArrivee.inventaire_objets_manquants.map((obj, idx) => (
+                    <div key={idx}>• {obj.objet || obj}</div>
+                  ))}
                 </div>
               </CardContent>
             </Card>

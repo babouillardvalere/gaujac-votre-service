@@ -41,22 +41,21 @@ export default function ClientDepartIdentite() {
     setRecherche(true);
 
     try {
-      const dossiers = await base44.entities.DossierArrivee.list();
-      const dossier = dossiers.find(d => 
-        d.client_nom.toLowerCase() === formData.nom.toLowerCase() &&
-        d.client_prenom.toLowerCase() === formData.prenom.toLowerCase() &&
-        d.numero_logement === formData.numero_logement &&
-        d.statut === 'finalise'
+      const fiches = await base44.entities.FicheArrivee.list();
+      const fiche = fiches.find(f => 
+        f.client_nom?.toLowerCase() === formData.nom.toLowerCase() &&
+        f.client_prenom?.toLowerCase() === formData.prenom.toLowerCase() &&
+        f.numero_logement === formData.numero_logement
       );
 
-      if (dossier) {
-        setDossierTrouve(dossier);
-        sessionStorage.setItem('depart_dossier_arrivee_id', dossier.id);
+      if (fiche) {
+        setDossierTrouve(fiche);
+        sessionStorage.setItem('depart_fiche_arrivee_id', fiche.id);
         toast.success(lang === 'fr' ? '✅ Dossier trouvé !' : '✅ File found!');
       } else {
         toast.error(lang === 'fr' 
-          ? '❌ Aucun dossier trouvé. Vérifiez vos informations.'
-          : '❌ No file found. Check your information.'
+          ? '❌ Aucun dossier d\'arrivée trouvé. Vérifiez vos informations ou contactez la réception.'
+          : '❌ No arrival file found. Check your information or contact reception.'
         );
         setDossierTrouve(null);
       }

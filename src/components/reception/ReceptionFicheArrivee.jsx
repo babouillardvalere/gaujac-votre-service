@@ -98,15 +98,46 @@ export default function ReceptionFicheArrivee({ ficheId, onClose, lang }) {
       doc.setFont('helvetica', 'normal');
 
       if (fiche.inventaire_objets_valides && fiche.inventaire_objets_valides.length > 0) {
-        doc.text(`${lang === 'fr' ? 'Objets validés' : 'Validated items'}: ${fiche.inventaire_objets_valides.length}`, 15, yPos);
-        yPos += 6;
+        doc.setTextColor(0, 128, 0);
+        doc.text(`${lang === 'fr' ? '✓ Objets validés' : '✓ Validated items'}: ${fiche.inventaire_objets_valides.length}`, 15, yPos);
+        doc.setTextColor(0, 0, 0);
+        yPos += 8;
+        
+        // Liste des objets validés
+        doc.setFontSize(9);
+        let colCount = 0;
+        fiche.inventaire_objets_valides.forEach(obj => {
+          const xPos = 20 + (colCount * 60);
+          doc.text(`• ${obj}`, xPos, yPos);
+          colCount++;
+          if (colCount === 3) {
+            colCount = 0;
+            yPos += 5;
+          }
+        });
+        if (colCount > 0) yPos += 5;
+        yPos += 5;
+        doc.setFontSize(11);
       }
 
       if (fiche.inventaire_objets_manquants && fiche.inventaire_objets_manquants.length > 0) {
         doc.setTextColor(255, 0, 0);
-        doc.text(`${lang === 'fr' ? 'Objets manquants/cassés' : 'Missing/broken items'}: ${fiche.inventaire_objets_manquants.length}`, 15, yPos);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${lang === 'fr' ? '✗ Objets manquants/cassés' : '✗ Missing/broken items'}: ${fiche.inventaire_objets_manquants.length}`, 15, yPos);
+        doc.setFont('helvetica', 'normal');
+        yPos += 8;
+        
+        // Détail des objets manquants
+        doc.setFontSize(9);
+        fiche.inventaire_objets_manquants.forEach(obj => {
+          const objetNom = typeof obj === 'string' ? obj : obj.objet;
+          const commentaire = typeof obj === 'object' ? obj.commentaire : '';
+          doc.text(`• ${objetNom}${commentaire ? ' - ' + commentaire : ''}`, 20, yPos);
+          yPos += 5;
+        });
         doc.setTextColor(0, 0, 0);
-        yPos += 6;
+        yPos += 5;
+        doc.setFontSize(11);
       }
 
       // Propreté
