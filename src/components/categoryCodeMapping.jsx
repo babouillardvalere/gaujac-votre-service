@@ -1,10 +1,11 @@
 // Mapping des catégories d'hébergement vers les codes d'inventaire
+// IMPORTANT: Les clés doivent correspondre EXACTEMENT aux noms dans accommodationData.jsx
 export const categoryToCodeMapping = {
-  // Chalets
+  // Chalets (sans accent sur Eco)
   "Chalet Eco": "CHALET_ECO_1CH",
   "Chalet Classique": "CHALET_CLASSIQUE",
   
-  // Mobil-homes Éco
+  // Mobil-homes Éco (sans accent sur Eco)
   "Mobil-home Eco": "MH_ECO_2CH",
   "Mobil-home Eco Clim": "MH_ECO_CLIM_2CH",
   
