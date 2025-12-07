@@ -15,34 +15,16 @@ export default function ReceptionArrivees({ lang }) {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 30;
 
-  // Récupérer uniquement les fiches actives (non archivées)
-  // Optimisation: charger uniquement les champs nécessaires
+  // Récupérer toutes les fiches actives (non archivées)
   const { data: fiches = [], isLoading } = useQuery({
     queryKey: ['fiches-arrivee'],
-    queryFn: () => base44.entities.FicheArrivee.list('-date_validation', 500),
+    queryFn: async () => {
+      const allFiches = await base44.entities.FicheArrivee.list('-date_validation', 500);
+      console.log('📥 Fiches arrivée récupérées:', allFiches.length);
+      return allFiches;
+    },
     refetchInterval: 10000,
-    staleTime: 30000, // Cache 30s
-    select: (data) => {
-      // Charger uniquement les données essentielles pour la liste (optimisation mémoire)
-      return data.map(f => ({
-        id: f.id,
-        client_nom: f.client_nom,
-        client_prenom: f.client_prenom,
-        date_arrivee: f.date_arrivee,
-        date_depart: f.date_depart,
-        numero_logement: f.numero_logement,
-        categorie_logement: f.categorie_logement,
-        evaluation_proprete: f.evaluation_proprete,
-        inventaire_objets_manquants: f.inventaire_objets_manquants,
-        nombre_adultes: f.nombre_adultes,
-        nombre_adolescents: f.nombre_adolescents,
-        nombre_enfants: f.nombre_enfants,
-        nombre_bebes: f.nombre_bebes,
-        date_validation: f.date_validation,
-        pdf_url: f.pdf_url,
-        email_envoye: f.email_envoye
-      }));
-    }
+    staleTime: 30000
   });
 
   const fichesFiltrees = fiches.filter(f => {
@@ -65,9 +47,10 @@ export default function ReceptionArrivees({ lang }) {
   }, [recherche]);
 
   if (ficheSelectionnee) {
+    // Recharger la fiche complète depuis la BDD pour avoir toutes les données
     return (
       <ReceptionFicheArrivee
-        fiche={ficheSelectionnee}
+        ficheId={ficheSelectionnee.id}
         onClose={() => setFicheSelectionnee(null)}
         lang={lang}
       />

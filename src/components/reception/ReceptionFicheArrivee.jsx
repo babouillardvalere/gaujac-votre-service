@@ -10,7 +10,32 @@ import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import { addPDFToQueue, PDF_STATUS } from '../pdfQueue';
 
-export default function ReceptionFicheArrivee({ fiche, onClose, lang }) {
+export default function ReceptionFicheArrivee({ ficheId, onClose, lang }) {
+  const [fiche, setFiche] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const loadFiche = async () => {
+      try {
+        const ficheComplete = await base44.entities.FicheArrivee.get(ficheId);
+        console.log('📄 Fiche chargée:', ficheComplete);
+        setFiche(ficheComplete);
+      } catch (error) {
+        console.error('Erreur chargement fiche:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadFiche();
+  }, [ficheId]);
+
+  if (loading || !fiche) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-gray-500">{lang === 'fr' ? 'Chargement...' : 'Loading...'}</p>
+      </div>
+    );
+  }
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
   const queryClient = useQueryClient();
