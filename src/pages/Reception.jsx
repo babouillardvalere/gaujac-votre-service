@@ -5,6 +5,7 @@ import Logo from '../components/Logo';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ReceptionArrivees from '../components/reception/ReceptionArrivees';
 import ReceptionDeparts from '../components/reception/ReceptionDeparts';
+import JournalInterventions from '../components/reception/JournalInterventions';
 import CollaborateurNotificationBell from '../components/CollaborateurNotificationBell';
 import { runAutoArchiving } from '../components/reception/ArchivageService';
 import { Home, LogIn, LogOut, Archive } from 'lucide-react';

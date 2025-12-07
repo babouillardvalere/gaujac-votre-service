@@ -124,8 +124,10 @@ export default function ClientDepartInventaire() {
         horodatage_creation: new Date().toISOString()
       });
 
-      // Créer FicheDepart pour la réception
-      await base44.entities.FicheDepart.create({
+
+
+      // Créer FicheDepart d'abord
+      const ficheDepart = await base44.entities.FicheDepart.create({
         client_nom: sessionStorage.getItem('depart_nom'),
         client_prenom: sessionStorage.getItem('depart_prenom'),
         date_arrivee: ficheArrivee?.date_arrivee || '',
@@ -166,7 +168,9 @@ export default function ClientDepartInventaire() {
           photo_url: photoProprete,
           statut: 'en_attente',
           autorisation_acces: 'oui',
-          origine: 'depart'
+          origine: 'depart',
+          fiche_depart_id: ficheDepart.id,
+          fiche_arrivee_id: ficheArriveeId
         });
       }
 
@@ -184,7 +188,9 @@ export default function ClientDepartInventaire() {
           logement: sessionStorage.getItem('depart_numero'),
           statut: 'en_attente',
           autorisation_acces: 'oui',
-          origine: 'depart'
+          origine: 'depart',
+          fiche_depart_id: ficheDepart.id,
+          fiche_arrivee_id: ficheArriveeId
         });
       }
 

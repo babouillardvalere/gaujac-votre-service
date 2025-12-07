@@ -299,10 +299,12 @@ export default function ClientControleInventaire() {
           statut: 'en_attente',
           autorisation_acces: 'oui',
           clause_autorisation_acceptee: true,
-          origine: 'arrivee'
+          origine: 'arrivee',
+          fiche_arrivee_id: inventaire.id,
+          dossier_arrivee_id: dossierId
         });
         interventionsMenageIds.push(incident.id);
-        
+
         // 🔔 Notifier l'équipe ménage
         await notifierInterventionCreee(incident);
       }
@@ -326,10 +328,12 @@ export default function ClientControleInventaire() {
           statut: 'en_attente',
           autorisation_acces: 'oui',
           clause_autorisation_acceptee: true,
-          origine: 'arrivee'
+          origine: 'arrivee',
+          fiche_arrivee_id: inventaire.id,
+          dossier_arrivee_id: dossierId
         });
         interventionsTechniqueIds.push(incident.id);
-        
+
         // 🔔 Notifier l'équipe technique
         await notifierInterventionCreee(incident);
       }
