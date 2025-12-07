@@ -56,6 +56,7 @@ import DashboardRapports from './pages/DashboardRapports';
 import ClientDepartIdentification from './pages/ClientDepartIdentification';
 import ClientDepartLogement from './pages/ClientDepartLogement';
 import ClientDepartProprete from './pages/ClientDepartProprete';
+import ClientDepartRecap from './pages/ClientDepartRecap';
 import __Layout from './Layout.jsx';
 
 
@@ -118,6 +119,7 @@ export const PAGES = {
     "ClientDepartIdentification": ClientDepartIdentification,
     "ClientDepartLogement": ClientDepartLogement,
     "ClientDepartProprete": ClientDepartProprete,
+    "ClientDepartRecap": ClientDepartRecap,
 }
 
 export const pagesConfig = {
