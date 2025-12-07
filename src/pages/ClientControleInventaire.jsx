@@ -55,7 +55,7 @@ export default function ClientControleInventaire() {
   }, [nom, categorie, navigate]);
 
   // Charger l'inventaire selon la catégorie
-  const codeCategorie = typeLogement === 'mobilhome' ? getCodeFromCategory(categorie) : null;
+  const codeCategorie = typeLogement === 'mobilhome' && categorie ? getCodeFromCategory(categorie) : null;
 
   const { data: inventaireData, isLoading: loadingInventaire } = useQuery({
     queryKey: ['inventaire', codeCategorie],
@@ -64,7 +64,7 @@ export default function ClientControleInventaire() {
       const inventaires = await base44.entities.InventaireHebergement.list();
       return inventaires.find(inv => inv.code_categorie === codeCategorie);
     },
-    enabled: !!codeCategorie && typeLogement === 'mobilhome'
+    enabled: typeLogement === 'mobilhome' && !!codeCategorie
   });
 
   // Parser l'inventaire pour extraire les items
