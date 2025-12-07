@@ -7,15 +7,19 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Users, Search, FileText, CheckCircle, AlertCircle } from 'lucide-react';
 import ReceptionFicheArrivee from './ReceptionFicheArrivee';
+import Pagination from '../Pagination';
 
 export default function ReceptionArrivees({ lang }) {
   const [ficheSelectionnee, setFicheSelectionnee] = useState(null);
   const [recherche, setRecherche] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 30;
 
   const { data: fiches = [], isLoading } = useQuery({
     queryKey: ['fiches-arrivee'],
-    queryFn: () => base44.entities.FicheArrivee.list('-date_validation'),
-    refetchInterval: 10000
+    queryFn: () => base44.entities.FicheArrivee.list('-date_validation', 500),
+    refetchInterval: 10000,
+    staleTime: 30000 // Cache 30s
   });
 
   const fichesFiltrees = fiches.filter(f => {
@@ -27,6 +31,15 @@ export default function ReceptionArrivees({ lang }) {
       f.numero_logement?.toLowerCase().includes(searchLower)
     );
   });
+
+  // Pagination
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const fichesPaginees = fichesFiltrees.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  // Réinitialiser la page si la recherche change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [recherche]);
 
   if (ficheSelectionnee) {
     return (
@@ -83,7 +96,7 @@ export default function ReceptionArrivees({ lang }) {
         </Card>
       ) : (
         <div className="grid gap-4">
-          {fichesFiltrees.map(fiche => {
+          {fichesPaginees.map(fiche => {
             const totalPersonnes = (fiche.nombre_adultes || 0) + (fiche.nombre_adolescents || 0) + 
                                    (fiche.nombre_enfants || 0) + (fiche.nombre_bebes || 0);
             const aProblemes = fiche.evaluation_proprete === 'pas_satisfaisant' || 
@@ -139,6 +152,16 @@ export default function ReceptionArrivees({ lang }) {
             );
           })}
         </div>
+      )}
+
+      {/* Pagination */}
+      {!isLoading && fichesFiltrees.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalItems={fichesFiltrees.length}
+          itemsPerPage={ITEMS_PER_PAGE}
+          onPageChange={setCurrentPage}
+        />
       )}
     </div>
   );

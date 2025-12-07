@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Star, Filter, Calendar, User, MapPin, Eye, EyeOff, Award, ChevronDown, ChevronUp, Loader2, Zap, Smile, Sparkles } from 'lucide-react';
+import Pagination from '../Pagination';
 import { format, startOfWeek, startOfMonth, getWeek, getMonth, getYear } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend, PieChart, Pie, Cell, Area, AreaChart, ReferenceLine } from 'recharts';
@@ -25,6 +26,8 @@ const getSeason = (date) => {
 
 export default function BureauAvis() {
   const queryClient = useQueryClient();
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 30;
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState('recent');
   const [evolutionPeriod, setEvolutionPeriod] = useState('month');
@@ -47,7 +50,8 @@ export default function BureauAvis() {
 
   const { data: avis = [], isLoading } = useQuery({
     queryKey: ['bureau-avis'],
-    queryFn: () => base44.entities.Avis.list('-created_date', 500)
+    queryFn: () => base44.entities.Avis.list('-created_date', 1000),
+    staleTime: 60000 // Cache 60s
   });
 
   const updateAvisMutation = useMutation({
@@ -231,7 +235,17 @@ export default function BureauAvis() {
       hebergement: '', reactiviteMin: '', reactiviteMax: '', amabiliteMin: '',
       amabiliteMax: '', qualiteMin: '', qualiteMax: '', noteGlobaleMin: '', noteGlobaleMax: ''
     });
+    setCurrentPage(1);
   };
+
+  // Pagination
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedAvis = sortedAvis.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  // Réinitialiser la page si les filtres changent
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, sortBy]);
 
   const StatCard = ({ title, value, icon: Icon, color, bgColor }) => (
     <Card className={`border-2 ${color} rounded-xl`}>
@@ -594,9 +608,9 @@ export default function BureauAvis() {
         </CardContent>
       </Card>
 
-      {/* Liste complète des avis */}
+      {/* Liste paginée des avis */}
       <div className="space-y-4">
-        {sortedAvis.map(avisItem => (
+        {paginatedAvis.map(avisItem => (
           <Card key={avisItem.id} className={`border-2 rounded-xl ${avisItem.mis_en_avant ? 'border-[#FFD700] bg-[#FFD700]/5' : 'border-gray-200'}`}>
             <CardContent className="p-4">
               <div className="flex justify-between items-start mb-3">
@@ -668,6 +682,16 @@ export default function BureauAvis() {
           </Card>
         ))}
       </div>
+
+      {/* Pagination */}
+      {!isLoading && sortedAvis.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalItems={sortedAvis.length}
+          itemsPerPage={ITEMS_PER_PAGE}
+          onPageChange={setCurrentPage}
+        />
+      )}
     </div>
   );
 }

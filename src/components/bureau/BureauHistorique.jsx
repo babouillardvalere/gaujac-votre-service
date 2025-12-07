@@ -13,11 +13,14 @@ import {
   Search, Filter, AlertTriangle, Calendar, Clock, User, Home,
   Star, MessageSquare, Camera, Loader2
 } from 'lucide-react';
+import Pagination from '../Pagination';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 export default function BureauHistorique() {
   const { t, lang } = useTranslation();
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 50;
   const [filters, setFilters] = useState({
     dateFrom: '',
     dateTo: '',
@@ -30,7 +33,8 @@ export default function BureauHistorique() {
 
   const { data: incidents = [], isLoading } = useQuery({
     queryKey: ['all-incidents'],
-    queryFn: () => base44.entities.Incident.filter({}, '-created_date', 500)
+    queryFn: () => base44.entities.Incident.filter({}, '-created_date', 1000),
+    staleTime: 60000 // Cache 60s
   });
 
   const { data: avis = [] } = useQuery({
@@ -54,6 +58,16 @@ export default function BureauHistorique() {
     }
     return true;
   });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredIncidents.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedIncidents = filteredIncidents.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  // Réinitialiser la page si les filtres changent
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
 
   const getStatusColor = (status) => {
     const colors = {
@@ -168,7 +182,7 @@ export default function BureauHistorique() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredIncidents.map((incident) => {
+                  {paginatedIncidents.map((incident) => {
                     const avisClient = getAvisForIncident(incident.id);
                     return (
                       <tr 
@@ -217,6 +231,15 @@ export default function BureauHistorique() {
                 </tbody>
               </table>
             </div>
+          )}
+          
+          {!isLoading && filteredIncidents.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalItems={filteredIncidents.length}
+              itemsPerPage={ITEMS_PER_PAGE}
+              onPageChange={setCurrentPage}
+            />
           )}
         </CardContent>
       </Card>
