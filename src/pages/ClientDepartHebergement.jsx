@@ -4,7 +4,7 @@ import { useTranslation } from '../components/translations';
 import SelecteurHebergement from '../components/reception/SelecteurHebergement';
 import Logo from '../components/Logo';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
