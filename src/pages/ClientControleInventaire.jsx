@@ -402,11 +402,17 @@ export default function ClientControleInventaire() {
         );
       }
       
-      // Rediriger vers page de confirmation
+      // Message de confirmation
       setTimeout(() => {
-        const dossierId = sessionStorage.getItem('arrivee_dossier_id');
-        navigate(createPageUrl('ClientArriveeSuivi') + `?id=${dossierId}`);
-      }, 2000);
+        alert(lang === 'fr' 
+          ? "Votre inventaire a bien été envoyé à la réception.\nMerci d'avoir complété l'état des lieux."
+          : "Your inventory has been sent to reception.\nThank you for completing the inventory check.");
+      }, 200);
+
+      // Redirection automatique vers la réception
+      setTimeout(() => {
+        navigate(createPageUrl('ReceptionArrivees'));
+      }, 1000);
     } catch (error) {
       console.error('Submit error:', error);
       toast.error(lang === 'fr' ? 'Erreur lors de l\'envoi' : 'Submit error');

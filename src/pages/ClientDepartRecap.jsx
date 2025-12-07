@@ -208,9 +208,17 @@ export default function ClientDepartRecap() {
         ? '✅ Départ enregistré ! Merci et bon retour !'
         : '✅ Departure registered! Thank you and safe travels!');
 
+      // Message de confirmation
       setTimeout(() => {
-        navigate(createPageUrl('ClientMenu'));
-      }, 2000);
+        alert(lang === 'fr' 
+          ? "Votre inventaire de départ a bien été envoyé à la réception.\nMerci d'avoir complété l'état des lieux."
+          : "Your departure inventory has been sent to reception.\nThank you for completing the inventory check.");
+      }, 200);
+
+      // Redirection automatique vers la réception
+      setTimeout(() => {
+        navigate(createPageUrl('ReceptionDeparts'));
+      }, 1000);
 
     } catch (error) {
       console.error(error);
