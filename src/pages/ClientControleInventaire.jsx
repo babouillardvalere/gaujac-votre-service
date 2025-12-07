@@ -19,6 +19,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
 import { notifierInventaireSoumis, notifierInterventionCreee, notifierDossierFinalise } from '../components/notificationService';
+import { uploadCompressedImage } from '../components/imageCompression';
 
 export default function ClientControleInventaire() {
   const { t, lang } = useTranslation();
@@ -102,8 +103,10 @@ export default function ClientControleInventaire() {
     if (!file) return;
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setPhotosLieux(prev => ({ ...prev, [lieuId]: file_url }));
+      const result = await uploadCompressedImage(file, (compressedFile) => 
+        base44.integrations.Core.UploadFile({ file: compressedFile })
+      );
+      setPhotosLieux(prev => ({ ...prev, [lieuId]: result.file_url }));
       toast.success(lang === 'fr' ? 'Photo ajoutée' : 'Photo added');
     } catch (error) {
       console.error('Upload error:', error);
@@ -128,8 +131,10 @@ export default function ClientControleInventaire() {
     if (!file) return;
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setMissingItem(prev => ({ ...prev, photo: file_url }));
+      const result = await uploadCompressedImage(file, (compressedFile) => 
+        base44.integrations.Core.UploadFile({ file: compressedFile })
+      );
+      setMissingItem(prev => ({ ...prev, photo: result.file_url }));
       toast.success(lang === 'fr' ? 'Photo ajoutée' : 'Photo added');
     } catch (error) {
       console.error('Upload error:', error);
@@ -143,8 +148,10 @@ export default function ClientControleInventaire() {
     if (!file) return;
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setPhotoProprete(file_url);
+      const result = await uploadCompressedImage(file, (compressedFile) => 
+        base44.integrations.Core.UploadFile({ file: compressedFile })
+      );
+      setPhotoProprete(result.file_url);
       toast.success(lang === 'fr' ? 'Photo ajoutée' : 'Photo added');
     } catch (error) {
       console.error('Upload error:', error);
