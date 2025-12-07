@@ -61,15 +61,6 @@ export default function MenuCollaborateur() {
       hasUrgent: counts.menageUrgent > 0
     },
     {
-      title: '📋 Réception',
-      icon: ClipboardList,
-      href: 'Reception',
-      color: 'bg-[#22c55e]',
-      textColor: 'text-white',
-      description: 'Arrivées & Départs • Assistance client',
-      badgeCount: 0
-    },
-    {
       title: t('menu_materiel'),
       icon: Package,
       href: 'Materiel',
