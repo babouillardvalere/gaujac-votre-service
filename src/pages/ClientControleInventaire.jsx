@@ -20,6 +20,7 @@ import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
 import { notifierInventaireSoumis, notifierInterventionCreee, notifierDossierFinalise } from '../components/notificationService';
 import { uploadCompressedImage } from '../components/imageCompression';
+import LazyInventaire from '../components/LazyInventaire';
 
 export default function ClientControleInventaire() {
   const { t, lang } = useTranslation();
@@ -461,13 +462,23 @@ export default function ClientControleInventaire() {
                   : 'If an icon is not checked = missing or damaged item'}
               </p>
 
-              {inventaireItems.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  {lang === 'fr' ? 'Inventaire non disponible' : 'Inventory not available'}
-                </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-2 gap-3 mb-4">
+              <LazyInventaire
+                placeholder={
+                  <div className="text-center py-8">
+                    <Loader2 className="w-8 h-8 animate-spin text-[#00AEEF] mx-auto mb-2" />
+                    <p className="text-sm text-gray-500">
+                      {lang === 'fr' ? 'Chargement de l\'inventaire...' : 'Loading inventory...'}
+                    </p>
+                  </div>
+                }
+              >
+                {inventaireItems.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    {lang === 'fr' ? 'Inventaire non disponible' : 'Inventory not available'}
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 gap-3 mb-4">
                 {inventaireItems.map(item => {
                   const isValidated = objetsValides.includes(item.id);
                   return (
@@ -514,8 +525,9 @@ export default function ClientControleInventaire() {
                       ))}
                     </div>
                   )}
-                </>
-              )}
+                  </>
+                )}
+              </LazyInventaire>
             </CardContent>
           </Card>
 
@@ -531,7 +543,8 @@ export default function ClientControleInventaire() {
                   : 'These photos are not mandatory unless you notice a problem. They protect you in case of dispute.'}
               </p>
 
-              <div className="space-y-3">
+              <LazyInventaire>
+                <div className="space-y-3">
                 {lieuxPhoto.map(lieu => (
                   <div key={lieu.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <span className="text-sm font-heading text-[#0077A8]">
@@ -570,7 +583,8 @@ export default function ClientControleInventaire() {
                     </label>
                   </div>
                 ))}
-              </div>
+                </div>
+              </LazyInventaire>
             </CardContent>
           </Card>
 
