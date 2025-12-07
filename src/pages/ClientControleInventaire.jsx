@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 import { notifierInventaireSoumis, notifierInterventionCreee, notifierDossierFinalise } from '../components/notificationService';
 import { uploadCompressedImage } from '../components/imageCompression';
 import LazyInventaire from '../components/LazyInventaire';
+import { clearInventaireCache } from '../components/inventaireCache';
 
 export default function ClientControleInventaire() {
   const { t, lang } = useTranslation();
@@ -54,6 +55,8 @@ export default function ClientControleInventaire() {
     if (!nom || !categorie) {
       navigate(createPageUrl('ClientArriveeIdentite'));
     }
+    // Vider le cache pour forcer le rechargement avec quantités
+    clearInventaireCache();
   }, [nom, categorie, navigate]);
 
   // Charger l'inventaire depuis categoryCodeMapping
@@ -497,7 +500,8 @@ export default function ClientControleInventaire() {
                     >
                       <div className="text-3xl mb-2">{item.icon}</div>
                       <div className="text-sm font-heading text-[#0077A8]">
-                        {lang === 'fr' ? item.nom_fr : item.nom_en} {item.quantite && <strong>×{item.quantite}</strong>}
+                        {lang === 'fr' ? item.nom_fr : item.nom_en}
+                        {item.quantite && <> <strong>×{item.quantite}</strong></>}
                       </div>
                       {isValidated && (
                         <Check className="w-5 h-5 text-green-600 mx-auto mt-2" />
