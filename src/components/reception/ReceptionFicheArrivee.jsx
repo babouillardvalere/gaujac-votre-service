@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Download, Mail, FileText, CheckCircle, XCircle, Users, Calendar, Home } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
+import { addPDFToQueue, PDF_STATUS } from '../pdfQueue';
 
 export default function ReceptionFicheArrivee({ fiche, onClose, lang }) {
   const [generatingPDF, setGeneratingPDF] = useState(false);
@@ -16,8 +17,14 @@ export default function ReceptionFicheArrivee({ fiche, onClose, lang }) {
 
   const genererPDF = async () => {
     setGeneratingPDF(true);
-    try {
-      const doc = new jsPDF();
+    
+    // Ajouter à la file d'attente
+    await addPDFToQueue({
+      type: 'arrivee',
+      entityId: fiche.id,
+      entityData: fiche,
+      generatorFn: async () => {
+        const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.width;
       let yPos = 20;
 
@@ -119,19 +126,17 @@ export default function ReceptionFicheArrivee({ fiche, onClose, lang }) {
       const pdfBlob = doc.output('blob');
       const pdfFile = new File([pdfBlob], `arrivee_${fiche.numero_logement}_${fiche.client_nom}.pdf`, { type: 'application/pdf' });
       
-      const { file_url } = await base44.integrations.Core.UploadFile({ file: pdfFile });
-      
-      await base44.entities.FicheArrivee.update(fiche.id, { pdf_url: file_url });
-      queryClient.invalidateQueries({ queryKey: ['fiches-arrivee'] });
-
-      toast.success(lang === 'fr' ? 'PDF généré avec succès' : 'PDF generated successfully');
-      window.open(file_url, '_blank');
-    } catch (error) {
-      console.error('Erreur génération PDF:', error);
-      toast.error(lang === 'fr' ? 'Erreur lors de la génération du PDF' : 'Error generating PDF');
-    } finally {
-      setGeneratingPDF(false);
-    }
+        const { file_url } = await base44.integrations.Core.UploadFile({ file: pdfFile });
+        
+        return file_url;
+      }
+    });
+    
+    queryClient.invalidateQueries({ queryKey: ['fiches-arrivee'] });
+    toast.success(lang === 'fr' 
+      ? 'PDF ajouté à la file de génération. Vous serez notifié quand il sera prêt.' 
+      : 'PDF added to generation queue. You will be notified when ready.');
+    setGeneratingPDF(false);
   };
 
   const envoyerEmail = async () => {
@@ -183,9 +188,27 @@ export default function ReceptionFicheArrivee({ fiche, onClose, lang }) {
           {lang === 'fr' ? 'Retour à la liste' : 'Back to list'}
         </Button>
         <div className="flex gap-2">
-          <Button onClick={genererPDF} disabled={generatingPDF} className="gap-2 bg-[#00AEEF]">
+          {fiche.pdf_status === PDF_STATUS.EN_COURS && (
+            <Badge className="bg-blue-100 text-blue-700">
+              {lang === 'fr' ? '⏳ Génération en cours...' : '⏳ Generating...'}
+            </Badge>
+          )}
+          {fiche.pdf_status === PDF_STATUS.ERREUR && (
+            <Badge className="bg-red-100 text-red-700">
+              {lang === 'fr' ? '❌ Erreur génération' : '❌ Generation error'}
+            </Badge>
+          )}
+          <Button 
+            onClick={genererPDF} 
+            disabled={generatingPDF || fiche.pdf_status === PDF_STATUS.EN_COURS} 
+            className="gap-2 bg-[#00AEEF]"
+          >
             <Download className="w-4 h-4" />
-            {generatingPDF ? (lang === 'fr' ? 'Génération...' : 'Generating...') : (lang === 'fr' ? 'Générer PDF' : 'Generate PDF')}
+            {fiche.pdf_status === PDF_STATUS.TERMINE && fiche.pdf_url
+              ? (lang === 'fr' ? 'Télécharger PDF' : 'Download PDF')
+              : generatingPDF 
+                ? (lang === 'fr' ? 'Ajout...' : 'Adding...') 
+                : (lang === 'fr' ? 'Générer PDF' : 'Generate PDF')}
           </Button>
           <Button onClick={envoyerEmail} disabled={sendingEmail || !fiche.pdf_url} variant="outline" className="gap-2">
             <Mail className="w-4 h-4" />
