@@ -6,10 +6,10 @@ import Logo from '../components/Logo';
 import ArriveeProgressBar from '../components/ArriveeProgressBar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, ArrowRight, Calendar } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Users, Dog, Cat, Plus, Minus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
@@ -17,110 +17,131 @@ import { toast } from 'sonner';
 export default function ClientArriveeIdentite() {
   const { t, lang } = useTranslation();
   const navigate = useNavigate();
-  const [dossierId, setDossierId] = useState(null);
-  
+
   const [formData, setFormData] = useState({
     nom: '',
     prenom: '',
     date_arrivee: '',
-    date_depart: ''
+    date_depart: '',
+    nb_adultes: 2,
+    nb_adolescents: 0,
+    nb_enfants: 0,
+    nb_bebes: 0,
+    nombre_chiens: 0,
+    nombre_chats: 0,
+    autres_animaux: '',
+    remarque_arrivee: ''
   });
 
+  const [dossierId, setDossierId] = useState(sessionStorage.getItem('arrivee_dossier_id'));
+
   useEffect(() => {
-    // Vérifier si un dossier existe déjà
     const existingDossierId = sessionStorage.getItem('arrivee_dossier_id');
-    if (existingDossierId) {
-      setDossierId(existingDossierId);
-    }
+    if (existingDossierId) setDossierId(existingDossierId);
 
-    // Charger les données de session si elles existent
-    const nom = sessionStorage.getItem('arrivee_nom');
-    const prenom = sessionStorage.getItem('arrivee_prenom');
-    const dateArrivee = sessionStorage.getItem('arrivee_date_arrivee');
-    const dateDepart = sessionStorage.getItem('arrivee_date_depart');
-
-    if (nom && prenom && dateArrivee && dateDepart) {
-      setFormData({
-        nom,
-        prenom,
-        date_arrivee: dateArrivee,
-        date_depart: dateDepart
-      });
-    }
+    const savedNom = sessionStorage.getItem('arrivee_nom');
+    const savedPrenom = sessionStorage.getItem('arrivee_prenom');
+    const savedDateArrivee = sessionStorage.getItem('arrivee_date_arrivee');
+    const savedDateDepart = sessionStorage.getItem('arrivee_date_depart');
+    
+    if (savedNom) setFormData(prev => ({ ...prev, nom: savedNom }));
+    if (savedPrenom) setFormData(prev => ({ ...prev, prenom: savedPrenom }));
+    if (savedDateArrivee) setFormData(prev => ({ ...prev, date_arrivee: savedDateArrivee }));
+    if (savedDateDepart) setFormData(prev => ({ ...prev, date_depart: savedDateDepart }));
   }, []);
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const validateDates = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const arrivee = new Date(formData.date_arrivee);
-    arrivee.setHours(0, 0, 0, 0);
-    
-    const depart = new Date(formData.date_depart);
-    depart.setHours(0, 0, 0, 0);
+  const handleIncrement = (field) => {
+    setFormData(prev => ({ ...prev, [field]: Math.min(prev[field] + 1, 20) }));
+  };
 
-    // La date d'arrivée ne doit pas être dans le futur de plus de 7 jours
-    const maxArrival = new Date(today);
-    maxArrival.setDate(maxArrival.getDate() + 7);
-    
-    if (arrivee > maxArrival) {
-      toast.error(lang === 'fr' 
-        ? "La date d'arrivée ne peut pas être si loin dans le futur"
-        : "Arrival date cannot be so far in the future"
-      );
+  const handleDecrement = (field) => {
+    setFormData(prev => ({ ...prev, [field]: Math.max(prev[field] - 1, 0) }));
+  };
+
+  const validateForm = () => {
+    if (!formData.nom || !formData.prenom || !formData.date_arrivee || !formData.date_depart) {
+      toast.error(t('champs_obligatoires'));
       return false;
     }
 
-    // La date de départ doit être après la date d'arrivée
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const arrivee = new Date(formData.date_arrivee);
+    const depart = new Date(formData.date_depart);
+
+    if (arrivee > tomorrow) {
+      toast.error(lang === 'fr' 
+        ? 'La date d\'arrivée doit être aujourd\'hui ou demain maximum'
+        : 'Arrival date must be today or tomorrow at most');
+      return false;
+    }
+
     if (depart <= arrivee) {
-      toast.error(lang === 'fr'
-        ? "La date de départ doit être après la date d'arrivée"
-        : "Departure date must be after arrival date"
-      );
+      toast.error(t('date_error_ordre'));
+      return false;
+    }
+
+    const totalPersonnes = formData.nb_adultes + formData.nb_adolescents + formData.nb_enfants + formData.nb_bebes;
+    if (totalPersonnes < 1) {
+      toast.error(lang === 'fr' 
+        ? 'Au moins une personne est requise'
+        : 'At least one person is required');
       return false;
     }
 
     return true;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
 
-    if (!formData.nom || !formData.prenom || !formData.date_arrivee || !formData.date_depart) {
-      toast.error(t('champs_obligatoires'));
-      return;
-    }
-
-    if (!validateDates()) {
-      return;
-    }
-
-    // Stocker en session
-    sessionStorage.setItem('arrivee_nom', formData.nom);
-    sessionStorage.setItem('arrivee_prenom', formData.prenom);
-    sessionStorage.setItem('arrivee_date_arrivee', formData.date_arrivee);
-    sessionStorage.setItem('arrivee_date_depart', formData.date_depart);
-    sessionStorage.setItem('arrivee_nb_adultes', formData.nb_adultes);
-    sessionStorage.setItem('arrivee_nb_adolescents', formData.nb_adolescents);
-    sessionStorage.setItem('arrivee_nb_enfants', formData.nb_enfants);
-    sessionStorage.setItem('arrivee_nb_bebes', formData.nb_bebes);
-    sessionStorage.setItem('arrivee_nb_animaux', formData.nb_animaux);
-    sessionStorage.setItem('arrivee_nombre_chiens', formData.nombre_chiens);
-    sessionStorage.setItem('arrivee_nombre_chats', formData.nombre_chats);
-    sessionStorage.setItem('arrivee_autres_animaux', formData.autres_animaux);
-    sessionStorage.setItem('arrivee_remarque', formData.remarque_arrivee);
-
-    // Créer ou mettre à jour le dossier d'arrivée
     try {
-      let currentDossierId = dossierId;
-      
-      if (dossierId) {
-        // Mettre à jour le dossier existant
-        const totalAnimaux = formData.nombre_chiens + formData.nombre_chats;
+      // Persister en session
+      sessionStorage.setItem('arrivee_nom', formData.nom);
+      sessionStorage.setItem('arrivee_prenom', formData.prenom);
+      sessionStorage.setItem('arrivee_date_arrivee', formData.date_arrivee);
+      sessionStorage.setItem('arrivee_date_depart', formData.date_depart);
+      sessionStorage.setItem('arrivee_nb_adultes', formData.nb_adultes);
+      sessionStorage.setItem('arrivee_nb_adolescents', formData.nb_adolescents);
+      sessionStorage.setItem('arrivee_nb_enfants', formData.nb_enfants);
+      sessionStorage.setItem('arrivee_nb_bebes', formData.nb_bebes);
+      sessionStorage.setItem('arrivee_nombre_chiens', formData.nombre_chiens);
+      sessionStorage.setItem('arrivee_nombre_chats', formData.nombre_chats);
+      sessionStorage.setItem('arrivee_autres_animaux', formData.autres_animaux);
+      sessionStorage.setItem('arrivee_remarque', formData.remarque_arrivee);
+
+      const totalAnimaux = formData.nombre_chiens + formData.nombre_chats;
+
+      if (!dossierId) {
+        const dossier = await base44.entities.DossierArrivee.create({
+          code_dossier: `ARR-${formData.nom.toUpperCase()}-${Date.now()}`,
+          client_nom: formData.nom,
+          client_prenom: formData.prenom,
+          date_arrivee: formData.date_arrivee,
+          date_depart: formData.date_depart,
+          nombre_adultes: formData.nb_adultes,
+          nombre_adolescents: formData.nb_adolescents,
+          nombre_enfants: formData.nb_enfants,
+          nombre_bebes: formData.nb_bebes,
+          nombre_animaux: totalAnimaux,
+          nombre_chiens: formData.nombre_chiens,
+          nombre_chats: formData.nombre_chats,
+          autres_animaux: formData.autres_animaux,
+          etape_1_terminee: true,
+          etape_2_terminee: true,
+          etape_actuelle: 3,
+          statut: 'en_cours',
+          horodatage_creation: new Date().toISOString()
+        });
+        sessionStorage.setItem('arrivee_dossier_id', dossier.id);
+      } else {
         await base44.entities.DossierArrivee.update(dossierId, {
           client_nom: formData.nom,
           client_prenom: formData.prenom,
@@ -138,51 +159,26 @@ export default function ClientArriveeIdentite() {
           etape_2_terminee: true,
           etape_actuelle: 3
         });
-      } else {
-        // Créer un nouveau dossier
-        const codeDossier = `ARRIVEE-${formData.nom.toUpperCase()}-${Date.now()}`;
-        const dossier = await base44.entities.DossierArrivee.create({
-          code_dossier: codeDossier,
-          client_nom: formData.nom,
-          client_prenom: formData.prenom,
-          date_arrivee: formData.date_arrivee,
-          date_depart: formData.date_depart,
-          etape_actuelle: 2,
-          etape_1_terminee: true,
-          statut: 'en_cours'
-        });
-        currentDossierId = dossier.id;
-        sessionStorage.setItem('arrivee_dossier_id', dossier.id);
-        setDossierId(dossier.id);
       }
 
-      // Navigation vers l'étape suivante (statistiques puis hébergement)
       navigate(createPageUrl('ClientArriveeHebergement'));
     } catch (error) {
-      console.error('Error creating/updating dossier:', error);
-      toast.error(lang === 'fr' 
-        ? 'Erreur lors de l\'enregistrement. Veuillez réessayer.'
-        : 'Error saving. Please try again.'
-      );
+      console.error(error);
+      toast.error(lang === 'fr' ? 'Erreur lors de l\'enregistrement' : 'Error saving data');
     }
   };
 
   return (
     <div className="min-h-screen px-6 py-8">
       <div className="max-w-lg mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={() => navigate(createPageUrl('ClientArrivee'))}
-              className="flex items-center gap-2 text-[#0077A8] hover:text-[#00AEEF]"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span className="font-heading">{t('retour')}</span>
-            </button>
-          </div>
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+          <button
+            onClick={() => navigate(createPageUrl('ClientMenu'))}
+            className="flex items-center gap-2 text-[#0077A8] hover:text-[#00AEEF] mb-4"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span className="font-heading">{t('retour')}</span>
+          </button>
 
           <Logo className="h-16 mb-4" />
           
@@ -190,7 +186,6 @@ export default function ClientArriveeIdentite() {
             🏡 {lang === 'fr' ? 'Arrivée' : 'Arrival'}
           </h1>
 
-          {/* Barre de progression */}
           {dossierId && (
             <Card className="border-2 border-[#00AEEF]/30 rounded-xl mb-6">
               <CardContent className="p-4">
@@ -199,9 +194,14 @@ export default function ClientArriveeIdentite() {
             </Card>
           )}
 
-          <Card className="border-2 border-[#22c55e]/30 rounded-xl">
-            <CardContent className="p-6">
-              <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Identité */}
+          <Card className="border-2 border-[#22c55e]/30 rounded-xl mb-4">
+            <CardContent className="p-6 space-y-4">
+              <h2 className="font-heading text-xl text-[#0077A8] mb-4">
+                {t('identite_title')}
+              </h2>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="nom" className="font-heading text-[#0077A8]">
                     {t('nom')} *
@@ -211,7 +211,6 @@ export default function ClientArriveeIdentite() {
                     value={formData.nom}
                     onChange={(e) => handleChange('nom', e.target.value)}
                     className="mt-1 border-2 border-gray-200 focus:border-[#22c55e] rounded-xl"
-                    placeholder={lang === 'fr' ? 'Votre nom' : 'Your last name'}
                   />
                 </div>
 
@@ -224,13 +223,11 @@ export default function ClientArriveeIdentite() {
                     value={formData.prenom}
                     onChange={(e) => handleChange('prenom', e.target.value)}
                     className="mt-1 border-2 border-gray-200 focus:border-[#22c55e] rounded-xl"
-                    placeholder={lang === 'fr' ? 'Votre prénom' : 'Your first name'}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="date_arrivee" className="font-heading text-[#0077A8] flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
+                  <Label htmlFor="date_arrivee" className="font-heading text-[#0077A8]">
                     {t('date_arrivee')} *
                   </Label>
                   <Input
@@ -243,8 +240,7 @@ export default function ClientArriveeIdentite() {
                 </div>
 
                 <div>
-                  <Label htmlFor="date_depart" className="font-heading text-[#0077A8] flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
+                  <Label htmlFor="date_depart" className="font-heading text-[#0077A8]">
                     {t('date_depart')} *
                   </Label>
                   <Input
@@ -255,17 +251,209 @@ export default function ClientArriveeIdentite() {
                     className="mt-1 border-2 border-gray-200 focus:border-[#22c55e] rounded-xl"
                   />
                 </div>
-
-                <Button
-                  type="submit"
-                  className="w-full h-12 bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl font-heading"
-                >
-                  {t('suivant')}
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
-              </form>
+              </div>
             </CardContent>
           </Card>
+
+          {/* Occupants */}
+          <Card className="border-2 border-[#00AEEF]/30 rounded-xl mb-4">
+            <CardContent className="p-6 space-y-4">
+              <h2 className="font-heading text-xl text-[#0077A8] mb-4 flex items-center gap-2">
+                <Users className="w-6 h-6" />
+                {lang === 'fr' ? 'Nombre de personnes' : 'Number of people'} *
+              </h2>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-xl">
+                  <span className="font-heading text-gray-700">
+                    👨‍👩 {lang === 'fr' ? 'Adultes (18+)' : 'Adults (18+)'}
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => handleDecrement('nb_adultes')}
+                      className="w-8 h-8 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center hover:border-blue-400"
+                      type="button"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <span className="w-8 text-center font-bold text-lg">{formData.nb_adultes}</span>
+                    <button
+                      onClick={() => handleIncrement('nb_adultes')}
+                      className="w-8 h-8 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center hover:border-blue-400"
+                      type="button"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-xl">
+                  <span className="font-heading text-gray-700">
+                    🧑‍🦱 {lang === 'fr' ? 'Ados (13-17 ans)' : 'Teens (13-17)'}
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => handleDecrement('nb_adolescents')}
+                      className="w-8 h-8 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center hover:border-purple-400"
+                      type="button"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <span className="w-8 text-center font-bold text-lg">{formData.nb_adolescents}</span>
+                    <button
+                      onClick={() => handleIncrement('nb_adolescents')}
+                      className="w-8 h-8 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center hover:border-purple-400"
+                      type="button"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-xl">
+                  <span className="font-heading text-gray-700">
+                    👧 {lang === 'fr' ? 'Enfants (3-12 ans)' : 'Children (3-12)'}
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => handleDecrement('nb_enfants')}
+                      className="w-8 h-8 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center hover:border-green-400"
+                      type="button"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <span className="w-8 text-center font-bold text-lg">{formData.nb_enfants}</span>
+                    <button
+                      onClick={() => handleIncrement('nb_enfants')}
+                      className="w-8 h-8 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center hover:border-green-400"
+                      type="button"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-xl">
+                  <span className="font-heading text-gray-700">
+                    👶 {lang === 'fr' ? 'Bébés (0-2 ans)' : 'Babies (0-2)'}
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => handleDecrement('nb_bebes')}
+                      className="w-8 h-8 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center hover:border-yellow-400"
+                      type="button"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <span className="w-8 text-center font-bold text-lg">{formData.nb_bebes}</span>
+                    <button
+                      onClick={() => handleIncrement('nb_bebes')}
+                      className="w-8 h-8 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center hover:border-yellow-400"
+                      type="button"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Animaux */}
+          <Card className="border-2 border-[#FFA500]/30 rounded-xl mb-4">
+            <CardContent className="p-6 space-y-4">
+              <h2 className="font-heading text-xl text-[#0077A8] mb-4 flex items-center gap-2">
+                <Dog className="w-6 h-6" />
+                {lang === 'fr' ? 'Animaux' : 'Pets'}
+              </h2>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-orange-50 rounded-xl">
+                  <span className="font-heading text-gray-700 flex items-center gap-2">
+                    <Dog className="w-5 h-5" />
+                    {lang === 'fr' ? 'Chiens' : 'Dogs'}
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => handleDecrement('nombre_chiens')}
+                      className="w-8 h-8 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center hover:border-orange-400"
+                      type="button"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <span className="w-8 text-center font-bold text-lg">{formData.nombre_chiens}</span>
+                    <button
+                      onClick={() => handleIncrement('nombre_chiens')}
+                      className="w-8 h-8 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center hover:border-orange-400"
+                      type="button"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-pink-50 rounded-xl">
+                  <span className="font-heading text-gray-700 flex items-center gap-2">
+                    <Cat className="w-5 h-5" />
+                    {lang === 'fr' ? 'Chats' : 'Cats'}
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => handleDecrement('nombre_chats')}
+                      className="w-8 h-8 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center hover:border-pink-400"
+                      type="button"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <span className="w-8 text-center font-bold text-lg">{formData.nombre_chats}</span>
+                    <button
+                      onClick={() => handleIncrement('nombre_chats')}
+                      className="w-8 h-8 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center hover:border-pink-400"
+                      type="button"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="font-heading text-[#0077A8] mb-2 block">
+                    {lang === 'fr' ? 'Autres animaux (facultatif)' : 'Other pets (optional)'}
+                  </Label>
+                  <Input
+                    value={formData.autres_animaux}
+                    onChange={(e) => handleChange('autres_animaux', e.target.value)}
+                    placeholder={lang === 'fr' ? 'Ex: lapin, perroquet...' : 'Ex: rabbit, parrot...'}
+                    className="border-2"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Remarques */}
+          <Card className="border-2 border-gray-300 rounded-xl mb-6">
+            <CardContent className="p-6">
+              <Label className="font-heading text-[#0077A8] mb-2 block">
+                {lang === 'fr' ? 'Remarque ou demande spéciale (facultatif)' : 'Special request (optional)'}
+              </Label>
+              <Textarea
+                value={formData.remarque_arrivee}
+                onChange={(e) => handleChange('remarque_arrivee', e.target.value)}
+                placeholder={lang === 'fr' ? 'Ex: allergie, demande spécifique...' : 'Ex: allergy, specific request...'}
+                rows={3}
+                className="border-2"
+              />
+            </CardContent>
+          </Card>
+
+          <Button
+            onClick={handleSubmit}
+            className="w-full h-12 bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl font-heading"
+          >
+            {lang === 'fr' ? 'Continuer' : 'Continue'}
+            <ArrowRight className="w-5 h-5 ml-2" />
+          </Button>
         </motion.div>
       </div>
     </div>
