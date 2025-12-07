@@ -66,6 +66,14 @@ export const POINTS_FORTS = {
     description: 'PDFs uploadés via Core.UploadFile (S3-compatible)',
     impact: 'URLs stockées en BDD, pas les binaires',
     zones: ['FicheArrivee.pdf_url', 'FicheDepart.pdf_url']
+  },
+
+  '8_Securite_Isolation': {
+    status: '⚠️ À VÉRIFIER',
+    description: 'Isolation données clients et permissions strictes',
+    impact: 'Critique pour éviter fuites de données entre utilisateurs',
+    zones: ['Tous les modules', 'Voir SECURITE_ET_ISOLATION.jsx'],
+    action_requise: 'Audit sécurité complet avant haute saison'
   }
 };
 
@@ -408,7 +416,12 @@ export const PLAN_ACTION = {
     {
       action: '📊 Monitoring temps réel',
       outils: 'Logs serveur, APM (Application Performance Monitoring)',
-      metriques: ['Temps réponse', 'Erreurs 5xx', 'Charge BDD']
+      metriques: ['Temps réponse', 'Erreurs 5xx', 'Charge BDD', 'Erreurs isolation données']
+    },
+    {
+      action: '🔒 Monitoring sécurité actif',
+      details: 'Dashboard erreurs 403/401, alertes si > 10/min, audit logs quotidien',
+      metriques: ['Tentatives accès non autorisés', 'Taux fuites données', 'Rate limiting déclenchés']
     },
     {
       action: '🔄 Archivage quotidien automatique',
@@ -418,21 +431,33 @@ export const PLAN_ACTION = {
     {
       action: '🧹 Purge logs/notifications hebdomadaire',
       details: 'Supprimer notifications lues >14j, logs >30j'
+    },
+    {
+      action: '⚠️ Alertes critiques configurées',
+      details: 'Email/SMS si: taux erreur >1%, PDF fail, BDD timeout, accès non autorisés détectés'
     }
   ],
 
   'APRES_HAUTE_SAISON': [
     {
       action: '📈 Analyse des métriques collectées',
-      details: 'Identifier pics de charge réels vs estimés'
+      details: 'Identifier pics de charge réels vs estimés + incidents sécurité'
     },
     {
       action: '🗄️ Archivage massif',
-      details: 'Archiver tous dossiers >60j'
+      details: 'Archiver tous dossiers >60j vers stockage froid'
+    },
+    {
+      action: '🖼️ Compression rétrospective photos',
+      details: 'Convertir anciennes photos JPEG → WebP pour récupérer espace'
     },
     {
       action: '🔧 Optimisations ciblées',
       details: 'Basées sur les goulots réellement observés'
+    },
+    {
+      action: '🔒 Audit sécurité post-saison',
+      details: 'Vérifier aucun incident données, revoir permissions si besoin'
     }
   ]
 };
@@ -531,16 +556,19 @@ export const SUCCESS_CRITERIA = {
  * - Séparation métier/données propre
  * 
  * 🔴 Actions CRITIQUES avant haute saison:
- * 1. Créer index BDD (1 jour) - BLOQUANT
- * 2. Générer PDFs côté serveur (3-5 jours) - BLOQUANT
- * 3. Implémenter WebSocket notifications (2-3 jours) - RECOMMANDÉ
+ * 1. Audit sécurité & isolation données (2-3 jours) - BLOQUANT
+ * 2. Créer index BDD (1 jour) - BLOQUANT
+ * 3. Générer PDFs côté serveur avec limites (3-5 jours) - BLOQUANT
+ * 4. Optimiser photos WebP + compression (2 jours) - RECOMMANDÉ
  * 
  * 🟡 Actions RECOMMANDÉES:
- * - Compression HTTP serveur (1h)
+ * - Cache Redis (stats + pages) (2 jours)
+ * - Logs structurés + monitoring (1-2 jours)
+ * - Sécurisation URLs photos/PDFs (1 jour)
  * - Rate limiting (1 jour)
- * - Monitoring/alerting temps réel
+ * - Compression HTTP serveur (1h)
  * 
- * ⏱️ Délai total actions critiques: 5-7 jours
+ * ⏱️ Délai total actions critiques: 7-10 jours
  * 
  * 📈 Résultat attendu APRÈS optimisations:
  * - 95% requêtes < 2s ✅

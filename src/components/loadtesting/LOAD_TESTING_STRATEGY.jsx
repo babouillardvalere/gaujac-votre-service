@@ -244,6 +244,46 @@ export const CRITICAL_BOTTLENECKS = {
     impact: 'Optimisé (5-30s selon criticité) ✅',
     solution: 'Déjà configuré correctement',
     priority: 'BASSE'
+  },
+
+  '8_Archivage_Long_Terme': {
+    risk: 'ÉLEVÉ',
+    description: 'Pas de politique archivage >12 mois = explosion stockage',
+    impact: 'Base de données et stockage saturés en 3-5 ans',
+    solution: 'Archivage froid >12 mois, compression photos WebP (max 1MB), compression PDF',
+    priority: 'HAUTE'
+  },
+
+  '9_Absence_Cache_Serveur': {
+    risk: 'ÉLEVÉ',
+    description: 'Statistiques/dashboard recalculés à chaque requête',
+    impact: 'Ralentissements si 50+ admin consultent en même temps',
+    solution: 'Cache Redis pour stats (refresh 5-10min), cache pages consultées fréquemment',
+    priority: 'HAUTE'
+  },
+
+  '10_Erreurs_Silencieuses': {
+    risk: 'MOYEN-ÉLEVÉ',
+    description: 'Pas de logs détaillés ni monitoring erreurs API',
+    impact: 'Pertes de données silencieuses (intervention, inventaire, PDF)',
+    solution: 'Logs structurés + dashboard monitoring + alertes automatiques',
+    priority: 'HAUTE'
+  },
+
+  '11_Surcharge_PDF_Non_Limitee': {
+    risk: 'CRITIQUE',
+    description: 'Pas de limite sur génération PDF simultanées ni taille',
+    impact: '40 PDFs en 1min = crash, PDFs >5MB = stockage explosé',
+    solution: 'File d\'attente (max 5 simultanés), compression systématique, limite 2MB',
+    priority: 'CRITIQUE'
+  },
+
+  '12_Securite_Permissions': {
+    risk: 'CRITIQUE',
+    description: 'Pas de tests sur isolation données et permissions strictes',
+    impact: 'Risque mélange données, accès non autorisés, fuite informations',
+    solution: 'Vérification stricte permissions, test 200 clients + 60 collabs simultanés',
+    priority: 'CRITIQUE'
   }
 };
 
@@ -293,18 +333,23 @@ export const OPTIMIZATION_RECOMMENDATIONS = {
   
   'Immediate_Actions': [
     '✅ Créer les index BDD (date_arrivee, date_depart, statut, numero_logement)',
-    '⚠️ Déplacer génération PDF côté serveur avec queue (Redis/Bull)',
+    '🔴 Déplacer génération PDF côté serveur avec queue (Redis/Bull)',
+    '🔴 Limiter génération PDF: max 5 simultanés, compression obligatoire, taille max 2MB',
     '✅ Activer compression HTTP (gzip/brotli) côté serveur',
     '✅ Configurer cache HTTP (Cache-Control headers)',
-    '⚠️ Implémenter rate limiting (max 100 req/min par IP)'
+    '⚠️ Implémenter rate limiting (max 100 req/min par IP)',
+    '🔴 Optimiser photos: conversion WebP automatique, compression max 1MB',
+    '🔴 Vérification stricte permissions: isolation données par user/role'
   ],
 
   'Short_Term': [
     '🔄 Remplacer polling par WebSocket pour notifications temps réel',
     '📦 Utiliser CDN pour assets statiques (images, CSS, JS)',
-    '🗃️ Mettre en place Redis pour cache session + données fréquentes',
+    '🗃️ Mettre en place Redis pour cache session + stats dashboard (refresh 5-10min)',
     '📊 Paginer davantage : 20 items au lieu de 30-50',
-    '🎯 Lazy loading systématique pour images/composants lourds'
+    '🎯 Lazy loading systématique pour images/composants lourds',
+    '📝 Logs structurés + dashboard monitoring erreurs temps réel',
+    '🔔 Alertes automatiques si erreur critique (PDF fail, BDD timeout)'
   ],
 
   'Medium_Term': [
@@ -312,7 +357,10 @@ export const OPTIMIZATION_RECOMMENDATIONS = {
     '📈 Monitoring temps réel (Datadog, New Relic, Prometheus)',
     '🔍 Ajouter tracing distribué (OpenTelemetry)',
     '💾 Séparer base de lecture (read replicas) et écriture',
-    '📝 Audit performances avec Lighthouse (score > 90)'
+    '📝 Audit performances avec Lighthouse (score > 90)',
+    '🗄️ Archivage froid automatique >12 mois (S3 Glacier)',
+    '🖼️ Conversion photos WebP + compression pipeline automatique',
+    '📄 Compression PDF systématique (max 2MB) avant stockage'
   ],
 
   'Architecture': [

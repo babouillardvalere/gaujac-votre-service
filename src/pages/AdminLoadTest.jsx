@@ -110,19 +110,30 @@ export default function AdminLoadTest() {
             </Button>
 
             <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-300">
-              <p className="text-sm font-bold text-blue-900 mb-2">📥 Télécharger le script K6</p>
+              <p className="text-sm font-bold text-blue-900 mb-2">📥 Documentation Complète</p>
               <p className="text-xs text-blue-700 mb-3">
-                Script de test de charge prêt à exécuter avec K6 (500 utilisateurs simultanés)
+                Scripts de test et analyses sécurité/performance
               </p>
-              <Button
-                onClick={() => window.open('/components/loadtesting/k6-load-test.js', '_blank')}
-                variant="outline"
-                size="sm"
-                className="border-blue-500"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                k6-load-test.js
-              </Button>
+              <div className="space-y-2">
+                <Button
+                  onClick={() => window.open('/components/loadtesting/k6-load-test.js', '_blank')}
+                  variant="outline"
+                  size="sm"
+                  className="border-blue-500 w-full"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Script K6 (500 users)
+                </Button>
+                <Button
+                  onClick={() => window.open('/components/loadtesting/SECURITE_ET_ISOLATION.jsx', '_blank')}
+                  variant="outline"
+                  size="sm"
+                  className="border-red-500 w-full"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  🔒 Sécurité & Isolation
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -318,6 +329,7 @@ export default function AdminLoadTest() {
           <div className="space-y-2 text-sm text-blue-800">
             <p>✅ Stratégie complète: <code className="bg-white px-2 py-1 rounded">components/loadtesting/LOAD_TESTING_STRATEGY.jsx</code></p>
             <p>✅ Rapport analyse: <code className="bg-white px-2 py-1 rounded">components/loadtesting/RAPPORT_ANALYSE_PERFORMANCE.jsx</code></p>
+            <p>🔒 Sécurité & isolation: <code className="bg-white px-2 py-1 rounded">components/loadtesting/SECURITE_ET_ISOLATION.jsx</code></p>
             <p>✅ Script K6: <code className="bg-white px-2 py-1 rounded">components/loadtesting/k6-load-test.js</code></p>
             <p>✅ Seed données: <code className="bg-white px-2 py-1 rounded">components/loadtesting/seed-test-data.js</code></p>
             <p>✅ Index BDD: <code className="bg-white px-2 py-1 rounded">components/DATABASE_INDEXING.jsx</code></p>
