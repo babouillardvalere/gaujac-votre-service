@@ -57,6 +57,7 @@ import ClientDepartIdentification from './pages/ClientDepartIdentification';
 import ClientDepartLogement from './pages/ClientDepartLogement';
 import ClientDepartProprete from './pages/ClientDepartProprete';
 import ClientDepartRecap from './pages/ClientDepartRecap';
+import ClientDepartConditions from './pages/ClientDepartConditions';
 import __Layout from './Layout.jsx';
 
 
@@ -120,6 +121,7 @@ export const PAGES = {
     "ClientDepartLogement": ClientDepartLogement,
     "ClientDepartProprete": ClientDepartProprete,
     "ClientDepartRecap": ClientDepartRecap,
+    "ClientDepartConditions": ClientDepartConditions,
 }
 
 export const pagesConfig = {

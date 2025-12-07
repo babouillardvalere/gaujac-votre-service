@@ -92,10 +92,10 @@ export default function ClientDepartLogement() {
               </div>
 
               <Button
-                onClick={() => navigate(createPageUrl('ClientDepartInventaire'))}
+                onClick={() => navigate(createPageUrl('ClientDepartConditions'))}
                 className="w-full h-12 bg-[#FFA500] hover:bg-[#FF8C00] text-white rounded-xl font-heading mt-6"
               >
-                {lang === 'fr' ? 'Continuer vers inventaire' : 'Continue to inventory'}
+                {lang === 'fr' ? 'Continuer' : 'Continue'}
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </CardContent>
