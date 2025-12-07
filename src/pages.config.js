@@ -52,6 +52,7 @@ import MesReservations from './pages/MesReservations';
 import GestionReservationsReception from './pages/GestionReservationsReception';
 import Reception from './pages/Reception';
 import AdminLoadTest from './pages/AdminLoadTest';
+import DashboardRapports from './pages/DashboardRapports';
 import __Layout from './Layout.jsx';
 
 
@@ -110,6 +111,7 @@ export const PAGES = {
     "GestionReservationsReception": GestionReservationsReception,
     "Reception": Reception,
     "AdminLoadTest": AdminLoadTest,
+    "DashboardRapports": DashboardRapports,
 }
 
 export const pagesConfig = {
