@@ -57,7 +57,7 @@ export default function ClientMenu() {
       titleEn: '🚗 Departure',
       description: 'Conditions de départ',
       descriptionEn: 'Departure conditions',
-      href: 'ClientDepartIdentite',
+      href: 'ClientDepartIdentification',
       color: 'bg-[#FFA500]',
       textColor: 'text-white',
       disabled: false,
