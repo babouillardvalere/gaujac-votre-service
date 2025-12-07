@@ -146,7 +146,7 @@ export default function ReceptionFicheDepart({ fiche, onClose, lang }) {
         <CardHeader className="bg-gradient-to-r from-[#FFA500] to-[#FF8C00] text-white">
           <CardTitle className="text-2xl flex items-center gap-2">
             <FileText className="w-6 h-6" />
-            {lang === 'fr' ? 'Dossier de départ' : 'Departure file'}
+            {lang === 'fr' ? `Dossier de départ - ${fiche.client_prenom} ${fiche.client_nom}` : `Departure file - ${fiche.client_prenom} ${fiche.client_nom}`}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6 space-y-6">

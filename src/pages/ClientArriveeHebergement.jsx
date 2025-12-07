@@ -88,7 +88,9 @@ export default function ClientArriveeHebergement() {
           <Logo className="h-16 mb-4" />
           
           <h1 className="font-handwritten text-3xl text-[#22c55e] text-center mb-2">
-            🏡 {lang === 'fr' ? 'Arrivée' : 'Arrival'}
+            🏡 {lang === 'fr' 
+              ? `Arrivée - ${sessionStorage.getItem('arrivee_prenom') || ''} ${sessionStorage.getItem('arrivee_nom') || ''}`
+              : `Arrival - ${sessionStorage.getItem('arrivee_prenom') || ''} ${sessionStorage.getItem('arrivee_nom') || ''}`}
           </h1>
 
           {/* Barre de progression */}

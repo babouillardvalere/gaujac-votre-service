@@ -225,7 +225,7 @@ export default function ClientDepartInventaire() {
           <Logo className="h-16 mb-4" />
           
           <h1 className="font-handwritten text-3xl text-[#FFA500] text-center mb-6">
-            ✅ {lang === 'fr' ? 'Inventaire Départ' : 'Departure Inventory'}
+            ✅ {lang === 'fr' ? `Inventaire Départ - ${dossierArrivee?.client_prenom || ''} ${dossierArrivee?.client_nom || ''}` : `Departure Inventory - ${dossierArrivee?.client_prenom || ''} ${dossierArrivee?.client_nom || ''}`}
           </h1>
 
           {/* Info pré-remplissage */}
