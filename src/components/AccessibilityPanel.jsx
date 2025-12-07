@@ -930,23 +930,6 @@ export default function AccessibilityPanel() {
             <div className="pb-4">
               <h2 className="font-heading text-green-700 text-xl mb-4">🔊 {t('audio_section')}</h2>
             
-            {/* Assistant vocal */}
-            <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl border-2 border-blue-200 mb-4">
-              <div className="flex items-center gap-3">
-                <div className="text-2xl">🗣️</div>
-                <div>
-                  <p className="font-heading text-blue-700">🗣️ {t('voice_assistant')}</p>
-                  <p className="text-sm text-blue-600 font-body">{t('voice_assistant_desc')}</p>
-                </div>
-              </div>
-              <Switch
-                checked={settings.voiceAssistant}
-                onCheckedChange={toggleVoiceAssistant}
-                aria-label={t('voice_assistant')}
-                className="data-[state=checked]:bg-blue-500"
-              />
-            </div>
-
             {/* Lecture vocale interactive */}
             <div className="flex items-center justify-between p-4 bg-green-50 rounded-xl border-2 border-green-200 mb-4">
               <div className="flex items-center gap-3">
