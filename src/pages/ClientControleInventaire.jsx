@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../components/translations';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
-import { getCodeFromCategory } from '../components/categoryCodeMapping';
+import { getCodeFromCategory, getInventaireParCategorie } from '../components/categoryCodeMapping';
 import { getCategorie, isUrgent, getDescriptionProbleme } from '../components/inventaireCategories';
 import Logo from '../components/Logo';
 import SignaturePad from '../components/SignaturePad';
@@ -54,48 +54,23 @@ export default function ClientControleInventaire() {
     }
   }, [nom, categorie, navigate]);
 
-  // Charger l'inventaire selon la catégorie
+  // Charger l'inventaire depuis categoryCodeMapping
   const codeCategorie = typeLogement === 'mobilhome' && categorie ? getCodeFromCategory(categorie) : null;
 
-  const { data: inventaireData, isLoading: loadingInventaire } = useQuery({
-    queryKey: ['inventaire', codeCategorie],
-    queryFn: async () => {
-      if (!codeCategorie) return null;
-      const inventaires = await base44.entities.InventaireHebergement.list();
-      return inventaires.find(inv => inv.code_categorie === codeCategorie);
-    },
-    enabled: typeLogement === 'mobilhome' && !!codeCategorie
-  });
-
-  // Parser l'inventaire pour extraire les items
-  const parseInventaire = (contenu) => {
-    if (!contenu) return [];
-    
-    const items = [];
-    const lines = contenu.split('\n');
-    
-    for (const line of lines) {
-      // Détecter les lignes avec emoji + texte + quantité
-      const match = line.match(/^([^\s]+)\s+(.+?)\s+(×\d+|x\d+)?$/);
-      if (match) {
-        const [, emoji, nom, quantite] = match;
-        const id = nom.toLowerCase().replace(/[^a-z0-9]/g, '_');
-        items.push({
-          id,
-          icon: emoji,
-          nom_fr: nom.trim(),
-          nom_en: nom.trim(), // On utilise le français par défaut, peut être amélioré
-          quantite: quantite ? quantite.replace('×', 'x') : ''
-        });
-      }
-    }
-    
-    return items;
-  };
+  // Utiliser getInventaireParCategorie au lieu de charger depuis la base
+  const inventaireLocal = typeLogement === 'mobilhome' && categorie 
+    ? getInventaireParCategorie(categorie, lang)
+    : null;
 
   // Liste d'inventaire selon la catégorie
-  const inventaireItems = typeLogement === 'mobilhome' && inventaireData
-    ? parseInventaire(lang === 'fr' ? inventaireData.contenu_fr : inventaireData.contenu_en)
+  const inventaireItems = typeLogement === 'mobilhome' && inventaireLocal
+    ? inventaireLocal.objets.map(obj => ({
+        id: obj.id,
+        icon: obj.icon,
+        nom_fr: obj.label,
+        nom_en: obj.label,
+        quantite: ''
+      }))
     : typeLogement === 'emplacement' 
       ? [
           { id: 'terrain_propre', icon: '✅', nom_fr: 'Terrain propre', nom_en: 'Clean pitch', quantite: '' },
@@ -479,11 +454,7 @@ export default function ClientControleInventaire() {
                   : 'If an icon is not checked = missing or damaged item'}
               </p>
 
-              {loadingInventaire ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-8 h-8 animate-spin text-[#00AEEF]" />
-                </div>
-              ) : inventaireItems.length === 0 ? (
+              {inventaireItems.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   {lang === 'fr' ? 'Inventaire non disponible' : 'Inventory not available'}
                 </div>
