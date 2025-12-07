@@ -181,6 +181,44 @@ export const POINTS_CRITIQUES = {
     solution_actuelle: 'Compression avant upload ✅, limite 2MB ✅',
     amelioration_possible: 'Queue d\'upload côté client (1 par 1 au lieu de parallèle)',
     priority: 'BASSE'
+  },
+
+  '6_Archivage_Long_Terme': {
+    risk: 'ÉLEVÉ',
+    description: 'Pas de politique archivage >12 mois = explosion stockage en 3-5 ans',
+    impact: 'Photos non optimisées (JPEG 2-5MB), PDFs non compressés, stockage saturé',
+    solution: 'Archivage froid >12 mois (S3 Glacier), conversion WebP automatique, compression PDF max 2MB',
+    priority: 'HAUTE',
+    metriques: {
+      'Photos par saison': '12,000',
+      'Poids actuel JPEG': '24GB/saison',
+      'Avec WebP optimisé': '4.8GB/saison (-80%)'
+    }
+  },
+
+  '7_Absence_Cache_Serveur': {
+    risk: 'ÉLEVÉ',
+    description: 'Statistiques/dashboard recalculés à chaque requête',
+    impact: 'Si 50 admin consultent simultanément = calculs répétés 50 fois',
+    solution: 'Cache Redis pour stats dashboard (refresh 5-10min), invalidation intelligente',
+    priority: 'HAUTE'
+  },
+
+  '8_Erreurs_Silencieuses': {
+    risk: 'MOYEN-ÉLEVÉ',
+    description: 'Pas de logs détaillés ni monitoring erreurs API',
+    impact: 'Pertes silencieuses: intervention non créée, inventaire non sauvé, PDF fail',
+    solution: 'Logs structurés (JSON), dashboard monitoring, alertes automatiques si erreur >1%',
+    priority: 'HAUTE'
+  },
+
+  '9_Securite_Permissions': {
+    risk: 'CRITIQUE',
+    description: 'Pas de tests isolation données ni vérification stricte permissions',
+    impact: 'Risques: mélange données clients, accès non autorisés, fuites informations',
+    solution: 'Audit complet permissions, tests 200 clients + 60 collabs, URLs signées, rate limiting',
+    priority: 'CRITIQUE',
+    fichier_reference: 'components/loadtesting/SECURITE_ET_ISOLATION.jsx'
   }
 };
 
