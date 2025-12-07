@@ -25,6 +25,7 @@ import {
 import { format } from 'date-fns';
 import { fr, enUS } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getNotificationPriority, PRIORITY_LEVELS } from './notificationBatching';
 
 const translations = {
   fr: {
@@ -104,7 +105,7 @@ export default function NotificationCenter({ userType = 'collaborateur', userIde
   const t = (key) => translations[lang]?.[key] || translations['fr'][key];
   const dateLocale = lang === 'en' ? enUS : fr;
 
-  // Récupérer les notifications
+  // Récupérer les notifications - polling à 30s
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ['notifications', userType, userIdentifier, showArchived],
     queryFn: async () => {
@@ -115,9 +116,18 @@ export default function NotificationCenter({ userType = 'collaborateur', userIde
       if (userIdentifier) {
         filter.destinataire_email = userIdentifier;
       }
-      return base44.entities.Notification.filter(filter, '-created_date', 50);
+      const notifs = await base44.entities.Notification.filter(filter, '-created_date', 50);
+      
+      // Trier par priorité (urgences critiques en haut)
+      return notifs.sort((a, b) => {
+        const priorityA = getNotificationPriority(a);
+        const priorityB = getNotificationPriority(b);
+        if (priorityA !== priorityB) return priorityA - priorityB;
+        // Si même priorité, trier par date (plus récent en premier)
+        return new Date(b.created_date) - new Date(a.created_date);
+      });
     },
-    refetchInterval: 10000 // Refresh toutes les 10 secondes
+    refetchInterval: 30000 // 30 secondes au lieu de 10
   });
 
   const unreadCount = notifications.filter(n => !n.lue).length;
@@ -160,6 +170,8 @@ export default function NotificationCenter({ userType = 'collaborateur', userIde
   const NotificationItem = ({ notification }) => {
     const Icon = typeIcons[notification.type] || Bell;
     const colorClass = typeColors[notification.type] || 'bg-gray-100 text-gray-600';
+    const priority = getNotificationPriority(notification);
+    const isCritical = priority === PRIORITY_LEVELS.CRITIQUE;
 
     return (
       <motion.div
@@ -168,7 +180,7 @@ export default function NotificationCenter({ userType = 'collaborateur', userIde
         exit={{ opacity: 0, x: 20 }}
         className={`p-3 border-b border-gray-100 hover:bg-gray-50 transition-colors ${
           !notification.lue ? 'bg-blue-50/50' : ''
-        }`}
+        } ${isCritical ? 'border-l-4 border-red-500' : ''}`}
       >
         <div className="flex items-start gap-3">
           <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${colorClass}`}>
