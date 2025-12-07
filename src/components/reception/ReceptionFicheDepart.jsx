@@ -265,7 +265,9 @@ export default function ReceptionFicheDepart({ ficheId, onClose, lang }) {
                     </p>
                     <div className="space-y-1 text-sm">
                       {fiche.inventaire_objets_etat.filter(o => o.etat === 'casse_ou_manquant').map((obj, i) => (
-                        <div key={i} className="text-red-600">• {obj.objet}</div>
+                        <div key={i} className="text-red-600">
+                          • {obj.objet} {obj.quantity && <strong>×{obj.quantity}</strong>}
+                        </div>
                       ))}
                     </div>
                   </div>

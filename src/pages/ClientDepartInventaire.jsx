@@ -224,7 +224,7 @@ export default function ClientDepartInventaire() {
                     >
                       <div className="text-3xl mb-2">{item.icon}</div>
                       <div className="text-sm font-heading text-[#0077A8]">
-                        {item.label}
+                        {item.label} {item.quantity && <strong>×{item.quantity}</strong>}
                       </div>
                       {status === 'ok' && <Check className="w-5 h-5 text-green-600 mx-auto mt-2" />}
                       {status === 'signale_depart' && <XCircle className="w-5 h-5 text-red-600 mx-auto mt-2" />}

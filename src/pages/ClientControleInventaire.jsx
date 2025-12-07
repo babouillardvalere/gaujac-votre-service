@@ -71,7 +71,7 @@ export default function ClientControleInventaire() {
         icon: obj.icon,
         nom_fr: obj.label,
         nom_en: obj.label,
-        quantite: ''
+        quantite: obj.quantity
       }))
     : typeLogement === 'emplacement' 
       ? [
@@ -497,9 +497,8 @@ export default function ClientControleInventaire() {
                     >
                       <div className="text-3xl mb-2">{item.icon}</div>
                       <div className="text-sm font-heading text-[#0077A8]">
-                        {lang === 'fr' ? item.nom_fr : item.nom_en}
+                        {lang === 'fr' ? item.nom_fr : item.nom_en} {item.quantite && <strong>×{item.quantite}</strong>}
                       </div>
-                      <div className="text-xs text-gray-500">{item.quantite}</div>
                       {isValidated && (
                         <Check className="w-5 h-5 text-green-600 mx-auto mt-2" />
                       )}

@@ -356,9 +356,14 @@ export default function ReceptionFicheArrivee({ ficheId, onClose, lang }) {
                     {lang === 'fr' ? 'Objets validés' : 'Validated items'} ({fiche.inventaire_objets_valides.length})
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {fiche.inventaire_objets_valides.map((obj, i) => (
-                      <Badge key={i} className="bg-green-100 text-green-800">✓ {obj}</Badge>
-                    ))}
+                    {fiche.inventaire_objets_valides.map((obj, i) => {
+                      const objData = typeof obj === 'object' ? obj : { nom: obj };
+                      return (
+                        <Badge key={i} className="bg-green-100 text-green-800">
+                          ✓ {objData.nom || obj} {objData.quantity && <strong>×{objData.quantity}</strong>}
+                        </Badge>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -369,12 +374,15 @@ export default function ReceptionFicheArrivee({ ficheId, onClose, lang }) {
                     {lang === 'fr' ? 'Objets manquants/cassés' : 'Missing/broken items'} ({fiche.inventaire_objets_manquants.length})
                   </p>
                   <div className="space-y-2">
-                    {fiche.inventaire_objets_manquants.map((obj, i) => (
-                      <div key={i} className="flex items-center gap-2 text-sm">
-                        <XCircle className="w-4 h-4 text-red-600" />
-                        <span>{obj.nom || obj}</span>
-                      </div>
-                    ))}
+                    {fiche.inventaire_objets_manquants.map((obj, i) => {
+                      const objData = typeof obj === 'object' ? obj : { nom: obj };
+                      return (
+                        <div key={i} className="flex items-center gap-2 text-sm">
+                          <XCircle className="w-4 h-4 text-red-600" />
+                          <span>{objData.nom || objData.objet || obj} {objData.quantity && <strong>×{objData.quantity}</strong>}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
