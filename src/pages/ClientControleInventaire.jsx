@@ -36,6 +36,7 @@ export default function ClientControleInventaire() {
   const categorie = sessionStorage.getItem('arrivee_categorie');
   const numero = sessionStorage.getItem('arrivee_numero');
 
+  // Initialiser tous les objets comme NON COCHÉS (false par défaut)
   const [objetsValides, setObjetsValides] = useState([]);
   const [objetsMissing, setObjetsMissing] = useState([]);
   const [showMissingDialog, setShowMissingDialog] = useState(false);
@@ -262,12 +263,20 @@ export default function ClientControleInventaire() {
         return item ? (lang === 'fr' ? item.nom_fr : item.nom_en) : id;
       });
 
-      console.log('📊 Données à envoyer:', {
-        adultes: sessionStorage.getItem('arrivee_nombre_adultes'),
-        ados: sessionStorage.getItem('arrivee_nombre_adolescents'),
-        enfants: sessionStorage.getItem('arrivee_nombre_enfants'),
-        bebes: sessionStorage.getItem('arrivee_nombre_bebes'),
-        animaux: sessionStorage.getItem('arrivee_nombre_animaux')
+      // Récupérer les occupants depuis sessionStorage
+      const nombreAdultes = parseInt(sessionStorage.getItem('arrivee_nombre_adultes') || '0');
+      const nombreAdos = parseInt(sessionStorage.getItem('arrivee_nombre_adolescents') || '0');
+      const nombreEnfants = parseInt(sessionStorage.getItem('arrivee_nombre_enfants') || '0');
+      const nombreBebes = parseInt(sessionStorage.getItem('arrivee_nombre_bebes') || '0');
+      const nombreAnimaux = parseInt(sessionStorage.getItem('arrivee_nombre_animaux') || '0');
+      
+      console.log('📊 Données occupants:', {
+        nombreAdultes,
+        nombreAdos,
+        nombreEnfants,
+        nombreBebes,
+        nombreAnimaux,
+        total: nombreAdultes + nombreAdos + nombreEnfants + nombreBebes
       });
 
       // Créer la FicheArrivee pour la réception EN PREMIER
@@ -279,11 +288,11 @@ export default function ClientControleInventaire() {
         numero_logement: numero,
         categorie_logement: categorie,
         type_logement: typeLogement,
-        nombre_adultes: parseInt(sessionStorage.getItem('arrivee_nombre_adultes') || '0'),
-        nombre_adolescents: parseInt(sessionStorage.getItem('arrivee_nombre_adolescents') || '0'),
-        nombre_enfants: parseInt(sessionStorage.getItem('arrivee_nombre_enfants') || '0'),
-        nombre_bebes: parseInt(sessionStorage.getItem('arrivee_nombre_bebes') || '0'),
-        nombre_animaux: parseInt(sessionStorage.getItem('arrivee_nombre_animaux') || '0'),
+        nombre_adultes: nombreAdultes,
+        nombre_adolescents: nombreAdos,
+        nombre_enfants: nombreEnfants,
+        nombre_bebes: nombreBebes,
+        nombre_animaux: nombreAnimaux,
         inventaire_objets_valides: objetsValidesAvecDetails,
         inventaire_objets_manquants: objetsMissing,
         evaluation_proprete: evaluationProprete,
