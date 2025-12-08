@@ -329,19 +329,18 @@ export default function ClientControleInventaire() {
       });
 
       // Récupérer les occupants depuis sessionStorage
-      const nombreAdultes = parseInt(sessionStorage.getItem('arrivee_nombre_adultes') || '0');
-      const nombreAdos = parseInt(sessionStorage.getItem('arrivee_nombre_adolescents') || '0');
-      const nombreEnfants = parseInt(sessionStorage.getItem('arrivee_nombre_enfants') || '0');
-      const nombreBebes = parseInt(sessionStorage.getItem('arrivee_nombre_bebes') || '0');
-      const nombreAnimaux = parseInt(sessionStorage.getItem('arrivee_nombre_animaux') || '0');
-      
-      console.log('📊 Données occupants:', {
+      const nombreAdultes = sessionStorage.getItem('arrivee_nombre_adultes') || '0';
+      const nombreAdos = sessionStorage.getItem('arrivee_nombre_adolescents') || '0';
+      const nombreEnfants = sessionStorage.getItem('arrivee_nombre_enfants') || '0';
+      const nombreBebes = sessionStorage.getItem('arrivee_nombre_bebes') || '0';
+      const nombreAnimaux = sessionStorage.getItem('arrivee_nombre_animaux') || '0';
+
+      console.log('📊 Données occupants (STRING):', {
         nombreAdultes,
         nombreAdos,
         nombreEnfants,
         nombreBebes,
-        nombreAnimaux,
-        total: nombreAdultes + nombreAdos + nombreEnfants + nombreBebes
+        nombreAnimaux
       });
 
       // Créer la FicheArrivee pour la réception EN PREMIER
@@ -353,11 +352,11 @@ export default function ClientControleInventaire() {
         numero_logement: numero,
         categorie_logement: categorie,
         type_logement: typeLogement,
-        nombre_adultes: nombreAdultes,
-        nombre_adolescents: nombreAdos,
-        nombre_enfants: nombreEnfants,
-        nombre_bebes: nombreBebes,
-        nombre_animaux: nombreAnimaux,
+        nombre_adultes: parseInt(nombreAdultes),
+        nombre_adolescents: parseInt(nombreAdos),
+        nombre_enfants: parseInt(nombreEnfants),
+        nombre_bebes: parseInt(nombreBebes),
+        nombre_animaux: parseInt(nombreAnimaux),
         inventaire_objets_valides: objetsValidesAvecDetails,
         inventaire_objets_manquants: [...objetsManquantsAuto, ...objetsMissing],
         evaluation_proprete: evaluationProprete,
@@ -436,11 +435,11 @@ export default function ClientControleInventaire() {
           signature: signatureUrl,
           inventaire_termine: true,
           statut: 'termine',
-          nombre_adultes: nombreAdultes,
-          nombre_adolescents: nombreAdos,
-          nombre_enfants: nombreEnfants,
-          nombre_bebes: nombreBebes,
-          nombre_animaux: nombreAnimaux
+          nombre_adultes: parseInt(nombreAdultes),
+          nombre_adolescents: parseInt(nombreAdos),
+          nombre_enfants: parseInt(nombreEnfants),
+          nombre_bebes: parseInt(nombreBebes),
+          nombre_animaux: parseInt(nombreAnimaux)
         });
       }
 
@@ -500,7 +499,7 @@ export default function ClientControleInventaire() {
                 <p><strong>{lang === 'fr' ? 'Catégorie' : 'Category'}:</strong> {categorie}</p>
                 <p><strong>{lang === 'fr' ? 'Nom & Prénom' : 'Name'}:</strong> {nom} {prenom}</p>
                 <p><strong>{lang === 'fr' ? 'Dates' : 'Dates'}:</strong> {dateArrivee} — {dateDepart}</p>
-                <p><strong>{lang === 'fr' ? 'Occupants' : 'Occupants'}:</strong> {parseInt(sessionStorage.getItem('arrivee_nombre_adultes') || '0')} adultes, {parseInt(sessionStorage.getItem('arrivee_nombre_adolescents') || '0')} ados, {parseInt(sessionStorage.getItem('arrivee_nombre_enfants') || '0')} enfants, {parseInt(sessionStorage.getItem('arrivee_nombre_bebes') || '0')} bébés</p>
+                <p><strong>{lang === 'fr' ? 'Occupants' : 'Occupants'}:</strong> {sessionStorage.getItem('arrivee_nombre_adultes') || '0'} adultes, {sessionStorage.getItem('arrivee_nombre_adolescents') || '0'} ados, {sessionStorage.getItem('arrivee_nombre_enfants') || '0'} enfants, {sessionStorage.getItem('arrivee_nombre_bebes') || '0'} bébés, {sessionStorage.getItem('arrivee_nombre_animaux') || '0'} animaux</p>
               </div>
             </CardContent>
           </Card>
