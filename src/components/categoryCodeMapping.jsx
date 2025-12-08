@@ -223,10 +223,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'poeles', icon: '🍳', label_fr: 'Poêles', label_en: 'Pans', quantity: 2 },
       { id: 'faitout', icon: '🍲', label_fr: 'Faitout + couvercle', label_en: 'Dutch oven + lid', quantity: 1 },
       { id: 'couvercle', icon: '🔥', label_fr: 'Couvercle', label_en: 'Lid', quantity: 1 },
-      { id: 'casseroles', icon: '🍲', label_fr: 'Casseroles', label_en: 'Pots', quantity: 3 },
-      { id: 'poeles', icon: '🍳', label_fr: 'Poêles', label_en: 'Pans', quantity: 2 },
-      { id: 'faitout', icon: '🍲', label_fr: 'Faitout + couvercle', label_en: 'Dutch oven + lid', quantity: 1 },
-      { id: 'couvercle', icon: '🔥', label_fr: 'Couvercle', label_en: 'Lid', quantity: 1 },
       { id: 'cafetiere', icon: '☕', label_fr: 'Cafetière', label_en: 'Coffee maker', quantity: 1 },
       { id: 'micro_ondes', icon: '📡', label_fr: 'Micro-onde', label_en: 'Microwave', quantity: 1 },
       { id: 'tv', icon: '📺', label_fr: 'TV + télécommande', label_en: 'TV + remote', quantity: 1 },
@@ -359,8 +355,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
 
   INVENTAIRES.MH_CONFORT_PLUS_2CH = [
     ...INVENTAIRES.MH_CLASSIQUE_CLIM_2CH,
-    { id: 'plancha', icon: '🔥', label_fr: 'Plancha', label_en: 'Griddle', quantity: 1 },
-    { id: 'frigo', icon: '🧊', label_fr: 'Réfrigérateur-congélateur', label_en: 'Fridge-freezer', quantity: 1 }
+    { id: 'plancha', icon: '🔥', label_fr: 'Plancha', label_en: 'Griddle', quantity: 1 }
   ];
 
   INVENTAIRES.MH_CONFORT_PLUS_3CH = [
