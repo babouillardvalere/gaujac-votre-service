@@ -197,40 +197,7 @@ export default function Home() {
           ))}
         </nav>
 
-        {/* Bouton Accessibilité - placé juste après les boutons principaux */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="mb-8"
-        >
-          <button
-            onClick={() => setShowAccessibilityMenu(!showAccessibilityMenu)}
-            className="block w-full group focus:outline-none focus:ring-4 focus:ring-[#FFD700] rounded-2xl"
-            aria-label="Options d'accessibilité"
-          >
-            <div className="bg-white rounded-2xl border-4 border-[#0077A8] shadow-md hover:shadow-xl transition-all duration-300 h-24">
-              <div className="flex items-center justify-between px-5 h-full">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-[#0077A8] flex items-center justify-center group-hover:scale-110 transition-transform" aria-hidden="true">
-                    <span className="text-2xl" role="img" aria-label="Accessibilité">♿</span>
-                  </div>
-                  <div className="text-left">
-                    <h2 className="font-heading text-2xl text-[#0077A8]">
-                      Accessibilité
-                    </h2>
-                    <p className="font-body text-sm text-gray-600">Options d'aide</p>
-                  </div>
-                </div>
-                <div className="text-[#0077A8] group-hover:translate-x-1 transition-all" aria-hidden="true">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </button>
-        </motion.div>
+
 
         {/* Section Avis */}
         <HomeAvisSection />
