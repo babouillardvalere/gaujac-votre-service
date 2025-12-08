@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Coffee, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '../utils';
+import ServiceMissionDashboard from '../components/direction/ServiceMissionDashboard';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function Bar() {
   const { t, lang } = useTranslation();
@@ -32,25 +34,42 @@ export default function Bar() {
           </p>
         </div>
 
-        <Card className="border-2 border-[#00AEEF]/30 rounded-xl">
-          <CardHeader>
-            <CardTitle className="font-heading text-[#0077A8]">
-              {lang === 'fr' ? 'Module en construction' : 'Module under construction'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600">
-              {lang === 'fr' ? 'Fonctionnalités à venir :' : 'Features coming soon:'}
-            </p>
-            <ul className="mt-4 space-y-2 text-gray-600">
-              <li>• {lang === 'fr' ? 'Gestion des stocks boissons' : 'Beverage stock management'}</li>
-              <li>• {lang === 'fr' ? 'Gestion des stocks snack' : 'Snack stock management'}</li>
-              <li>• {lang === 'fr' ? 'Commandes fournisseurs' : 'Supplier orders'}</li>
-              <li>• {lang === 'fr' ? 'Inventaire quotidien' : 'Daily inventory'}</li>
-              <li>• {lang === 'fr' ? 'Horaires d\'ouverture' : 'Opening hours'}</li>
-            </ul>
-          </CardContent>
-        </Card>
+        <Tabs defaultValue="dashboard" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="dashboard">
+              {lang === 'fr' ? 'Missions Direction' : 'Direction Missions'}
+            </TabsTrigger>
+            <TabsTrigger value="gestion">
+              {lang === 'fr' ? 'Gestion Bar' : 'Bar Management'}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="dashboard">
+            <ServiceMissionDashboard service="BAR" serviceLabel="Bar" />
+          </TabsContent>
+
+          <TabsContent value="gestion">
+            <Card className="border-2 border-[#00AEEF]/30 rounded-xl">
+              <CardHeader>
+                <CardTitle className="font-heading text-[#0077A8]">
+                  {lang === 'fr' ? 'Module en construction' : 'Module under construction'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">
+                  {lang === 'fr' ? 'Fonctionnalités à venir :' : 'Features coming soon:'}
+                </p>
+                <ul className="mt-4 space-y-2 text-gray-600">
+                  <li>• {lang === 'fr' ? 'Gestion des stocks boissons' : 'Beverage stock management'}</li>
+                  <li>• {lang === 'fr' ? 'Gestion des stocks snack' : 'Snack stock management'}</li>
+                  <li>• {lang === 'fr' ? 'Commandes fournisseurs' : 'Supplier orders'}</li>
+                  <li>• {lang === 'fr' ? 'Inventaire quotidien' : 'Daily inventory'}</li>
+                  <li>• {lang === 'fr' ? 'Horaires d\'ouverture' : 'Opening hours'}</li>
+                </ul>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

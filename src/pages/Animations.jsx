@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Music, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '../utils';
+import ServiceMissionDashboard from '../components/direction/ServiceMissionDashboard';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function Animations() {
   const { t, lang } = useTranslation();
@@ -32,25 +34,42 @@ export default function Animations() {
           </p>
         </div>
 
-        <Card className="border-2 border-[#00AEEF]/30 rounded-xl">
-          <CardHeader>
-            <CardTitle className="font-heading text-[#0077A8]">
-              {lang === 'fr' ? 'Module en construction' : 'Module under construction'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600">
-              {lang === 'fr' ? 'Fonctionnalités à venir :' : 'Features coming soon:'}
-            </p>
-            <ul className="mt-4 space-y-2 text-gray-600">
-              <li>• {lang === 'fr' ? 'Planning des animations' : 'Entertainment schedule'}</li>
-              <li>• {lang === 'fr' ? 'Soirées thématiques' : 'Themed evenings'}</li>
-              <li>• {lang === 'fr' ? 'Activités sportives' : 'Sports activities'}</li>
-              <li>• {lang === 'fr' ? 'Club enfants' : 'Kids club'}</li>
-              <li>• {lang === 'fr' ? 'Tournois et concours' : 'Tournaments and contests'}</li>
-            </ul>
-          </CardContent>
-        </Card>
+        <Tabs defaultValue="dashboard" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="dashboard">
+              {lang === 'fr' ? 'Missions Direction' : 'Direction Missions'}
+            </TabsTrigger>
+            <TabsTrigger value="gestion">
+              {lang === 'fr' ? 'Gestion Animations' : 'Events Management'}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="dashboard">
+            <ServiceMissionDashboard service="ANIMATION" serviceLabel="Animations" />
+          </TabsContent>
+
+          <TabsContent value="gestion">
+            <Card className="border-2 border-[#00AEEF]/30 rounded-xl">
+              <CardHeader>
+                <CardTitle className="font-heading text-[#0077A8]">
+                  {lang === 'fr' ? 'Module en construction' : 'Module under construction'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">
+                  {lang === 'fr' ? 'Fonctionnalités à venir :' : 'Features coming soon:'}
+                </p>
+                <ul className="mt-4 space-y-2 text-gray-600">
+                  <li>• {lang === 'fr' ? 'Planning des animations' : 'Entertainment schedule'}</li>
+                  <li>• {lang === 'fr' ? 'Soirées thématiques' : 'Themed evenings'}</li>
+                  <li>• {lang === 'fr' ? 'Activités sportives' : 'Sports activities'}</li>
+                  <li>• {lang === 'fr' ? 'Club enfants' : 'Kids club'}</li>
+                  <li>• {lang === 'fr' ? 'Tournois et concours' : 'Tournaments and contests'}</li>
+                </ul>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
