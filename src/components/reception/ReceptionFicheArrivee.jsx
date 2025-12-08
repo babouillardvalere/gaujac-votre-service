@@ -13,6 +13,9 @@ import { addPDFToQueue, PDF_STATUS } from '../pdfQueue';
 export default function ReceptionFicheArrivee({ ficheId, onClose, lang }) {
   const [fiche, setFiche] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const queryClient = useQueryClient();
 
   React.useEffect(() => {
     const loadFiche = async () => {
@@ -36,9 +39,6 @@ export default function ReceptionFicheArrivee({ ficheId, onClose, lang }) {
       </div>
     );
   }
-  const [generatingPDF, setGeneratingPDF] = useState(false);
-  const [sendingEmail, setSendingEmail] = useState(false);
-  const queryClient = useQueryClient();
 
   const genererPDF = async () => {
     setGeneratingPDF(true);
