@@ -574,13 +574,11 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     { id: 'saladier', icon: '🥗', label_fr: 'Saladier', label_en: 'Salad bowl', quantity: 1 },
     { id: 'tasses', icon: '☕', label_fr: 'Tasses', label_en: 'Cups', quantity: 6 },
     { id: 'verres_eau', icon: '🥛', label_fr: 'Verres à eau', label_en: 'Water glasses', quantity: 6 },
-    { id: 'verres_vin', icon: '🍷', label_fr: 'Verres à vin', label_en: 'Wine glasses', quantity: 6 },
     { id: 'pichet', icon: '🍶', label_fr: 'Pichet / Carafe', label_en: 'Pitcher / Carafe', quantity: 1 },
     { id: 'fourchettes', icon: '🍴', label_fr: 'Fourchettes', label_en: 'Forks', quantity: 6 },
     { id: 'cuilleres_soupe', icon: '🥄', label_fr: 'Cuillères soupe', label_en: 'Soup spoons', quantity: 6 },
     { id: 'cuilleres_cafe', icon: '🥄', label_fr: 'Cuillères café', label_en: 'Coffee spoons', quantity: 6 },
     { id: 'couteau_pain', icon: '🔪', label_fr: 'Couteau à pain', label_en: 'Bread knife', quantity: 1 },
-    { id: 'couteau_decouper', icon: '🔪', label_fr: 'Couteau à découper', label_en: 'Carving knife', quantity: 1 },
     { id: 'couteau_office', icon: '🔪', label_fr: 'Couteau office', label_en: 'Paring knife', quantity: 1 },
     { id: 'couteaux', icon: '🔪', label_fr: 'Couteaux', label_en: 'Knives', quantity: 6 },
     { id: 'cendrier', icon: '🚬', label_fr: 'Cendrier', label_en: 'Ashtray', quantity: 1 },
@@ -607,6 +605,8 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     { id: 'couvercle', icon: '🔥', label_fr: 'Couvercle', label_en: 'Lid', quantity: 1 },
     { id: 'cafetiere', icon: '☕', label_fr: 'Cafetière électrique', label_en: 'Electric coffee maker', quantity: 1 },
     { id: 'micro_ondes', icon: '📡', label_fr: 'Micro-ondes', label_en: 'Microwave', quantity: 1 },
+    { id: 'tv', icon: '📺', label_fr: 'TV', label_en: 'TV', quantity: 1 },
+    { id: 'telecommande_tv', icon: '🎛️', label_fr: 'Télécommande TV', label_en: 'TV remote', quantity: 1 },
     { id: 'telecommande_clim', icon: '❄️', label_fr: 'Télécommande climatisation', label_en: 'AC remote', quantity: 1 },
     { id: 'refrigerateur', icon: '🧊', label_fr: 'Réfrigérateur', label_en: 'Refrigerator', quantity: 1 },
 
@@ -631,8 +631,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
 
     // Extérieur
     { id: 'cle_locatif', icon: '🗝️', label_fr: 'Clé locatif', label_en: 'Rental key', quantity: 1 },
-    { id: 'badge', icon: '🎫', label_fr: 'Badge', label_en: 'Badge', quantity: 1 },
-    { id: 'chaises_interieur', icon: '🪑', label_fr: 'Chaises intérieur', label_en: 'Indoor chairs', quantity: 4 },
+    { id: 'chaises_interieur', icon: '🪑', label_fr: 'Chaises intérieur', label_en: 'Indoor chairs', quantity: 2 },
     { id: 'table_jardin', icon: '🍽️', label_fr: 'Table de jardin', label_en: 'Garden table', quantity: 1 },
     { id: 'chaises_jardin', icon: '🪑', label_fr: 'Chaises de jardin', label_en: 'Garden chairs', quantity: 4 }
   ];
