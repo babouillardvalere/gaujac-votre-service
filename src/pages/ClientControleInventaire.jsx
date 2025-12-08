@@ -515,13 +515,16 @@ export default function ClientControleInventaire() {
         });
       }
 
+      // Sauvegarder l'ID de la fiche pour le résumé
+      sessionStorage.setItem('fiche_arrivee_id', ficheArrivee.id);
+
       // Message de confirmation
       alert(lang === 'fr' 
         ? "Votre contrôle inventaire a bien été envoyé à la réception.\nMerci !"
         : "Your inventory has been sent to reception.\nThank you!");
 
-      // Redirection automatique vers l'accueil client
-      navigate(createPageUrl('ClientMenu'));
+      // Redirection vers le résumé
+      navigate(createPageUrl('ClientResume'));
 
     } catch (error) {
       console.error('ERREUR ENVOI INVENTAIRE:', error);
