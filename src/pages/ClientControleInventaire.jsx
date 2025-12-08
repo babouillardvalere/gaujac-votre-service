@@ -256,10 +256,18 @@ export default function ClientControleInventaire() {
 
       const dossierId = sessionStorage.getItem('arrivee_dossier_id');
 
-      // Préparer les objets validés avec leurs noms et quantités
+      // Préparer les objets validés avec leurs noms traduits
       const objetsValidesAvecDetails = objetsValides.map(id => {
         const item = inventaireItems.find(i => i.id === id);
         return item ? (lang === 'fr' ? item.nom_fr : item.nom_en) : id;
+      });
+
+      console.log('📊 Données à envoyer:', {
+        adultes: sessionStorage.getItem('arrivee_nombre_adultes'),
+        ados: sessionStorage.getItem('arrivee_nombre_adolescents'),
+        enfants: sessionStorage.getItem('arrivee_nombre_enfants'),
+        bebes: sessionStorage.getItem('arrivee_nombre_bebes'),
+        animaux: sessionStorage.getItem('arrivee_nombre_animaux')
       });
 
       // Créer la FicheArrivee pour la réception EN PREMIER
@@ -271,17 +279,13 @@ export default function ClientControleInventaire() {
         numero_logement: numero,
         categorie_logement: categorie,
         type_logement: typeLogement,
-        nombre_adultes: parseInt(sessionStorage.getItem('arrivee_nombre_adultes')) || 0,
-        nombre_adolescents: parseInt(sessionStorage.getItem('arrivee_nombre_adolescents')) || 0,
-        nombre_enfants: parseInt(sessionStorage.getItem('arrivee_nombre_enfants')) || 0,
-        nombre_bebes: parseInt(sessionStorage.getItem('arrivee_nombre_bebes')) || 0,
-        nombre_animaux: parseInt(sessionStorage.getItem('arrivee_nombre_animaux')) || 0,
+        nombre_adultes: parseInt(sessionStorage.getItem('arrivee_nombre_adultes') || '0'),
+        nombre_adolescents: parseInt(sessionStorage.getItem('arrivee_nombre_adolescents') || '0'),
+        nombre_enfants: parseInt(sessionStorage.getItem('arrivee_nombre_enfants') || '0'),
+        nombre_bebes: parseInt(sessionStorage.getItem('arrivee_nombre_bebes') || '0'),
+        nombre_animaux: parseInt(sessionStorage.getItem('arrivee_nombre_animaux') || '0'),
         inventaire_objets_valides: objetsValidesAvecDetails,
-        inventaire_objets_manquants: objetsMissing.map(obj => ({
-          objet: obj.objet,
-          commentaire: obj.commentaire,
-          photo: obj.photo
-        })),
+        inventaire_objets_manquants: objetsMissing,
         evaluation_proprete: evaluationProprete,
         commentaire_proprete: commentaireProprete,
         photos_pieces: photosLieux,
