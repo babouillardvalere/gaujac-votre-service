@@ -8,7 +8,7 @@ import { useNotifications } from '../components/useNotifications';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Wrench, Sparkles, Building2, LogOut, Package, Lock, ClipboardList } from 'lucide-react';
+import { Wrench, Sparkles, Building2, LogOut, Package, Lock, ClipboardList, Briefcase } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 
@@ -77,6 +77,15 @@ export default function MenuCollaborateur() {
       textColor: 'text-white',
       description: t('desc_materiel'),
       badgeCount: counts.materiel
+    },
+    {
+      title: '🏢 Direction',
+      icon: Briefcase,
+      href: 'DirectionMenu',
+      color: 'bg-[#9333ea]',
+      textColor: 'text-white',
+      description: lang === 'fr' ? 'Gestion saisonnière' : 'Seasonal management',
+      badgeCount: 0
     },
     {
       title: t('menu_bureau'),

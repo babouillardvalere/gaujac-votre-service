@@ -63,6 +63,7 @@ import ClientResume from './pages/ClientResume';
 import DirectionDeshivernage from './pages/DirectionDeshivernage';
 import DirectionHivernage from './pages/DirectionHivernage';
 import DirectionSaison from './pages/DirectionSaison';
+import DirectionMenu from './pages/DirectionMenu';
 import __Layout from './Layout.jsx';
 
 
@@ -132,6 +133,7 @@ export const PAGES = {
     "DirectionDeshivernage": DirectionDeshivernage,
     "DirectionHivernage": DirectionHivernage,
     "DirectionSaison": DirectionSaison,
+    "DirectionMenu": DirectionMenu,
 }
 
 export const pagesConfig = {
