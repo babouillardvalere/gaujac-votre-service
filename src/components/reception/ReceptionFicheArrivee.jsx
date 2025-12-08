@@ -438,6 +438,81 @@ export default function ReceptionFicheArrivee({ ficheId, onClose, lang }) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Dialog d'édition inventaire */}
+      <Dialog open={editMode} onOpenChange={setEditMode}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-2xl text-[#0077A8]">
+              {lang === 'fr' ? '✏️ Modifier l\'inventaire' : '✏️ Edit inventory'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              {lang === 'fr' 
+                ? '⚠️ Cochez uniquement les objets manquants ou cassés'
+                : '⚠️ Check only missing or broken items'}
+            </p>
+            
+            <div className="grid grid-cols-2 gap-3">
+              {inventaireData?.objets.map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => setEditedChecked(prev => ({
+                    ...prev,
+                    [item.id]: !prev[item.id]
+                  }))}
+                  className={`p-4 rounded-lg border-2 transition-all text-left ${
+                    editedChecked[item.id]
+                      ? 'border-red-500 bg-red-50'
+                      : 'border-gray-300 bg-white hover:border-[#00AEEF]'
+                  }`}
+                >
+                  <div className="text-2xl mb-2">{item.icon}</div>
+                  <div className="text-sm font-heading">
+                    {item.label} {item.quantity && `×${item.quantity}`}
+                  </div>
+                  {editedChecked[item.id] && (
+                    <div className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      {lang === 'fr' ? 'Manquant' : 'Missing'}
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+            
+            <div className="flex gap-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setEditMode(false)}
+                className="flex-1"
+                disabled={saving}
+              >
+                {lang === 'fr' ? 'Annuler' : 'Cancel'}
+              </Button>
+              <Button
+                onClick={handleSaveEdit}
+                className="flex-1 bg-[#00AEEF] hover:bg-[#0077A8]"
+                disabled={saving}
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    {lang === 'fr' ? 'Enregistrement...' : 'Saving...'}
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4 mr-2" />
+                    {lang === 'fr' ? 'Enregistrer' : 'Save'}
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -343,6 +343,97 @@ export default function ReceptionFicheDepart({ ficheId, onClose, lang }) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Dialog d'édition inventaire */}
+      <Dialog open={editMode} onOpenChange={setEditMode}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-2xl text-[#0077A8]">
+              {lang === 'fr' ? '✏️ Modifier l\'état de l\'inventaire' : '✏️ Edit inventory condition'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              {lang === 'fr' 
+                ? 'Indiquez l\'état de chaque objet au départ'
+                : 'Indicate the condition of each item at departure'}
+            </p>
+            
+            <div className="grid grid-cols-1 gap-3">
+              {inventaireData?.objets.map(item => (
+                <div
+                  key={item.id}
+                  className="p-4 rounded-lg border-2 border-gray-300 bg-white"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="text-2xl">{item.icon}</div>
+                      <div className="text-sm font-heading">
+                        {item.label} {item.quantity && `×${item.quantity}`}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant={editedStates[item.id] === 'ok' ? 'default' : 'outline'}
+                        onClick={() => setEditedStates(prev => ({ ...prev, [item.id]: 'ok' }))}
+                        className={editedStates[item.id] === 'ok' ? 'bg-green-600 hover:bg-green-700' : ''}
+                      >
+                        {lang === 'fr' ? 'OK' : 'OK'}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={editedStates[item.id] === 'manquant' ? 'default' : 'outline'}
+                        onClick={() => setEditedStates(prev => ({ ...prev, [item.id]: 'manquant' }))}
+                        className={editedStates[item.id] === 'manquant' ? 'bg-orange-600 hover:bg-orange-700' : ''}
+                      >
+                        {lang === 'fr' ? 'Manquant' : 'Missing'}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={editedStates[item.id] === 'casse' ? 'default' : 'outline'}
+                        onClick={() => setEditedStates(prev => ({ ...prev, [item.id]: 'casse' }))}
+                        className={editedStates[item.id] === 'casse' ? 'bg-red-600 hover:bg-red-700' : ''}
+                      >
+                        {lang === 'fr' ? 'Cassé' : 'Broken'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="flex gap-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setEditMode(false)}
+                className="flex-1"
+                disabled={saving}
+              >
+                {lang === 'fr' ? 'Annuler' : 'Cancel'}
+              </Button>
+              <Button
+                onClick={handleSaveEdit}
+                className="flex-1 bg-[#FFA500] hover:bg-[#FF8C00]"
+                disabled={saving}
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    {lang === 'fr' ? 'Enregistrement...' : 'Saving...'}
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4 mr-2" />
+                    {lang === 'fr' ? 'Enregistrer' : 'Save'}
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
