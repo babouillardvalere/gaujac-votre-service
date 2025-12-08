@@ -38,9 +38,11 @@ export default function ClientControleInventaire() {
 
   // État pour tracker les objets MANQUANTS/CASSÉS (cochés = problème signalé)
   const [objetsCocheState, setObjetsCocheState] = useState({});
+  const [objetPhotos, setObjetPhotos] = useState({});
   const [objetsMissing, setObjetsMissing] = useState([]);
   const [showMissingDialog, setShowMissingDialog] = useState(false);
   const [missingItem, setMissingItem] = useState({ objet: '', photo: '', commentaire: '' });
+  const [uploadingItemId, setUploadingItemId] = useState(null);
   
   // Filtres
   const [searchTerm, setSearchTerm] = useState('');
@@ -256,6 +258,23 @@ export default function ClientControleInventaire() {
     }
   };
 
+  const handleUploadItemPhoto = async (itemId, file) => {
+    if (!file) return;
+    setUploadingItemId(itemId);
+    try {
+      const result = await uploadCompressedImage(file, (compressedFile) => 
+        base44.integrations.Core.UploadFile({ file: compressedFile })
+      );
+      setObjetPhotos(prev => ({ ...prev, [itemId]: result.file_url }));
+      toast.success(lang === 'fr' ? 'Photo ajoutée' : 'Photo added');
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error(lang === 'fr' ? 'Erreur upload' : 'Upload error');
+    } finally {
+      setUploadingItemId(null);
+    }
+  };
+
   const analyzeAndPrepareInterventions = () => {
     const interventionsMenage = [];
     const interventionsTechnique = [];
@@ -270,7 +289,7 @@ export default function ClientControleInventaire() {
           description: `${lang === 'fr' ? 'Objet manquant ou cassé signalé à l\'arrivée' : 'Missing or broken item reported on arrival'}: ${lang === 'fr' ? item.nom_fr : item.nom_en}`,
           urgent: CRITICAL_ITEMS.includes(item.id),
           icon: item.icon,
-          photo: null
+          photo: objetPhotos[item.id] || null
         };
 
         // Si objet critique → intervention TECHNIQUE urgente
@@ -661,30 +680,63 @@ export default function ClientControleInventaire() {
                 ) : (
                   <>
                     <div className="grid grid-cols-2 gap-3 mb-4">
-                {inventaireItems.map(item => {
-                  const isCoche = objetsCocheState[item.id] === true;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => toggleObjet(item.id)}
-                      className={`p-4 rounded-lg border-2 transition-all ${
-                        isCoche 
-                          ? 'border-red-500 bg-red-50' 
-                          : 'border-gray-300 bg-white hover:border-[#00AEEF]'
-                      }`}
-                    >
-                      <div className="text-3xl mb-2">{item.icon}</div>
-                      <div className="text-sm font-heading text-[#0077A8]">
-                        {lang === 'fr' ? item.nom_fr : item.nom_en}
-                        {item.quantite && <> <strong>×{item.quantite}</strong></>}
-                      </div>
-                      {isCoche && (
-                        <AlertCircle className="w-5 h-5 text-red-600 mx-auto mt-2" />
-                      )}
-                    </button>
-                  );
-                })}
-                  </div>
+                    {inventaireItems.map(item => {
+                    const isCoche = objetsCocheState[item.id] === true;
+                    const hasPhoto = objetPhotos[item.id];
+                    const isUploading = uploadingItemId === item.id;
+
+                    return (
+                    <div key={item.id} className="relative">
+                     <button
+                       onClick={() => toggleObjet(item.id)}
+                       className={`w-full p-4 rounded-lg border-2 transition-all ${
+                         isCoche 
+                           ? 'border-red-500 bg-red-50' 
+                           : 'border-gray-300 bg-white hover:border-[#00AEEF]'
+                       }`}
+                     >
+                       <div className="text-3xl mb-2">{item.icon}</div>
+                       <div className="text-sm font-heading text-[#0077A8]">
+                         {lang === 'fr' ? item.nom_fr : item.nom_en}
+                         {item.quantite && <> <strong>×{item.quantite}</strong></>}
+                       </div>
+                       {isCoche && (
+                         <AlertCircle className="w-5 h-5 text-red-600 mx-auto mt-2" />
+                       )}
+                     </button>
+
+                     {isCoche && (
+                       <label 
+                         className="absolute bottom-2 right-2 cursor-pointer"
+                         onClick={(e) => e.stopPropagation()}
+                       >
+                         <input
+                           type="file"
+                           accept="image/*"
+                           capture="environment"
+                           className="hidden"
+                           onChange={(e) => handleUploadItemPhoto(item.id, e.target.files[0])}
+                           disabled={isUploading}
+                         />
+                         <div className={`p-1.5 rounded-full ${
+                           hasPhoto 
+                             ? 'bg-green-500 hover:bg-green-600' 
+                             : 'bg-orange-500 hover:bg-orange-600'
+                         } ${isUploading ? 'opacity-50' : ''}`}>
+                           {isUploading ? (
+                             <Loader2 className="w-4 h-4 text-white animate-spin" />
+                           ) : hasPhoto ? (
+                             <Check className="w-4 h-4 text-white" />
+                           ) : (
+                             <Camera className="w-4 h-4 text-white" />
+                           )}
+                         </div>
+                       </label>
+                     )}
+                    </div>
+                    );
+                    })}
+                    </div>
 
                   <Button
                 onClick={() => setShowMissingDialog(true)}
