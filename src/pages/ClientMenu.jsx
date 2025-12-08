@@ -16,6 +16,8 @@ export default function ClientMenu() {
 
   // Vérifier si un dossier d'arrivée existe
   const dossierId = sessionStorage.getItem('arrivee_dossier_id');
+  const ficheArriveeId = sessionStorage.getItem('fiche_arrivee_id');
+  
   const { data: dossierArrivee } = useQuery({
     queryKey: ['dossier-arrivee-actif', dossierId],
     queryFn: async () => {
@@ -42,6 +44,17 @@ export default function ClientMenu() {
       disabled: false,
       comingSoon: false
     },
+    ...(ficheArriveeId ? [{
+      title: '📋 Résumé',
+      titleEn: '📋 Summary',
+      description: 'Résumé d\'arrivée',
+      descriptionEn: 'Arrival summary',
+      href: 'ClientResume',
+      color: 'bg-[#9333ea]',
+      textColor: 'text-white',
+      disabled: false,
+      comingSoon: false
+    }] : []),
     {
       title: '🌞 Séjour',
       titleEn: '🌞 Stay',
