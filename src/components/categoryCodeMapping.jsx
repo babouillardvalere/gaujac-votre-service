@@ -355,7 +355,8 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
 
   INVENTAIRES.MH_CONFORT_PLUS_2CH = [
     ...INVENTAIRES.MH_CLASSIQUE_CLIM_2CH,
-    { id: 'plancha', icon: '🔥', label_fr: 'Plancha', label_en: 'Griddle', quantity: 1 }
+    { id: 'plancha', icon: '🔥', label_fr: 'Plancha', label_en: 'Griddle', quantity: 1 },
+    { id: 'frigo', icon: '🧊', label_fr: 'Réfrigérateur-congélateur', label_en: 'Fridge-freezer', quantity: 1 }
   ];
 
   INVENTAIRES.MH_CONFORT_PLUS_3CH = [

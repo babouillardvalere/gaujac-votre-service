@@ -36,8 +36,8 @@ export default function ClientControleInventaire() {
   const categorie = sessionStorage.getItem('arrivee_categorie');
   const numero = sessionStorage.getItem('arrivee_numero');
 
-  // Initialiser tous les objets comme NON COCHÉS (false par défaut)
-  const [objetsValides, setObjetsValides] = useState([]);
+  // État pour tracker les objets cochés/non cochés (tous initialisés à false)
+  const [objetsCocheState, setObjetsCocheState] = useState({});
   const [objetsMissing, setObjetsMissing] = useState([]);
   const [showMissingDialog, setShowMissingDialog] = useState(false);
   const [missingItem, setMissingItem] = useState({ objet: '', photo: '', commentaire: '' });
@@ -84,6 +84,18 @@ export default function ClientControleInventaire() {
         ]
       : [];
 
+  // Initialiser l'état des objets cochés quand inventaireItems change
+  useEffect(() => {
+    if (inventaireItems.length > 0 && Object.keys(objetsCocheState).length === 0) {
+      const initialState = {};
+      inventaireItems.forEach(item => {
+        initialState[item.id] = false; // TOUS à false par défaut
+      });
+      setObjetsCocheState(initialState);
+      console.log('✅ Inventaire initialisé:', Object.keys(initialState).length, 'objets à false');
+    }
+  }, [inventaireItems.length]);
+
   const lieuxPhoto = typeLogement === 'mobilhome' ? [
     { id: 'cuisine', label_fr: 'Cuisine', label_en: 'Kitchen' },
     { id: 'salle_bain', label_fr: 'Salle de bain', label_en: 'Bathroom' },
@@ -97,11 +109,10 @@ export default function ClientControleInventaire() {
   ];
 
   const toggleObjet = (objetId) => {
-    if (objetsValides.includes(objetId)) {
-      setObjetsValides(objetsValides.filter(id => id !== objetId));
-    } else {
-      setObjetsValides([...objetsValides, objetId]);
-    }
+    setObjetsCocheState(prev => ({
+      ...prev,
+      [objetId]: !prev[objetId]
+    }));
   };
 
   const handlePhotoLieu = async (lieuId, file) => {
@@ -170,11 +181,11 @@ export default function ClientControleInventaire() {
     const interventionsMenage = [];
     const interventionsTechnique = [];
 
-    // Analyser objets NON VALIDÉS (non cochés) → MÉNAGE par défaut
+    // Analyser objets NON COCHÉS → MÉNAGE par défaut
     inventaireItems.forEach(item => {
-      const isValidated = objetsValides.includes(item.id);
+      const isCoche = objetsCocheState[item.id] === true;
       
-      if (!isValidated) {
+      if (!isCoche) {
         const intervention = {
           objet: lang === 'fr' ? item.nom_fr : item.nom_en,
           description: `${lang === 'fr' ? 'Objet manquant ou à vérifier' : 'Missing or to check'}: ${lang === 'fr' ? item.nom_fr : item.nom_en}`,
@@ -225,8 +236,9 @@ export default function ClientControleInventaire() {
       return;
     }
 
-    // Signature optionnelle si tout est OK
-    const hasProblems = (inventaireItems.length - objetsValides.length) > 0 || 
+    // Compter les objets cochés
+    const objetsCochesCount = Object.values(objetsCocheState).filter(v => v === true).length;
+    const hasProblems = objetsCochesCount < inventaireItems.length || 
                         objetsMissing.length > 0 || 
                         evaluationProprete === 'pas_satisfaisant';
     
@@ -257,10 +269,31 @@ export default function ClientControleInventaire() {
 
       const dossierId = sessionStorage.getItem('arrivee_dossier_id');
 
+      // Extraire les objets cochés et non cochés
+      const objetsCochesIds = Object.keys(objetsCocheState).filter(id => objetsCocheState[id] === true);
+      const objetsNonCochesIds = Object.keys(objetsCocheState).filter(id => objetsCocheState[id] === false);
+      
       // Préparer les objets validés avec leurs noms traduits
-      const objetsValidesAvecDetails = objetsValides.map(id => {
+      const objetsValidesAvecDetails = objetsCochesIds.map(id => {
         const item = inventaireItems.find(i => i.id === id);
         return item ? (lang === 'fr' ? item.nom_fr : item.nom_en) : id;
+      });
+      
+      // Préparer les objets manquants (non cochés)
+      const objetsManquantsAuto = objetsNonCochesIds.map(id => {
+        const item = inventaireItems.find(i => i.id === id);
+        return {
+          objet: item ? (lang === 'fr' ? item.nom_fr : item.nom_en) : id,
+          commentaire: lang === 'fr' ? 'Non coché lors du contrôle' : 'Not checked during inspection',
+          photo: ''
+        };
+      });
+      
+      console.log('📊 Inventaire:', {
+        objetsCochesCount: objetsCochesIds.length,
+        objetsNonCochesCount: objetsNonCochesIds.length,
+        objetsManuels: objetsMissing.length,
+        total: inventaireItems.length
       });
 
       // Récupérer les occupants depuis sessionStorage
@@ -294,7 +327,7 @@ export default function ClientControleInventaire() {
         nombre_bebes: nombreBebes,
         nombre_animaux: nombreAnimaux,
         inventaire_objets_valides: objetsValidesAvecDetails,
-        inventaire_objets_manquants: objetsMissing,
+        inventaire_objets_manquants: [...objetsManquantsAuto, ...objetsMissing],
         evaluation_proprete: evaluationProprete,
         commentaire_proprete: commentaireProprete,
         photos_pieces: photosLieux,
@@ -362,15 +395,20 @@ export default function ClientControleInventaire() {
           etape_4_terminee: true,
           etape_actuelle: 4,
           inventaire_json: { 
-            objets_valides: objetsValides,
-            objets_manquants: objetsMissing 
+            objets_valides: objetsCochesIds,
+            objets_manquants: [...objetsNonCochesIds, ...objetsMissing.map(o => o.objet)]
           },
           photos: photosLieux,
           evaluation_proprete: evaluationProprete,
           remarques: commentaireProprete || remarques,
           signature: signatureUrl,
           inventaire_termine: true,
-          statut: 'termine'
+          statut: 'termine',
+          nombre_adultes: nombreAdultes,
+          nombre_adolescents: nombreAdos,
+          nombre_enfants: nombreEnfants,
+          nombre_bebes: nombreBebes,
+          nombre_animaux: nombreAnimaux
         });
       }
 
@@ -464,13 +502,13 @@ export default function ClientControleInventaire() {
                   <>
                     <div className="grid grid-cols-2 gap-3 mb-4">
                 {inventaireItems.map(item => {
-                  const isValidated = objetsValides.includes(item.id);
+                  const isCoche = objetsCocheState[item.id] === true;
                   return (
                     <button
                       key={item.id}
                       onClick={() => toggleObjet(item.id)}
                       className={`p-4 rounded-lg border-2 transition-all ${
-                        isValidated 
+                        isCoche 
                           ? 'border-green-500 bg-green-50' 
                           : 'border-gray-300 bg-white hover:border-[#00AEEF]'
                       }`}
@@ -480,7 +518,7 @@ export default function ClientControleInventaire() {
                         {lang === 'fr' ? item.nom_fr : item.nom_en}
                         {item.quantite && <> <strong>×{item.quantite}</strong></>}
                       </div>
-                      {isValidated && (
+                      {isCoche && (
                         <Check className="w-5 h-5 text-green-600 mx-auto mt-2" />
                       )}
                     </button>
@@ -810,7 +848,7 @@ export default function ClientControleInventaire() {
                 <CardContent className="p-4">
                   <h3 className="font-heading text-lg text-green-800 mb-2 flex items-center gap-2">
                     <Check className="w-5 h-5" />
-                    {lang === 'fr' ? 'Objets validés' : 'Validated items'} ({objetsValides.length})
+                    {lang === 'fr' ? 'Objets validés' : 'Validated items'} ({Object.values(objetsCocheState).filter(v => v === true).length})
                   </h3>
                 </CardContent>
               </Card>
