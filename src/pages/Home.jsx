@@ -168,25 +168,25 @@ export default function Home() {
                 role="button"
                 tabIndex={0}
               >
-                <div className={`${item.bgColor} rounded-2xl border-2 ${item.borderColor} shadow-md hover:shadow-xl transition-all duration-300 h-28`}>
-                  <div className="flex items-center justify-between p-6 h-full">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-14 h-14 rounded-xl ${item.iconBg} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`} aria-hidden="true">
+                <div className={`bg-white rounded-2xl border-4 ${item.borderColor} shadow-md hover:shadow-xl transition-all duration-300 h-24`}>
+                  <div className="flex items-center justify-between px-5 h-full">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-12 h-12 rounded-xl ${item.borderColor.replace('border-', 'bg-')} flex items-center justify-center group-hover:scale-110 transition-transform`} aria-hidden="true">
                         {item.customIcon ? (
-                          <item.icon className="w-7 h-7" aria-hidden="true" />
+                          <item.icon className="w-6 h-6 text-white" aria-hidden="true" />
                         ) : (
-                          <item.icon className={`w-7 h-7 ${item.iconColor || 'text-white'}`} aria-hidden="true" />
+                          <item.icon className="w-6 h-6 text-white" aria-hidden="true" />
                         )}
                       </div>
                       <div>
-                        <h2 className={`font-heading text-3xl ${item.textColor} mb-1`}>
+                        <h2 className="font-heading text-2xl text-[#0077A8]">
                           {item.title}
                         </h2>
-                        <p className={`font-body text-base ${item.subtitleColor}`}>{item.description}</p>
+                        <p className="font-body text-sm text-gray-600">{item.description}</p>
                       </div>
                     </div>
-                    <div className={`${item.arrowColor} group-hover:translate-x-1 transition-all`} aria-hidden="true">
-                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <div className={`${item.borderColor.replace('border-', 'text-')} group-hover:translate-x-1 transition-all`} aria-hidden="true">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                       </svg>
                     </div>
@@ -209,21 +209,21 @@ export default function Home() {
             className="block w-full group focus:outline-none focus:ring-4 focus:ring-[#FFD700] rounded-2xl"
             aria-label="Options d'accessibilité"
           >
-            <div className="bg-[#0077A8] rounded-2xl border-2 border-[#0077A8] shadow-md hover:shadow-xl transition-all duration-300 h-24">
-              <div className="flex items-center justify-between p-5 h-full">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform" aria-hidden="true">
-                    <span className="text-3xl" role="img" aria-label="Accessibilité">♿</span>
+            <div className="bg-white rounded-2xl border-4 border-[#0077A8] shadow-md hover:shadow-xl transition-all duration-300 h-24">
+              <div className="flex items-center justify-between px-5 h-full">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-[#0077A8] flex items-center justify-center group-hover:scale-110 transition-transform" aria-hidden="true">
+                    <span className="text-2xl" role="img" aria-label="Accessibilité">♿</span>
                   </div>
                   <div className="text-left">
-                    <h2 className="font-heading text-2xl text-white mb-1">
+                    <h2 className="font-heading text-2xl text-[#0077A8]">
                       Accessibilité
                     </h2>
-                    <p className="font-body text-base text-white/90">Options d'aide</p>
+                    <p className="font-body text-sm text-gray-600">Options d'aide</p>
                   </div>
                 </div>
-                <div className="text-white group-hover:translate-x-1 transition-all" aria-hidden="true">
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <div className="text-[#0077A8] group-hover:translate-x-1 transition-all" aria-hidden="true">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
