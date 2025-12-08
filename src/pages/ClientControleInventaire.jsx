@@ -241,7 +241,6 @@ export default function ClientControleInventaire() {
   };
 
   const handleFinalSubmit = async () => {
-
     setSubmitting(true);
     setShowRecapDialog(false);
     
@@ -255,8 +254,33 @@ export default function ClientControleInventaire() {
         signatureUrl = result.file_url;
       }
 
-      // Créer les interventions MÉNAGE
-      const interventionsMenageIds = [];
+      const dossierId = sessionStorage.getItem('arrivee_dossier_id');
+
+      // Créer la FicheArrivee pour la réception EN PREMIER
+      const ficheArrivee = await base44.entities.FicheArrivee.create({
+        client_nom: nom,
+        client_prenom: prenom,
+        date_arrivee: dateArrivee,
+        date_depart: dateDepart,
+        numero_logement: numero,
+        categorie_logement: categorie,
+        type_logement: typeLogement,
+        nombre_adultes: parseInt(sessionStorage.getItem('arrivee_nombre_adultes')) || 0,
+        nombre_adolescents: parseInt(sessionStorage.getItem('arrivee_nombre_adolescents')) || 0,
+        nombre_enfants: parseInt(sessionStorage.getItem('arrivee_nombre_enfants')) || 0,
+        nombre_bebes: parseInt(sessionStorage.getItem('arrivee_nombre_bebes')) || 0,
+        nombre_animaux: parseInt(sessionStorage.getItem('arrivee_nombre_animaux')) || 0,
+        inventaire_objets_valides: objetsValides,
+        inventaire_objets_manquants: objetsMissing,
+        evaluation_proprete: evaluationProprete,
+        commentaire_proprete: commentaireProprete,
+        photos_pieces: photosLieux,
+        remarques_client: remarques,
+        signature_url: signatureUrl,
+        date_validation: new Date().toISOString()
+      });
+
+      // Créer les interventions MÉNAGE (objets non cochés)
       for (const intervention of interventionsPreview.menage) {
         const incident = await base44.entities.Incident.create({
           type: 'menage',
@@ -275,16 +299,14 @@ export default function ClientControleInventaire() {
           autorisation_acces: 'oui',
           clause_autorisation_acceptee: true,
           origine: 'arrivee',
-          dossier_arrivee_id: sessionStorage.getItem('arrivee_dossier_id')
+          fiche_arrivee_id: ficheArrivee.id,
+          dossier_arrivee_id: dossierId
         });
-        interventionsMenageIds.push(incident.id);
 
-        // 🔔 Notifier l'équipe ménage
         await notifierInterventionCreee(incident);
       }
 
-      // Créer les interventions TECHNIQUE
-      const interventionsTechniqueIds = [];
+      // Créer les interventions TECHNIQUE (objets cassés déclarés)
       for (const intervention of interventionsPreview.technique) {
         const incident = await base44.entities.Incident.create({
           type: 'technique',
@@ -303,16 +325,14 @@ export default function ClientControleInventaire() {
           autorisation_acces: 'oui',
           clause_autorisation_acceptee: true,
           origine: 'arrivee',
-          dossier_arrivee_id: sessionStorage.getItem('arrivee_dossier_id')
+          fiche_arrivee_id: ficheArrivee.id,
+          dossier_arrivee_id: dossierId
         });
-        interventionsTechniqueIds.push(incident.id);
 
-        // 🔔 Notifier l'équipe technique
         await notifierInterventionCreee(incident);
       }
 
       // Mettre à jour le dossier d'arrivée
-      const dossierId = sessionStorage.getItem('arrivee_dossier_id');
       if (dossierId) {
         await base44.entities.DossierArrivee.update(dossierId, {
           etape_3_terminee: true,
@@ -327,58 +347,23 @@ export default function ClientControleInventaire() {
           remarques: commentaireProprete || remarques,
           signature: signatureUrl,
           inventaire_termine: true,
-          statut: 'termine',
-          horodatage_creation: new Date().toISOString()
-        });
-
-        // Créer la FicheArrivee pour la réception
-        await base44.entities.FicheArrivee.create({
-          client_nom: nom,
-          client_prenom: prenom,
-          date_arrivee: dateArrivee,
-          date_depart: dateDepart,
-          numero_logement: numero,
-          categorie_logement: categorie,
-          type_logement: typeLogement,
-          nombre_adultes: parseInt(sessionStorage.getItem('arrivee_nombre_adultes')) || 0,
-          nombre_adolescents: parseInt(sessionStorage.getItem('arrivee_nombre_adolescents')) || 0,
-          nombre_enfants: parseInt(sessionStorage.getItem('arrivee_nombre_enfants')) || 0,
-          nombre_bebes: parseInt(sessionStorage.getItem('arrivee_nombre_bebes')) || 0,
-          nombre_animaux: parseInt(sessionStorage.getItem('arrivee_nombre_animaux')) || 0,
-          inventaire_objets_valides: objetsValides,
-          inventaire_objets_manquants: objetsMissing,
-          evaluation_proprete: evaluationProprete,
-          commentaire_proprete: commentaireProprete,
-          photos_pieces: photosLieux,
-          remarques_client: remarques,
-          signature_url: signatureUrl,
-          date_validation: new Date().toISOString()
+          statut: 'termine'
         });
       }
 
-      toast.success(lang === 'fr' ? '✅ Inventaire envoyé à la réception !' : '✅ Inventory sent to reception!');
-      
-      if (interventionsPreview.menage.length > 0 || interventionsPreview.technique.length > 0) {
-        toast.success(lang === 'fr' 
-          ? `📋 ${interventionsPreview.menage.length + interventionsPreview.technique.length} intervention(s) créée(s) automatiquement`
-          : `📋 ${interventionsPreview.menage.length + interventionsPreview.technique.length} intervention(s) created automatically`
-        );
-      }
-      
       // Message de confirmation
-      setTimeout(() => {
-        alert(lang === 'fr' 
-          ? "Votre inventaire a bien été envoyé à la réception.\nMerci d'avoir complété l'état des lieux."
-          : "Your inventory has been sent to reception.\nThank you for completing the inventory check.");
-      }, 200);
+      alert(lang === 'fr' 
+        ? "Votre contrôle inventaire a bien été envoyé à la réception.\nMerci !"
+        : "Your inventory has been sent to reception.\nThank you!");
 
       // Redirection automatique vers l'accueil client
-      setTimeout(() => {
-        navigate(createPageUrl('ClientMenu'));
-      }, 1000);
+      navigate(createPageUrl('ClientMenu'));
+
     } catch (error) {
-      console.error('Submit error:', error);
-      toast.error(lang === 'fr' ? 'Erreur lors de l\'envoi' : 'Submit error');
+      console.error('ERREUR ENVOI INVENTAIRE:', error);
+      alert(lang === 'fr' 
+        ? "Une erreur est survenue lors de l'envoi. Merci de réessayer."
+        : "An error occurred during submission. Please try again.");
     } finally {
       setSubmitting(false);
     }
