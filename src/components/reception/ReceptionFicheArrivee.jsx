@@ -391,6 +391,32 @@ export default function ReceptionFicheArrivee({ ficheId, onClose, lang }) {
 
           <Separator />
 
+          {/* Photos */}
+          {fiche.photos_pieces && Object.keys(fiche.photos_pieces).length > 0 && (
+            <>
+              <div>
+                <h3 className="font-heading text-lg text-[#0077A8] mb-3">
+                  {lang === 'fr' ? '📸 Photos de l\'état initial' : '📸 Initial condition photos'}
+                </h3>
+                <div className="grid grid-cols-3 gap-3">
+                  {Object.entries(fiche.photos_pieces).map(([lieu, url]) => (
+                    <div key={lieu} className="space-y-2">
+                      <img 
+                        src={url} 
+                        alt={lieu}
+                        className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
+                      />
+                      <p className="text-xs text-center text-gray-600 capitalize">
+                        {lieu.replace(/_/g, ' ')}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <Separator />
+            </>
+          )}
+
           {/* Propreté */}
           <div>
             <h3 className="font-heading text-lg text-[#0077A8] mb-3">

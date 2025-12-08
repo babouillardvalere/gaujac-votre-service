@@ -283,6 +283,31 @@ export default function ReceptionFicheDepart({ ficheId, onClose, lang }) {
             </div>
           )}
 
+          <Separator />
+
+          {/* Photos départ */}
+          {fiche.photos_depart && Object.keys(fiche.photos_depart).length > 0 && (
+            <div>
+              <h3 className="font-heading text-lg text-[#0077A8] mb-3">
+                {lang === 'fr' ? '📸 Photos au départ' : '📸 Departure photos'}
+              </h3>
+              <div className="grid grid-cols-3 gap-3">
+                {Object.entries(fiche.photos_depart).map(([lieu, url]) => (
+                  <div key={lieu} className="space-y-2">
+                    <img 
+                      src={url} 
+                      alt={lieu}
+                      className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
+                    />
+                    <p className="text-xs text-center text-gray-600 capitalize">
+                      {lieu.replace(/_/g, ' ')}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {fiche.degats_signales && (
             <>
               <Separator />
