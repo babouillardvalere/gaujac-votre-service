@@ -60,6 +60,9 @@ import ClientDepartRecap from './pages/ClientDepartRecap';
 import ClientDepartConditions from './pages/ClientDepartConditions';
 import RapportsInterventions from './pages/RapportsInterventions';
 import ClientResume from './pages/ClientResume';
+import DirectionDeshivernage from './pages/DirectionDeshivernage';
+import DirectionHivernage from './pages/DirectionHivernage';
+import DirectionSaison from './pages/DirectionSaison';
 import __Layout from './Layout.jsx';
 
 
@@ -126,6 +129,9 @@ export const PAGES = {
     "ClientDepartConditions": ClientDepartConditions,
     "RapportsInterventions": RapportsInterventions,
     "ClientResume": ClientResume,
+    "DirectionDeshivernage": DirectionDeshivernage,
+    "DirectionHivernage": DirectionHivernage,
+    "DirectionSaison": DirectionSaison,
 }
 
 export const pagesConfig = {
