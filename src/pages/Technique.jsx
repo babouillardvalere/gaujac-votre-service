@@ -17,6 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ServiceMissionDashboard from '../components/direction/ServiceMissionDashboard';
 import { 
   ArrowLeft, Clock, User, Home as HomeIcon, AlertTriangle, CheckCircle, 
   Play, Copy, Loader2, Flame, Droplets, Zap, Wrench, TreePine, Bug, Pause, DoorOpen, UserCheck, Camera, Home
@@ -40,15 +41,13 @@ const categoryIcons = {
   frelons: { icon: Bug, emoji: '🐝', label: 'frelons' }
 };
 
-// Photos obligatoires uniquement en cas de casse/dégâts matériels
 const CASSE_CATEGORIES = ['mobilier', 'structurel', 'immobilier'];
-
 const isPhotoRequired = (categorie) => CASSE_CATEGORIES.includes(categorie);
 
 export default function Technique() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const { counts } = useNotifications();
   
   const [selectedIncident, setSelectedIncident] = useState(null);
@@ -60,6 +59,7 @@ export default function Technique() {
   const [showPhotoAvant, setShowPhotoAvant] = useState(false);
   const [showPhotoApres, setShowPhotoApres] = useState(false);
   const [incidentForPhoto, setIncidentForPhoto] = useState(null);
+  const [activeTab, setActiveTab] = useState('interventions');
 
   useEffect(() => {
     const auth = sessionStorage.getItem('collaborateur_authenticated');
@@ -89,12 +89,10 @@ export default function Technique() {
       return;
     }
     
-    // Photos obligatoires uniquement pour catégories sécurité
     if (isPhotoRequired(incident.categorie)) {
       setIncidentForPhoto(incident);
       setShowPhotoAvant(true);
     } else {
-      // Prise en charge directe sans photo obligatoire
       handlePrendreEnChargeSansPhoto(incident);
     }
   };
@@ -123,7 +121,6 @@ export default function Technique() {
       }
     });
     
-    // 🔔 Notifier le client
     await notifierClientPriseEnCharge(incident, collaborateurNom);
   };
 
@@ -135,7 +132,6 @@ export default function Technique() {
       ? differenceInMinutes(now, new Date(incidentForPhoto.date_saisie))
       : 0;
     
-    // Créer un log de prise en charge
     await base44.entities.InterventionLog.create({
       incident_id: incidentForPhoto.id,
       action: 'prise_en_charge',
@@ -160,12 +156,10 @@ export default function Technique() {
   };
 
   const handleTerminer = (incident) => {
-    // Photos obligatoires uniquement pour catégories sécurité
     if (isPhotoRequired(incident.categorie)) {
       setIncidentForPhoto(incident);
       setShowPhotoApres(true);
     } else {
-      // Terminer directement sans photo obligatoire
       handleTerminerSansPhoto(incident);
     }
   };
@@ -195,7 +189,6 @@ export default function Technique() {
     });
     setCommentaire('');
     
-    // 🔔 Notifier le client de la résolution
     await notifierClientResolution(incident);
   };
 
@@ -207,7 +200,6 @@ export default function Technique() {
       ? differenceInMinutes(now, new Date(incidentForPhoto.date_saisie))
       : 0;
     
-    // Créer un log de résolution
     await base44.entities.InterventionLog.create({
       incident_id: incidentForPhoto.id,
       action: 'resolu',
@@ -262,7 +254,6 @@ export default function Technique() {
     setIncidentToWait(null);
   };
 
-  // Fonction pour extraire l'heure de début d'une plage horaire (ex: "15h30 → 17h30" -> 15.5)
   const getPlageHoraireStart = (plage) => {
     if (!plage) return 24;
     const match = plage.match(/(\d{2})h(\d{2})/);
@@ -272,18 +263,14 @@ export default function Technique() {
     return 24;
   };
 
-  // Déterminer le type de priorité
   const getPriorityType = (incident) => {
     if (incident.urgent) return 'urgent';
     if (incident.autorisation_acces === 'non' && incident.plage_horaire_client) return 'plage_horaire';
     return 'normal';
   };
 
-  // Tri intelligent par priorité
   const sortByPriority = (a, b) => {
-    // Si priorité bureau définie, elle prime (sauf urgents)
     if ((a.priorite_bureau || 0) !== (b.priorite_bureau || 0)) {
-      // Les urgents restent toujours en haut même avec priorité bureau
       if (a.urgent && !b.urgent) return -1;
       if (!a.urgent && b.urgent) return 1;
       return (b.priorite_bureau || 0) - (a.priorite_bureau || 0);
@@ -292,32 +279,27 @@ export default function Technique() {
     const typeA = getPriorityType(a);
     const typeB = getPriorityType(b);
 
-    // Résolus toujours en bas
     if (a.statut === 'resolu' && b.statut !== 'resolu') return 1;
     if (a.statut !== 'resolu' && b.statut === 'resolu') return -1;
     if (a.statut === 'resolu' && b.statut === 'resolu') {
       return new Date(b.date_resolution) - new Date(a.date_resolution);
     }
 
-    // En attente matériel après les actifs
     if (a.statut === 'en_attente_materiel' && b.statut !== 'en_attente_materiel' && b.statut !== 'resolu') return 1;
     if (a.statut !== 'en_attente_materiel' && a.statut !== 'resolu' && b.statut === 'en_attente_materiel') return -1;
 
-    // 1. URGENTS en premier (tri par date création, plus ancien d'abord)
     if (typeA === 'urgent' && typeB !== 'urgent') return -1;
     if (typeA !== 'urgent' && typeB === 'urgent') return 1;
     if (typeA === 'urgent' && typeB === 'urgent') {
-      return new Date(a.date_saisie) - new Date(b.date_saisie); // Plus ancien d'abord
+      return new Date(a.date_saisie) - new Date(b.date_saisie);
     }
 
-    // 2. PLAGE HORAIRE vs NORMAL - tri intelligent
     const now = new Date();
     const currentHour = now.getHours() + now.getMinutes() / 60;
 
     if (typeA === 'plage_horaire' && typeB === 'normal') {
       const plageStart = getPlageHoraireStart(a.plage_horaire_client);
       const normalHour = new Date(b.date_saisie).getHours() + new Date(b.date_saisie).getMinutes() / 60;
-      // Si la plage horaire commence après l'heure du normal, placer après
       if (plageStart > normalHour) return 1;
       return -1;
     }
@@ -328,12 +310,10 @@ export default function Technique() {
       return 1;
     }
 
-    // Entre plages horaires, trier par début de plage
     if (typeA === 'plage_horaire' && typeB === 'plage_horaire') {
       return getPlageHoraireStart(a.plage_horaire_client) - getPlageHoraireStart(b.plage_horaire_client);
     }
 
-    // 3. NORMAL - tri par date création (plus ancien d'abord)
     return new Date(a.date_saisie) - new Date(b.date_saisie);
   };
 
@@ -366,15 +346,14 @@ export default function Technique() {
 
   return (
     <div className="min-h-screen pb-8" role="main" aria-label="Accueil > Collaborateur > Technique">
-      <h1 className="sr-only">Accueil > Collaborateur > Technique - Interventions techniques</h1>
+      <h1 className="sr-only">Accueil > Collaborateur > Technique</h1>
       <OfflineBanner />
       
       <div className="bg-[#00AEEF] text-white px-4 py-4 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div>
-              <h1 className="font-heading text-xl">{t('menu_technique')} - {t('interventions')}</h1>
-              <p className="text-white/80 text-sm font-body">{filteredIncidents.length} intervention(s)</p>
+              <h1 className="font-heading text-xl">{t('menu_technique')}</h1>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -392,67 +371,77 @@ export default function Technique() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6">
-        <Tabs value={filter} onValueChange={setFilter} className="mb-6">
-          <TabsList className="bg-[#e6f7ff] p-1 rounded-xl border border-[#00AEEF]/30 w-full grid grid-cols-4">
-            <TabsTrigger value="en_attente" className="rounded-lg font-heading text-xs data-[state=active]:bg-[#FFA500] data-[state=active]:text-white relative">
-              {t('en_attente')}
-              <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
-                {incidents.filter(i => i.statut === 'en_attente').length}
-              </span>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="interventions">
+              {lang === 'fr' ? 'Interventions' : 'Interventions'}
             </TabsTrigger>
-            <TabsTrigger value="en_cours" className="rounded-lg font-heading text-xs data-[state=active]:bg-[#00AEEF] data-[state=active]:text-white relative">
-              {t('en_cours')}
-              <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
-                {incidents.filter(i => i.statut === 'en_cours').length}
-              </span>
-            </TabsTrigger>
-            <TabsTrigger value="en_attente_materiel" className="rounded-lg font-heading text-xs data-[state=active]:bg-gray-500 data-[state=active]:text-white relative">
-              ⏳ {t('menu_attente')}
-              <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
-                {incidents.filter(i => i.statut === 'en_attente_materiel').length}
-              </span>
-            </TabsTrigger>
-            <TabsTrigger value="resolu" className="rounded-lg font-heading text-xs data-[state=active]:bg-green-500 data-[state=active]:text-white relative">
-              {t('resolu')}
-              <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
-                {incidents.filter(i => i.statut === 'resolu').length}
-              </span>
+            <TabsTrigger value="missions">
+              {lang === 'fr' ? 'Missions Direction' : 'Direction Missions'}
             </TabsTrigger>
           </TabsList>
-        </Tabs>
 
-        {isLoading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-[#00AEEF]" />
-          </div>
-        ) : filteredIncidents.length === 0 ? (
-          <div className="text-center py-12">
-            <CheckCircle className="w-16 h-16 text-[#00AEEF] mx-auto mb-4" />
-            <p className="font-heading text-[#0077A8]">{t('aucun')}</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {filteredIncidents.map((incident) => {
-            const catInfo = getCategoryInfo(incident.categorie);
-            const priorityType = getPriorityType(incident);
+          <TabsContent value="interventions">
+            <Tabs value={filter} onValueChange={setFilter} className="mb-6">
+              <TabsList className="bg-[#e6f7ff] p-1 rounded-xl border border-[#00AEEF]/30 w-full grid grid-cols-4">
+                <TabsTrigger value="en_attente" className="rounded-lg font-heading text-xs data-[state=active]:bg-[#FFA500] data-[state=active]:text-white relative">
+                  {t('en_attente')}
+                  <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
+                    {incidents.filter(i => i.statut === 'en_attente').length}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="en_cours" className="rounded-lg font-heading text-xs data-[state=active]:bg-[#00AEEF] data-[state=active]:text-white relative">
+                  {t('en_cours')}
+                  <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
+                    {incidents.filter(i => i.statut === 'en_cours').length}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="en_attente_materiel" className="rounded-lg font-heading text-xs data-[state=active]:bg-gray-500 data-[state=active]:text-white relative">
+                  ⏳ {t('menu_attente')}
+                  <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
+                    {incidents.filter(i => i.statut === 'en_attente_materiel').length}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="resolu" className="rounded-lg font-heading text-xs data-[state=active]:bg-green-500 data-[state=active]:text-white relative">
+                  {t('resolu')}
+                  <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
+                    {incidents.filter(i => i.statut === 'resolu').length}
+                  </span>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
 
-            // Couleurs selon priorité
-            const priorityStyles = {
-            urgent: 'border-red-500 bg-red-500/10',
-            plage_horaire: 'border-blue-500 bg-blue-500/10',
-            normal: 'border-yellow-500 bg-yellow-500/10'
-            };
+            {isLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-[#00AEEF]" />
+              </div>
+            ) : filteredIncidents.length === 0 ? (
+              <div className="text-center py-12">
+                <CheckCircle className="w-16 h-16 text-[#00AEEF] mx-auto mb-4" />
+                <p className="font-heading text-[#0077A8]">{t('aucun')}</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredIncidents.map((incident) => {
+                const catInfo = getCategoryInfo(incident.categorie);
+                const priorityType = getPriorityType(incident);
 
-            const origineColor = incident.origine === 'arrivee' ? 'border-l-8 border-l-green-500' : 
-                                 incident.origine === 'depart' ? 'border-l-8 border-l-orange-500' : 
-                                 'border-l-8 border-l-blue-500';
-            
-            return (
-            <motion.div key={incident.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-              <Card 
-                className={`border-2 rounded-xl cursor-pointer hover:shadow-lg transition-all ${priorityStyles[priorityType]} ${origineColor}`}
-                onClick={() => setSelectedIncident(incident)}
-              >
+                const priorityStyles = {
+                urgent: 'border-red-500 bg-red-500/10',
+                plage_horaire: 'border-blue-500 bg-blue-500/10',
+                normal: 'border-yellow-500 bg-yellow-500/10'
+                };
+
+                const origineColor = incident.origine === 'arrivee' ? 'border-l-8 border-l-green-500' : 
+                                     incident.origine === 'depart' ? 'border-l-8 border-l-orange-500' : 
+                                     'border-l-8 border-l-blue-500';
+                
+                return (
+                <motion.div key={incident.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                  <Card 
+                    className={`border-2 rounded-xl cursor-pointer hover:shadow-lg transition-all ${priorityStyles[priorityType]} ${origineColor}`}
+                    onClick={() => setSelectedIncident(incident)}
+                  >
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
@@ -492,7 +481,6 @@ export default function Technique() {
                           {incident.date_saisie && format(new Date(incident.date_saisie), 'dd/MM HH:mm', { locale: fr })}
                         </div>
                       </div>
-                      {/* Badge autorisation d'accès */}
                       {incident.autorisation_acces && (
                         <div className={`mt-2 inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-body ${
                           incident.autorisation_acces === 'oui' 
@@ -534,12 +522,19 @@ export default function Technique() {
                     </CardContent>
                   </Card>
                 </motion.div>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          )}
+          </TabsContent>
+
+          <TabsContent value="missions">
+            <ServiceMissionDashboard service="TECHNIQUE" serviceLabel={t('menu_technique')} />
+          </TabsContent>
+        </Tabs>
       </div>
 
+      {/* Dialogs restants... */}
       <MettreEnAttenteDialog
         open={showAttenteDialog}
         onOpenChange={setShowAttenteDialog}
@@ -547,7 +542,6 @@ export default function Technique() {
         isLoading={updateMutation.isPending}
       />
 
-      {/* Dialog photo AVANT */}
       <PhotoInterventionCapture
         open={showPhotoAvant}
         onOpenChange={(open) => {
@@ -560,7 +554,6 @@ export default function Technique() {
         onPhotoUploaded={handlePhotoAvantUploaded}
       />
 
-      {/* Dialog photo APRES */}
       <PhotoInterventionCapture
         open={showPhotoApres}
         onOpenChange={(open) => {
@@ -595,7 +588,6 @@ export default function Technique() {
                     {selectedIncident.date_saisie && format(new Date(selectedIncident.date_saisie), 'dd/MM/yyyy HH:mm', { locale: fr })}
                   </span>
                 </div>
-                {/* Priorité */}
                 <div className="flex justify-between items-center">
                   <span className="text-[#0077A8]/70 font-body">Priorité</span>
                   {selectedIncident.urgent ? (
@@ -612,7 +604,6 @@ export default function Technique() {
                     <span className="font-heading">{t('urgent_label')}</span>
                   </div>
                 )}
-                {/* Autorisation d'accès */}
                 <div className={`flex items-center gap-2 p-2 rounded-lg mt-2 ${
                   selectedIncident.autorisation_acces === 'oui' 
                     ? 'bg-green-100 text-green-700' 
@@ -679,7 +670,6 @@ export default function Technique() {
                     className="border-[#00AEEF]/30 rounded-xl font-body"
                   />
                   
-                  {/* Message photos */}
                   <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
                     <p className="text-xs font-heading text-blue-700 flex items-center gap-2 mb-1">
                       <Camera className="w-4 h-4" />
@@ -694,7 +684,6 @@ export default function Technique() {
                     </p>
                   </div>
                   
-                  {/* Option photo avant facultative */}
                   {!isPhotoRequired(selectedIncident.categorie) && (
                     <Button 
                       onClick={() => { setIncidentForPhoto(selectedIncident); setShowPhotoAvant(true); }}
@@ -731,7 +720,6 @@ export default function Technique() {
                     className="border-[#00AEEF]/30 rounded-xl font-body"
                   />
                   
-                  {/* Message photos */}
                   <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
                     <p className="text-xs text-blue-600 font-body">
                       {isPhotoRequired(selectedIncident.categorie) ? (
@@ -753,7 +741,6 @@ export default function Technique() {
                     </Button>
                   </div>
                   
-                  {/* Bouton photo facultative */}
                   {!isPhotoRequired(selectedIncident.categorie) && (
                     <Button 
                       onClick={() => { setIncidentForPhoto(selectedIncident); setShowPhotoApres(true); }}

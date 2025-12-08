@@ -15,7 +15,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ServiceMissionDashboard from '../components/direction/ServiceMissionDashboard';
 import { 
   ArrowLeft, Clock, User, CheckCircle, Play, Loader2, Sparkles, Bed, UtensilsCrossed, Pause, DoorOpen, UserCheck, Camera, Home
 } from 'lucide-react';
@@ -34,13 +35,12 @@ const categoryIcons = {
   materiel_menage: { emoji: '🧹', label: 'menage' }
 };
 
-// Pour le ménage, les photos sont facultatives (pas de catégorie sécurité)
 const isPhotoRequired = () => false;
 
 export default function Menage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const { counts } = useNotifications();
   
   const [selectedIncident, setSelectedIncident] = useState(null);
@@ -52,6 +52,7 @@ export default function Menage() {
   const [showPhotoAvant, setShowPhotoAvant] = useState(false);
   const [showPhotoApres, setShowPhotoApres] = useState(false);
   const [incidentForPhoto, setIncidentForPhoto] = useState(null);
+  const [activeTab, setActiveTab] = useState('interventions');
 
   useEffect(() => {
     const auth = sessionStorage.getItem('collaborateur_authenticated');
@@ -80,7 +81,6 @@ export default function Menage() {
       toast.error(t('champs_obligatoires'));
       return;
     }
-    // Photos facultatives pour le ménage - prise en charge directe
     handlePrendreEnChargeSansPhoto(incident);
   };
 
@@ -108,7 +108,6 @@ export default function Menage() {
       }
     });
     
-    // 🔔 Notifier le client
     await notifierClientPriseEnCharge(incident, collaborateurNom);
   };
 
@@ -144,7 +143,6 @@ export default function Menage() {
   };
 
   const handleTerminer = (incident) => {
-    // Photos facultatives pour le ménage - terminer directement
     handleTerminerSansPhoto(incident);
   };
 
@@ -173,7 +171,6 @@ export default function Menage() {
     });
     setCommentaire('');
     
-    // 🔔 Notifier le client de la résolution
     await notifierClientResolution(incident);
   };
 
@@ -232,7 +229,6 @@ export default function Menage() {
     setIncidentToWait(null);
   };
 
-  // Fonction pour extraire l'heure de début d'une plage horaire
   const getPlageHoraireStart = (plage) => {
     if (!plage) return 24;
     const match = plage.match(/(\d{2})h(\d{2})/);
@@ -242,14 +238,12 @@ export default function Menage() {
     return 24;
   };
 
-  // Déterminer le type de priorité
   const getPriorityType = (incident) => {
     if (incident.urgent) return 'urgent';
     if (incident.autorisation_acces === 'non' && incident.plage_horaire_client) return 'plage_horaire';
     return 'normal';
   };
 
-  // Tri intelligent par priorité
   const sortByPriority = (a, b) => {
     if ((a.priorite_bureau || 0) !== (b.priorite_bureau || 0)) {
       if (a.urgent && !b.urgent) return -1;
@@ -324,15 +318,14 @@ export default function Menage() {
 
   return (
     <div className="min-h-screen pb-8" role="main" aria-label="Accueil > Collaborateur > Ménage">
-      <h1 className="sr-only">Accueil > Collaborateur > Ménage - Demandes de ménage</h1>
+      <h1 className="sr-only">Accueil > Collaborateur > Ménage</h1>
       <OfflineBanner />
       
       <div className="bg-[#FFD700] text-[#0077A8] px-4 py-4 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div>
-              <h1 className="font-heading text-xl">{t('menu_menage')} - {t('demandes')}</h1>
-              <p className="text-[#0077A8]/70 text-sm font-body">{filteredIncidents.length} {t('demandes').toLowerCase()}</p>
+              <h1 className="font-heading text-xl">{t('menu_menage')}</h1>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -350,146 +343,162 @@ export default function Menage() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6">
-        <Tabs value={filter} onValueChange={setFilter} className="mb-6">
-          <TabsList className="bg-[#FFF4B2] p-1 rounded-xl border border-[#FFD700]/50 w-full grid grid-cols-4">
-            <TabsTrigger value="en_attente" className="rounded-lg font-heading text-xs data-[state=active]:bg-[#FFA500] data-[state=active]:text-white relative">
-              {t('en_attente')}
-              <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
-                {incidents.filter(i => i.statut === 'en_attente').length}
-              </span>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="interventions">
+              {lang === 'fr' ? 'Interventions' : 'Interventions'}
             </TabsTrigger>
-            <TabsTrigger value="en_cours" className="rounded-lg font-heading text-xs data-[state=active]:bg-[#FFD700] data-[state=active]:text-[#0077A8] relative">
-              {t('en_cours')}
-              <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
-                {incidents.filter(i => i.statut === 'en_cours').length}
-              </span>
-            </TabsTrigger>
-            <TabsTrigger value="en_attente_materiel" className="rounded-lg font-heading text-xs data-[state=active]:bg-gray-500 data-[state=active]:text-white relative">
-              ⏳ {t('menu_attente')}
-              <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
-                {incidents.filter(i => i.statut === 'en_attente_materiel').length}
-              </span>
-            </TabsTrigger>
-            <TabsTrigger value="resolu" className="rounded-lg font-heading text-xs data-[state=active]:bg-green-500 data-[state=active]:text-white relative">
-              {t('resolu')}
-              <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
-                {incidents.filter(i => i.statut === 'resolu').length}
-              </span>
+            <TabsTrigger value="missions">
+              {lang === 'fr' ? 'Missions Direction' : 'Direction Missions'}
             </TabsTrigger>
           </TabsList>
-        </Tabs>
 
-        {isLoading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-[#FFD700]" />
-          </div>
-        ) : filteredIncidents.length === 0 ? (
-          <div className="text-center py-12">
-            <CheckCircle className="w-16 h-16 text-[#FFD700] mx-auto mb-4" />
-            <p className="font-heading text-[#0077A8]">{t('aucun')}</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {filteredIncidents.map((incident) => {
-              const catInfo = getCategoryInfo(incident.categorie);
-              const priorityType = getPriorityType(incident);
-              
-              const priorityStyles = {
-                urgent: 'border-red-500 bg-red-500/10',
-                plage_horaire: 'border-blue-500 bg-blue-500/10',
-                normal: 'border-yellow-500 bg-yellow-500/10'
-              };
-              
-              const origineColor = incident.origine === 'arrivee' ? 'border-l-8 border-l-green-500' : 
-                                   incident.origine === 'depart' ? 'border-l-8 border-l-orange-500' : 
-                                   'border-l-8 border-l-blue-500';
-              
-              return (
-                <motion.div key={incident.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                  <Card className={`border-2 rounded-xl cursor-pointer hover:shadow-lg transition-all ${priorityStyles[priorityType]} ${origineColor}`} onClick={() => setSelectedIncident(incident)}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <span className="text-3xl">{catInfo.emoji}</span>
-                          <div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-heading text-[#0077A8]">{incident.logement || incident.emplacement}</span>
-                              {priorityType === 'urgent' && (
-                                <Badge className="bg-red-500 text-white text-xs">⚠️ Urgent</Badge>
-                              )}
-                              {priorityType === 'plage_horaire' && (
-                                <Badge className="bg-blue-500 text-white text-xs">⏰ {incident.plage_horaire_client}</Badge>
-                              )}
-                              {priorityType === 'normal' && (
-                                <Badge className="bg-yellow-500 text-black text-xs">🧹 Normal</Badge>
-                              )}
-                              {incident.origine === 'arrivee' && (
-                                <Badge className="bg-green-600 text-white text-xs">🏁 {t('date_arrivee')}</Badge>
-                              )}
-                              {incident.origine === 'depart' && (
-                                <Badge className="bg-orange-600 text-white text-xs">🚪 {t('date_depart')}</Badge>
+          <TabsContent value="interventions">
+            <Tabs value={filter} onValueChange={setFilter} className="mb-6">
+              <TabsList className="bg-[#FFF4B2] p-1 rounded-xl border border-[#FFD700]/50 w-full grid grid-cols-4">
+                <TabsTrigger value="en_attente" className="rounded-lg font-heading text-xs data-[state=active]:bg-[#FFA500] data-[state=active]:text-white relative">
+                  {t('en_attente')}
+                  <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
+                    {incidents.filter(i => i.statut === 'en_attente').length}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="en_cours" className="rounded-lg font-heading text-xs data-[state=active]:bg-[#FFD700] data-[state=active]:text-[#0077A8] relative">
+                  {t('en_cours')}
+                  <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
+                    {incidents.filter(i => i.statut === 'en_cours').length}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="en_attente_materiel" className="rounded-lg font-heading text-xs data-[state=active]:bg-gray-500 data-[state=active]:text-white relative">
+                  ⏳ {t('menu_attente')}
+                  <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
+                    {incidents.filter(i => i.statut === 'en_attente_materiel').length}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="resolu" className="rounded-lg font-heading text-xs data-[state=active]:bg-green-500 data-[state=active]:text-white relative">
+                  {t('resolu')}
+                  <span className="ml-1 min-w-5 h-5 inline-flex items-center justify-center text-xs font-bold rounded-full px-1.5 bg-[#E63946] text-white">
+                    {incidents.filter(i => i.statut === 'resolu').length}
+                  </span>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            {isLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-[#FFD700]" />
+              </div>
+            ) : filteredIncidents.length === 0 ? (
+              <div className="text-center py-12">
+                <CheckCircle className="w-16 h-16 text-[#FFD700] mx-auto mb-4" />
+                <p className="font-heading text-[#0077A8]">{t('aucun')}</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredIncidents.map((incident) => {
+                  const catInfo = getCategoryInfo(incident.categorie);
+                  const priorityType = getPriorityType(incident);
+                  
+                  const priorityStyles = {
+                    urgent: 'border-red-500 bg-red-500/10',
+                    plage_horaire: 'border-blue-500 bg-blue-500/10',
+                    normal: 'border-yellow-500 bg-yellow-500/10'
+                  };
+                  
+                  const origineColor = incident.origine === 'arrivee' ? 'border-l-8 border-l-green-500' : 
+                                       incident.origine === 'depart' ? 'border-l-8 border-l-orange-500' : 
+                                       'border-l-8 border-l-blue-500';
+                  
+                  return (
+                    <motion.div key={incident.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                      <Card className={`border-2 rounded-xl cursor-pointer hover:shadow-lg transition-all ${priorityStyles[priorityType]} ${origineColor}`} onClick={() => setSelectedIncident(incident)}>
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <span className="text-3xl">{catInfo.emoji}</span>
+                              <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-heading text-[#0077A8]">{incident.logement || incident.emplacement}</span>
+                                  {priorityType === 'urgent' && (
+                                    <Badge className="bg-red-500 text-white text-xs">⚠️ Urgent</Badge>
+                                  )}
+                                  {priorityType === 'plage_horaire' && (
+                                    <Badge className="bg-blue-500 text-white text-xs">⏰ {incident.plage_horaire_client}</Badge>
+                                  )}
+                                  {priorityType === 'normal' && (
+                                    <Badge className="bg-yellow-500 text-black text-xs">🧹 Normal</Badge>
+                                  )}
+                                  {incident.origine === 'arrivee' && (
+                                    <Badge className="bg-green-600 text-white text-xs">🏁 {t('date_arrivee')}</Badge>
+                                  )}
+                                  {incident.origine === 'depart' && (
+                                    <Badge className="bg-orange-600 text-white text-xs">🚪 {t('date_depart')}</Badge>
+                                  )}
+                                </div>
+                                <p className="text-sm font-body text-gray-600">{catInfo.label}</p>
+                              </div>
+                            </div>
+                            {getStatusBadge(incident.statut)}
+                          </div>
+                          <p className="font-body text-gray-700 mb-3 line-clamp-2">{incident.description}</p>
+                          <div className="flex items-center justify-between text-xs text-gray-500 font-body">
+                            <div className="flex items-center gap-1">
+                              <User className="w-3 h-3" />
+                              {incident.client_prenom} {incident.client_nom}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {incident.date_saisie && format(new Date(incident.date_saisie), 'dd/MM HH:mm', { locale: fr })}
+                            </div>
+                          </div>
+                          {incident.autorisation_acces && (
+                            <div className={`mt-2 inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-body ${
+                              incident.autorisation_acces === 'oui' 
+                                ? 'bg-green-100 text-green-700' 
+                                : 'bg-orange-100 text-orange-700'
+                            }`}>
+                              {incident.autorisation_acces === 'oui' ? (
+                                <>
+                                  <UserCheck className="w-3 h-3" />
+                                  {t('acces_autorise')}
+                                </>
+                              ) : (
+                                <>
+                                  <DoorOpen className="w-3 h-3" />
+                                  {t('acces_non_autorise')}
+                                  {incident.plage_horaire_client && (
+                                    <span className="ml-1">— {t('plage_demandee')}: {incident.plage_horaire_client}</span>
+                                  )}
+                                </>
                               )}
                             </div>
-                            <p className="text-sm font-body text-gray-600">{catInfo.label}</p>
-                          </div>
-                        </div>
-                        {getStatusBadge(incident.statut)}
-                      </div>
-                      <p className="font-body text-gray-700 mb-3 line-clamp-2">{incident.description}</p>
-                      <div className="flex items-center justify-between text-xs text-gray-500 font-body">
-                        <div className="flex items-center gap-1">
-                          <User className="w-3 h-3" />
-                          {incident.client_prenom} {incident.client_nom}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {incident.date_saisie && format(new Date(incident.date_saisie), 'dd/MM HH:mm', { locale: fr })}
-                        </div>
-                      </div>
-                      {/* Badge autorisation d'accès */}
-                      {incident.autorisation_acces && (
-                        <div className={`mt-2 inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-body ${
-                          incident.autorisation_acces === 'oui' 
-                            ? 'bg-green-100 text-green-700' 
-                            : 'bg-orange-100 text-orange-700'
-                        }`}>
-                          {incident.autorisation_acces === 'oui' ? (
-                            <>
-                              <UserCheck className="w-3 h-3" />
-                              {t('acces_autorise')}
-                            </>
-                          ) : (
-                            <>
-                              <DoorOpen className="w-3 h-3" />
-                              {t('acces_non_autorise')}
-                              {incident.plage_horaire_client && (
-                                <span className="ml-1">— {t('plage_demandee')}: {incident.plage_horaire_client}</span>
-                              )}
-                            </>
                           )}
-                        </div>
-                      )}
-                      {incident.pris_par && incident.statut === 'en_cours' && (
-                        <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between">
-                          <p className="text-xs font-body text-[#FFD700]">{t('pris_en_charge_par')}: {incident.pris_par}</p>
-                          <InterventionTimer startTime={incident.date_debut} isActive={true} />
-                        </div>
-                      )}
-                      {incident.statut === 'en_attente_materiel' && incident.motif_attente && (
-                        <div className="mt-2 pt-2 border-t border-gray-100">
-                          <p className="text-xs font-body text-[#FFA500] flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            ⏳ {t('motif_label')} : {incident.motif_attente}
-                          </p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
+                          {incident.pris_par && incident.statut === 'en_cours' && (
+                            <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between">
+                              <p className="text-xs font-body text-[#FFD700]">{t('pris_en_charge_par')}: {incident.pris_par}</p>
+                              <InterventionTimer startTime={incident.date_debut} isActive={true} />
+                            </div>
+                          )}
+                          {incident.statut === 'en_attente_materiel' && incident.motif_attente && (
+                            <div className="mt-2 pt-2 border-t border-gray-100">
+                              <p className="text-xs font-body text-[#FFA500] flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                ⏳ {t('motif_label')} : {incident.motif_attente}
+                              </p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="missions">
+            <ServiceMissionDashboard service="MENAGE" serviceLabel={t('menu_menage')} />
+          </TabsContent>
+        </Tabs>
       </div>
 
       <Dialog open={!!selectedIncident} onOpenChange={() => setSelectedIncident(null)}>
@@ -514,7 +523,6 @@ export default function Menage() {
                     {selectedIncident.date_saisie && format(new Date(selectedIncident.date_saisie), 'dd/MM/yyyy HH:mm', { locale: fr })}
                   </span>
                 </div>
-                {/* Priorité */}
                 <div className="flex justify-between items-center">
                   <span className="text-[#0077A8]/70 font-body">Priorité</span>
                   {selectedIncident.urgent ? (
@@ -525,7 +533,6 @@ export default function Menage() {
                     <Badge className="bg-yellow-500 text-black">🟡 Normal</Badge>
                   )}
                 </div>
-                {/* Autorisation d'accès */}
                 <div className={`flex items-center gap-2 p-2 rounded-lg mt-2 ${
                   selectedIncident.autorisation_acces === 'oui' 
                     ? 'bg-green-100 text-green-700' 
@@ -592,7 +599,6 @@ export default function Menage() {
                     className="border-[#FFD700]/50 rounded-xl font-body"
                   />
                   
-                  {/* Message photos */}
                   <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3">
                     <p className="text-xs font-heading text-yellow-700 flex items-center gap-2 mb-1">
                       <Camera className="w-4 h-4" />
@@ -612,7 +618,6 @@ export default function Menage() {
                     {t('prendre_en_charge')}
                   </Button>
                   
-                  {/* Option photo avant facultative */}
                   <Button 
                     onClick={() => { setIncidentForPhoto(selectedIncident); setShowPhotoAvant(true); }}
                     variant="outline" 
@@ -638,7 +643,6 @@ export default function Menage() {
                     className="border-[#FFD700]/50 rounded-xl font-body"
                   />
                   
-                  {/* Message photos */}
                   <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3">
                     <p className="text-xs text-yellow-600 font-body">
                       📸 Photo après : facultative mais recommandée pour attester de votre travail.
@@ -656,7 +660,6 @@ export default function Menage() {
                     </Button>
                   </div>
                   
-                  {/* Bouton photo facultative */}
                   <Button 
                     onClick={() => { setIncidentForPhoto(selectedIncident); setShowPhotoApres(true); }}
                     variant="outline" 
@@ -732,7 +735,6 @@ export default function Menage() {
         isLoading={updateMutation.isPending}
       />
 
-      {/* Dialog photo AVANT */}
       <PhotoInterventionCapture
         open={showPhotoAvant}
         onOpenChange={(open) => {
@@ -745,7 +747,6 @@ export default function Menage() {
         onPhotoUploaded={handlePhotoAvantUploaded}
       />
 
-      {/* Dialog photo APRES */}
       <PhotoInterventionCapture
         open={showPhotoApres}
         onOpenChange={(open) => {
