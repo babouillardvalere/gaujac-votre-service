@@ -36,11 +36,25 @@ export default function ClientControleInventaire() {
   const categorie = sessionStorage.getItem('arrivee_categorie');
   const numero = sessionStorage.getItem('arrivee_numero');
 
-  // État pour tracker les objets cochés/non cochés (tous initialisés à false)
+  // État pour tracker les objets MANQUANTS/CASSÉS (cochés = problème signalé)
   const [objetsCocheState, setObjetsCocheState] = useState({});
   const [objetsMissing, setObjetsMissing] = useState([]);
   const [showMissingDialog, setShowMissingDialog] = useState(false);
   const [missingItem, setMissingItem] = useState({ objet: '', photo: '', commentaire: '' });
+
+  // Liste des objets critiques nécessitant intervention technique immédiate
+  const CRITICAL_ITEMS = [
+    'table_jardin',
+    'chaises_jardin',
+    'tv',
+    'telecommande_clim',
+    'plancha',
+    'frigo',
+    'detecteur_fumee',
+    'lave_vaisselle',
+    'micro_ondes',
+    'cafetiere'
+  ];
   const [photosLieux, setPhotosLieux] = useState({});
   const [evaluationProprete, setEvaluationProprete] = useState('');
   const [commentaireProprete, setCommentaireProprete] = useState('');
@@ -109,10 +123,22 @@ export default function ClientControleInventaire() {
   ];
 
   const toggleObjet = (objetId) => {
+    const newState = !objetsCocheState[objetId];
     setObjetsCocheState(prev => ({
       ...prev,
-      [objetId]: !prev[objetId]
+      [objetId]: newState
     }));
+
+    // Si objet critique coché (= manquant) → notifier immédiatement
+    if (newState && CRITICAL_ITEMS.includes(objetId)) {
+      const item = inventaireItems.find(i => i.id === objetId);
+      toast.warning(
+        lang === 'fr' 
+          ? `⚠️ Objet critique signalé : ${item?.nom_fr || objetId}` 
+          : `⚠️ Critical item reported: ${item?.nom_en || objetId}`,
+        { duration: 3000 }
+      );
+    }
   };
 
   const handlePhotoLieu = async (lieuId, file) => {
@@ -181,21 +207,26 @@ export default function ClientControleInventaire() {
     const interventionsMenage = [];
     const interventionsTechnique = [];
 
-    // Analyser objets NON COCHÉS → MÉNAGE par défaut
+    // Analyser objets COCHÉS (= manquants/cassés signalés par client)
     inventaireItems.forEach(item => {
       const isCoche = objetsCocheState[item.id] === true;
       
-      if (!isCoche) {
+      if (isCoche) {
         const intervention = {
           objet: lang === 'fr' ? item.nom_fr : item.nom_en,
-          description: `${lang === 'fr' ? 'Objet manquant ou à vérifier' : 'Missing or to check'}: ${lang === 'fr' ? item.nom_fr : item.nom_en}`,
-          urgent: false,
+          description: `${lang === 'fr' ? 'Objet manquant ou cassé signalé à l\'arrivée' : 'Missing or broken item reported on arrival'}: ${lang === 'fr' ? item.nom_fr : item.nom_en}`,
+          urgent: CRITICAL_ITEMS.includes(item.id),
           icon: item.icon,
           photo: null
         };
 
-        // Objet non coché = intervention MÉNAGE
-        interventionsMenage.push(intervention);
+        // Si objet critique → intervention TECHNIQUE urgente
+        if (CRITICAL_ITEMS.includes(item.id)) {
+          interventionsTechnique.push(intervention);
+        } else {
+          // Sinon → intervention MÉNAGE standard
+          interventionsMenage.push(intervention);
+        }
       }
     });
 
@@ -236,14 +267,14 @@ export default function ClientControleInventaire() {
       return;
     }
 
-    // Compter les objets cochés
-    const objetsCochesCount = Object.values(objetsCocheState).filter(v => v === true).length;
-    const hasProblems = objetsCochesCount < inventaireItems.length || 
+    // Compter les objets signalés (cochés = problème)
+    const objetsSignalesCount = Object.values(objetsCocheState).filter(v => v === true).length;
+    const hasProblems = objetsSignalesCount > 0 || 
                         objetsMissing.length > 0 || 
                         evaluationProprete === 'pas_satisfaisant';
     
     if (hasProblems && !signature) {
-      toast.error(lang === 'fr' ? 'Signature requise en cas de problème' : 'Signature required if issues found');
+      toast.error(lang === 'fr' ? 'Signature requise en cas de problème signalé' : 'Signature required if issues reported');
       return;
     }
 
@@ -269,29 +300,30 @@ export default function ClientControleInventaire() {
 
       const dossierId = sessionStorage.getItem('arrivee_dossier_id');
 
-      // Extraire les objets cochés et non cochés
-      const objetsCochesIds = Object.keys(objetsCocheState).filter(id => objetsCocheState[id] === true);
-      const objetsNonCochesIds = Object.keys(objetsCocheState).filter(id => objetsCocheState[id] === false);
+      // NOUVELLE LOGIQUE : objets cochés = MANQUANTS/CASSÉS
+      const objetsSignalesIds = Object.keys(objetsCocheState).filter(id => objetsCocheState[id] === true);
+      const objetsOkIds = Object.keys(objetsCocheState).filter(id => objetsCocheState[id] === false);
       
-      // Préparer les objets validés avec leurs noms traduits
-      const objetsValidesAvecDetails = objetsCochesIds.map(id => {
+      // Préparer les objets OK (non cochés = RAS)
+      const objetsValidesAvecDetails = objetsOkIds.map(id => {
         const item = inventaireItems.find(i => i.id === id);
         return item ? (lang === 'fr' ? item.nom_fr : item.nom_en) : id;
       });
       
-      // Préparer les objets manquants (non cochés)
-      const objetsManquantsAuto = objetsNonCochesIds.map(id => {
+      // Préparer les objets manquants (cochés par le client)
+      const objetsManquantsAuto = objetsSignalesIds.map(id => {
         const item = inventaireItems.find(i => i.id === id);
         return {
           objet: item ? (lang === 'fr' ? item.nom_fr : item.nom_en) : id,
-          commentaire: lang === 'fr' ? 'Non coché lors du contrôle' : 'Not checked during inspection',
-          photo: ''
+          commentaire: lang === 'fr' ? 'Signalé manquant ou cassé par le client' : 'Reported missing or broken by client',
+          photo: '',
+          critique: CRITICAL_ITEMS.includes(id)
         };
       });
       
       console.log('📊 Inventaire:', {
-        objetsCochesCount: objetsCochesIds.length,
-        objetsNonCochesCount: objetsNonCochesIds.length,
+        objetsSignalesCount: objetsSignalesIds.length,
+        objetsOkCount: objetsOkIds.length,
         objetsManuels: objetsMissing.length,
         total: inventaireItems.length
       });
@@ -395,8 +427,8 @@ export default function ClientControleInventaire() {
           etape_4_terminee: true,
           etape_actuelle: 4,
           inventaire_json: { 
-            objets_valides: objetsCochesIds,
-            objets_manquants: [...objetsNonCochesIds, ...objetsMissing.map(o => o.objet)]
+            objets_valides: objetsOkIds,
+            objets_manquants: [...objetsSignalesIds, ...objetsMissing.map(o => o.objet)]
           },
           photos: photosLieux,
           evaluation_proprete: evaluationProprete,
@@ -477,12 +509,12 @@ export default function ClientControleInventaire() {
           <Card className="border-2 border-[#22c55e]/30 rounded-xl mb-6">
             <CardContent className="p-6">
               <h2 className="font-heading text-xl text-[#0077A8] mb-2">
-                ✔️ {lang === 'fr' ? 'Touchez les icônes pour valider les objets présents' : 'Tap icons to validate present items'}
+                ⚠️ {lang === 'fr' ? 'Cochez UNIQUEMENT les objets manquants ou cassés' : 'Check ONLY missing or broken items'}
               </h2>
-              <p className="text-sm text-gray-600 mb-4">
-                ❗ {lang === 'fr' 
-                  ? 'Si une icône n\'est pas cochée = objet manquant ou abîmé' 
-                  : 'If an icon is not checked = missing or damaged item'}
+              <p className="text-sm text-red-600 font-semibold mb-4">
+                ✔️ {lang === 'fr' 
+                  ? 'Icône cochée = objet MANQUANT ou ABÎMÉ signalé' 
+                  : 'Checked icon = MISSING or DAMAGED item reported'}
               </p>
 
               <LazyInventaire
@@ -510,7 +542,7 @@ export default function ClientControleInventaire() {
                       onClick={() => toggleObjet(item.id)}
                       className={`p-4 rounded-lg border-2 transition-all ${
                         isCoche 
-                          ? 'border-green-500 bg-green-50' 
+                          ? 'border-red-500 bg-red-50' 
                           : 'border-gray-300 bg-white hover:border-[#00AEEF]'
                       }`}
                     >
@@ -520,7 +552,7 @@ export default function ClientControleInventaire() {
                         {item.quantite && <> <strong>×{item.quantite}</strong></>}
                       </div>
                       {isCoche && (
-                        <Check className="w-5 h-5 text-green-600 mx-auto mt-2" />
+                        <AlertCircle className="w-5 h-5 text-red-600 mx-auto mt-2" />
                       )}
                     </button>
                   );
@@ -844,30 +876,29 @@ export default function ClientControleInventaire() {
             </DialogHeader>
 
             <div className="space-y-4">
-              {/* Objets validés */}
+              {/* Objets OK (non cochés) */}
               <Card className="border-2 border-green-500/30 bg-green-50">
                 <CardContent className="p-4">
                   <h3 className="font-heading text-lg text-green-800 mb-2 flex items-center gap-2">
                     <Check className="w-5 h-5" />
-                    {lang === 'fr' ? 'Objets validés' : 'Validated items'} ({Object.values(objetsCocheState).filter(v => v === true).length})
+                    {lang === 'fr' ? 'Objets OK (non signalés)' : 'OK items (not reported)'} ({Object.values(objetsCocheState).filter(v => v === false).length})
                   </h3>
                 </CardContent>
               </Card>
 
-              {/* Interventions ménage */}
+              {/* Interventions ménage (objets non critiques signalés) */}
               {interventionsPreview.menage.length > 0 && (
                 <Card className="border-2 border-yellow-500/30 bg-yellow-50">
                   <CardContent className="p-4">
                     <h3 className="font-heading text-lg text-yellow-800 mb-3 flex items-center gap-2">
                       <Sparkles className="w-5 h-5" />
-                      {lang === 'fr' ? '🧹 Interventions Ménage créées' : '🧹 Housekeeping interventions created'} ({interventionsPreview.menage.length})
+                      {lang === 'fr' ? '🧹 Objets manquants - Ménage' : '🧹 Missing items - Housekeeping'} ({interventionsPreview.menage.length})
                     </h3>
                     <div className="space-y-2">
                       {interventionsPreview.menage.map((interv, idx) => (
-                        <div key={idx} className={`p-3 rounded-lg ${interv.urgent ? 'bg-red-100 border-2 border-red-400' : 'bg-white'}`}>
+                        <div key={idx} className="p-3 rounded-lg bg-white">
                           <div className="flex items-center gap-2">
-                            {interv.urgent && <span className="text-red-600 font-bold">🔴 URGENT</span>}
-                            {!interv.urgent && <span className="text-yellow-600">🟡 NORMAL</span>}
+                            <span className="text-yellow-600">🟡</span>
                             <span className="font-heading">{interv.objet}</span>
                           </div>
                           <p className="text-sm text-gray-600 mt-1">{interv.description}</p>
@@ -878,20 +909,19 @@ export default function ClientControleInventaire() {
                 </Card>
               )}
 
-              {/* Interventions technique */}
+              {/* Interventions technique URGENTES (objets critiques signalés) */}
               {interventionsPreview.technique.length > 0 && (
-                <Card className="border-2 border-blue-500/30 bg-blue-50">
+                <Card className="border-2 border-red-500/30 bg-red-50">
                   <CardContent className="p-4">
-                    <h3 className="font-heading text-lg text-blue-800 mb-3 flex items-center gap-2">
+                    <h3 className="font-heading text-lg text-red-800 mb-3 flex items-center gap-2">
                       <Wrench className="w-5 h-5" />
-                      {lang === 'fr' ? '🔧 Interventions Technique créées' : '🔧 Technical interventions created'} ({interventionsPreview.technique.length})
+                      {lang === 'fr' ? '🔧 Objets CRITIQUES - Technique URGENTE' : '🔧 CRITICAL items - URGENT Technical'} ({interventionsPreview.technique.length})
                     </h3>
                     <div className="space-y-2">
                       {interventionsPreview.technique.map((interv, idx) => (
-                        <div key={idx} className={`p-3 rounded-lg ${interv.urgent ? 'bg-red-100 border-2 border-red-400' : 'bg-white'}`}>
+                        <div key={idx} className="p-3 rounded-lg bg-red-100 border-2 border-red-400">
                           <div className="flex items-center gap-2">
-                            {interv.urgent && <span className="text-red-600 font-bold">🔴 URGENT</span>}
-                            {!interv.urgent && <span className="text-blue-600">🟡 NORMAL</span>}
+                            <span className="text-red-600 font-bold">🚨 CRITIQUE</span>
                             <span className="font-heading">{interv.objet}</span>
                           </div>
                           <p className="text-sm text-gray-600 mt-1">{interv.description}</p>
