@@ -46,7 +46,18 @@ export default function ReceptionArrivees({ lang }) {
     setCurrentPage(1);
   }, [recherche]);
 
-  if (ficheSelectionnee) {
+  // Éviter de charger le composant conditionnel avant d'avoir fini le rendu des hooks
+  const [shouldRenderFiche, setShouldRenderFiche] = React.useState(false);
+  
+  React.useEffect(() => {
+    if (ficheSelectionnee) {
+      setShouldRenderFiche(true);
+    } else {
+      setShouldRenderFiche(false);
+    }
+  }, [ficheSelectionnee]);
+
+  if (shouldRenderFiche && ficheSelectionnee) {
     // Recharger la fiche complète depuis la BDD pour avoir toutes les données
     return (
       <ReceptionFicheArrivee
