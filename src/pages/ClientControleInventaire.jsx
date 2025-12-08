@@ -41,6 +41,10 @@ export default function ClientControleInventaire() {
   const [objetsMissing, setObjetsMissing] = useState([]);
   const [showMissingDialog, setShowMissingDialog] = useState(false);
   const [missingItem, setMissingItem] = useState({ objet: '', photo: '', commentaire: '' });
+  
+  // Filtres
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   // Liste des objets critiques nécessitant intervention technique immédiate
   const CRITICAL_ITEMS = [
@@ -102,7 +106,7 @@ export default function ClientControleInventaire() {
     : null;
 
   // Liste d'inventaire selon la catégorie
-  const inventaireItems = typeLogement === 'mobilhome' && inventaireLocal
+  const inventaireItemsRaw = typeLogement === 'mobilhome' && inventaireLocal
     ? inventaireLocal.objets.map(obj => ({
         id: obj.id,
         icon: obj.icon,
@@ -116,6 +120,36 @@ export default function ClientControleInventaire() {
           { id: 'electricite', icon: '⚡', nom_fr: 'Électricité', nom_en: 'Electricity', quantite: '' },
         ]
       : [];
+
+  // Déterminer la catégorie d'un item
+  const getItemCategory = (itemId) => {
+    const vaisselle = ['assiettes_creuses', 'assiettes_dessert', 'assiettes_plates', 'plat', 'bols', 'saladier', 'tasses', 'verres_eau', 'verres_vin', 'pichet'];
+    const couverts = ['fourchettes', 'cuilleres_soupe', 'cuilleres_cafe', 'couteau_pain', 'couteaux', 'cendrier', 'couvert_salade', 'ciseaux', 'spatule_bois', 'eplucheur', 'louche', 'ecumoire', 'planche_decouper', 'dessous_plat', 'passoire', 'essoreuse_salade', 'tire_bouchon', 'ouvre_boite', 'range_couverts', 'plateau', 'corbeille_pain', 'cloche_micro_onde', 'bac_glacons'];
+    const cuisson = ['casseroles', 'poeles', 'poele', 'faitout', 'couvercle', 'cafetiere', 'micro_ondes', 'refrigerateur', 'congelateur', 'tv', 'telecommande_tv', 'telecommande_clim', 'lave_vaisselle', 'refrigerateur_congelateur', 'plat_four_rond'];
+    const menage = ['kit_wc', 'seau', 'bassine', 'balai', 'balai_brosse', 'pelle_balayette', 'serpilliere', 'sechoir_linge', 'pinces_linge', 'poubelle', 'poubelles', 'extincteur', 'detecteur_fumee'];
+    const nuit = ['couette_double', 'couettes_doubles', 'couette_simple', 'couettes_simples', 'oreillers', 'cintres', 'table_chevet'];
+    const exterieur = ['cle_locatif', 'carte_barriere', 'banc_bois', 'table_jardin', 'chaises_jardin', 'chaises_interieures', 'chaises_interieur', 'transats', 'terrasse'];
+    
+    if (vaisselle.includes(itemId)) return 'vaisselle';
+    if (couverts.includes(itemId)) return 'couverts';
+    if (cuisson.includes(itemId)) return 'cuisson';
+    if (menage.includes(itemId)) return 'menage';
+    if (nuit.includes(itemId)) return 'nuit';
+    if (exterieur.includes(itemId)) return 'exterieur';
+    return 'autre';
+  };
+
+  // Filtrer les items
+  const inventaireItems = inventaireItemsRaw.filter(item => {
+    const itemLabel = lang === 'fr' ? item.nom_fr : item.nom_en;
+    const matchesSearch = searchTerm === '' || 
+      itemLabel.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.id.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesCategory = selectedCategory === 'all' || getItemCategory(item.id) === selectedCategory;
+    
+    return matchesSearch && matchesCategory;
+  });
 
   // Initialiser l'état des objets cochés quand inventaireItems change
   useEffect(() => {
@@ -534,6 +568,81 @@ export default function ClientControleInventaire() {
                   ? 'Icône cochée = objet MANQUANT ou ABÎMÉ signalé' 
                   : 'Checked icon = MISSING or DAMAGED item reported'}
               </p>
+
+              {/* Filtres */}
+              <div className="mb-4 space-y-3">
+                <Input
+                  placeholder={lang === 'fr' ? '🔍 Rechercher un objet...' : '🔍 Search item...'}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="border-2"
+                />
+
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant={selectedCategory === 'all' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedCategory('all')}
+                    className="text-xs"
+                  >
+                    {lang === 'fr' ? 'Tout' : 'All'}
+                  </Button>
+                  <Button
+                    variant={selectedCategory === 'vaisselle' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedCategory('vaisselle')}
+                    className="text-xs"
+                  >
+                    🍽️ {lang === 'fr' ? 'Vaisselle' : 'Dishes'}
+                  </Button>
+                  <Button
+                    variant={selectedCategory === 'couverts' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedCategory('couverts')}
+                    className="text-xs"
+                  >
+                    🍴 {lang === 'fr' ? 'Couverts' : 'Cutlery'}
+                  </Button>
+                  <Button
+                    variant={selectedCategory === 'cuisson' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedCategory('cuisson')}
+                    className="text-xs"
+                  >
+                    🍳 {lang === 'fr' ? 'Cuisson' : 'Cooking'}
+                  </Button>
+                  <Button
+                    variant={selectedCategory === 'menage' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedCategory('menage')}
+                    className="text-xs"
+                  >
+                    🧹 {lang === 'fr' ? 'Ménage' : 'Cleaning'}
+                  </Button>
+                  <Button
+                    variant={selectedCategory === 'nuit' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedCategory('nuit')}
+                    className="text-xs"
+                  >
+                    🛏️ {lang === 'fr' ? 'Nuit' : 'Bedding'}
+                  </Button>
+                  <Button
+                    variant={selectedCategory === 'exterieur' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedCategory('exterieur')}
+                    className="text-xs"
+                  >
+                    🌳 {lang === 'fr' ? 'Extérieur' : 'Outdoor'}
+                  </Button>
+                </div>
+
+                {(searchTerm || selectedCategory !== 'all') && (
+                  <p className="text-xs text-gray-500">
+                    {inventaireItems.length} {lang === 'fr' ? 'objet(s) affiché(s)' : 'item(s) displayed'}
+                  </p>
+                )}
+              </div>
 
               <LazyInventaire
                 placeholder={
