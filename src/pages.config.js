@@ -58,6 +58,7 @@ import ClientDepartLogement from './pages/ClientDepartLogement';
 import ClientDepartProprete from './pages/ClientDepartProprete';
 import ClientDepartRecap from './pages/ClientDepartRecap';
 import ClientDepartConditions from './pages/ClientDepartConditions';
+import RapportsInterventions from './pages/RapportsInterventions';
 import __Layout from './Layout.jsx';
 
 
@@ -122,6 +123,7 @@ export const PAGES = {
     "ClientDepartProprete": ClientDepartProprete,
     "ClientDepartRecap": ClientDepartRecap,
     "ClientDepartConditions": ClientDepartConditions,
+    "RapportsInterventions": RapportsInterventions,
 }
 
 export const pagesConfig = {

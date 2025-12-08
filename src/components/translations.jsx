@@ -175,11 +175,13 @@ export const translations = {
     menu_bureau: "Bureau",
     menu_attente: "Attente",
     menu_materiel: "Matériel",
+    menu_rapports: "Rapports",
     desc_technique: "Interventions techniques",
     desc_menage: "Demandes de ménage",
     desc_bureau: "Historique & Statistiques",
     desc_attente: "Interventions reportées",
     desc_materiel: "Stock & Demandes",
+    desc_rapports: "Rapports détaillés",
 
     // Interventions
     interventions: "Interventions",
@@ -598,11 +600,13 @@ export const translations = {
     menu_bureau: "Office",
     menu_attente: "On hold",
     menu_materiel: "Equipment",
+    menu_rapports: "Reports",
     desc_technique: "Technical interventions",
     desc_menage: "Cleaning requests",
     desc_bureau: "History & Statistics",
     desc_attente: "Postponed interventions",
     desc_materiel: "Stock & Requests",
+    desc_rapports: "Detailed reports",
 
     // Interventions
     interventions: "Interventions",
