@@ -32,7 +32,7 @@ export default function ClientMenu() {
     enabled: !!dossierId
   });
 
-  const menuItems = [
+  const baseMenuItems = [
     {
       title: '🏡 Arrivée',
       titleEn: '🏡 Arrival',
@@ -44,17 +44,6 @@ export default function ClientMenu() {
       disabled: false,
       comingSoon: false
     },
-    ...(ficheArriveeId ? [{
-      title: '📋 Résumé',
-      titleEn: '📋 Summary',
-      description: 'Résumé d\'arrivée',
-      descriptionEn: 'Arrival summary',
-      href: 'ClientResume',
-      color: 'bg-[#9333ea]',
-      textColor: 'text-white',
-      disabled: false,
-      comingSoon: false
-    }] : []),
     {
       title: '🌞 Séjour',
       titleEn: '🌞 Stay',
@@ -77,6 +66,24 @@ export default function ClientMenu() {
       comingSoon: false
     }
   ];
+
+  const menuItems = ficheArriveeId 
+    ? [
+        baseMenuItems[0],
+        {
+          title: '📋 Résumé',
+          titleEn: '📋 Summary',
+          description: 'Résumé d\'arrivée',
+          descriptionEn: 'Arrival summary',
+          href: 'ClientResume',
+          color: 'bg-[#9333ea]',
+          textColor: 'text-white',
+          disabled: false,
+          comingSoon: false
+        },
+        ...baseMenuItems.slice(1)
+      ]
+    : baseMenuItems;
 
   return (
     <div className="min-h-screen px-6 py-8">
