@@ -468,6 +468,7 @@ export default function ClientControleInventaire() {
                 <p><strong>{lang === 'fr' ? 'Catégorie' : 'Category'}:</strong> {categorie}</p>
                 <p><strong>{lang === 'fr' ? 'Nom & Prénom' : 'Name'}:</strong> {nom} {prenom}</p>
                 <p><strong>{lang === 'fr' ? 'Dates' : 'Dates'}:</strong> {dateArrivee} — {dateDepart}</p>
+                <p><strong>{lang === 'fr' ? 'Occupants' : 'Occupants'}:</strong> {parseInt(sessionStorage.getItem('arrivee_nombre_adultes') || '0')} adultes, {parseInt(sessionStorage.getItem('arrivee_nombre_adolescents') || '0')} ados, {parseInt(sessionStorage.getItem('arrivee_nombre_enfants') || '0')} enfants, {parseInt(sessionStorage.getItem('arrivee_nombre_bebes') || '0')} bébés</p>
               </div>
             </CardContent>
           </Card>

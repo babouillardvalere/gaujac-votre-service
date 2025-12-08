@@ -366,9 +366,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
 
   INVENTAIRES.MH_PREMIUM_2CH = [
     ...INVENTAIRES.MH_CONFORT_PLUS_2CH,
-    { id: 'lave_vaisselle', icon: '🍽️', label_fr: 'Lave-vaisselle', label_en: 'Dishwasher', quantity: 1 },
-    { id: 'frigo', icon: '🧊', label_fr: 'Réfrigérateur-congélateur', label_en: 'Fridge-freezer', quantity: 1 },
-    { id: 'tv', icon: '📺', label_fr: 'TV + télécommande', label_en: 'TV + remote', quantity: 1 }
+    { id: 'lave_vaisselle', icon: '🍽️', label_fr: 'Lave-vaisselle', label_en: 'Dishwasher', quantity: 1 }
   ];
 
   INVENTAIRES.MH_PREMIUM_TWINS = [
