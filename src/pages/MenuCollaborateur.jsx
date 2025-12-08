@@ -8,7 +8,7 @@ import { useNotifications } from '../components/useNotifications';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Wrench, Sparkles, Building2, LogOut, Package, Lock, ClipboardList, Briefcase } from 'lucide-react';
+import { Wrench, Sparkles, Building2, LogOut, Package, Lock, ClipboardList, Briefcase, Music } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 
@@ -67,6 +67,15 @@ export default function MenuCollaborateur() {
       color: 'bg-[#22c55e]',
       textColor: 'text-white',
       description: lang === 'fr' ? 'Arrivées & Départs' : 'Arrivals & Departures',
+      badgeCount: 0
+    },
+    {
+      title: '🎵 Bar & Animations',
+      icon: Music,
+      href: 'BarAnimation',
+      color: 'bg-[#ec4899]',
+      textColor: 'text-white',
+      description: lang === 'fr' ? 'Bar, snack et animations' : 'Bar, snack and entertainment',
       badgeCount: 0
     },
     {
