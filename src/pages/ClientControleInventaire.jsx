@@ -409,9 +409,9 @@ export default function ClientControleInventaire() {
           : "Your inventory has been sent to reception.\nThank you for completing the inventory check.");
       }, 200);
 
-      // Redirection automatique vers la réception
+      // Redirection automatique vers l'accueil client
       setTimeout(() => {
-        navigate(createPageUrl('ReceptionArrivees'));
+        navigate(createPageUrl('ClientMenu'));
       }, 1000);
     } catch (error) {
       console.error('Submit error:', error);

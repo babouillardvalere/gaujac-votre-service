@@ -215,9 +215,9 @@ export default function ClientDepartRecap() {
           : "Your departure inventory has been sent to reception.\nThank you for completing the inventory check.");
       }, 200);
 
-      // Redirection automatique vers la réception
+      // Redirection automatique vers l'accueil client
       setTimeout(() => {
-        navigate(createPageUrl('ReceptionDeparts'));
+        navigate(createPageUrl('ClientMenu'));
       }, 1000);
 
     } catch (error) {
