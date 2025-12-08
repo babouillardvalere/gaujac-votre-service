@@ -69,7 +69,26 @@ export default function ClientControleInventaire() {
   useEffect(() => {
     if (!nom || !categorie) {
       navigate(createPageUrl('ClientArriveeIdentite'));
+      return;
     }
+    
+    // DEBUG: Vérifier les données occupants dans sessionStorage
+    const debugOccupants = {
+      adultes: sessionStorage.getItem('arrivee_nombre_adultes'),
+      ados: sessionStorage.getItem('arrivee_nombre_adolescents'),
+      enfants: sessionStorage.getItem('arrivee_nombre_enfants'),
+      bebes: sessionStorage.getItem('arrivee_nombre_bebes'),
+      animaux: sessionStorage.getItem('arrivee_nombre_animaux')
+    };
+    console.log('🔍 DEBUG sessionStorage occupants:', debugOccupants);
+    
+    // Si les données occupants sont manquantes, rediriger vers l'étape statistiques
+    if (!sessionStorage.getItem('arrivee_nombre_adultes')) {
+      console.warn('⚠️ Données occupants manquantes - redirection vers statistiques');
+      navigate(createPageUrl('ClientArriveeStatistiques'));
+      return;
+    }
+    
     // Vider le cache pour forcer le rechargement avec quantités
     clearInventaireCache();
   }, [nom, categorie, navigate]);
