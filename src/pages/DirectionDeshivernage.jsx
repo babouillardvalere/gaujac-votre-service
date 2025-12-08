@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { ArrowLeft, Plus, Calendar, CheckCircle2, Clock, Circle } from 'lucide-react';
 import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
+import { notifyMissionServices, notifyMissionStatusChange } from '../components/missionNotifications';
 
 export default function DirectionDeshivernage() {
   const { t, lang } = useTranslation();
@@ -53,19 +54,35 @@ export default function DirectionDeshivernage() {
   // Création de mission
   const createMission = useMutation({
     mutationFn: (data) => base44.entities.Mission.create(data),
-    onSuccess: () => {
+    onSuccess: async (createdMission) => {
       queryClient.invalidateQueries(['missions']);
       setShowForm(false);
       setNewMission({ titre: '', description: '', date_debut: '', date_fin: '', services: [] });
       toast.success(lang === 'fr' ? 'Mission créée' : 'Mission created');
+      
+      // Envoi des notifications aux services
+      const result = await notifyMissionServices(createdMission, lang);
+      if (result.success) {
+        toast.success(
+          lang === 'fr' 
+            ? `${result.count} notification(s) envoyée(s)` 
+            : `${result.count} notification(s) sent`
+        );
+      }
     }
   });
 
   // Mise à jour du statut
   const updateStatut = useMutation({
-    mutationFn: ({ id, statut }) => base44.entities.Mission.update(id, { statut }),
-    onSuccess: () => {
+    mutationFn: async ({ id, statut, mission }) => {
+      await base44.entities.Mission.update(id, { statut });
+      return { id, statut, mission };
+    },
+    onSuccess: async ({ statut, mission }) => {
       queryClient.invalidateQueries(['missions']);
+      
+      // Envoi notification de changement de statut
+      await notifyMissionStatusChange(mission, statut, lang);
     }
   });
 
@@ -108,7 +125,7 @@ export default function DirectionDeshivernage() {
     const statuts = ['A_FAIRE', 'EN_COURS', 'TERMINE'];
     const currentIndex = statuts.indexOf(mission.statut);
     const nextStatut = statuts[(currentIndex + 1) % statuts.length];
-    updateStatut.mutate({ id: mission.id, statut: nextStatut });
+    updateStatut.mutate({ id: mission.id, statut: nextStatut, mission });
   };
 
   const getStatutBadge = (statut) => {
