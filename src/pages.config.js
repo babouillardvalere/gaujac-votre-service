@@ -64,7 +64,8 @@ import DirectionDeshivernage from './pages/DirectionDeshivernage';
 import DirectionHivernage from './pages/DirectionHivernage';
 import DirectionSaison from './pages/DirectionSaison';
 import DirectionMenu from './pages/DirectionMenu';
-import BarAnimation from './pages/BarAnimation';
+import Bar from './pages/Bar';
+import Animations from './pages/Animations';
 import __Layout from './Layout.jsx';
 
 
@@ -135,7 +136,8 @@ export const PAGES = {
     "DirectionHivernage": DirectionHivernage,
     "DirectionSaison": DirectionSaison,
     "DirectionMenu": DirectionMenu,
-    "BarAnimation": BarAnimation,
+    "Bar": Bar,
+    "Animations": Animations,
 }
 
 export const pagesConfig = {
