@@ -1,18 +1,32 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Users, Search, FileText, CheckCircle, AlertCircle } from 'lucide-react';
+import { Calendar, Users, Search, FileText, CheckCircle, AlertCircle, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import ReceptionFicheArrivee from './ReceptionFicheArrivee';
 import Pagination from '../Pagination';
 
 export default function ReceptionArrivees({ lang }) {
+  const queryClient = useQueryClient();
   const [ficheSelectionnee, setFicheSelectionnee] = useState(null);
   const [recherche, setRecherche] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [ficheASupprimer, setFicheASupprimer] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const ITEMS_PER_PAGE = 30;
 
   // Récupérer toutes les fiches actives (non archivées)
@@ -45,6 +59,24 @@ export default function ReceptionArrivees({ lang }) {
   React.useEffect(() => {
     setCurrentPage(1);
   }, [recherche]);
+
+  // Supprimer une fiche
+  const handleDeleteFiche = async () => {
+    if (!ficheASupprimer) return;
+    
+    setIsDeleting(true);
+    try {
+      await base44.entities.FicheArrivee.delete(ficheASupprimer.id);
+      toast.success(lang === 'fr' ? 'Fiche supprimée' : 'File deleted');
+      queryClient.invalidateQueries(['fiches-arrivee']);
+      setFicheASupprimer(null);
+    } catch (error) {
+      console.error('Erreur suppression:', error);
+      toast.error(lang === 'fr' ? 'Erreur lors de la suppression' : 'Error deleting file');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // Éviter de charger le composant conditionnel avant d'avoir fini le rendu des hooks
   const [shouldRenderFiche, setShouldRenderFiche] = React.useState(false);
@@ -120,11 +152,10 @@ export default function ReceptionArrivees({ lang }) {
                               (fiche.inventaire_objets_manquants && fiche.inventaire_objets_manquants.length > 0);
 
             return (
-              <Card key={fiche.id} className={`border-2 ${aProblemes ? 'border-orange-400 bg-orange-50' : 'border-green-400 bg-green-50'} hover:shadow-lg transition-all cursor-pointer`}
-                onClick={() => setFicheSelectionnee(fiche)}>
+              <Card key={fiche.id} className={`border-2 ${aProblemes ? 'border-orange-400 bg-orange-50' : 'border-green-400 bg-green-50'} hover:shadow-lg transition-all`}>
                 <CardContent className="p-5">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 flex-1">
+                    <div className="flex items-center gap-4 flex-1 cursor-pointer" onClick={() => setFicheSelectionnee(fiche)}>
                       <div className="text-3xl font-bold text-[#00AEEF]">
                         {fiche.numero_logement}
                       </div>
@@ -159,8 +190,19 @@ export default function ReceptionArrivees({ lang }) {
                           {lang === 'fr' ? 'Conforme' : 'OK'}
                         </Badge>
                       )}
-                      <Button variant="outline" size="sm">
-                        {lang === 'fr' ? 'Voir le dossier' : 'View file'} →
+                      <Button variant="outline" size="sm" onClick={() => setFicheSelectionnee(fiche)}>
+                        {lang === 'fr' ? 'Voir' : 'View'} →
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFicheASupprimer(fiche);
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>
@@ -180,6 +222,34 @@ export default function ReceptionArrivees({ lang }) {
           onPageChange={setCurrentPage}
         />
       )}
+
+      {/* Dialog de confirmation suppression */}
+      <AlertDialog open={!!ficheASupprimer} onOpenChange={() => setFicheASupprimer(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {lang === 'fr' ? 'Confirmer la suppression' : 'Confirm deletion'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {lang === 'fr' 
+                ? `Voulez-vous vraiment supprimer la fiche d'arrivée de ${ficheASupprimer?.client_prenom} ${ficheASupprimer?.client_nom} (${ficheASupprimer?.numero_logement}) ? Cette action est irréversible.`
+                : `Do you really want to delete the arrival file for ${ficheASupprimer?.client_prenom} ${ficheASupprimer?.client_nom} (${ficheASupprimer?.numero_logement})? This action is irreversible.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>
+              {lang === 'fr' ? 'Annuler' : 'Cancel'}
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteFiche}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? (lang === 'fr' ? 'Suppression...' : 'Deleting...') : (lang === 'fr' ? 'Supprimer' : 'Delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
