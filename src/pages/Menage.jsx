@@ -555,6 +555,34 @@ export default function Menage() {
                 <p className="font-body text-gray-700 bg-gray-50 p-3 rounded-xl mt-1">{selectedIncident.description}</p>
               </div>
 
+              {selectedIncident.photo_url && (
+                <div>
+                  <label className="text-sm font-heading text-[#0077A8]">{t('photo')}</label>
+                  <img src={selectedIncident.photo_url} alt="Photo" className="w-full h-40 object-cover rounded-xl mt-1" />
+                </div>
+              )}
+
+              {selectedIncident.photo_avant_url && (
+                <div>
+                  <label className="text-sm font-heading text-[#0077A8]">📸 Photo AVANT intervention</label>
+                  <img src={selectedIncident.photo_avant_url} alt="Avant" className="w-full h-40 object-cover rounded-xl mt-1" />
+                </div>
+              )}
+
+              {selectedIncident.photo_apres_url && (
+                <div>
+                  <label className="text-sm font-heading text-[#0077A8]">📸 Photo APRÈS intervention</label>
+                  <img src={selectedIncident.photo_apres_url} alt="Après" className="w-full h-40 object-cover rounded-xl mt-1" />
+                </div>
+              )}
+
+              {selectedIncident.commentaire_interne && (
+                <div>
+                  <label className="text-sm font-heading text-[#0077A8]">{t('commentaire_interne')}</label>
+                  <p className="font-body text-gray-700 bg-gray-50 p-3 rounded-xl mt-1">{selectedIncident.commentaire_interne}</p>
+                </div>
+              )}
+
               {selectedIncident.statut === 'en_attente' && (
                 <div className="space-y-3 pt-4 border-t">
                   <Input

@@ -246,40 +246,21 @@ export default function ClientControleInventaire() {
     setShowRecapDialog(false);
     
     try {
-      // Upload signature
-      const blob = await fetch(signature).then(r => r.blob());
-      const signatureFile = new File([blob], 'signature.png', { type: 'image/png' });
-      const { file_url: signatureUrl } = await base44.integrations.Core.UploadFile({ file: signatureFile });
+      // Upload signature (optionnelle si pas de problème)
+      let signatureUrl = '';
+      if (signature) {
+        const blob = await fetch(signature).then(r => r.blob());
+        const signatureFile = new File([blob], 'signature.png', { type: 'image/png' });
+        const result = await base44.integrations.Core.UploadFile({ file: signatureFile });
+        signatureUrl = result.file_url;
+      }
 
-      // Créer le contrôle inventaire
-      const inventaire = await base44.entities.ControleInventaireArrivee.create({
-        numero_locatif: numero,
-        categorie_locatif: categorie,
-        client_nom: nom,
-        client_prenom: prenom,
-        date_arrivee: dateArrivee,
-        date_depart: dateDepart,
-        objets_valides: objetsValides,
-        objets_manquants: objetsMissing,
-        photos_pieces: photosLieux,
-        evaluation_proprete: evaluationProprete,
-        commentaire_proprete: commentaireProprete,
-        photo_proprete: photoProprete,
-        remarques_suggestions: remarques,
-        signature_url: signatureUrl,
-        date_validation: new Date().toISOString(),
-        inventaire_complet: objetsMissing.length === 0 && evaluationProprete !== 'pas_satisfaisant'
-      });
-
-      // 🔔 Notifier la réception de l'inventaire soumis
-      await notifierInventaireSoumis(inventaire);
-
-      // Créer les interventions ménage
+      // Créer les interventions MÉNAGE
       const interventionsMenageIds = [];
       for (const intervention of interventionsPreview.menage) {
         const incident = await base44.entities.Incident.create({
           type: 'menage',
-          categorie: 'menage',
+          categorie: 'nettoyage',
           sous_categorie: intervention.objet,
           description: intervention.description,
           urgent: intervention.urgent,
@@ -294,8 +275,7 @@ export default function ClientControleInventaire() {
           autorisation_acces: 'oui',
           clause_autorisation_acceptee: true,
           origine: 'arrivee',
-          fiche_arrivee_id: inventaire.id,
-          dossier_arrivee_id: dossierId
+          dossier_arrivee_id: sessionStorage.getItem('arrivee_dossier_id')
         });
         interventionsMenageIds.push(incident.id);
 
@@ -303,12 +283,12 @@ export default function ClientControleInventaire() {
         await notifierInterventionCreee(incident);
       }
 
-      // Créer les interventions technique
+      // Créer les interventions TECHNIQUE
       const interventionsTechniqueIds = [];
       for (const intervention of interventionsPreview.technique) {
         const incident = await base44.entities.Incident.create({
           type: 'technique',
-          categorie: 'divers_technique',
+          categorie: 'mobilier',
           sous_categorie: intervention.objet,
           description: intervention.description,
           urgent: intervention.urgent,
@@ -323,8 +303,7 @@ export default function ClientControleInventaire() {
           autorisation_acces: 'oui',
           clause_autorisation_acceptee: true,
           origine: 'arrivee',
-          fiche_arrivee_id: inventaire.id,
-          dossier_arrivee_id: dossierId
+          dossier_arrivee_id: sessionStorage.getItem('arrivee_dossier_id')
         });
         interventionsTechniqueIds.push(incident.id);
 
@@ -335,7 +314,7 @@ export default function ClientControleInventaire() {
       // Mettre à jour le dossier d'arrivée
       const dossierId = sessionStorage.getItem('arrivee_dossier_id');
       if (dossierId) {
-        const dossierUpdated = await base44.entities.DossierArrivee.update(dossierId, {
+        await base44.entities.DossierArrivee.update(dossierId, {
           etape_3_terminee: true,
           etape_4_terminee: true,
           etape_actuelle: 4,
@@ -361,11 +340,11 @@ export default function ClientControleInventaire() {
           numero_logement: numero,
           categorie_logement: categorie,
           type_logement: typeLogement,
-          nombre_adultes: sessionStorage.getItem('arrivee_nombre_adultes') || 0,
-          nombre_adolescents: sessionStorage.getItem('arrivee_nombre_adolescents') || 0,
-          nombre_enfants: sessionStorage.getItem('arrivee_nombre_enfants') || 0,
-          nombre_bebes: sessionStorage.getItem('arrivee_nombre_bebes') || 0,
-          nombre_animaux: sessionStorage.getItem('arrivee_nombre_animaux') || 0,
+          nombre_adultes: parseInt(sessionStorage.getItem('arrivee_nombre_adultes')) || 0,
+          nombre_adolescents: parseInt(sessionStorage.getItem('arrivee_nombre_adolescents')) || 0,
+          nombre_enfants: parseInt(sessionStorage.getItem('arrivee_nombre_enfants')) || 0,
+          nombre_bebes: parseInt(sessionStorage.getItem('arrivee_nombre_bebes')) || 0,
+          nombre_animaux: parseInt(sessionStorage.getItem('arrivee_nombre_animaux')) || 0,
           inventaire_objets_valides: objetsValides,
           inventaire_objets_manquants: objetsMissing,
           evaluation_proprete: evaluationProprete,
@@ -374,13 +353,6 @@ export default function ClientControleInventaire() {
           remarques_client: remarques,
           signature_url: signatureUrl,
           date_validation: new Date().toISOString()
-        });
-        
-        // 🔔 Notifier la réception du dossier finalisé
-        await notifierDossierFinalise(dossierUpdated, {
-          interventions_menage: interventionsMenageIds.length,
-          interventions_technique: interventionsTechniqueIds.length,
-          inventaire_complet: objetsMissing.length === 0 && evaluationProprete !== 'pas_satisfaisant'
         });
       }
 
