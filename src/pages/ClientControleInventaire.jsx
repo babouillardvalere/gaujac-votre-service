@@ -256,6 +256,12 @@ export default function ClientControleInventaire() {
 
       const dossierId = sessionStorage.getItem('arrivee_dossier_id');
 
+      // Préparer les objets validés avec leurs noms et quantités
+      const objetsValidesAvecDetails = objetsValides.map(id => {
+        const item = inventaireItems.find(i => i.id === id);
+        return item ? (lang === 'fr' ? item.nom_fr : item.nom_en) : id;
+      });
+
       // Créer la FicheArrivee pour la réception EN PREMIER
       const ficheArrivee = await base44.entities.FicheArrivee.create({
         client_nom: nom,
@@ -270,8 +276,12 @@ export default function ClientControleInventaire() {
         nombre_enfants: parseInt(sessionStorage.getItem('arrivee_nombre_enfants')) || 0,
         nombre_bebes: parseInt(sessionStorage.getItem('arrivee_nombre_bebes')) || 0,
         nombre_animaux: parseInt(sessionStorage.getItem('arrivee_nombre_animaux')) || 0,
-        inventaire_objets_valides: objetsValides,
-        inventaire_objets_manquants: objetsMissing,
+        inventaire_objets_valides: objetsValidesAvecDetails,
+        inventaire_objets_manquants: objetsMissing.map(obj => ({
+          objet: obj.objet,
+          commentaire: obj.commentaire,
+          photo: obj.photo
+        })),
         evaluation_proprete: evaluationProprete,
         commentaire_proprete: commentaireProprete,
         photos_pieces: photosLieux,

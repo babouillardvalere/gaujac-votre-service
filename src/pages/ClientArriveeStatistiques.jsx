@@ -68,10 +68,12 @@ export default function ClientArriveeStatistiques() {
         etape_actuelle: 3
       });
 
-      sessionStorage.setItem('arrivee_nombre_adultes', formData.nombre_adultes);
-      sessionStorage.setItem('arrivee_nombre_enfants', formData.nombre_enfants + formData.nombre_adolescents + formData.nombre_bebes);
-      sessionStorage.setItem('arrivee_nombre_animaux', formData.a_animaux ? 
-        (formData.nombre_chiens + formData.nombre_chats) : 0);
+      sessionStorage.setItem('arrivee_nombre_adultes', formData.nombre_adultes.toString());
+      sessionStorage.setItem('arrivee_nombre_adolescents', formData.nombre_adolescents.toString());
+      sessionStorage.setItem('arrivee_nombre_enfants', formData.nombre_enfants.toString());
+      sessionStorage.setItem('arrivee_nombre_bebes', formData.nombre_bebes.toString());
+      sessionStorage.setItem('arrivee_nombre_animaux', (formData.a_animaux ? 
+        (formData.nombre_chiens + formData.nombre_chats) : 0).toString());
 
       navigate(createPageUrl('ClientArriveeHebergement'));
     } catch (error) {
