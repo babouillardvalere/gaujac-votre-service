@@ -50,7 +50,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     CHALET_ECO_1CH: [
       // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 6 },
-      { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes dessert', label_en: 'Dessert plates', quantity: 6 },
+      { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 6 },
       { id: 'assiettes_plates', icon: '🍽️', label_fr: 'Assiettes plates', label_en: 'Dinner plates', quantity: 6 },
       { id: 'plat', icon: '🍲', label_fr: 'Plat', label_en: 'Serving dish', quantity: 1 },
       { id: 'bols', icon: '🥣', label_fr: 'Bols', label_en: 'Bowls', quantity: 6 },
@@ -78,8 +78,8 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'essoreuse_salade', icon: '🥬', label_fr: 'Essoreuse à salade', label_en: 'Salad spinner', quantity: 1 },
       { id: 'tire_bouchon', icon: '🍷', label_fr: 'Tire-bouchon', label_en: 'Corkscrew', quantity: 1 },
       { id: 'ouvre_boite', icon: '🥫', label_fr: 'Ouvre-boîte', label_en: 'Can opener', quantity: 1 },
-      { id: 'range_couverts', icon: '🍴', label_fr: 'Range-couverts', label_en: 'Cutlery tray', quantity: 1 },
-      { id: 'cloche_micro_onde', icon: '🥤', label_fr: 'Cloche micro-ondes', label_en: 'Microwave cover', quantity: 1 },
+      { id: 'range_couverts', icon: '🍴', label_fr: 'Range couverts', label_en: 'Cutlery tray', quantity: 1 },
+      { id: 'cloche_micro_onde', icon: '🥤', label_fr: 'Cloche micro-onde', label_en: 'Microwave cover', quantity: 1 },
       { id: 'bac_glacons', icon: '🧊', label_fr: 'Bac à glaçons', label_en: 'Ice cube tray', quantity: 1 },
 
       // Cuisson / Électroménager
@@ -113,7 +113,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
 
       // Extérieur
       { id: 'cle_locatif', icon: '🗝️', label_fr: 'Clé locatif', label_en: 'Rental key', quantity: 1 },
-      { id: 'carte_barriere', icon: '🪪', label_fr: 'Carte barrière', label_en: 'Barrier card', quantity: 1 },
+      { id: 'carte_barriere', icon: '🪪', label_fr: 'Carte Barrière', label_en: 'Barrier card', quantity: 1 },
       { id: 'banc_bois', icon: '🌳', label_fr: 'Bancs en bois', label_en: 'Wooden benches', quantity: 2 },
       { id: 'table_jardin', icon: '🍽️', label_fr: 'Table de jardin', label_en: 'Garden table', quantity: 1 },
       { id: 'chaises_jardin', icon: '🪑', label_fr: 'Chaises de jardin', label_en: 'Garden chairs', quantity: 4 }
