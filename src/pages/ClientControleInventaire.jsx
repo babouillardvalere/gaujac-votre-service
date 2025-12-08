@@ -169,52 +169,38 @@ export default function ClientControleInventaire() {
     const interventionsMenage = [];
     const interventionsTechnique = [];
 
-    // Analyser TOUS les objets de l'inventaire
+    // Analyser objets NON VALIDÉS (non cochés) → MÉNAGE par défaut
     inventaireItems.forEach(item => {
       const isValidated = objetsValides.includes(item.id);
       
-      // Si l'objet N'EST PAS validé = objet manquant ou cassé
       if (!isValidated) {
-        const categorie = getCategorie(item.id, lang === 'fr' ? item.nom_fr : item.nom_en);
-        const urgent = isUrgent(item.id, lang === 'fr' ? item.nom_fr : item.nom_en);
-        const description = getDescriptionProbleme(lang === 'fr' ? item.nom_fr : item.nom_en, lang);
-
         const intervention = {
           objet: lang === 'fr' ? item.nom_fr : item.nom_en,
-          description: description || `${lang === 'fr' ? 'Objet manquant ou abîmé' : 'Missing or damaged item'}: ${lang === 'fr' ? item.nom_fr : item.nom_en}`,
-          urgent,
+          description: `${lang === 'fr' ? 'Objet manquant ou à vérifier' : 'Missing or to check'}: ${lang === 'fr' ? item.nom_fr : item.nom_en}`,
+          urgent: false,
           icon: item.icon,
           photo: null
         };
 
-        if (categorie === 'menage') {
-          interventionsMenage.push(intervention);
-        } else {
-          interventionsTechnique.push(intervention);
-        }
+        // Objet non coché = intervention MÉNAGE
+        interventionsMenage.push(intervention);
       }
     });
 
-    // Ajouter objets déclarés manuellement avec photos
+    // Objets déclarés MANUELLEMENT avec PHOTO = TECHNIQUE (cassé)
     objetsMissing.forEach(obj => {
-      const categorie = getCategorie(obj.objet, obj.objet);
-      const urgent = isUrgent(obj.objet, obj.objet);
-
       const intervention = {
         objet: obj.objet,
-        description: obj.commentaire || `${lang === 'fr' ? 'Objet déclaré manquant/cassé' : 'Item declared missing/broken'}: ${obj.objet}`,
-        urgent,
+        description: obj.commentaire || `${lang === 'fr' ? 'Objet cassé ou endommagé' : 'Broken or damaged item'}: ${obj.objet}`,
+        urgent: true,
         photo: obj.photo
       };
 
-      if (categorie === 'menage') {
-        interventionsMenage.push(intervention);
-      } else {
-        interventionsTechnique.push(intervention);
-      }
+      // Objet déclaré manuellement = intervention TECHNIQUE
+      interventionsTechnique.push(intervention);
     });
 
-    // Problème de propreté = intervention ménage
+    // Propreté insatisfaisante = intervention MÉNAGE URGENT
     if (evaluationProprete === 'pas_satisfaisant') {
       interventionsMenage.push({
         objet: lang === 'fr' ? 'Propreté insatisfaisante' : 'Unsatisfactory cleanliness',
@@ -238,8 +224,13 @@ export default function ClientControleInventaire() {
       return;
     }
 
-    if (!signature) {
-      toast.error(lang === 'fr' ? 'Signature requise' : 'Signature required');
+    // Signature optionnelle si tout est OK
+    const hasProblems = (inventaireItems.length - objetsValides.length) > 0 || 
+                        objetsMissing.length > 0 || 
+                        evaluationProprete === 'pas_satisfaisant';
+    
+    if (hasProblems && !signature) {
+      toast.error(lang === 'fr' ? 'Signature requise en cas de problème' : 'Signature required if issues found');
       return;
     }
 
@@ -720,7 +711,7 @@ export default function ClientControleInventaire() {
           {/* Bloc 7 - Validation */}
           <Button
             onClick={handlePrepareSubmit}
-            disabled={submitting || !evaluationProprete || !signature}
+            disabled={submitting || !evaluationProprete}
             className="w-full h-14 bg-[#00AEEF] hover:bg-[#0077A8] text-white rounded-xl font-heading text-lg mt-6"
           >
             <Send className="w-5 h-5 mr-2" />
