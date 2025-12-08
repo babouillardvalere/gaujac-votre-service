@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../components/translations';
 import { base44 } from '@/api/base44Client';
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ArrowLeft, Plus, Calendar, CheckCircle2, Clock, Circle } from 'lucide-react';
 import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
@@ -18,8 +19,10 @@ export default function DirectionDeshivernage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  const [showDatePopup, setShowDatePopup] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [viewMode, setViewMode] = useState('liste'); // liste, kanban, gantt
+  const [dates, setDates] = useState({ debut: '', fin: '' });
   const [newMission, setNewMission] = useState({
     titre: '',
     description: '',
@@ -27,6 +30,16 @@ export default function DirectionDeshivernage() {
     date_fin: '',
     services: []
   });
+
+  // Vérifier si les dates de déshivernage sont déjà définies
+  useEffect(() => {
+    const savedDates = localStorage.getItem('deshivernage_dates');
+    if (savedDates) {
+      const parsed = JSON.parse(savedDates);
+      setDates(parsed);
+      setShowDatePopup(false);
+    }
+  }, []);
 
   // Récupération des missions
   const { data: missions = [] } = useQuery({
@@ -75,6 +88,20 @@ export default function DirectionDeshivernage() {
         ? prev.services.filter(s => s !== service)
         : [...prev.services, service]
     }));
+  };
+
+  const validateDates = () => {
+    if (!dates.debut || !dates.fin) {
+      toast.error(lang === 'fr' ? 'Remplissez les deux dates' : 'Fill both dates');
+      return;
+    }
+    if (new Date(dates.debut) >= new Date(dates.fin)) {
+      toast.error(lang === 'fr' ? 'La date de fin doit être après la date de début' : 'End date must be after start date');
+      return;
+    }
+    localStorage.setItem('deshivernage_dates', JSON.stringify(dates));
+    setShowDatePopup(false);
+    toast.success(lang === 'fr' ? 'Dates enregistrées' : 'Dates saved');
   };
 
   const cycleStatut = (mission) => {
@@ -126,18 +153,70 @@ export default function DirectionDeshivernage() {
                 {lang === 'fr' ? 'Déshivernage' : 'Spring Opening'}
               </h1>
             </div>
-            <Button onClick={() => setShowForm(!showForm)} className="bg-[#00AEEF]">
-              <Plus className="w-5 h-5 mr-2" />
-              {lang === 'fr' ? 'Nouvelle mission' : 'New mission'}
-            </Button>
+            {!showDatePopup && (
+              <Button onClick={() => setShowForm(!showForm)} className="bg-[#00AEEF]">
+                <Plus className="w-5 h-5 mr-2" />
+                {lang === 'fr' ? 'Nouvelle mission' : 'New mission'}
+              </Button>
+            )}
           </div>
           <p className="text-gray-600 font-body">
             {lang === 'fr' ? 'Planification des travaux d\'ouverture de saison' : 'Season opening work planning'}
           </p>
+
+          {!showDatePopup && dates.debut && (
+            <div className="mt-4 flex items-center gap-2 text-sm">
+              <Calendar className="w-4 h-4 text-[#0077A8]" />
+              <span className="text-gray-600">
+                {lang === 'fr' ? 'Période' : 'Period'}: <strong>{dates.debut}</strong> → <strong>{dates.fin}</strong>
+              </span>
+              <Button variant="ghost" size="sm" onClick={() => setShowDatePopup(true)}>
+                {lang === 'fr' ? 'Modifier' : 'Edit'}
+              </Button>
+            </div>
+          )}
         </div>
 
+        {/* Popup dates */}
+        <Dialog open={showDatePopup} onOpenChange={setShowDatePopup}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="font-heading text-[#0077A8]">
+                {lang === 'fr' ? 'Définir les dates de déshivernage' : 'Set spring opening dates'}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <label className="text-sm text-gray-600 mb-2 block">
+                  {lang === 'fr' ? 'Date début déshivernage' : 'Opening start date'}
+                </label>
+                <Input
+                  type="date"
+                  value={dates.debut}
+                  onChange={(e) => setDates({ ...dates, debut: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="text-sm text-gray-600 mb-2 block">
+                  {lang === 'fr' ? 'Date fin prévue' : 'Expected end date'}
+                </label>
+                <Input
+                  type="date"
+                  value={dates.fin}
+                  onChange={(e) => setDates({ ...dates, fin: e.target.value })}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={validateDates} className="bg-[#00AEEF]">
+                {t('valider')}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {/* Formulaire de création */}
-        {showForm && (
+        {!showDatePopup && showForm && (
           <Card className="mb-6 border-2 border-[#00AEEF]/30">
             <CardHeader>
               <CardTitle className="font-heading text-[#0077A8]">
@@ -203,6 +282,7 @@ export default function DirectionDeshivernage() {
         )}
 
         {/* Vue modes */}
+        {!showDatePopup && (
         <div className="flex gap-2 mb-4">
           <Button
             variant={viewMode === 'liste' ? 'default' : 'outline'}
@@ -227,8 +307,10 @@ export default function DirectionDeshivernage() {
           </Button>
         </div>
 
+        )}
+
         {/* Vue Liste */}
-        {viewMode === 'liste' && (
+        {!showDatePopup && viewMode === 'liste' && (
           <div className="space-y-4">
             {missions.length === 0 ? (
               <Card className="border-2 border-dashed border-gray-300">
@@ -272,7 +354,7 @@ export default function DirectionDeshivernage() {
         )}
 
         {/* Vue Kanban */}
-        {viewMode === 'kanban' && (
+        {!showDatePopup && viewMode === 'kanban' && (
           <div className="grid grid-cols-3 gap-4">
             {['A_FAIRE', 'EN_COURS', 'TERMINE'].map(statut => (
               <Card key={statut} className="border-2 border-[#00AEEF]/30">
@@ -305,7 +387,7 @@ export default function DirectionDeshivernage() {
         )}
 
         {/* Vue Gantt */}
-        {viewMode === 'gantt' && (
+        {!showDatePopup && viewMode === 'gantt' && (
           <Card className="border-2 border-[#00AEEF]/30">
             <CardContent className="p-4">
               <div className="space-y-2">
