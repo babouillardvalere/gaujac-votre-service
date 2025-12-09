@@ -48,7 +48,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
   // Inventaires complets par catégorie
   const INVENTAIRES = {
     CHALET_ECO_1CH: [
-      // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 6 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 6 },
       { id: 'assiettes_plates', icon: '🍽️', label_fr: 'Assiettes plates', label_en: 'Dinner plates', quantity: 6 },
@@ -58,8 +57,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'tasses', icon: '☕', label_fr: 'Tasses', label_en: 'Cups', quantity: 6 },
       { id: 'verres', icon: '🥛', label_fr: 'Verres', label_en: 'Glasses', quantity: 6 },
       { id: 'pichet', icon: '🍶', label_fr: 'Pichet', label_en: 'Carafe', quantity: 1 },
-
-      // Couverts
       { id: 'fourchettes', icon: '🍴', label_fr: 'Fourchettes', label_en: 'Forks', quantity: 6 },
       { id: 'cuilleres_soupe', icon: '🥄', label_fr: 'Cuillères à soupe', label_en: 'Soup spoons', quantity: 6 },
       { id: 'cuilleres_cafe', icon: '🥄', label_fr: 'Cuillères à café', label_en: 'Coffee spoons', quantity: 6 },
@@ -81,8 +78,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'range_couverts', icon: '🍴', label_fr: 'Range couverts', label_en: 'Cutlery tray', quantity: 1 },
       { id: 'cloche_micro_onde', icon: '🥤', label_fr: 'Cloche micro-onde', label_en: 'Microwave cover', quantity: 1 },
       { id: 'bac_glacons', icon: '🧊', label_fr: 'Bac à glaçons', label_en: 'Ice tray', quantity: 1 },
-
-      // Batterie de cuisine
       { id: 'casseroles', icon: '🍲', label_fr: 'Casseroles', label_en: 'Pots', quantity: 3 },
       { id: 'poele', icon: '🍳', label_fr: 'Poêle', label_en: 'Pan', quantity: 1 },
       { id: 'faitout', icon: '🍲', label_fr: 'Faitout + couvercle', label_en: 'Dutch oven + lid', quantity: 1 },
@@ -90,8 +85,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'cafetiere', icon: '☕', label_fr: 'Cafetière électrique', label_en: 'Coffee maker', quantity: 1 },
       { id: 'micro_ondes', icon: '📡', label_fr: 'Micro-ondes', label_en: 'Microwave', quantity: 1 },
       { id: 'refrigerateur', icon: '🧊', label_fr: 'Réfrigérateur', label_en: 'Fridge', quantity: 1 },
-
-      // Ménage
       { id: 'kit_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'Toilet kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
       { id: 'bassine', icon: '🧴', label_fr: 'Bassine', label_en: 'Basin', quantity: 1 },
@@ -104,14 +97,10 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'poubelle', icon: '🗑️', label_fr: 'Poubelle', label_en: 'Trash can', quantity: 1 },
       { id: 'extincteur', icon: '🧯', label_fr: 'Extincteur', label_en: 'Fire extinguisher', quantity: 1 },
       { id: 'detecteur_fumee', icon: '🚨', label_fr: 'Détecteur de fumée', label_en: 'Smoke detector', quantity: 1 },
-
-      // Literie
       { id: 'couettes_doubles', icon: '🛏️', label_fr: 'Couettes doubles', label_en: 'Double duvets', quantity: 2 },
       { id: 'couette_simple', icon: '🛏️', label_fr: 'Couette simple', label_en: 'Single duvet', quantity: 1 },
       { id: 'oreillers', icon: '🛏️', label_fr: 'Oreillers', label_en: 'Pillows', quantity: 4 },
       { id: 'cintres', icon: '👗', label_fr: 'Cintres', label_en: 'Hangers', quantity: 10 },
-
-      // Extérieur
       { id: 'cle_locatif', icon: '🗝️', label_fr: 'Clé locatif', label_en: 'Rental key', quantity: 1 },
       { id: 'carte_barriere', icon: '🪪', label_fr: 'Carte Barrière', label_en: 'Barrier card', quantity: 1 },
       { id: 'banc_bois', icon: '🌳', label_fr: 'Bancs en bois', label_en: 'Wooden benches', quantity: 2 },
@@ -120,7 +109,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     ],
 
     CHALET_CLASSIQUE: [
-      // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 4 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes dessert', label_en: 'Dessert plates', quantity: 4 },
       { id: 'assiettes_plates', icon: '🍽️', label_fr: 'Assiettes plates', label_en: 'Dinner plates', quantity: 4 },
@@ -130,8 +118,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'tasses', icon: '☕', label_fr: 'Tasses', label_en: 'Cups', quantity: 4 },
       { id: 'verres', icon: '🥛', label_fr: 'Verres', label_en: 'Glasses', quantity: 4 },
       { id: 'pichet', icon: '🍶', label_fr: 'Pichet / Carafe', label_en: 'Pitcher / Carafe', quantity: 1 },
-
-      // Couverts
       { id: 'fourchettes', icon: '🍴', label_fr: 'Fourchettes', label_en: 'Forks', quantity: 4 },
       { id: 'cuilleres_soupe', icon: '🥄', label_fr: 'Cuillères soupe', label_en: 'Soup spoons', quantity: 4 },
       { id: 'cuilleres_cafe', icon: '🥄', label_fr: 'Cuillères café', label_en: 'Coffee spoons', quantity: 4 },
@@ -153,8 +139,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'range_couverts', icon: '🍴', label_fr: 'Range-couverts', label_en: 'Cutlery tray', quantity: 1 },
       { id: 'cloche_micro_onde', icon: '🥤', label_fr: 'Cloche micro-onde', label_en: 'Microwave cover', quantity: 1 },
       { id: 'bac_glacons', icon: '🧊', label_fr: 'Bac glaçons', label_en: 'Ice cube tray', quantity: 1 },
-
-      // Batterie de cuisine
       { id: 'casseroles', icon: '🍲', label_fr: 'Casseroles', label_en: 'Pots', quantity: 3 },
       { id: 'poele', icon: '🍳', label_fr: 'Poêle', label_en: 'Pan', quantity: 1 },
       { id: 'faitout', icon: '🍲', label_fr: 'Faitout + couvercle', label_en: 'Dutch oven + lid', quantity: 1 },
@@ -162,8 +146,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'cafetiere', icon: '☕', label_fr: 'Cafetière', label_en: 'Coffee maker', quantity: 1 },
       { id: 'micro_ondes', icon: '📡', label_fr: 'Micro-onde', label_en: 'Microwave', quantity: 1 },
       { id: 'tv', icon: '📺', label_fr: 'TV + télécommande', label_en: 'TV + remote', quantity: 1 },
-
-      // Ménage
       { id: 'kit_wc', icon: '🚽', label_fr: 'Kit WC', label_en: 'Toilet kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
       { id: 'bassine', icon: '🧴', label_fr: 'Bassine', label_en: 'Basin', quantity: 1 },
@@ -175,13 +157,9 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'pinces_linge', icon: '🧷', label_fr: 'Pinces à linge', label_en: 'Clothespins', quantity: 8 },
       { id: 'poubelle', icon: '🗑️', label_fr: 'Poubelle', label_en: 'Trash can', quantity: 1 },
       { id: 'detecteur_fumee', icon: '🚨', label_fr: 'Détecteur fumée', label_en: 'Smoke detector', quantity: 1 },
-
-      // Literie
       { id: 'couette_double', icon: '🛏️', label_fr: 'Couette double', label_en: 'Double duvet', quantity: 1 },
       { id: 'oreillers', icon: '🛏️', label_fr: 'Oreillers', label_en: 'Pillows', quantity: 2 },
       { id: 'cintres', icon: '👗', label_fr: 'Cintres', label_en: 'Hangers', quantity: 6 },
-
-      // Extérieur
       { id: 'cle_locatif', icon: '🗝️', label_fr: 'Clé locatif', label_en: 'Rental key', quantity: 1 },
       { id: 'carte_barriere', icon: '🪪', label_fr: 'Carte barrière', label_en: 'Barrier card', quantity: 1 },
       { id: 'table_jardin', icon: '🍽️', label_fr: 'Table de jardin', label_en: 'Garden table', quantity: 1 },
@@ -189,7 +167,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     ],
 
     MH_ECO_2CH: [
-      // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 6 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 6 },
       { id: 'assiettes_plates', icon: '🍽️', label_fr: 'Assiettes plates', label_en: 'Dinner plates', quantity: 6 },
@@ -199,8 +176,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'tasses', icon: '☕', label_fr: 'Tasses', label_en: 'Cups', quantity: 6 },
       { id: 'verres', icon: '🥤', label_fr: 'Verres', label_en: 'Glasses', quantity: 6 },
       { id: 'pichet', icon: '🍶', label_fr: 'Pichet / Carafe', label_en: 'Pitcher / Carafe', quantity: 1 },
-
-      // Couverts
       { id: 'fourchettes', icon: '🍴', label_fr: 'Fourchettes', label_en: 'Forks', quantity: 6 },
       { id: 'cuilleres_soupe', icon: '🥄', label_fr: 'Cuillères à soupe', label_en: 'Soup spoons', quantity: 6 },
       { id: 'cuilleres_cafe', icon: '🥄', label_fr: 'Cuillères à café', label_en: 'Coffee spoons', quantity: 6 },
@@ -223,8 +198,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'range_couverts', icon: '🍴', label_fr: 'Range-couverts', label_en: 'Cutlery tray', quantity: 1 },
       { id: 'cloche_micro_onde', icon: '🥤', label_fr: 'Cloche micro-ondes', label_en: 'Microwave cover', quantity: 1 },
       { id: 'bac_glacons', icon: '🧊', label_fr: 'Bac à glaçons', label_en: 'Ice cube tray', quantity: 1 },
-
-      // Batterie de cuisine
       { id: 'casseroles', icon: '🍲', label_fr: 'Casseroles', label_en: 'Pots', quantity: 3 },
       { id: 'poele', icon: '🍳', label_fr: 'Poêle', label_en: 'Pan', quantity: 1 },
       { id: 'faitout', icon: '🍲', label_fr: 'Faitout + couvercle', label_en: 'Dutch oven + lid', quantity: 1 },
@@ -232,8 +205,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'cafetiere', icon: '☕', label_fr: 'Cafetière électrique', label_en: 'Electric coffee maker', quantity: 1 },
       { id: 'micro_ondes', icon: '📡', label_fr: 'Micro-ondes', label_en: 'Microwave', quantity: 1 },
       { id: 'refrigerateur', icon: '🧊', label_fr: 'Réfrigérateur', label_en: 'Refrigerator', quantity: 1 },
-
-      // Ménage
       { id: 'kit_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'Toilet kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
       { id: 'bassine', icon: '🧴', label_fr: 'Bassine', label_en: 'Basin', quantity: 1 },
@@ -246,14 +217,10 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'poubelles', icon: '🗑️', label_fr: 'Poubelles', label_en: 'Trash cans', quantity: 2 },
       { id: 'extincteur', icon: '🧯', label_fr: 'Extincteur', label_en: 'Fire extinguisher', quantity: 1 },
       { id: 'detecteur_fumee', icon: '🚨', label_fr: 'Détecteur de fumée', label_en: 'Smoke detector', quantity: 1 },
-
-      // Literie
       { id: 'couette_double', icon: '🛏️', label_fr: 'Couette double', label_en: 'Double duvet', quantity: 1 },
       { id: 'couettes_simples', icon: '🛏️', label_fr: 'Couettes simples', label_en: 'Single duvets', quantity: 2 },
       { id: 'oreillers', icon: '🛏️', label_fr: 'Oreillers', label_en: 'Pillows', quantity: 4 },
       { id: 'cintres', icon: '👗', label_fr: 'Cintres', label_en: 'Hangers', quantity: 10 },
-
-      // Extérieur
       { id: 'cle_locatif', icon: '🗝️', label_fr: 'Clé locatif', label_en: 'Rental key', quantity: 1 },
       { id: 'tabourets', icon: '🪑', label_fr: 'Tabourets', label_en: 'Stools', quantity: 2 },
       { id: 'table_jardin', icon: '🍽️', label_fr: 'Table de jardin', label_en: 'Garden table', quantity: 1 },
@@ -261,7 +228,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     ],
 
     MH_ECO_CLIM_2CH: [
-      // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 6 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 6 },
       { id: 'assiettes_plates', icon: '🍽️', label_fr: 'Assiettes plates', label_en: 'Dinner plates', quantity: 6 },
@@ -271,8 +237,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'tasses', icon: '☕', label_fr: 'Tasses', label_en: 'Cups', quantity: 6 },
       { id: 'verres_eau', icon: '🥛', label_fr: 'Verres à eau', label_en: 'Water glasses', quantity: 6 },
       { id: 'pichet', icon: '🍶', label_fr: 'Pichet / Carafe', label_en: 'Pitcher / Carafe', quantity: 1 },
-
-      // Couverts
       { id: 'fourchettes', icon: '🍴', label_fr: 'Fourchettes', label_en: 'Forks', quantity: 6 },
       { id: 'cuilleres_soupe', icon: '🥄', label_fr: 'Cuillères à soupe', label_en: 'Soup spoons', quantity: 6 },
       { id: 'cuilleres_cafe', icon: '🥄', label_fr: 'Cuillères à café', label_en: 'Coffee spoons', quantity: 6 },
@@ -296,8 +260,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'plat_four', icon: '🍛', label_fr: 'Plat à four', label_en: 'Baking dish', quantity: 1 },
       { id: 'cloche_micro_onde', icon: '🥤', label_fr: 'Cloche micro-ondes', label_en: 'Microwave cover', quantity: 1 },
       { id: 'bac_glacons', icon: '🧊', label_fr: 'Bac à glaçons', label_en: 'Ice cube tray', quantity: 1 },
-
-      // Batterie de cuisine
       { id: 'casseroles', icon: '🍲', label_fr: 'Casseroles', label_en: 'Pots', quantity: 3 },
       { id: 'poeles', icon: '🍳', label_fr: 'Poêles', label_en: 'Pans', quantity: 2 },
       { id: 'faitout', icon: '🍲', label_fr: 'Faitout + couvercle', label_en: 'Dutch oven + lid', quantity: 1 },
@@ -306,8 +268,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'micro_ondes', icon: '📡', label_fr: 'Micro-ondes', label_en: 'Microwave', quantity: 1 },
       { id: 'refrigerateur', icon: '🧊', label_fr: 'Réfrigérateur', label_en: 'Refrigerator', quantity: 1 },
       { id: 'telecommande_clim', icon: '❄️', label_fr: 'Télécommande climatisation', label_en: 'AC remote', quantity: 1 },
-
-      // Ménage
       { id: 'kit_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'Toilet kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
       { id: 'bassine', icon: '🧴', label_fr: 'Bassine', label_en: 'Basin', quantity: 1 },
@@ -319,14 +279,10 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'pinces_linge', icon: '🧷', label_fr: 'Pinces à linge', label_en: 'Clothespins', quantity: 8 },
       { id: 'poubelles', icon: '🗑️', label_fr: 'Poubelles', label_en: 'Trash cans', quantity: 2 },
       { id: 'detecteur_fumee', icon: '🚨', label_fr: 'Détecteur de fumée', label_en: 'Smoke detector', quantity: 1 },
-
-      // Literie
       { id: 'couette_double', icon: '🛏️', label_fr: 'Couette double', label_en: 'Double duvet', quantity: 1 },
       { id: 'couettes_simples', icon: '🛏️', label_fr: 'Couettes simples', label_en: 'Single duvets', quantity: 2 },
       { id: 'oreillers', icon: '🛏️', label_fr: 'Oreillers', label_en: 'Pillows', quantity: 4 },
       { id: 'cintres', icon: '👗', label_fr: 'Cintres', label_en: 'Hangers', quantity: 10 },
-
-      // Extérieur
       { id: 'cle_locatif', icon: '🗝️', label_fr: 'Clé locatif', label_en: 'Rental key', quantity: 1 },
       { id: 'chaises_interieur', icon: '🪑', label_fr: 'Chaises intérieur', label_en: 'Indoor chairs', quantity: 2 },
       { id: 'table_jardin', icon: '🍽️', label_fr: 'Table de jardin', label_en: 'Garden table', quantity: 1 },
@@ -334,7 +290,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     ],
 
     MH_CLASSIQUE_2CH: [
-      // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 6 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 6 },
       { id: 'assiettes_plates', icon: '🍽️', label_fr: 'Assiettes plates', label_en: 'Dinner plates', quantity: 6 },
@@ -345,8 +300,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'verres_eau', icon: '🥛', label_fr: 'Verres à eau', label_en: 'Water glasses', quantity: 6 },
       { id: 'verres_vin', icon: '🍷', label_fr: 'Verres à vin', label_en: 'Wine glasses', quantity: 6 },
       { id: 'pichet', icon: '🍶', label_fr: 'Pichet', label_en: 'Carafe', quantity: 1 },
-
-      // Couverts
       { id: 'fourchettes', icon: '🍴', label_fr: 'Fourchettes', label_en: 'Forks', quantity: 6 },
       { id: 'cuilleres_soupe', icon: '🥄', label_fr: 'Cuillères à soupe', label_en: 'Soup spoons', quantity: 6 },
       { id: 'cuilleres_cafe', icon: '🥄', label_fr: 'Cuillères à café', label_en: 'Coffee spoons', quantity: 6 },
@@ -370,8 +323,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'corbeille_pain', icon: '🍞', label_fr: 'Corbeille à pain', label_en: 'Bread basket', quantity: 1 },
       { id: 'cloche_micro_onde', icon: '🥤', label_fr: 'Cloche micro-onde', label_en: 'Microwave cover', quantity: 1 },
       { id: 'bac_glacons', icon: '🧊', label_fr: 'Bac à glaçons', label_en: 'Ice tray', quantity: 1 },
-
-      // Batterie de cuisine
       { id: 'casseroles', icon: '🍲', label_fr: 'Casseroles', label_en: 'Pots', quantity: 3 },
       { id: 'poeles', icon: '🍳', label_fr: 'Poêles', label_en: 'Pans', quantity: 2 },
       { id: 'faitout', icon: '🍲', label_fr: 'Faitout + couvercle', label_en: 'Dutch oven + lid', quantity: 1 },
@@ -380,8 +331,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'micro_ondes', icon: '📡', label_fr: 'Micro-ondes', label_en: 'Microwave', quantity: 1 },
       { id: 'refrigerateur', icon: '🧊', label_fr: 'Réfrigérateur', label_en: 'Fridge', quantity: 1 },
       { id: 'congelateur', icon: '🧊', label_fr: 'Congélateur', label_en: 'Freezer', quantity: 1 },
-
-      // Ménage
       { id: 'kit_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'Toilet kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
       { id: 'bassine', icon: '🧴', label_fr: 'Bassine', label_en: 'Basin', quantity: 1 },
@@ -394,14 +343,10 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'poubelles', icon: '🗑️', label_fr: 'Poubelles', label_en: 'Trash cans', quantity: 2 },
       { id: 'extincteur', icon: '🧯', label_fr: 'Extincteur', label_en: 'Fire extinguisher', quantity: 1 },
       { id: 'detecteur_fumee', icon: '🚨', label_fr: 'Détecteur de fumée', label_en: 'Smoke detector', quantity: 1 },
-
-      // Literie
       { id: 'couettes_doubles', icon: '🛏️', label_fr: 'Couettes doubles', label_en: 'Double duvets', quantity: 1 },
       { id: 'couettes_simples', icon: '🛏️', label_fr: 'Couettes simples', label_en: 'Single duvets', quantity: 2 },
       { id: 'oreillers', icon: '🛏️', label_fr: 'Oreillers', label_en: 'Pillows', quantity: 6 },
       { id: 'cintres', icon: '👗', label_fr: 'Cintres', label_en: 'Hangers', quantity: 10 },
-
-      // Extérieur
       { id: 'cle_locatif', icon: '🗝️', label_fr: 'Clé locatif', label_en: 'Rental key', quantity: 1 },
       { id: 'carte_barriere', icon: '🪪', label_fr: 'Carte Barrière', label_en: 'Barrier card', quantity: 1 },
       { id: 'chaises_interieur', icon: '🪑', label_fr: 'Chaises intérieures', label_en: 'Indoor chairs', quantity: 2 },
@@ -410,7 +355,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     ],
 
     MH_CLASSIQUE_CLIM_2CH: [
-      // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 6 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 6 },
       { id: 'assiettes_plates', icon: '🍽️', label_fr: 'Assiettes plates', label_en: 'Dinner plates', quantity: 6 },
@@ -420,8 +364,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'tasses', icon: '☕', label_fr: 'Tasses', label_en: 'Cups', quantity: 6 },
       { id: 'verres_eau', icon: '🥛', label_fr: 'Verres à eau', label_en: 'Water glasses', quantity: 6 },
       { id: 'pichet', icon: '🍶', label_fr: 'Pichet / Carafe', label_en: 'Pitcher / Carafe', quantity: 1 },
-
-      // Couverts
       { id: 'fourchettes', icon: '🍴', label_fr: 'Fourchettes', label_en: 'Forks', quantity: 6 },
       { id: 'cuilleres_soupe', icon: '🥄', label_fr: 'Cuillères soupe', label_en: 'Soup spoons', quantity: 6 },
       { id: 'cuilleres_cafe', icon: '🥄', label_fr: 'Cuillères café', label_en: 'Coffee spoons', quantity: 6 },
@@ -445,8 +387,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'plat_four_rond', icon: '🍛', label_fr: 'Plat à four', label_en: 'Baking dish', quantity: 1 },
       { id: 'cloche_micro_onde', icon: '🥤', label_fr: 'Cloche micro-onde', label_en: 'Microwave cover', quantity: 1 },
       { id: 'bac_glacons', icon: '🧊', label_fr: 'Bac à glaçons', label_en: 'Ice cube tray', quantity: 1 },
-
-      // Batterie de cuisine
       { id: 'casseroles', icon: '🍲', label_fr: 'Casseroles', label_en: 'Pots', quantity: 3 },
       { id: 'poeles', icon: '🍳', label_fr: 'Poêles', label_en: 'Pans', quantity: 2 },
       { id: 'faitout', icon: '🍲', label_fr: 'Faitout + couvercle', label_en: 'Dutch oven + lid', quantity: 1 },
@@ -455,8 +395,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'micro_ondes', icon: '📡', label_fr: 'Micro-ondes', label_en: 'Microwave', quantity: 1 },
       { id: 'refrigerateur', icon: '🧊', label_fr: 'Réfrigérateur', label_en: 'Refrigerator', quantity: 1 },
       { id: 'telecommande_clim', icon: '❄️', label_fr: 'Télécommande climatisation', label_en: 'AC remote', quantity: 1 },
-
-      // Ménage
       { id: 'kit_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'Toilet kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
       { id: 'bassine', icon: '🧴', label_fr: 'Bassine', label_en: 'Basin', quantity: 1 },
@@ -468,14 +406,10 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'pinces_linge', icon: '🧷', label_fr: 'Pinces à linge', label_en: 'Clothespins', quantity: 8 },
       { id: 'poubelles', icon: '🗑️', label_fr: 'Poubelles', label_en: 'Trash cans', quantity: 2 },
       { id: 'detecteur_fumee', icon: '🚨', label_fr: 'Détecteur de fumée', label_en: 'Smoke detector', quantity: 1 },
-
-      // Literie
       { id: 'couette_double', icon: '🛏️', label_fr: 'Couette double', label_en: 'Double duvet', quantity: 1 },
       { id: 'couettes_simples', icon: '🛏️', label_fr: 'Couettes simples', label_en: 'Single duvets', quantity: 2 },
       { id: 'oreillers', icon: '🛏️', label_fr: 'Oreillers', label_en: 'Pillows', quantity: 4 },
       { id: 'cintres', icon: '👗', label_fr: 'Cintres', label_en: 'Hangers', quantity: 10 },
-
-      // Extérieur
       { id: 'cle_locatif', icon: '🗝️', label_fr: 'Clé locatif', label_en: 'Rental key', quantity: 1 },
       { id: 'carte_barriere', icon: '🪪', label_fr: 'Carte Barrière', label_en: 'Barrier card', quantity: 1 },
       { id: 'chaises_interieur', icon: '🪑', label_fr: 'Chaises intérieures', label_en: 'Indoor chairs', quantity: 2 },
@@ -484,7 +418,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     ],
 
     MH_CLASSIQUE_3CH: [
-      // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 8 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 8 },
       { id: 'assiettes_plates', icon: '🍽️', label_fr: 'Assiettes plates', label_en: 'Dinner plates', quantity: 8 },
@@ -495,8 +428,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'verres_vin', icon: '🍷', label_fr: 'Verres à vin', label_en: 'Wine glasses', quantity: 6 },
       { id: 'verres_eau', icon: '🥛', label_fr: 'Verres à eau', label_en: 'Water glasses', quantity: 6 },
       { id: 'pichet', icon: '🍶', label_fr: 'Pichet / Carafe', label_en: 'Pitcher / Carafe', quantity: 1 },
-
-      // Couverts
       { id: 'fourchettes', icon: '🍴', label_fr: 'Fourchettes', label_en: 'Forks', quantity: 8 },
       { id: 'cuilleres_soupe', icon: '🥄', label_fr: 'Cuillères soupe', label_en: 'Soup spoons', quantity: 8 },
       { id: 'cuilleres_cafe', icon: '🥄', label_fr: 'Cuillères café', label_en: 'Coffee spoons', quantity: 8 },
@@ -523,8 +454,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'plat_four_rond', icon: '🍛', label_fr: 'Plat à four rond', label_en: 'Round baking dish', quantity: 1 },
       { id: 'cloche_micro_onde', icon: '🥤', label_fr: 'Cloche micro-onde', label_en: 'Microwave cover', quantity: 1 },
       { id: 'bac_glacons', icon: '🧊', label_fr: 'Bac à glaçons', label_en: 'Ice cube tray', quantity: 1 },
-
-      // Batterie de cuisine
       { id: 'casseroles', icon: '🍲', label_fr: 'Casseroles', label_en: 'Pots', quantity: 3 },
       { id: 'poeles', icon: '🍳', label_fr: 'Poêles', label_en: 'Pans', quantity: 2 },
       { id: 'faitout', icon: '🍲', label_fr: 'Faitout + couvercle', label_en: 'Dutch oven + lid', quantity: 1 },
@@ -532,8 +461,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'cafetiere', icon: '☕', label_fr: 'Cafetière électrique', label_en: 'Electric coffee maker', quantity: 1 },
       { id: 'micro_ondes', icon: '📡', label_fr: 'Micro-ondes', label_en: 'Microwave', quantity: 1 },
       { id: 'refrigerateur', icon: '🧊', label_fr: 'Réfrigérateur', label_en: 'Refrigerator', quantity: 1 },
-
-      // Ménage
       { id: 'kit_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'Toilet kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
       { id: 'bassine', icon: '🧴', label_fr: 'Bassine', label_en: 'Basin', quantity: 1 },
@@ -546,14 +473,10 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'poubelles', icon: '🗑️', label_fr: 'Poubelles', label_en: 'Trash cans', quantity: 2 },
       { id: 'extincteur', icon: '🧯', label_fr: 'Extincteur', label_en: 'Fire extinguisher', quantity: 1 },
       { id: 'detecteur_fumee', icon: '🚨', label_fr: 'Détecteur de fumée', label_en: 'Smoke detector', quantity: 1 },
-
-      // Literie
       { id: 'couette_double', icon: '🛏️', label_fr: 'Couette double', label_en: 'Double duvet', quantity: 1 },
       { id: 'couettes_simples', icon: '🛏️', label_fr: 'Couettes simples', label_en: 'Single duvets', quantity: 4 },
       { id: 'oreillers', icon: '🛏️', label_fr: 'Oreillers', label_en: 'Pillows', quantity: 6 },
       { id: 'cintres', icon: '👗', label_fr: 'Cintres', label_en: 'Hangers', quantity: 10 },
-
-      // Extérieur
       { id: 'cle_locatif', icon: '🗝️', label_fr: 'Clé locatif', label_en: 'Rental key', quantity: 1 },
       { id: 'carte_barriere', icon: '🪪', label_fr: 'Carte Barrière', label_en: 'Barrier card', quantity: 1 },
       { id: 'chaises_interieur', icon: '🪑', label_fr: 'Chaises intérieures', label_en: 'Indoor chairs', quantity: 2 },
@@ -562,7 +485,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     ],
 
     MH_CONFORT_PLUS_2CH: [
-      // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 6 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 6 },
       { id: 'assiettes_plates', icon: '🍽️', label_fr: 'Assiettes plates', label_en: 'Dinner plates', quantity: 6 },
@@ -572,8 +494,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'tasses', icon: '☕', label_fr: 'Tasses', label_en: 'Cups', quantity: 6 },
       { id: 'verres_eau', icon: '🥛', label_fr: 'Verres à eau', label_en: 'Water glasses', quantity: 6 },
       { id: 'pichet', icon: '🍶', label_fr: 'Pichet / Carafe', label_en: 'Pitcher / Carafe', quantity: 1 },
-
-      // Couverts
       { id: 'fourchettes', icon: '🍴', label_fr: 'Fourchettes', label_en: 'Forks', quantity: 6 },
       { id: 'cuilleres_soupe', icon: '🥄', label_fr: 'Cuillères soupe', label_en: 'Soup spoons', quantity: 6 },
       { id: 'cuilleres_cafe', icon: '🥄', label_fr: 'Cuillères café', label_en: 'Coffee spoons', quantity: 6 },
@@ -596,8 +516,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'plat_four_rond', icon: '🍛', label_fr: 'Plat à four rond', label_en: 'Round baking dish', quantity: 1 },
       { id: 'cloche_micro_onde', icon: '🥤', label_fr: 'Cloche micro-ondes', label_en: 'Microwave cover', quantity: 1 },
       { id: 'bac_glacons', icon: '🧊', label_fr: 'Bac à glaçons', label_en: 'Ice cube tray', quantity: 1 },
-
-      // Batterie de cuisine
       { id: 'casseroles', icon: '🍲', label_fr: 'Casseroles', label_en: 'Pots', quantity: 3 },
       { id: 'poeles', icon: '🍳', label_fr: 'Poêles', label_en: 'Pans', quantity: 2 },
       { id: 'faitout', icon: '🍲', label_fr: 'Faitout + couvercle', label_en: 'Dutch oven + lid', quantity: 1 },
@@ -608,8 +526,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'telecommande_tv', icon: '🎛️', label_fr: 'Télécommande TV', label_en: 'TV remote', quantity: 1 },
       { id: 'telecommande_clim', icon: '❄️', label_fr: 'Télécommande climatisation', label_en: 'AC remote', quantity: 1 },
       { id: 'refrigerateur', icon: '🧊', label_fr: 'Réfrigérateur', label_en: 'Refrigerator', quantity: 1 },
-
-      // Ménage
       { id: 'kit_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'Toilet kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
       { id: 'bassine', icon: '🧴', label_fr: 'Bassine', label_en: 'Basin', quantity: 1 },
@@ -621,14 +537,10 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'pinces_linge', icon: '🧷', label_fr: 'Pinces à linge', label_en: 'Clothespins', quantity: 8 },
       { id: 'poubelles', icon: '🗑️', label_fr: 'Poubelles', label_en: 'Trash cans', quantity: 2 },
       { id: 'detecteur_fumee', icon: '🚨', label_fr: 'Détecteur de fumée', label_en: 'Smoke detector', quantity: 1 },
-
-      // Literie
       { id: 'couette_double', icon: '🛏️', label_fr: 'Couette double', label_en: 'Double duvet', quantity: 1 },
       { id: 'couettes_simples', icon: '🛏️', label_fr: 'Couettes simples', label_en: 'Single duvets', quantity: 2 },
       { id: 'oreillers', icon: '🛏️', label_fr: 'Oreillers', label_en: 'Pillows', quantity: 4 },
       { id: 'cintres', icon: '👗', label_fr: 'Cintres', label_en: 'Hangers', quantity: 10 },
-
-      // Extérieur
       { id: 'cle_locatif', icon: '🗝️', label_fr: 'Clé locatif', label_en: 'Rental key', quantity: 1 },
       { id: 'chaises_interieur', icon: '🪑', label_fr: 'Chaises intérieur', label_en: 'Indoor chairs', quantity: 2 },
       { id: 'table_jardin', icon: '🍽️', label_fr: 'Table de jardin', label_en: 'Garden table', quantity: 1 },
@@ -636,7 +548,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     ],
 
     MH_CONFORT_PLUS_3CH: [
-      // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 8 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 8 },
       { id: 'assiettes_plates', icon: '🍽️', label_fr: 'Assiettes plates', label_en: 'Dinner plates', quantity: 8 },
@@ -647,8 +558,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'verres_vin', icon: '🍷', label_fr: 'Verres à vin', label_en: 'Wine glasses', quantity: 8 },
       { id: 'verres_eau', icon: '🥛', label_fr: 'Verres à eau', label_en: 'Water glasses', quantity: 8 },
       { id: 'pichet', icon: '🍶', label_fr: 'Pichet / Carafe', label_en: 'Pitcher / Carafe', quantity: 1 },
-
-      // Couverts
       { id: 'fourchettes', icon: '🍴', label_fr: 'Fourchettes', label_en: 'Forks', quantity: 8 },
       { id: 'cuilleres_soupe', icon: '🥄', label_fr: 'Cuillères à soupe', label_en: 'Soup spoons', quantity: 8 },
       { id: 'cuilleres_cafe', icon: '🥄', label_fr: 'Cuillères à café', label_en: 'Coffee spoons', quantity: 8 },
@@ -674,8 +583,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'plat_four_rond', icon: '🍛', label_fr: 'Plat à four rond', label_en: 'Round baking dish', quantity: 1 },
       { id: 'cloche_micro_onde', icon: '🥤', label_fr: 'Cloche micro-ondes', label_en: 'Microwave cover', quantity: 1 },
       { id: 'bac_glacons', icon: '🧊', label_fr: 'Bac à glaçons', label_en: 'Ice cube tray', quantity: 1 },
-
-      // Batterie de cuisine
       { id: 'casseroles', icon: '🍲', label_fr: 'Casseroles', label_en: 'Pots', quantity: 3 },
       { id: 'poeles', icon: '🍳', label_fr: 'Poêles', label_en: 'Pans', quantity: 2 },
       { id: 'faitout', icon: '🍲', label_fr: 'Faitout + couvercle', label_en: 'Dutch oven + lid', quantity: 1 },
@@ -684,8 +591,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'micro_ondes', icon: '📡', label_fr: 'Micro-ondes', label_en: 'Microwave', quantity: 1 },
       { id: 'telecommande_clim', icon: '❄️', label_fr: 'Télécommande climatisation', label_en: 'AC remote', quantity: 1 },
       { id: 'refrigerateur', icon: '🧊', label_fr: 'Réfrigérateur', label_en: 'Refrigerator', quantity: 1 },
-
-      // Ménage
       { id: 'kit_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'Toilet kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
       { id: 'bassine', icon: '🧴', label_fr: 'Bassine', label_en: 'Basin', quantity: 1 },
@@ -697,14 +602,10 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'pinces_linge', icon: '🧷', label_fr: 'Pinces à linge', label_en: 'Clothespins', quantity: 8 },
       { id: 'poubelles', icon: '🗑️', label_fr: 'Poubelles', label_en: 'Trash cans', quantity: 2 },
       { id: 'detecteur_fumee', icon: '🚨', label_fr: 'Détecteur de fumée', label_en: 'Smoke detector', quantity: 1 },
-
-      // Literie
       { id: 'couette_double', icon: '🛏️', label_fr: 'Couette double', label_en: 'Double duvet', quantity: 1 },
       { id: 'couettes_simples', icon: '🛏️', label_fr: 'Couettes simples', label_en: 'Single duvets', quantity: 4 },
       { id: 'oreillers', icon: '🛏️', label_fr: 'Oreillers', label_en: 'Pillows', quantity: 6 },
       { id: 'cintres', icon: '👗', label_fr: 'Cintres', label_en: 'Hangers', quantity: 10 },
-
-      // Extérieur
       { id: 'cle_locatif', icon: '🗝️', label_fr: 'Clé locatif', label_en: 'Rental key', quantity: 1 },
       { id: 'carte_barriere', icon: '🪪', label_fr: 'Carte barrière', label_en: 'Barrier card', quantity: 1 },
       { id: 'chaises_interieur', icon: '🪑', label_fr: 'Chaises intérieur', label_en: 'Indoor chairs', quantity: 4 },
@@ -713,7 +614,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     ],
 
     MH_PREMIUM_2CH: [
-      // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 6 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes dessert', label_en: 'Dessert plates', quantity: 6 },
       { id: 'assiettes_plates', icon: '🍽️', label_fr: 'Assiettes plates', label_en: 'Dinner plates', quantity: 6 },
@@ -724,8 +624,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'verres_vin', icon: '🍷', label_fr: 'Verres à vin', label_en: 'Wine glasses', quantity: 6 },
       { id: 'verres_eau', icon: '🥛', label_fr: 'Verres à eau', label_en: 'Water glasses', quantity: 6 },
       { id: 'pichet', icon: '🍶', label_fr: 'Pichet / Carafe', label_en: 'Pitcher / Carafe', quantity: 1 },
-
-      // Couverts
       { id: 'fourchettes', icon: '🍴', label_fr: 'Fourchettes', label_en: 'Forks', quantity: 6 },
       { id: 'cuilleres_soupe', icon: '🥄', label_fr: 'Cuillères soupe', label_en: 'Soup spoons', quantity: 6 },
       { id: 'cuilleres_cafe', icon: '🥄', label_fr: 'Cuillères café', label_en: 'Coffee spoons', quantity: 6 },
@@ -751,14 +649,10 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'plat_four_rond', icon: '🍛', label_fr: 'Plat four rond', label_en: 'Round baking dish', quantity: 1 },
       { id: 'cloche_micro_onde', icon: '🥤', label_fr: 'Cloche micro-onde', label_en: 'Microwave cover', quantity: 1 },
       { id: 'bac_glacons', icon: '🧊', label_fr: 'Bac glaçons', label_en: 'Ice cube tray', quantity: 1 },
-
-      // Batterie de cuisine
       { id: 'casseroles', icon: '🍲', label_fr: 'Casseroles', label_en: 'Pots', quantity: 3 },
       { id: 'poeles', icon: '🍳', label_fr: 'Poêles', label_en: 'Pans', quantity: 2 },
       { id: 'faitout', icon: '🍲', label_fr: 'Faitout + couvercle', label_en: 'Dutch oven + lid', quantity: 1 },
       { id: 'couvercle', icon: '🔥', label_fr: 'Couvercle', label_en: 'Lid', quantity: 1 },
-
-      // Appareils
       { id: 'cafetiere', icon: '☕', label_fr: 'Cafetière électrique', label_en: 'Electric coffee maker', quantity: 1 },
       { id: 'micro_ondes', icon: '📡', label_fr: 'Micro-onde', label_en: 'Microwave', quantity: 1 },
       { id: 'refrigerateur_congelateur', icon: '🧊', label_fr: 'Réfrigérateur-congélateur', label_en: 'Fridge-freezer', quantity: 1 },
@@ -766,8 +660,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'tv', icon: '📺', label_fr: 'TV', label_en: 'TV', quantity: 1 },
       { id: 'telecommande_tv', icon: '🎛️', label_fr: 'Télécommande TV', label_en: 'TV remote', quantity: 1 },
       { id: 'telecommande_clim', icon: '❄️', label_fr: 'Télécommande climatisation', label_en: 'AC remote', quantity: 1 },
-
-      // Ménage
       { id: 'kit_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'Toilet kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
       { id: 'bassine', icon: '🧴', label_fr: 'Bassine', label_en: 'Basin', quantity: 1 },
@@ -779,14 +671,10 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'pinces_linge', icon: '🧷', label_fr: 'Pinces à linge', label_en: 'Clothespins', quantity: 8 },
       { id: 'poubelles', icon: '🗑️', label_fr: 'Poubelles', label_en: 'Trash cans', quantity: 2 },
       { id: 'detecteur_fumee', icon: '🚨', label_fr: 'Détecteur fumée', label_en: 'Smoke detector', quantity: 1 },
-
-      // Literie
       { id: 'couette_double', icon: '🛏️', label_fr: 'Couette double', label_en: 'Double duvet', quantity: 1 },
       { id: 'couettes_simples', icon: '🛏️', label_fr: 'Couettes simples', label_en: 'Single duvets', quantity: 2 },
       { id: 'oreillers', icon: '🛏️', label_fr: 'Oreillers', label_en: 'Pillows', quantity: 4 },
       { id: 'cintres', icon: '👗', label_fr: 'Cintres', label_en: 'Hangers', quantity: 10 },
-
-      // Extérieur
       { id: 'cle_locatif', icon: '🗝️', label_fr: 'Clé locatif', label_en: 'Rental key', quantity: 1 },
       { id: 'carte_barriere', icon: '🪪', label_fr: 'Carte barrière', label_en: 'Barrier card', quantity: 1 },
       { id: 'table_jardin', icon: '🍽️', label_fr: 'Table de jardin', label_en: 'Garden table', quantity: 1 },
@@ -794,7 +682,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     ],
 
     MH_PREMIUM_3CH: [
-      // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 8 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes dessert', label_en: 'Dessert plates', quantity: 8 },
       { id: 'assiettes_plates', icon: '🍽️', label_fr: 'Assiettes plates', label_en: 'Dinner plates', quantity: 8 },
@@ -805,8 +692,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'verres_vin', icon: '🍷', label_fr: 'Verres à vin', label_en: 'Wine glasses', quantity: 8 },
       { id: 'verres_eau', icon: '🥛', label_fr: 'Verres à eau', label_en: 'Water glasses', quantity: 8 },
       { id: 'pichet', icon: '🍶', label_fr: 'Pichet / Carafe', label_en: 'Pitcher / Carafe', quantity: 1 },
-
-      // Couverts
       { id: 'fourchettes', icon: '🍴', label_fr: 'Fourchettes', label_en: 'Forks', quantity: 8 },
       { id: 'cuilleres_soupe', icon: '🥄', label_fr: 'Cuillères soupe', label_en: 'Soup spoons', quantity: 8 },
       { id: 'cuilleres_cafe', icon: '🥄', label_fr: 'Cuillères café', label_en: 'Coffee spoons', quantity: 8 },
@@ -832,22 +717,16 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'plat_four_rond', icon: '🍛', label_fr: 'Plat four rond', label_en: 'Round baking dish', quantity: 1 },
       { id: 'cloche_micro_onde', icon: '🥤', label_fr: 'Cloche micro-onde', label_en: 'Microwave cover', quantity: 1 },
       { id: 'bac_glacons', icon: '🧊', label_fr: 'Bac à glaçons', label_en: 'Ice cube tray', quantity: 1 },
-
-      // Batterie de cuisine
       { id: 'casseroles', icon: '🍲', label_fr: 'Casseroles', label_en: 'Pots', quantity: 3 },
       { id: 'poeles', icon: '🍳', label_fr: 'Poêles', label_en: 'Pans', quantity: 2 },
       { id: 'faitout', icon: '🍲', label_fr: 'Faitout + couvercle', label_en: 'Dutch oven + lid', quantity: 1 },
       { id: 'couvercle', icon: '🔥', label_fr: 'Couvercle', label_en: 'Lid', quantity: 1 },
-
-      // Appareils
       { id: 'cafetiere', icon: '☕', label_fr: 'Cafetière électrique', label_en: 'Electric coffee maker', quantity: 1 },
       { id: 'micro_ondes', icon: '📡', label_fr: 'Micro-ondes', label_en: 'Microwave', quantity: 1 },
       { id: 'refrigerateur_congelateur', icon: '🧊', label_fr: 'Réfrigérateur-congélateur', label_en: 'Fridge-freezer', quantity: 1 },
       { id: 'tv', icon: '📺', label_fr: 'TV + télécommande', label_en: 'TV + remote', quantity: 1 },
       { id: 'telecommande_clim', icon: '❄️', label_fr: 'Télécommande climatisation', label_en: 'AC remote', quantity: 1 },
       { id: 'lave_vaisselle', icon: '🍽️', label_fr: 'Lave-vaisselle', label_en: 'Dishwasher', quantity: 1 },
-
-      // Ménage
       { id: 'kit_wc', icon: '🚽', label_fr: 'Kit WC', label_en: 'Toilet kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
       { id: 'bassine', icon: '🧴', label_fr: 'Bassine', label_en: 'Basin', quantity: 1 },
@@ -859,14 +738,10 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'pinces_linge', icon: '🧷', label_fr: 'Pinces à linge', label_en: 'Clothespins', quantity: 8 },
       { id: 'poubelles', icon: '🗑️', label_fr: 'Poubelles', label_en: 'Trash cans', quantity: 2 },
       { id: 'detecteur_fumee', icon: '🚨', label_fr: 'Détecteur fumée', label_en: 'Smoke detector', quantity: 1 },
-
-      // Literie
       { id: 'couette_double', icon: '🛏️', label_fr: 'Couette double', label_en: 'Double duvet', quantity: 1 },
       { id: 'couettes_simples', icon: '🛏️', label_fr: 'Couettes simples', label_en: 'Single duvets', quantity: 4 },
       { id: 'oreillers', icon: '🛏️', label_fr: 'Oreillers', label_en: 'Pillows', quantity: 6 },
       { id: 'cintres', icon: '👗', label_fr: 'Cintres', label_en: 'Hangers', quantity: 10 },
-
-      // Extérieur
       { id: 'cle_locatif', icon: '🗝️', label_fr: 'Clé locatif', label_en: 'Rental key', quantity: 1 },
       { id: 'carte_barriere', icon: '🪪', label_fr: 'Carte barrière', label_en: 'Barrier card', quantity: 1 },
       { id: 'table_jardin', icon: '🍽️', label_fr: 'Table de jardin', label_en: 'Garden table', quantity: 1 },
@@ -876,7 +751,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     ],
 
     MH_PREMIUM_TWINS: [
-      // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 6 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes dessert', label_en: 'Dessert plates', quantity: 6 },
       { id: 'assiettes_plates', icon: '🍽️', label_fr: 'Assiettes plates', label_en: 'Dinner plates', quantity: 6 },
@@ -887,8 +761,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'verres_vin', icon: '🍷', label_fr: 'Verres à vin', label_en: 'Wine glasses', quantity: 6 },
       { id: 'verres_eau', icon: '🥛', label_fr: 'Verres à eau', label_en: 'Water glasses', quantity: 6 },
       { id: 'pichet', icon: '🍶', label_fr: 'Pichet / Carafe', label_en: 'Pitcher / Carafe', quantity: 1 },
-
-      // Couverts
       { id: 'fourchettes', icon: '🍴', label_fr: 'Fourchettes', label_en: 'Forks', quantity: 6 },
       { id: 'cuilleres_soupe', icon: '🥄', label_fr: 'Cuillères soupe', label_en: 'Soup spoons', quantity: 6 },
       { id: 'cuilleres_cafe', icon: '🥄', label_fr: 'Cuillères café', label_en: 'Coffee spoons', quantity: 6 },
@@ -914,14 +786,10 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'plat_four_rond', icon: '🍛', label_fr: 'Plat four rond', label_en: 'Round baking dish', quantity: 1 },
       { id: 'cloche_micro_onde', icon: '🥤', label_fr: 'Cloche micro-onde', label_en: 'Microwave cover', quantity: 1 },
       { id: 'bac_glacons', icon: '🧊', label_fr: 'Bac à glaçons', label_en: 'Ice cube tray', quantity: 1 },
-
-      // Batterie de cuisine
       { id: 'casseroles', icon: '🍲', label_fr: 'Casseroles', label_en: 'Pots', quantity: 3 },
       { id: 'poeles', icon: '🍳', label_fr: 'Poêles', label_en: 'Pans', quantity: 2 },
       { id: 'faitout', icon: '🍲', label_fr: 'Faitout + couvercle', label_en: 'Dutch oven + lid', quantity: 1 },
       { id: 'couvercle', icon: '🔥', label_fr: 'Couvercle', label_en: 'Lid', quantity: 1 },
-
-      // Appareils
       { id: 'cafetiere', icon: '☕', label_fr: 'Cafetière électrique', label_en: 'Electric coffee maker', quantity: 1 },
       { id: 'micro_ondes', icon: '📡', label_fr: 'Micro-ondes', label_en: 'Microwave', quantity: 1 },
       { id: 'refrigerateur_congelateur', icon: '🧊', label_fr: 'Réfrigérateur-congélateur', label_en: 'Fridge-freezer', quantity: 1 },
@@ -930,8 +798,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'telecommande_clim', icon: '❄️', label_fr: 'Télécommande climatisation', label_en: 'AC remote', quantity: 1 },
       { id: 'lave_vaisselle', icon: '🍽️', label_fr: 'Lave-vaisselle', label_en: 'Dishwasher', quantity: 1 },
       { id: 'plancha', icon: '🔥', label_fr: 'Plancha', label_en: 'Plancha grill', quantity: 1 },
-
-      // Ménage
       { id: 'kit_wc', icon: '🚽', label_fr: 'Kit WC', label_en: 'Toilet kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
       { id: 'bassine', icon: '🧴', label_fr: 'Bassine', label_en: 'Basin', quantity: 1 },
@@ -943,14 +809,10 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'pinces_linge', icon: '🧷', label_fr: 'Pinces à linge', label_en: 'Clothespins', quantity: 8 },
       { id: 'poubelles', icon: '🗑️', label_fr: 'Poubelles', label_en: 'Trash cans', quantity: 2 },
       { id: 'detecteur_fumee', icon: '🚨', label_fr: 'Détecteur fumée', label_en: 'Smoke detector', quantity: 1 },
-
-      // Literie
       { id: 'couette_double', icon: '🛏️', label_fr: 'Couette double', label_en: 'Double duvet', quantity: 1 },
       { id: 'couettes_simples', icon: '🛏️', label_fr: 'Couettes simples', label_en: 'Single duvets', quantity: 2 },
       { id: 'oreillers', icon: '🛏️', label_fr: 'Oreillers', label_en: 'Pillows', quantity: 4 },
       { id: 'cintres', icon: '👗', label_fr: 'Cintres', label_en: 'Hangers', quantity: 10 },
-
-      // Extérieur
       { id: 'cle_locatif', icon: '🗝️', label_fr: 'Clé locatif', label_en: 'Rental key', quantity: 1 },
       { id: 'carte_barriere', icon: '🪪', label_fr: 'Carte barrière', label_en: 'Barrier card', quantity: 1 },
       { id: 'table_jardin', icon: '🍽️', label_fr: 'Table de jardin', label_en: 'Garden table', quantity: 1 },
@@ -960,7 +822,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     ],
 
     COTTAGE_PREMIUM: [
-      // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 6 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 6 },
       { id: 'assiettes_plates', icon: '🍽️', label_fr: 'Assiettes plates', label_en: 'Dinner plates', quantity: 6 },
@@ -971,8 +832,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'verres_vin', icon: '🍷', label_fr: 'Verres à vin', label_en: 'Wine glasses', quantity: 6 },
       { id: 'verres_eau', icon: '🥛', label_fr: 'Verres à eau', label_en: 'Water glasses', quantity: 6 },
       { id: 'pichet', icon: '🍶', label_fr: 'Pichet', label_en: 'Carafe', quantity: 1 },
-
-      // Couverts
       { id: 'fourchettes', icon: '🍴', label_fr: 'Fourchettes', label_en: 'Forks', quantity: 6 },
       { id: 'cuilleres_soupe', icon: '🥄', label_fr: 'Cuillères à soupe', label_en: 'Soup spoons', quantity: 6 },
       { id: 'cuilleres_cafe', icon: '🥄', label_fr: 'Cuillères à café', label_en: 'Coffee spoons', quantity: 6 },
@@ -998,14 +857,10 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'plat_four', icon: '🍛', label_fr: 'Plat à four', label_en: 'Baking dish', quantity: 1 },
       { id: 'cloche_micro_onde', icon: '🥤', label_fr: 'Cloche micro-onde', label_en: 'Microwave cover', quantity: 1 },
       { id: 'bac_glacons', icon: '🧊', label_fr: 'Bac à glaçons', label_en: 'Ice tray', quantity: 1 },
-
-      // Batterie de cuisine
       { id: 'casseroles', icon: '🍲', label_fr: 'Casseroles', label_en: 'Pots', quantity: 3 },
       { id: 'poeles', icon: '🍳', label_fr: 'Poêles', label_en: 'Pans', quantity: 2 },
       { id: 'faitout', icon: '🍲', label_fr: 'Faitout + couvercle', label_en: 'Dutch oven + lid', quantity: 1 },
       { id: 'couvercle', icon: '🔥', label_fr: 'Couvercle', label_en: 'Lid', quantity: 1 },
-
-      // Appareils
       { id: 'cafetiere', icon: '☕', label_fr: 'Cafetière électrique', label_en: 'Electric coffee maker', quantity: 1 },
       { id: 'micro_ondes', icon: '📡', label_fr: 'Micro-ondes', label_en: 'Microwave', quantity: 1 },
       { id: 'tv', icon: '📺', label_fr: 'TV + télécommande', label_en: 'TV + remote', quantity: 1 },
@@ -1013,8 +868,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'refrigerateur', icon: '🧊', label_fr: 'Réfrigérateur', label_en: 'Fridge', quantity: 1 },
       { id: 'lave_vaisselle', icon: '🍽️', label_fr: 'Lave-vaisselle', label_en: 'Dishwasher', quantity: 1 },
       { id: 'egouttoir', icon: '🥤', label_fr: 'Égouttoir', label_en: 'Dish rack', quantity: 1 },
-
-      // Ménage
       { id: 'kit_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'Toilet kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
       { id: 'bassine', icon: '🧴', label_fr: 'Bassine', label_en: 'Basin', quantity: 1 },
@@ -1026,14 +879,10 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'pinces_linge', icon: '🧷', label_fr: 'Pinces à linge', label_en: 'Clothespins', quantity: 8 },
       { id: 'poubelles', icon: '🗑️', label_fr: 'Poubelles', label_en: 'Trash cans', quantity: 2 },
       { id: 'detecteur_fumee', icon: '🚨', label_fr: 'Détecteur de fumée', label_en: 'Smoke detector', quantity: 1 },
-
-      // Literie
       { id: 'couette_double', icon: '🛏️', label_fr: 'Couette double', label_en: 'Double duvet', quantity: 1 },
       { id: 'couettes_simples', icon: '🛏️', label_fr: 'Couettes simples', label_en: 'Single duvets', quantity: 2 },
       { id: 'oreillers', icon: '🛏️', label_fr: 'Oreillers', label_en: 'Pillows', quantity: 4 },
       { id: 'cintres', icon: '👗', label_fr: 'Cintres', label_en: 'Hangers', quantity: 10 },
-
-      // Extérieur
       { id: 'cle_locatif', icon: '🗝️', label_fr: 'Clé locatif', label_en: 'Rental key', quantity: 2 },
       { id: 'carte_barriere', icon: '🪪', label_fr: 'Carte Barrière', label_en: 'Barrier card', quantity: 1 },
       { id: 'chaises_interieur', icon: '🪑', label_fr: 'Chaises intérieur', label_en: 'Indoor chairs', quantity: 3 },
