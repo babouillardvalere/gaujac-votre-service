@@ -470,8 +470,9 @@ export default function ClientControleInventaire() {
           photo_url: intervention.photo || '',
           date_saisie: new Date().toISOString(),
           statut: 'en_attente',
-          autorisation_acces: 'oui',
-          clause_autorisation_acceptee: true,
+          autorisation_acces: autorisationAcces,
+          plage_horaire_client: autorisationAcces === 'non' ? plageHoraire : '',
+          clause_autorisation_acceptee: autorisationAcces === 'oui',
           origine: 'arrivee',
           fiche_arrivee_id: ficheArrivee.id,
           dossier_arrivee_id: dossierId
@@ -496,8 +497,9 @@ export default function ClientControleInventaire() {
           photo_url: intervention.photo || '',
           date_saisie: new Date().toISOString(),
           statut: 'en_attente',
-          autorisation_acces: 'oui',
-          clause_autorisation_acceptee: true,
+          autorisation_acces: autorisationAcces,
+          plage_horaire_client: autorisationAcces === 'non' ? plageHoraire : '',
+          clause_autorisation_acceptee: autorisationAcces === 'oui',
           origine: 'arrivee',
           fiche_arrivee_id: ficheArrivee.id,
           dossier_arrivee_id: dossierId
