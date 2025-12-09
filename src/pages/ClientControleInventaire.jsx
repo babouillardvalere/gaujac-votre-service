@@ -49,18 +49,8 @@ export default function ClientControleInventaire() {
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   // Liste des objets critiques nécessitant intervention technique immédiate
-  const CRITICAL_ITEMS = [
-    'table_jardin',
-    'chaises_jardin',
-    'tv',
-    'telecommande_clim',
-    'plancha',
-    'frigo',
-    'detecteur_fumee',
-    'lave_vaisselle',
-    'micro_ondes',
-    'cafetiere'
-  ];
+  // VIDE : tous les objets de l'inventaire sont gérés par le MÉNAGE
+  const CRITICAL_ITEMS = [];
   const [photosLieux, setPhotosLieux] = useState({});
   const [evaluationProprete, setEvaluationProprete] = useState('');
   const [commentaireProprete, setCommentaireProprete] = useState('');
