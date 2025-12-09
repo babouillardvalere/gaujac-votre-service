@@ -71,6 +71,8 @@ export default function ClientControleInventaire() {
   const [uploading, setUploading] = useState(false);
   const [showRecapDialog, setShowRecapDialog] = useState(false);
   const [interventionsPreview, setInterventionsPreview] = useState({ menage: [], technique: [] });
+  const [autorisationAcces, setAutorisationAcces] = useState('');
+  const [plageHoraire, setPlageHoraire] = useState('');
 
   useEffect(() => {
     if (!nom || !categorie) {
@@ -330,6 +332,16 @@ export default function ClientControleInventaire() {
   };
 
   const handlePrepareSubmit = () => {
+    if (!autorisationAcces) {
+      toast.error(lang === 'fr' ? 'Veuillez indiquer si vous autorisez l\'accès' : 'Please indicate if you authorize access');
+      return;
+    }
+
+    if (autorisationAcces === 'non' && !plageHoraire) {
+      toast.error(lang === 'fr' ? 'Veuillez sélectionner une plage horaire' : 'Please select a time slot');
+      return;
+    }
+
     if (!evaluationProprete) {
       toast.error(lang === 'fr' ? 'Veuillez évaluer la propreté' : 'Please evaluate cleanliness');
       return;
@@ -771,7 +783,75 @@ export default function ClientControleInventaire() {
             </CardContent>
           </Card>
 
-          {/* Bloc 3 - Photos facultatives */}
+          {/* Bloc 3 - Autorisation d'accès */}
+          <Card className="border-2 border-purple-300 rounded-xl mb-6">
+            <CardContent className="p-6">
+              <h2 className="font-heading text-xl text-[#0077A8] mb-2">
+                🔐 {lang === 'fr' ? 'Autorisation d\'accès' : 'Access authorization'} *
+              </h2>
+              <p className="text-sm text-gray-600 mb-4">
+                {lang === 'fr' 
+                  ? 'Autorisez-vous notre intervenant à entrer dans votre hébergement / emplacement en votre absence ?' 
+                  : 'Do you authorize our staff to enter your accommodation / pitch in your absence?'}
+              </p>
+
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <button
+                  onClick={() => {
+                    setAutorisationAcces('oui');
+                    setPlageHoraire('');
+                  }}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    autorisationAcces === 'oui'
+                      ? 'border-green-500 bg-green-50'
+                      : 'border-gray-300 hover:border-green-300'
+                  }`}
+                >
+                  <div className="text-3xl mb-2">✔</div>
+                  <div className="font-heading text-sm">
+                    {lang === 'fr' ? 'Oui' : 'Yes'}
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setAutorisationAcces('non')}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    autorisationAcces === 'non'
+                      ? 'border-red-500 bg-red-50'
+                      : 'border-gray-300 hover:border-red-300'
+                  }`}
+                >
+                  <div className="text-3xl mb-2">✖</div>
+                  <div className="font-heading text-sm">
+                    {lang === 'fr' ? 'Non' : 'No'}
+                  </div>
+                </button>
+              </div>
+
+              {autorisationAcces === 'non' && (
+                <div className="mt-4 p-4 bg-yellow-50 rounded-lg border-2 border-yellow-300">
+                  <p className="text-sm text-gray-700 mb-3">
+                    ⏰ {lang === 'fr' 
+                      ? 'Quand souhaitez-vous que notre équipe intervienne ?' 
+                      : 'When would you like our team to intervene?'}
+                  </p>
+                  <Select value={plageHoraire} onValueChange={setPlageHoraire}>
+                    <SelectTrigger className="border-2">
+                      <SelectValue placeholder={lang === 'fr' ? 'Choisir une plage horaire' : 'Choose a time slot'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="8h-12h">8h–12h</SelectItem>
+                      <SelectItem value="12h-14h">12h–14h</SelectItem>
+                      <SelectItem value="14h-18h">14h–18h</SelectItem>
+                      <SelectItem value="18h-20h">18h–20h</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Bloc 4 - Photos facultatives */}
           <Card className="border-2 border-blue-300 rounded-xl mb-6">
             <CardContent className="p-6">
               <h2 className="font-heading text-xl text-[#0077A8] mb-2">
@@ -828,7 +908,7 @@ export default function ClientControleInventaire() {
             </CardContent>
           </Card>
 
-          {/* Bloc 4 - Propreté */}
+          {/* Bloc 5 - Propreté */}
           <Card className="border-2 border-[#FFA500]/30 rounded-xl mb-6">
             <CardContent className="p-6">
               <h2 className="font-heading text-xl text-[#0077A8] mb-4">
@@ -925,7 +1005,7 @@ export default function ClientControleInventaire() {
             </CardContent>
           </Card>
 
-          {/* Bloc 5 - Remarques */}
+          {/* Bloc 6 - Remarques */}
           <Card className="border-2 border-gray-300 rounded-xl mb-6">
             <CardContent className="p-6">
               <h2 className="font-heading text-xl text-[#0077A8] mb-4">
@@ -941,10 +1021,10 @@ export default function ClientControleInventaire() {
             </CardContent>
           </Card>
 
-          {/* Bloc 6 - Signature */}
+          {/* Bloc 7 - Signature */}
           <SignaturePad onSave={setSignature} disabled={submitting} lang={lang} />
 
-          {/* Bloc 7 - Validation */}
+          {/* Bloc 8 - Validation */}
           <Button
             onClick={handlePrepareSubmit}
             disabled={submitting || !evaluationProprete}

@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from './translations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
 import { AlertCircle, Clock, Camera, Wrench, Sparkles, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export default function ConditionsArrivee() {
+export default function ConditionsArrivee({ onAccept }) {
   const { t, lang } = useTranslation();
   const isFrench = lang === 'fr';
+  const [accepte, setAccepte] = useState(false);
 
   return (
     <div className="space-y-4">
@@ -346,6 +349,36 @@ export default function ConditionsArrivee() {
                 <span className="font-body text-gray-700">{isFrench ? 'Générer les documents d\'arrivée' : 'Generate arrival documents'}</span>
               </div>
             </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Case à cocher d'acceptation */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}>
+        <Card className="border-2 border-[#00AEEF] rounded-xl">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3 mb-4">
+              <Checkbox
+                id="accept-conditions"
+                checked={accepte}
+                onCheckedChange={setAccepte}
+                className="mt-1"
+              />
+              <label htmlFor="accept-conditions" className="font-body text-gray-700 cursor-pointer">
+                {isFrench 
+                  ? '✔ Pour continuer, merci d\'accepter les conditions ci-dessous. J\'ai lu et j\'accepte les conditions.'
+                  : '✔ To continue, please accept the conditions below. I have read and accept the conditions.'}
+              </label>
+            </div>
+            {onAccept && (
+              <Button
+                onClick={onAccept}
+                disabled={!accepte}
+                className="w-full h-12 bg-[#00AEEF] hover:bg-[#0077A8] text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isFrench ? 'Continuer' : 'Continue'}
+              </Button>
+            )}
           </CardContent>
         </Card>
       </motion.div>
