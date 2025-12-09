@@ -80,18 +80,19 @@ export default function ClientControleInventaire() {
     
     // DEBUG: Vérifier les données occupants dans sessionStorage
     const debugOccupants = {
-      adultes: sessionStorage.getItem('arrivee_nombre_adultes'),
-      ados: sessionStorage.getItem('arrivee_nombre_adolescents'),
-      enfants: sessionStorage.getItem('arrivee_nombre_enfants'),
-      bebes: sessionStorage.getItem('arrivee_nombre_bebes'),
-      animaux: sessionStorage.getItem('arrivee_nombre_animaux')
+      adultes: sessionStorage.getItem('arrivee_nb_adultes'),
+      ados: sessionStorage.getItem('arrivee_nb_adolescents'),
+      enfants: sessionStorage.getItem('arrivee_nb_enfants'),
+      bebes: sessionStorage.getItem('arrivee_nb_bebes'),
+      chiens: sessionStorage.getItem('arrivee_nombre_chiens'),
+      chats: sessionStorage.getItem('arrivee_nombre_chats')
     };
     console.log('🔍 DEBUG sessionStorage occupants:', debugOccupants);
     
-    // Si les données occupants sont manquantes, rediriger vers l'étape statistiques
-    if (!sessionStorage.getItem('arrivee_nombre_adultes')) {
-      console.warn('⚠️ Données occupants manquantes - redirection vers statistiques');
-      navigate(createPageUrl('ClientArriveeStatistiques'));
+    // Si les données occupants sont manquantes, rediriger vers l'étape identité
+    if (!sessionStorage.getItem('arrivee_nb_adultes')) {
+      console.warn('⚠️ Données occupants manquantes - redirection vers identité');
+      navigate(createPageUrl('ClientArriveeIdentite'));
       return;
     }
     
@@ -401,11 +402,13 @@ export default function ClientControleInventaire() {
       });
 
       // Récupérer les occupants depuis sessionStorage
-      const nombreAdultes = sessionStorage.getItem('arrivee_nombre_adultes') || '0';
-      const nombreAdos = sessionStorage.getItem('arrivee_nombre_adolescents') || '0';
-      const nombreEnfants = sessionStorage.getItem('arrivee_nombre_enfants') || '0';
-      const nombreBebes = sessionStorage.getItem('arrivee_nombre_bebes') || '0';
-      const nombreAnimaux = sessionStorage.getItem('arrivee_nombre_animaux') || '0';
+      const nombreAdultes = sessionStorage.getItem('arrivee_nb_adultes') || '0';
+      const nombreAdos = sessionStorage.getItem('arrivee_nb_adolescents') || '0';
+      const nombreEnfants = sessionStorage.getItem('arrivee_nb_enfants') || '0';
+      const nombreBebes = sessionStorage.getItem('arrivee_nb_bebes') || '0';
+      const nombreChiens = sessionStorage.getItem('arrivee_nombre_chiens') || '0';
+      const nombreChats = sessionStorage.getItem('arrivee_nombre_chats') || '0';
+      const nombreAnimaux = (parseInt(nombreChiens) + parseInt(nombreChats)).toString();
 
       console.log('📊 Données occupants (STRING):', {
         nombreAdultes,
@@ -574,7 +577,7 @@ export default function ClientControleInventaire() {
                 <p><strong>{lang === 'fr' ? 'Catégorie' : 'Category'}:</strong> {categorie}</p>
                 <p><strong>{lang === 'fr' ? 'Nom & Prénom' : 'Name'}:</strong> {nom} {prenom}</p>
                 <p><strong>{lang === 'fr' ? 'Dates' : 'Dates'}:</strong> {dateArrivee} — {dateDepart}</p>
-                <p><strong>{lang === 'fr' ? 'Occupants' : 'Occupants'}:</strong> {sessionStorage.getItem('arrivee_nombre_adultes') || '0'} adultes, {sessionStorage.getItem('arrivee_nombre_adolescents') || '0'} ados, {sessionStorage.getItem('arrivee_nombre_enfants') || '0'} enfants, {sessionStorage.getItem('arrivee_nombre_bebes') || '0'} bébés, {sessionStorage.getItem('arrivee_nombre_animaux') || '0'} animaux</p>
+                <p><strong>{lang === 'fr' ? 'Occupants' : 'Occupants'}:</strong> {sessionStorage.getItem('arrivee_nb_adultes') || '0'} adultes, {sessionStorage.getItem('arrivee_nb_adolescents') || '0'} ados, {sessionStorage.getItem('arrivee_nb_enfants') || '0'} enfants, {sessionStorage.getItem('arrivee_nb_bebes') || '0'} bébés, {(parseInt(sessionStorage.getItem('arrivee_nombre_chiens') || '0') + parseInt(sessionStorage.getItem('arrivee_nombre_chats') || '0'))} animaux</p>
               </div>
             </CardContent>
           </Card>
