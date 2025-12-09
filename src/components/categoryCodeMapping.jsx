@@ -384,7 +384,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'tire_bouchon', icon: '🍷', label_fr: 'Tire-bouchon', label_en: 'Corkscrew', quantity: 1 },
       { id: 'ouvre_boite', icon: '🥫', label_fr: 'Ouvre-boîte', label_en: 'Can opener', quantity: 1 },
       { id: 'range_couverts', icon: '🍴', label_fr: 'Range couverts', label_en: 'Cutlery tray', quantity: 1 },
-      { id: 'plat_four_rond', icon: '🍛', label_fr: 'Plat à four', label_en: 'Baking dish', quantity: 1 },
+      { id: 'plat_four', icon: '🍛', label_fr: 'Plat à four', label_en: 'Baking dish', quantity: 1 },
       { id: 'cloche_micro_onde', icon: '🥤', label_fr: 'Cloche micro-onde', label_en: 'Microwave cover', quantity: 1 },
       { id: 'bac_glacons', icon: '🧊', label_fr: 'Bac à glaçons', label_en: 'Ice cube tray', quantity: 1 },
       { id: 'casseroles', icon: '🍲', label_fr: 'Casseroles', label_en: 'Pots', quantity: 3 },
