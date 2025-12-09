@@ -128,12 +128,12 @@ export default function ClientControleInventaire() {
 
   // Déterminer la catégorie d'un item
   const getItemCategory = (itemId) => {
-    const vaisselle = ['assiettes_creuses', 'assiettes_dessert', 'assiettes_plates', 'plat', 'bols', 'saladier', 'tasses', 'verres_eau', 'verres_vin', 'pichet'];
-    const couverts = ['fourchettes', 'cuilleres_soupe', 'cuilleres_cafe', 'couteau_pain', 'couteaux', 'cendrier', 'couvert_salade', 'ciseaux', 'spatule_bois', 'eplucheur', 'louche', 'ecumoire', 'planche_decouper', 'dessous_plat', 'passoire', 'essoreuse_salade', 'tire_bouchon', 'ouvre_boite', 'range_couverts', 'plateau', 'corbeille_pain', 'cloche_micro_onde', 'bac_glacons'];
-    const cuisson = ['casseroles', 'poeles', 'poele', 'faitout', 'couvercle', 'cafetiere', 'micro_ondes', 'refrigerateur', 'congelateur', 'tv', 'telecommande_tv', 'telecommande_clim', 'lave_vaisselle', 'refrigerateur_congelateur', 'plat_four_rond'];
+    const vaisselle = ['assiettes_creuses', 'assiettes_dessert', 'assiettes_plates', 'plat', 'bols', 'saladier', 'tasses', 'verres_eau', 'verres_vin', 'verres', 'pichet'];
+    const couverts = ['fourchettes', 'cuilleres_soupe', 'cuilleres_cafe', 'couteau_pain', 'couteau_office', 'couteau_decouper', 'couteaux', 'cendrier', 'couvert_salade', 'ciseaux', 'spatule_bois', 'eplucheur', 'louche', 'ecumoire', 'planche_decouper', 'dessous_plat', 'passoire', 'essoreuse_salade', 'tire_bouchon', 'ouvre_boite', 'range_couverts', 'plateau', 'corbeille_pain', 'cloche_micro_onde', 'bac_glacons', 'plat_four_rond'];
+    const cuisson = ['casseroles', 'poeles', 'poele', 'faitout', 'couvercle', 'cafetiere', 'micro_ondes', 'refrigerateur', 'congelateur', 'tv', 'telecommande_tv', 'telecommande_clim', 'lave_vaisselle', 'lave_linge', 'seche_linge', 'refrigerateur_congelateur', 'plancha'];
     const menage = ['kit_wc', 'seau', 'bassine', 'balai', 'balai_brosse', 'pelle_balayette', 'serpilliere', 'sechoir_linge', 'pinces_linge', 'poubelle', 'poubelles', 'extincteur', 'detecteur_fumee'];
     const nuit = ['couette_double', 'couettes_doubles', 'couette_simple', 'couettes_simples', 'oreillers', 'cintres', 'table_chevet'];
-    const exterieur = ['cle_locatif', 'carte_barriere', 'banc_bois', 'table_jardin', 'chaises_jardin', 'chaises_interieures', 'chaises_interieur', 'transats', 'terrasse'];
+    const exterieur = ['cle_locatif', 'carte_barriere', 'banc_bois', 'table_jardin', 'chaises_jardin', 'chaises_interieures', 'chaises_interieur', 'tabourets', 'transats', 'terrasse'];
     
     if (vaisselle.includes(itemId)) return 'vaisselle';
     if (couverts.includes(itemId)) return 'couverts';
