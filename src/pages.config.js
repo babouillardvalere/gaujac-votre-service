@@ -37,7 +37,6 @@ import ClientArriveeHebergement from './pages/ClientArriveeHebergement';
 import ClientControleInventaire from './pages/ClientControleInventaire';
 import ClientArriveeSuivi from './pages/ClientArriveeSuivi';
 import ClientDepartInventaire from './pages/ClientDepartInventaire';
-import ClientArriveeStatistiques from './pages/ClientArriveeStatistiques';
 import Statistiques from './pages/Statistiques';
 import InfosPratiques from './pages/InfosPratiques';
 import AvisApplicationForm from './pages/AvisApplicationForm';
@@ -109,7 +108,6 @@ export const PAGES = {
     "ClientControleInventaire": ClientControleInventaire,
     "ClientArriveeSuivi": ClientArriveeSuivi,
     "ClientDepartInventaire": ClientDepartInventaire,
-    "ClientArriveeStatistiques": ClientArriveeStatistiques,
     "Statistiques": Statistiques,
     "InfosPratiques": InfosPratiques,
     "AvisApplicationForm": AvisApplicationForm,
