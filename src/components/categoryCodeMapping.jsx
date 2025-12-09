@@ -201,7 +201,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'oreillers', icon: '🛏️', label_fr: 'Oreillers', label_en: 'Pillows', quantity: 4 },
       { id: 'cintres', icon: '👗', label_fr: 'Cintres', label_en: 'Hangers', quantity: 10 },
       { id: 'cle_locatif', icon: '🗝️', label_fr: 'Clé locatif', label_en: 'Rental key', quantity: 1 },
-      { id: 'tabourets', icon: '🪑', label_fr: 'Tabourets', label_en: 'Stools', quantity: 2 },
+      { id: 'chaises_interieur', icon: '🪑', label_fr: 'Chaises intérieur', label_en: 'Indoor chairs', quantity: 2 },
       { id: 'table_jardin', icon: '🍽️', label_fr: 'Table de jardin', label_en: 'Garden table', quantity: 1 },
       { id: 'chaises_jardin', icon: '🪑', label_fr: 'Chaises de jardin', label_en: 'Garden chairs', quantity: 4 }
     ],
