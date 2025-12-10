@@ -6,7 +6,9 @@ export const NOTIFICATION_TYPES = {
   INTERVENTION_CREEE: 'intervention_creee',
   DOSSIER_FINALISE: 'dossier_finalise',
   INTERVENTION_PRISE_EN_CHARGE: 'intervention_prise_en_charge',
-  INTERVENTION_RESOLUE: 'intervention_resolue'
+  INTERVENTION_RESOLUE: 'intervention_resolue',
+  TACHE_ASSIGNEE: 'tache_assignee',
+  TACHE_STATUT_CHANGE: 'tache_statut_change'
 };
 
 // Rôles destinataires
@@ -179,5 +181,117 @@ export const marquerToutesCommeLues = async (role) => {
     await Promise.all(notifications.map(n => marquerCommeLue(n.id)));
   } catch (error) {
     console.error('Erreur marquer toutes lues:', error);
+  }
+};
+
+// Notifier nouvelle tâche assignée
+export const notifierNouvelleTache = async (tacheData) => {
+  const role = tacheData.categorie === 'technique' ? ROLES.TECHNIQUE : 
+                tacheData.categorie === 'menage' ? ROLES.MENAGE : 
+                ROLES.RECEPTION;
+  
+  const prefs = getNotificationPreferences(role);
+  
+  try {
+    await base44.entities.Notification.create({
+      destinataire_type: 'collaborateur',
+      destinataire_email: tacheData.assignee_email,
+      type: 'intervention_assignee',
+      titre: `✅ Nouvelle tâche ${tacheData.categorie}`,
+      message: `${tacheData.titre} - Échéance: ${tacheData.date_echeance ? new Date(tacheData.date_echeance).toLocaleDateString('fr-FR') : 'Non définie'}`,
+      metadata: {
+        tache_id: tacheData.id,
+        categorie: tacheData.categorie,
+        priorite: tacheData.priorite,
+        hebergement: tacheData.hebergement,
+        role_cible: role
+      },
+      lue: false,
+      archivee: false
+    });
+
+    // Email si activé
+    if (prefs.email_enabled && tacheData.assignee_email) {
+      await base44.integrations.Core.SendEmail({
+        to: tacheData.assignee_email,
+        subject: `Nouvelle tâche ${tacheData.categorie}: ${tacheData.titre}`,
+        body: `
+Bonjour ${tacheData.assignee},
+
+Une nouvelle tâche vous a été assignée :
+
+Titre: ${tacheData.titre}
+Catégorie: ${tacheData.categorie}
+Priorité: ${tacheData.priorite}
+${tacheData.hebergement ? `Hébergement: ${tacheData.hebergement}` : ''}
+Échéance: ${tacheData.date_echeance ? new Date(tacheData.date_echeance).toLocaleString('fr-FR') : 'Non définie'}
+
+${tacheData.description ? `Description:\n${tacheData.description}` : ''}
+
+Merci de traiter cette demande dans les meilleurs délais.
+
+L'équipe Camping Paradis
+        `
+      });
+    }
+  } catch (error) {
+    console.error('Erreur notification nouvelle tâche:', error);
+  }
+};
+
+// Notifier changement de statut de tâche
+export const notifierChangementStatutTache = async (tacheData, ancienStatut) => {
+  if (ancienStatut === tacheData.statut) return;
+  
+  const role = tacheData.categorie === 'technique' ? ROLES.TECHNIQUE : 
+                tacheData.categorie === 'menage' ? ROLES.MENAGE : 
+                ROLES.RECEPTION;
+  
+  const prefs = getNotificationPreferences(role);
+  
+  try {
+    const statutLabels = {
+      'a_faire': '⏳ À faire',
+      'en_cours': '🔵 En cours',
+      'en_attente': '⏸️ En attente',
+      'terminee': '✅ Terminée',
+      'annulee': '❌ Annulée'
+    };
+
+    await base44.entities.Notification.create({
+      destinataire_type: 'collaborateur',
+      destinataire_email: tacheData.assignee_email,
+      type: 'statut_change',
+      titre: `Tâche ${statutLabels[tacheData.statut]}`,
+      message: `${tacheData.titre}`,
+      metadata: {
+        tache_id: tacheData.id,
+        ancien_statut: ancienStatut,
+        nouveau_statut: tacheData.statut,
+        categorie: tacheData.categorie,
+        role_cible: role
+      },
+      lue: false,
+      archivee: false
+    });
+
+    // Email pour statut "terminée" si activé
+    if (prefs.email_enabled && tacheData.assignee_email && tacheData.statut === 'terminee') {
+      await base44.integrations.Core.SendEmail({
+        to: tacheData.assignee_email,
+        subject: `Tâche terminée: ${tacheData.titre}`,
+        body: `
+Bonjour ${tacheData.assignee},
+
+La tâche "${tacheData.titre}" a été marquée comme terminée.
+
+Merci pour votre travail !
+
+L'équipe Camping Paradis
+        `
+      });
+    }
+  } catch (error) {
+    console.error('Erreur notification changement statut tâche:', error);
   }
 };

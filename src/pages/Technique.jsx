@@ -60,6 +60,11 @@ export default function Technique() {
   const [showPhotoApres, setShowPhotoApres] = useState(false);
   const [incidentForPhoto, setIncidentForPhoto] = useState(null);
   const [activeTab, setActiveTab] = useState('interventions');
+  const [tacheFilters, setTacheFilters] = useState({
+    statut: 'tous',
+    priorite: 'tous',
+    tri: 'echeance'
+  });
 
   useEffect(() => {
     const auth = sessionStorage.getItem('collaborateur_authenticated');
@@ -546,14 +551,86 @@ export default function Technique() {
           </TabsContent>
 
           <TabsContent value="taches">
-            <div className="space-y-4">
-              {taches.length === 0 ? (
-                <div className="text-center py-12">
-                  <CheckCircle className="w-16 h-16 text-[#00AEEF] mx-auto mb-4" />
-                  <p className="font-heading text-[#0077A8]">{lang === 'fr' ? 'Aucune tâche' : 'No tasks'}</p>
+            <Card className="border-2 border-[#00AEEF]/30 rounded-xl mb-4">
+              <CardContent className="p-4">
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-xs font-heading text-[#0077A8] mb-1 block">
+                      {lang === 'fr' ? 'Statut' : 'Status'}
+                    </label>
+                    <select
+                      value={tacheFilters.statut}
+                      onChange={(e) => setTacheFilters({...tacheFilters, statut: e.target.value})}
+                      className="w-full px-3 py-2 border border-[#00AEEF]/30 rounded-lg text-sm"
+                    >
+                      <option value="tous">{lang === 'fr' ? 'Tous' : 'All'}</option>
+                      <option value="a_faire">⏳ {lang === 'fr' ? 'À faire' : 'To do'}</option>
+                      <option value="en_cours">🔵 {lang === 'fr' ? 'En cours' : 'In progress'}</option>
+                      <option value="terminee">✅ {lang === 'fr' ? 'Terminées' : 'Completed'}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-heading text-[#0077A8] mb-1 block">
+                      {lang === 'fr' ? 'Priorité' : 'Priority'}
+                    </label>
+                    <select
+                      value={tacheFilters.priorite}
+                      onChange={(e) => setTacheFilters({...tacheFilters, priorite: e.target.value})}
+                      className="w-full px-3 py-2 border border-[#00AEEF]/30 rounded-lg text-sm"
+                    >
+                      <option value="tous">{lang === 'fr' ? 'Toutes' : 'All'}</option>
+                      <option value="urgente">🔴 {lang === 'fr' ? 'Urgente' : 'Urgent'}</option>
+                      <option value="haute">⬆️ {lang === 'fr' ? 'Haute' : 'High'}</option>
+                      <option value="normale">➡️ {lang === 'fr' ? 'Normale' : 'Normal'}</option>
+                      <option value="basse">⬇️ {lang === 'fr' ? 'Basse' : 'Low'}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-heading text-[#0077A8] mb-1 block">
+                      {lang === 'fr' ? 'Trier par' : 'Sort by'}
+                    </label>
+                    <select
+                      value={tacheFilters.tri}
+                      onChange={(e) => setTacheFilters({...tacheFilters, tri: e.target.value})}
+                      className="w-full px-3 py-2 border border-[#00AEEF]/30 rounded-lg text-sm"
+                    >
+                      <option value="echeance">📅 {lang === 'fr' ? 'Échéance' : 'Deadline'}</option>
+                      <option value="creation">🆕 {lang === 'fr' ? 'Date création' : 'Creation date'}</option>
+                      <option value="priorite">⚡ {lang === 'fr' ? 'Priorité' : 'Priority'}</option>
+                    </select>
+                  </div>
                 </div>
-              ) : (
-                taches.map(tache => (
+              </CardContent>
+            </Card>
+
+            <div className="space-y-4">
+              {(() => {
+                const filteredTaches = taches
+                  .filter(t => {
+                    if (tacheFilters.statut !== 'tous' && t.statut !== tacheFilters.statut) return false;
+                    if (tacheFilters.priorite !== 'tous' && t.priorite !== tacheFilters.priorite) return false;
+                    return true;
+                  })
+                  .sort((a, b) => {
+                    if (tacheFilters.tri === 'priorite') {
+                      const prioriteOrder = { urgente: 4, haute: 3, normale: 2, basse: 1 };
+                      return (prioriteOrder[b.priorite] || 2) - (prioriteOrder[a.priorite] || 2);
+                    } else if (tacheFilters.tri === 'creation') {
+                      return new Date(b.created_date) - new Date(a.created_date);
+                    } else {
+                      if (!a.date_echeance) return 1;
+                      if (!b.date_echeance) return -1;
+                      return new Date(a.date_echeance) - new Date(b.date_echeance);
+                    }
+                  });
+
+                return filteredTaches.length === 0 ? (
+                  <div className="text-center py-12">
+                    <CheckCircle className="w-16 h-16 text-[#00AEEF] mx-auto mb-4" />
+                    <p className="font-heading text-[#0077A8]">{lang === 'fr' ? 'Aucune tâche trouvée' : 'No tasks found'}</p>
+                  </div>
+                ) : (
+                  filteredTaches.map(tache => (
                   <Card key={tache.id} className="border-2 border-[#00AEEF]/30 rounded-xl">
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-2">
@@ -626,8 +703,9 @@ export default function Technique() {
                       )}
                     </CardContent>
                   </Card>
-                ))
-              )}
+                  ))
+                );
+              })()}
             </div>
           </TabsContent>
 
