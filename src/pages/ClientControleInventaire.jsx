@@ -18,7 +18,7 @@ import { ArrowLeft, Camera, Check, AlertCircle, Smile, Meh, Frown, Send, Loader2
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
-import { notifierInventaireSoumis, notifierInterventionCreee, notifierDossierFinalise } from '../components/notificationService';
+import { notifierInventaireSoumis, notifierDossierFinalise } from '../components/notificationService';
 import { uploadCompressedImage } from '../components/imageCompression';
 import LazyInventaire from '../components/LazyInventaire';
 import { clearInventaireCache } from '../components/inventaireCache';
@@ -451,58 +451,74 @@ export default function ClientControleInventaire() {
         date_validation: new Date().toISOString()
       });
 
-      // Créer les interventions MÉNAGE (objets non cochés)
-      for (const intervention of interventionsPreview.menage) {
-        const incident = await base44.entities.Incident.create({
-          type: 'menage',
-          categorie: 'nettoyage',
-          sous_categorie: intervention.objet,
-          description: intervention.description,
-          urgent: intervention.urgent,
-          client_nom: nom,
-          client_prenom: prenom,
-          date_arrivee: dateArrivee,
-          date_depart: dateDepart,
-          logement: numero,
-          photo_url: intervention.photo || '',
-          date_saisie: new Date().toISOString(),
-          statut: 'en_attente',
-          autorisation_acces: autorisationAcces,
-          plage_horaire_client: autorisationAcces === 'non' ? plageHoraire : '',
-          clause_autorisation_acceptee: autorisationAcces === 'oui',
-          origine: 'arrivee',
-          fiche_arrivee_id: ficheArrivee.id,
-          dossier_arrivee_id: dossierId
-        });
+      // Créer UNE SEULE TÂCHE MÉNAGE regroupant tous les objets
+      if (interventionsPreview.menage.length > 0) {
+        const objetsList = interventionsPreview.menage
+          .map(interv => `• ${interv.objet}`)
+          .join('\n');
 
-        await notifierInterventionCreee(incident);
+        const descriptionMenage = lang === 'fr'
+          ? `📋 INVENTAIRE ARRIVÉE - Objets manquants (ménage)\n\n` +
+            `🏠 Logement: ${numero} (${categorie})\n` +
+            `👤 Client: ${nom} ${prenom}\n` +
+            `📅 Arrivée: ${dateArrivee} | Départ: ${dateDepart}\n\n` +
+            `📝 Objets signalés:\n${objetsList}\n\n` +
+            `🔐 Autorisation d'accès: ${autorisationAcces === 'oui' ? 'OUI' : 'NON - ' + plageHoraire}\n` +
+            `⏰ Généré le: ${new Date().toLocaleString('fr-FR')}`
+          : `📋 ARRIVAL INVENTORY - Missing items (housekeeping)\n\n` +
+            `🏠 Accommodation: ${numero} (${categorie})\n` +
+            `👤 Guest: ${prenom} ${nom}\n` +
+            `📅 Arrival: ${dateArrivee} | Departure: ${dateDepart}\n\n` +
+            `📝 Items reported:\n${objetsList}\n\n` +
+            `🔐 Access authorization: ${autorisationAcces === 'oui' ? 'YES' : 'NO - ' + plageHoraire}\n` +
+            `⏰ Generated on: ${new Date().toLocaleString('en-GB')}`;
+
+        await base44.entities.Tache.create({
+          titre: lang === 'fr' 
+            ? `🧹 Inventaire Arrivée - ${numero} - ${nom}` 
+            : `🧹 Arrival Inventory - ${numero} - ${nom}`,
+          description: descriptionMenage,
+          categorie: 'menage',
+          priorite: 'normale',
+          statut: 'a_faire',
+          hebergement: numero,
+          date_echeance: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // J+1
+        });
       }
 
-      // Créer les interventions TECHNIQUE (objets cassés déclarés)
-      for (const intervention of interventionsPreview.technique) {
-        const incident = await base44.entities.Incident.create({
-          type: 'technique',
-          categorie: 'mobilier',
-          sous_categorie: intervention.objet,
-          description: intervention.description,
-          urgent: intervention.urgent,
-          client_nom: nom,
-          client_prenom: prenom,
-          date_arrivee: dateArrivee,
-          date_depart: dateDepart,
-          logement: numero,
-          photo_url: intervention.photo || '',
-          date_saisie: new Date().toISOString(),
-          statut: 'en_attente',
-          autorisation_acces: autorisationAcces,
-          plage_horaire_client: autorisationAcces === 'non' ? plageHoraire : '',
-          clause_autorisation_acceptee: autorisationAcces === 'oui',
-          origine: 'arrivee',
-          fiche_arrivee_id: ficheArrivee.id,
-          dossier_arrivee_id: dossierId
-        });
+      // Créer UNE SEULE TÂCHE TECHNIQUE regroupant tous les objets critiques
+      if (interventionsPreview.technique.length > 0) {
+        const objetsList = interventionsPreview.technique
+          .map(interv => `• ${interv.objet}${interv.urgent ? ' 🚨 URGENT' : ''}`)
+          .join('\n');
 
-        await notifierInterventionCreee(incident);
+        const descriptionTechnique = lang === 'fr'
+          ? `🔧 INVENTAIRE ARRIVÉE - Objets cassés/défectueux (technique)\n\n` +
+            `🏠 Logement: ${numero} (${categorie})\n` +
+            `👤 Client: ${nom} ${prenom}\n` +
+            `📅 Arrivée: ${dateArrivee} | Départ: ${dateDepart}\n\n` +
+            `⚠️ Objets critiques signalés:\n${objetsList}\n\n` +
+            `🔐 Autorisation d'accès: ${autorisationAcces === 'oui' ? 'OUI' : 'NON - ' + plageHoraire}\n` +
+            `⏰ Généré le: ${new Date().toLocaleString('fr-FR')}`
+          : `🔧 ARRIVAL INVENTORY - Broken/defective items (technical)\n\n` +
+            `🏠 Accommodation: ${numero} (${categorie})\n` +
+            `👤 Guest: ${prenom} ${nom}\n` +
+            `📅 Arrival: ${dateArrivee} | Departure: ${dateDepart}\n\n` +
+            `⚠️ Critical items reported:\n${objetsList}\n\n` +
+            `🔐 Access authorization: ${autorisationAcces === 'oui' ? 'YES' : 'NO - ' + plageHoraire}\n` +
+            `⏰ Generated on: ${new Date().toLocaleString('en-GB')}`;
+
+        await base44.entities.Tache.create({
+          titre: lang === 'fr' 
+            ? `🔧 Inventaire Arrivée - ${numero} - ${nom}` 
+            : `🔧 Arrival Inventory - ${numero} - ${nom}`,
+          description: descriptionTechnique,
+          categorie: 'technique',
+          priorite: interventionsPreview.technique.some(i => i.urgent) ? 'urgente' : 'haute',
+          statut: 'a_faire',
+          hebergement: numero,
+          date_echeance: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString() // 12h pour technique
+        });
       }
 
       // Mettre à jour le dossier d'arrivée
