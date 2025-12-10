@@ -162,83 +162,146 @@ export default function ClientDepartRecap() {
       const objetsMenage = objetsSignales.filter(s => !CRITICAL_ITEMS.includes(s.objet));
       const objetsTechnique = objetsSignales.filter(s => CRITICAL_ITEMS.includes(s.objet));
 
-      // Créer UNE SEULE TÂCHE MÉNAGE si objets ménage + propreté insatisfaisante
-      if (objetsMenage.length > 0 || evaluationProprete === 'pas_satisfaisant') {
-        const objetsList = objetsMenage
-          .map(s => {
-            const item = inventaireItems.find(i => i.id === s.objet);
-            return `• ${item?.label || s.objet} (${s.type === 'casse' ? (lang === 'fr' ? 'cassé' : 'broken') : (lang === 'fr' ? 'manquant' : 'missing')})`;
-          })
-          .join('\n');
-        
-        const descriptionMenage = lang === 'fr'
-          ? `🧹 INVENTAIRE DÉPART - Objets manquants/cassés (ménage)\n\n` +
-            `🏠 Logement: ${numero} (${categorie})\n` +
-            `👤 Client: ${nom} ${prenom}\n` +
-            `📅 Arrivée: ${dateArrivee} | Départ: ${dateDepart}\n\n` +
-            `${objetsMenage.length > 0 ? `📝 Objets signalés:\n${objetsList}\n\n` : ''}` +
-            `${evaluationProprete === 'pas_satisfaisant' ? `🧽 Propreté insatisfaisante\n${commentaireProprete || ''}\n\n` : ''}` +
-            `⏰ Généré le: ${new Date().toLocaleString('fr-FR')}`
-          : `🧹 DEPARTURE INVENTORY - Missing/broken items (housekeeping)\n\n` +
-            `🏠 Accommodation: ${numero} (${categorie})\n` +
-            `👤 Guest: ${prenom} ${nom}\n` +
-            `📅 Arrival: ${dateArrivee} | Departure: ${dateDepart}\n\n` +
-            `${objetsMenage.length > 0 ? `📝 Items reported:\n${objetsList}\n\n` : ''}` +
-            `${evaluationProprete === 'pas_satisfaisant' ? `🧽 Unsatisfactory cleanliness\n${commentaireProprete || ''}\n\n` : ''}` +
-            `⏰ Generated on: ${new Date().toLocaleString('en-GB')}`;
+            // Préparer les items pour le suivi
+            const itemsMenage = objetsMenage.map(s => {
+              const item = inventaireItems.find(i => i.id === s.objet);
+              return {
+                key: s.objet,
+                label: item?.label || s.objet,
+                quantity: 1,
+                motif: s.type === 'casse' ? 'cassé' : 'manquant'
+              };
+            });
 
-        await base44.entities.Tache.create({
-          titre: lang === 'fr' 
-            ? `🧹 Inventaire Départ - ${numero} - ${nom}` 
-            : `🧹 Departure Inventory - ${numero} - ${nom}`,
-          description: descriptionMenage,
-          categorie: 'menage',
-          priorite: evaluationProprete === 'pas_satisfaisant' ? 'haute' : 'normale',
-          statut: 'a_faire',
-          hebergement: numero,
-          assignee: 'Service Ménage',
-          assignee_email: 'menage@campingparadis.com',
-          date_echeance: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-        });
-      }
+            // Ajouter propreté si insatisfaisante
+            if (evaluationProprete === 'pas_satisfaisant') {
+              itemsMenage.push({
+                key: 'proprete_generale',
+                label: lang === 'fr' ? 'Propreté générale' : 'General cleanliness',
+                quantity: 1,
+                motif: 'insatisfaisant'
+              });
+            }
 
-      // Créer UNE SEULE TÂCHE TECHNIQUE si objets critiques cassés/manquants
-      if (objetsTechnique.length > 0) {
-        const objetsList = objetsTechnique
-          .map(s => {
-            const item = inventaireItems.find(i => i.id === s.objet);
-            return `• ${item?.label || s.objet} (${s.type === 'casse' ? (lang === 'fr' ? 'cassé' : 'broken') : (lang === 'fr' ? 'manquant' : 'missing')})${s.type === 'casse' ? ' 🚨' : ''}`;
-          })
-          .join('\n');
-        
-        const descriptionTechnique = lang === 'fr'
-          ? `🔧 INVENTAIRE DÉPART - Objets cassés/manquants (technique)\n\n` +
-            `🏠 Logement: ${numero} (${categorie})\n` +
-            `👤 Client: ${nom} ${prenom}\n` +
-            `📅 Arrivée: ${dateArrivee} | Départ: ${dateDepart}\n\n` +
-            `⚠️ Objets critiques signalés:\n${objetsList}\n\n` +
-            `⏰ Généré le: ${new Date().toLocaleString('fr-FR')}`
-          : `🔧 DEPARTURE INVENTORY - Broken/missing items (technical)\n\n` +
-            `🏠 Accommodation: ${numero} (${categorie})\n` +
-            `👤 Guest: ${prenom} ${nom}\n` +
-            `📅 Arrival: ${dateArrivee} | Departure: ${dateDepart}\n\n` +
-            `⚠️ Critical items reported:\n${objetsList}\n\n` +
-            `⏰ Generated on: ${new Date().toLocaleString('en-GB')}`;
+            const itemsTechnique = objetsTechnique.map(s => {
+              const item = inventaireItems.find(i => i.id === s.objet);
+              return {
+                key: s.objet,
+                label: item?.label || s.objet,
+                quantity: 1,
+                motif: s.type === 'casse' ? 'cassé' : 'manquant'
+              };
+            });
 
-        await base44.entities.Tache.create({
-          titre: lang === 'fr' 
-            ? `🔧 Inventaire Départ - ${numero} - ${nom}` 
-            : `🔧 Departure Inventory - ${numero} - ${nom}`,
-          description: descriptionTechnique,
-          categorie: 'technique',
-          priorite: objetsTechnique.some(s => s.type === 'casse') ? 'urgente' : 'haute',
-          statut: 'a_faire',
-          hebergement: numero,
-          assignee: 'Service Technique',
-          assignee_email: 'technique@campingparadis.com',
-          date_echeance: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString()
-        });
-      }
+            let tacheMenageId = null;
+            let tacheTechniqueId = null;
+
+            // Créer UNE SEULE TÂCHE MÉNAGE si objets ménage + propreté insatisfaisante
+            if (itemsMenage.length > 0) {
+              const objetsList = objetsMenage
+                .map(s => {
+                  const item = inventaireItems.find(i => i.id === s.objet);
+                  return `• ${item?.label || s.objet} (${s.type === 'casse' ? (lang === 'fr' ? 'cassé' : 'broken') : (lang === 'fr' ? 'manquant' : 'missing')})`;
+                })
+                .join('\n');
+              
+              const descriptionMenage = lang === 'fr'
+                ? `🧹 INVENTAIRE DÉPART - Objets manquants/cassés (ménage)\n\n` +
+                  `🏠 Logement: ${numero} (${categorie})\n` +
+                  `👤 Client: ${nom} ${prenom}\n` +
+                  `📅 Arrivée: ${dateArrivee} | Départ: ${dateDepart}\n\n` +
+                  `${objetsMenage.length > 0 ? `📝 Objets signalés:\n${objetsList}\n\n` : ''}` +
+                  `${evaluationProprete === 'pas_satisfaisant' ? `🧽 Propreté insatisfaisante\n${commentaireProprete || ''}\n\n` : ''}` +
+                  `⏰ Généré le: ${new Date().toLocaleString('fr-FR')}`
+                : `🧹 DEPARTURE INVENTORY - Missing/broken items (housekeeping)\n\n` +
+                  `🏠 Accommodation: ${numero} (${categorie})\n` +
+                  `👤 Guest: ${prenom} ${nom}\n` +
+                  `📅 Arrival: ${dateArrivee} | Departure: ${dateDepart}\n\n` +
+                  `${objetsMenage.length > 0 ? `📝 Items reported:\n${objetsList}\n\n` : ''}` +
+                  `${evaluationProprete === 'pas_satisfaisant' ? `🧽 Unsatisfactory cleanliness\n${commentaireProprete || ''}\n\n` : ''}` +
+                  `⏰ Generated on: ${new Date().toLocaleString('en-GB')}`;
+
+              const tacheMenage = await base44.entities.Tache.create({
+                titre: lang === 'fr' 
+                  ? `🧹 Inventaire Départ - ${numero} - ${nom}` 
+                  : `🧹 Departure Inventory - ${numero} - ${nom}`,
+                description: descriptionMenage,
+                categorie: 'menage',
+                priorite: evaluationProprete === 'pas_satisfaisant' ? 'haute' : 'normale',
+                statut: 'a_faire',
+                hebergement: numero,
+                assignee: 'Service Ménage',
+                assignee_email: 'menage@campingparadis.com',
+                date_echeance: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+              });
+              tacheMenageId = tacheMenage.id;
+            }
+
+            // Créer UNE SEULE TÂCHE TECHNIQUE si objets critiques cassés/manquants
+            if (itemsTechnique.length > 0) {
+              const objetsList = objetsTechnique
+                .map(s => {
+                  const item = inventaireItems.find(i => i.id === s.objet);
+                  return `• ${item?.label || s.objet} (${s.type === 'casse' ? (lang === 'fr' ? 'cassé' : 'broken') : (lang === 'fr' ? 'manquant' : 'missing')})${s.type === 'casse' ? ' 🚨' : ''}`;
+                })
+                .join('\n');
+              
+              const descriptionTechnique = lang === 'fr'
+                ? `🔧 INVENTAIRE DÉPART - Objets cassés/manquants (technique)\n\n` +
+                  `🏠 Logement: ${numero} (${categorie})\n` +
+                  `👤 Client: ${nom} ${prenom}\n` +
+                  `📅 Arrivée: ${dateArrivee} | Départ: ${dateDepart}\n\n` +
+                  `⚠️ Objets critiques signalés:\n${objetsList}\n\n` +
+                  `⏰ Généré le: ${new Date().toLocaleString('fr-FR')}`
+                : `🔧 DEPARTURE INVENTORY - Broken/missing items (technical)\n\n` +
+                  `🏠 Accommodation: ${numero} (${categorie})\n` +
+                  `👤 Guest: ${prenom} ${nom}\n` +
+                  `📅 Arrival: ${dateArrivee} | Departure: ${dateDepart}\n\n` +
+                  `⚠️ Critical items reported:\n${objetsList}\n\n` +
+                  `⏰ Generated on: ${new Date().toLocaleString('en-GB')}`;
+
+              const tacheTechnique = await base44.entities.Tache.create({
+                titre: lang === 'fr' 
+                  ? `🔧 Inventaire Départ - ${numero} - ${nom}` 
+                  : `🔧 Departure Inventory - ${numero} - ${nom}`,
+                description: descriptionTechnique,
+                categorie: 'technique',
+                priorite: objetsTechnique.some(s => s.type === 'casse') ? 'urgente' : 'haute',
+                statut: 'a_faire',
+                hebergement: numero,
+                assignee: 'Service Technique',
+                assignee_email: 'technique@campingparadis.com',
+                date_echeance: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString()
+              });
+              tacheTechniqueId = tacheTechnique.id;
+            }
+
+            // Créer le SUIVI INVENTAIRE pour le client
+            if (itemsMenage.length > 0 || itemsTechnique.length > 0) {
+              const messageClient = lang === 'fr'
+                ? `Votre inventaire de départ a été enregistré. Les objets signalés sont en cours de traitement par nos équipes.`
+                : `Your departure inventory has been registered. Reported items are being processed by our teams.`;
+
+              await base44.entities.SuiviInventaire.create({
+                client_nom: nom,
+                client_prenom: prenom,
+                client_email: created_by, // Email de l'utilisateur connecté
+                logement: numero,
+                categorie_logement: categorie,
+                type_inventaire: 'DEPART',
+                date_arrivee: dateArrivee,
+                date_depart: dateDepart,
+                items_menage: itemsMenage,
+                items_technique: itemsTechnique,
+                statut_menage: itemsMenage.length > 0 ? 'en_attente' : 'non_requis',
+                statut_technique: itemsTechnique.length > 0 ? 'en_attente' : 'non_requis',
+                tache_menage_id: tacheMenageId,
+                tache_technique_id: tacheTechniqueId,
+                message_client: messageClient,
+                date_derniere_maj: new Date().toISOString(),
+                fiche_depart_id: dossierDepart.id
+              });
+            }
 
       // Nettoyer session
       Object.keys(sessionStorage).forEach(key => {

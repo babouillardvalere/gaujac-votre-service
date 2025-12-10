@@ -65,6 +65,7 @@ import DirectionSaison from './pages/DirectionSaison';
 import DirectionMenu from './pages/DirectionMenu';
 import Bar from './pages/Bar';
 import Animations from './pages/Animations';
+import ClientSuiviInventaire from './pages/ClientSuiviInventaire';
 import __Layout from './Layout.jsx';
 
 
@@ -136,6 +137,7 @@ export const PAGES = {
     "DirectionMenu": DirectionMenu,
     "Bar": Bar,
     "Animations": Animations,
+    "ClientSuiviInventaire": ClientSuiviInventaire,
 }
 
 export const pagesConfig = {

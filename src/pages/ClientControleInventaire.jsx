@@ -451,6 +451,24 @@ export default function ClientControleInventaire() {
         date_validation: new Date().toISOString()
       });
 
+      // Préparer les items pour le suivi
+      const itemsMenage = interventionsPreview.menage.map(interv => ({
+        key: interv.objet.toLowerCase().replace(/\s+/g, '_'),
+        label: interv.objet,
+        quantity: 1,
+        motif: 'manquant'
+      }));
+
+      const itemsTechnique = interventionsPreview.technique.map(interv => ({
+        key: interv.objet.toLowerCase().replace(/\s+/g, '_'),
+        label: interv.objet,
+        quantity: 1,
+        motif: interv.urgent ? 'cassé' : 'manquant'
+      }));
+
+      let tacheMenageId = null;
+      let tacheTechniqueId = null;
+
       // Créer UNE SEULE TÂCHE MÉNAGE regroupant tous les objets
       if (interventionsPreview.menage.length > 0) {
         const objetsList = interventionsPreview.menage
@@ -473,7 +491,7 @@ export default function ClientControleInventaire() {
             `🔐 Access authorization: ${autorisationAcces === 'oui' ? 'YES' : 'NO - ' + plageHoraire}\n` +
             `⏰ Generated on: ${new Date().toLocaleString('en-GB')}`;
 
-        await base44.entities.Tache.create({
+        const tacheMenage = await base44.entities.Tache.create({
           titre: lang === 'fr' 
             ? `🧹 Inventaire Arrivée - ${numero} - ${nom}` 
             : `🧹 Arrival Inventory - ${numero} - ${nom}`,
@@ -486,6 +504,7 @@ export default function ClientControleInventaire() {
           assignee_email: 'menage@campingparadis.com',
           date_echeance: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
         });
+        tacheMenageId = tacheMenage.id;
       }
 
       // Créer UNE SEULE TÂCHE TECHNIQUE regroupant tous les objets critiques
@@ -510,7 +529,7 @@ export default function ClientControleInventaire() {
             `🔐 Access authorization: ${autorisationAcces === 'oui' ? 'YES' : 'NO - ' + plageHoraire}\n` +
             `⏰ Generated on: ${new Date().toLocaleString('en-GB')}`;
 
-        await base44.entities.Tache.create({
+        const tacheTechnique = await base44.entities.Tache.create({
           titre: lang === 'fr' 
             ? `🔧 Inventaire Arrivée - ${numero} - ${nom}` 
             : `🔧 Arrival Inventory - ${numero} - ${nom}`,
@@ -522,6 +541,34 @@ export default function ClientControleInventaire() {
           assignee: 'Service Technique',
           assignee_email: 'technique@campingparadis.com',
           date_echeance: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString()
+        });
+        tacheTechniqueId = tacheTechnique.id;
+      }
+
+      // Créer le SUIVI INVENTAIRE pour le client
+      if (itemsMenage.length > 0 || itemsTechnique.length > 0) {
+        const messageClient = lang === 'fr'
+          ? `Votre inventaire a été enregistré. Les objets signalés sont en cours de traitement par nos équipes.`
+          : `Your inventory has been registered. Reported items are being processed by our teams.`;
+
+        await base44.entities.SuiviInventaire.create({
+          client_nom: nom,
+          client_prenom: prenom,
+          client_email: created_by, // Email de l'utilisateur connecté
+          logement: numero,
+          categorie_logement: categorie,
+          type_inventaire: 'ARRIVEE',
+          date_arrivee: dateArrivee,
+          date_depart: dateDepart,
+          items_menage: itemsMenage,
+          items_technique: itemsTechnique,
+          statut_menage: itemsMenage.length > 0 ? 'en_attente' : 'non_requis',
+          statut_technique: itemsTechnique.length > 0 ? 'en_attente' : 'non_requis',
+          tache_menage_id: tacheMenageId,
+          tache_technique_id: tacheTechniqueId,
+          message_client: messageClient,
+          date_derniere_maj: new Date().toISOString(),
+          fiche_arrivee_id: ficheArrivee.id
         });
       }
 
