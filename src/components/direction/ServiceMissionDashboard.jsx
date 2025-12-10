@@ -185,6 +185,231 @@ export default function ServiceMissionDashboard({ service, serviceLabel }) {
           )}
         </CardContent>
       </Card>
-    </div>
-  );
-}
+
+      {/* Dialog Créer Mission */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-xl text-purple-700">
+              <Plus className="w-5 h-5 inline mr-2" />
+              Créer une nouvelle mission
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-heading text-purple-700 mb-2 block">
+                Titre de la mission *
+              </label>
+              <Input
+                value={newMission.titre}
+                onChange={(e) => setNewMission({...newMission, titre: e.target.value})}
+                placeholder="Ex: Préparation hivernage hébergements"
+                className="border-2 border-purple-300/50"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-heading text-purple-700 mb-2 block">
+                Description
+              </label>
+              <Textarea
+                value={newMission.description}
+                onChange={(e) => setNewMission({...newMission, description: e.target.value})}
+                placeholder="Détails de la mission..."
+                rows={4}
+                className="border-2 border-purple-300/50"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-heading text-purple-700 mb-2 block">
+                  Type de mission *
+                </label>
+                <Select value={newMission.type} onValueChange={(v) => setNewMission({...newMission, type: v})}>
+                  <SelectTrigger className="border-2 border-purple-300/50">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="DESHIVERNAGE">🌸 Déshivernage</SelectItem>
+                    <SelectItem value="HIVERNAGE">❄️ Hivernage</SelectItem>
+                    <SelectItem value="SAISON">☀️ Saison</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-sm font-heading text-purple-700 mb-2 block">
+                  Services assignés *
+                </label>
+                <Select 
+                  value={newMission.services[0]} 
+                  onValueChange={(v) => setNewMission({...newMission, services: [v]})}
+                >
+                  <SelectTrigger className="border-2 border-purple-300/50">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="TECHNIQUE">🔧 Technique</SelectItem>
+                    <SelectItem value="MENAGE">🧹 Ménage</SelectItem>
+                    <SelectItem value="ACCUEIL">🎯 Accueil</SelectItem>
+                    <SelectItem value="ANIMATION">🎨 Animation</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-heading text-purple-700 mb-2 block">
+                  Date de début *
+                </label>
+                <Input
+                  type="date"
+                  value={newMission.date_debut}
+                  onChange={(e) => setNewMission({...newMission, date_debut: e.target.value})}
+                  className="border-2 border-purple-300/50"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-heading text-purple-700 mb-2 block">
+                  Date de fin *
+                </label>
+                <Input
+                  type="date"
+                  value={newMission.date_fin}
+                  onChange={(e) => setNewMission({...newMission, date_fin: e.target.value})}
+                  className="border-2 border-purple-300/50"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowCreateDialog(false);
+                  resetForm();
+                }}
+                className="flex-1"
+                disabled={createMutation.isPending}
+              >
+                Annuler
+              </Button>
+              <Button
+                onClick={handleCreateMission}
+                disabled={createMutation.isPending}
+                className="flex-1 bg-purple-600 hover:bg-purple-700"
+              >
+                {createMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : (
+                  <Plus className="w-4 h-4 mr-2" />
+                )}
+                Créer la mission
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Éditer Mission */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-xl text-purple-700">
+              <Edit className="w-5 h-5 inline mr-2" />
+              Modifier la mission
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedMission && (
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-heading text-purple-700 mb-2 block">
+                  Titre de la mission *
+                </label>
+                <Input
+                  value={selectedMission.titre}
+                  onChange={(e) => setSelectedMission({...selectedMission, titre: e.target.value})}
+                  className="border-2 border-purple-300/50"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-heading text-purple-700 mb-2 block">
+                  Description
+                </label>
+                <Textarea
+                  value={selectedMission.description}
+                  onChange={(e) => setSelectedMission({...selectedMission, description: e.target.value})}
+                  rows={4}
+                  className="border-2 border-purple-300/50"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-heading text-purple-700 mb-2 block">
+                    Date de début *
+                  </label>
+                  <Input
+                    type="date"
+                    value={selectedMission.date_debut}
+                    onChange={(e) => setSelectedMission({...selectedMission, date_debut: e.target.value})}
+                    className="border-2 border-purple-300/50"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-heading text-purple-700 mb-2 block">
+                    Date de fin *
+                  </label>
+                  <Input
+                    type="date"
+                    value={selectedMission.date_fin}
+                    onChange={(e) => setSelectedMission({...selectedMission, date_fin: e.target.value})}
+                    className="border-2 border-purple-300/50"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowEditDialog(false);
+                    setSelectedMission(null);
+                  }}
+                  className="flex-1"
+                  disabled={updateMutation.isPending}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  onClick={handleEditMission}
+                  disabled={updateMutation.isPending}
+                  className="flex-1 bg-purple-600 hover:bg-purple-700"
+                >
+                  {updateMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : (
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                  )}
+                  Enregistrer
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Card className="border-2 border-purple-300 rounded-xl mb-4">
+        <CardHeader>
+          <CardTitle className="text-lg font-heading text-purple-700">
+            🎯 Missions {serviceLabel}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
