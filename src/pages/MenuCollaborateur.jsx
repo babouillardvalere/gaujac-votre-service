@@ -97,6 +97,15 @@ export default function MenuCollaborateur() {
       badgeCount: counts.materiel
     },
     {
+      title: '✅ Tâches',
+      icon: ClipboardList,
+      href: 'Taches',
+      color: 'bg-[#10b981]',
+      textColor: 'text-white',
+      description: lang === 'fr' ? 'Gestion des tâches' : 'Task management',
+      badgeCount: 0
+    },
+    {
       title: '🏢 Direction',
       icon: Briefcase,
       href: 'DirectionMenu',
