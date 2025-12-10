@@ -371,6 +371,10 @@ export default function ClientControleInventaire() {
     setShowRecapDialog(false);
     
     try {
+      // Récupérer l'utilisateur connecté pour l'email
+      const currentUser = await base44.auth.me();
+      const userEmail = currentUser?.email || '';
+
       // Upload signature (optionnelle si pas de problème)
       let signatureUrl = '';
       if (signature) {
@@ -554,7 +558,7 @@ export default function ClientControleInventaire() {
         await base44.entities.SuiviInventaire.create({
           client_nom: nom,
           client_prenom: prenom,
-          client_email: created_by, // Email de l'utilisateur connecté
+          client_email: userEmail,
           logement: numero,
           categorie_logement: categorie,
           type_inventaire: 'ARRIVEE',

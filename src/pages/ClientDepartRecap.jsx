@@ -85,6 +85,10 @@ export default function ClientDepartRecap() {
     setSubmitting(true);
 
     try {
+      // Récupérer l'utilisateur connecté pour l'email
+      const currentUser = await base44.auth.me();
+      const userEmail = currentUser?.email || '';
+
       // Upload signature
       const blob = await fetch(signature).then(r => r.blob());
       const signatureFile = new File([blob], 'signature.png', { type: 'image/png' });
@@ -285,7 +289,7 @@ export default function ClientDepartRecap() {
               await base44.entities.SuiviInventaire.create({
                 client_nom: nom,
                 client_prenom: prenom,
-                client_email: created_by, // Email de l'utilisateur connecté
+                client_email: userEmail,
                 logement: numero,
                 categorie_logement: categorie,
                 type_inventaire: 'DEPART',
