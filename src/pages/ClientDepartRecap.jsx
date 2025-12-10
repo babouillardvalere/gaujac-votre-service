@@ -12,7 +12,7 @@ import { ArrowLeft, Send, Check, XCircle, AlertCircle, Loader2 } from 'lucide-re
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
-import { notifierInterventionCreee } from '../components/notificationService';
+
 
 export default function ClientDepartRecap() {
   const { t, lang } = useTranslation();
@@ -147,54 +147,93 @@ export default function ClientDepartRecap() {
         degats_signales: objetsSignales.length > 0 || evaluationProprete === 'pas_satisfaisant'
       });
 
-      // Créer interventions TECHNIQUE pour objets cassés/manquants
-      for (const signal of objetsSignales) {
-        const item = inventaireItems.find(i => i.id === signal.objet);
-        const categorieIntervention = getCategorie(signal.objet, item?.label || signal.objet);
+      // Liste des objets techniques critiques
+      const CRITICAL_ITEMS = [
+        'table_jardin', 'chaises_jardin', 'lit_double', 'lits_superposes',
+        'cumulus', 'lavabo', 'douche', 'wc', 'micro_ondes', 'refrigerateur',
+        'plaques_cuisson', 'hotte', 'detecteur_fumee', 'telecommande_clim',
+        'canape', 'cafetiere', 'extincteur', 'banquette', 'feux_gaz',
+        'chauffe_eau_gaz', 'chauffage', 'evier', 'tv', 'seche_serviette',
+        'seche_cheveux', 'congelateur', 'lave_vaisselle', 'sofa', 'poele',
+        'poeles', 'casseroles', 'faitout', 'refrigerateur_congelateur'
+      ];
 
-        await base44.entities.Incident.create({
-          type: categorieIntervention === 'menage' ? 'menage' : 'technique',
-          categorie: categorieIntervention === 'menage' ? 'menage' : 'divers_technique',
-          sous_categorie: signal.objet,
-          description: `${lang === 'fr' ? 'Départ' : 'Departure'} - ${signal.type === 'casse' 
-            ? (lang === 'fr' ? 'Objet cassé' : 'Broken item') 
-            : (lang === 'fr' ? 'Objet manquant' : 'Missing item')}: ${item?.label || signal.objet}. ${signal.commentaire}`,
-          urgent: signal.type === 'casse',
-          client_nom: nom,
-          client_prenom: prenom,
-          date_arrivee: dateArrivee,
-          date_depart: dateDepart,
-          logement: numero,
-          photo_url: signal.photo || '',
-          date_saisie: new Date().toISOString(),
-          statut: 'en_attente',
-          autorisation_acces: 'oui',
-          clause_autorisation_acceptee: true,
-          origine: 'depart',
-          fiche_depart_id: dossierDepart.id
-        }).then(incident => notifierInterventionCreee(incident));
+      // Séparer objets par catégorie
+      const objetsMenage = objetsSignales.filter(s => !CRITICAL_ITEMS.includes(s.objet));
+      const objetsTechnique = objetsSignales.filter(s => CRITICAL_ITEMS.includes(s.objet));
+
+      // Créer UNE SEULE TÂCHE MÉNAGE si objets ménage + propreté insatisfaisante
+      if (objetsMenage.length > 0 || evaluationProprete === 'pas_satisfaisant') {
+        const objetsList = objetsMenage
+          .map(s => {
+            const item = inventaireItems.find(i => i.id === s.objet);
+            return `• ${item?.label || s.objet} (${s.type === 'casse' ? (lang === 'fr' ? 'cassé' : 'broken') : (lang === 'fr' ? 'manquant' : 'missing')})`;
+          })
+          .join('\n');
+        
+        const descriptionMenage = lang === 'fr'
+          ? `🧹 INVENTAIRE DÉPART - Objets manquants/cassés (ménage)\n\n` +
+            `🏠 Logement: ${numero} (${categorie})\n` +
+            `👤 Client: ${nom} ${prenom}\n` +
+            `📅 Arrivée: ${dateArrivee} | Départ: ${dateDepart}\n\n` +
+            `${objetsMenage.length > 0 ? `📝 Objets signalés:\n${objetsList}\n\n` : ''}` +
+            `${evaluationProprete === 'pas_satisfaisant' ? `🧽 Propreté insatisfaisante\n${commentaireProprete || ''}\n\n` : ''}` +
+            `⏰ Généré le: ${new Date().toLocaleString('fr-FR')}`
+          : `🧹 DEPARTURE INVENTORY - Missing/broken items (housekeeping)\n\n` +
+            `🏠 Accommodation: ${numero} (${categorie})\n` +
+            `👤 Guest: ${prenom} ${nom}\n` +
+            `📅 Arrival: ${dateArrivee} | Departure: ${dateDepart}\n\n` +
+            `${objetsMenage.length > 0 ? `📝 Items reported:\n${objetsList}\n\n` : ''}` +
+            `${evaluationProprete === 'pas_satisfaisant' ? `🧽 Unsatisfactory cleanliness\n${commentaireProprete || ''}\n\n` : ''}` +
+            `⏰ Generated on: ${new Date().toLocaleString('en-GB')}`;
+
+        await base44.entities.Tache.create({
+          titre: lang === 'fr' 
+            ? `🧹 Inventaire Départ - ${numero} - ${nom}` 
+            : `🧹 Departure Inventory - ${numero} - ${nom}`,
+          description: descriptionMenage,
+          categorie: 'menage',
+          priorite: evaluationProprete === 'pas_satisfaisant' ? 'haute' : 'normale',
+          statut: 'a_faire',
+          hebergement: numero,
+          date_echeance: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+        });
       }
 
-      // Créer intervention MÉNAGE si propreté insatisfaisante
-      if (evaluationProprete === 'pas_satisfaisant') {
-        await base44.entities.Incident.create({
-          type: 'menage',
-          categorie: 'menage',
-          sous_categorie: 'nettoyage',
-          description: `${lang === 'fr' ? 'Reprise ménage départ' : 'Departure cleaning required'} - ${categorie} ${numero}. ${commentaireProprete}`,
-          urgent: true,
-          client_nom: nom,
-          client_prenom: prenom,
-          date_arrivee: dateArrivee,
-          date_depart: dateDepart,
-          logement: numero,
-          date_saisie: new Date().toISOString(),
-          statut: 'en_attente',
-          autorisation_acces: 'oui',
-          clause_autorisation_acceptee: true,
-          origine: 'depart',
-          fiche_depart_id: dossierDepart.id
-        }).then(incident => notifierInterventionCreee(incident));
+      // Créer UNE SEULE TÂCHE TECHNIQUE si objets critiques cassés/manquants
+      if (objetsTechnique.length > 0) {
+        const objetsList = objetsTechnique
+          .map(s => {
+            const item = inventaireItems.find(i => i.id === s.objet);
+            return `• ${item?.label || s.objet} (${s.type === 'casse' ? (lang === 'fr' ? 'cassé' : 'broken') : (lang === 'fr' ? 'manquant' : 'missing')})${s.type === 'casse' ? ' 🚨' : ''}`;
+          })
+          .join('\n');
+        
+        const descriptionTechnique = lang === 'fr'
+          ? `🔧 INVENTAIRE DÉPART - Objets cassés/manquants (technique)\n\n` +
+            `🏠 Logement: ${numero} (${categorie})\n` +
+            `👤 Client: ${nom} ${prenom}\n` +
+            `📅 Arrivée: ${dateArrivee} | Départ: ${dateDepart}\n\n` +
+            `⚠️ Objets critiques signalés:\n${objetsList}\n\n` +
+            `⏰ Généré le: ${new Date().toLocaleString('fr-FR')}`
+          : `🔧 DEPARTURE INVENTORY - Broken/missing items (technical)\n\n` +
+            `🏠 Accommodation: ${numero} (${categorie})\n` +
+            `👤 Guest: ${prenom} ${nom}\n` +
+            `📅 Arrival: ${dateArrivee} | Departure: ${dateDepart}\n\n` +
+            `⚠️ Critical items reported:\n${objetsList}\n\n` +
+            `⏰ Generated on: ${new Date().toLocaleString('en-GB')}`;
+
+        await base44.entities.Tache.create({
+          titre: lang === 'fr' 
+            ? `🔧 Inventaire Départ - ${numero} - ${nom}` 
+            : `🔧 Departure Inventory - ${numero} - ${nom}`,
+          description: descriptionTechnique,
+          categorie: 'technique',
+          priorite: objetsTechnique.some(s => s.type === 'casse') ? 'urgente' : 'haute',
+          statut: 'a_faire',
+          hebergement: numero,
+          date_echeance: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString()
+        });
       }
 
       // Nettoyer session
