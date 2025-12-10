@@ -9,8 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Calendar, CheckCircle2, Clock, Circle, AlertCircle, Plus, Loader2, Edit, Trash2, Filter, Play } from 'lucide-react';
+import { Calendar, CheckCircle2, Clock, Circle, AlertCircle, Plus, Loader2, Edit, Trash2, Filter, Play, Eye } from 'lucide-react';
 import { toast } from 'sonner';
+import MissionDocuments from '../interventions/MissionDocuments';
 
 export default function ServiceMissionDashboard({ service, serviceLabel }) {
   const { lang } = useTranslation();
@@ -19,6 +20,7 @@ export default function ServiceMissionDashboard({ service, serviceLabel }) {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedMission, setSelectedMission] = useState(null);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [filters, setFilters] = useState({
     statut: 'tous',
     tri: 'echeance'
@@ -48,6 +50,14 @@ export default function ServiceMissionDashboard({ service, serviceLabel }) {
         n.metadata?.service === service && !n.archivee
       ).sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     }
+  });
+
+  const { data: missionDocuments = [] } = useQuery({
+    queryKey: ['mission-documents', selectedMission?.id],
+    queryFn: () => selectedMission
+      ? base44.entities.InterventionDocument.filter({ mission_id: selectedMission.id }, '-created_date', 50)
+      : Promise.resolve([]),
+    enabled: !!selectedMission
   });
 
   const createMutation = useMutation({
@@ -359,7 +369,20 @@ export default function ServiceMissionDashboard({ service, serviceLabel }) {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedMission(mission);
+                      setShowDetailsDialog(true);
+                    }}
+                    className="border-purple-500 text-purple-600"
+                  >
+                    <Eye className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setSelectedMission(mission);
                       setShowEditDialog(true);
                     }}
@@ -620,6 +643,49 @@ export default function ServiceMissionDashboard({ service, serviceLabel }) {
                   Enregistrer
                 </Button>
               </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Détails Mission */}
+      <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-xl text-purple-700">
+              📋 Détails de la mission
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedMission && (
+            <div className="space-y-4">
+              <div className="bg-purple-50 p-4 rounded-xl">
+                <h3 className="font-heading text-lg text-purple-800">{selectedMission.titre}</h3>
+                {selectedMission.description && (
+                  <p className="text-sm text-gray-700 mt-2">{selectedMission.description}</p>
+                )}
+                <div className="flex gap-2 mt-3">
+                  {getStatutBadge(selectedMission.statut)}
+                  <Badge variant="outline">{getTypeBadge(selectedMission.type)}</Badge>
+                  <Badge variant="outline">
+                    📅 {selectedMission.date_debut} → {selectedMission.date_fin}
+                  </Badge>
+                </div>
+              </div>
+
+              <MissionDocuments 
+                missionId={selectedMission.id}
+                documents={missionDocuments}
+                canAdd={true}
+              />
+
+              <Button
+                variant="outline"
+                onClick={() => setShowDetailsDialog(false)}
+                className="w-full"
+              >
+                Fermer
+              </Button>
             </div>
           )}
         </DialogContent>
