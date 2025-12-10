@@ -371,9 +371,19 @@ export default function ClientControleInventaire() {
     setShowRecapDialog(false);
     
     try {
+      console.log('🚀 DÉBUT handleFinalSubmit');
+      
       // Récupérer l'utilisateur connecté pour l'email
-      const currentUser = await base44.auth.me();
-      const userEmail = currentUser?.email || '';
+      let currentUser = null;
+      let userEmail = '';
+      
+      try {
+        currentUser = await base44.auth.me();
+        userEmail = currentUser?.email || '';
+        console.log('👤 Utilisateur récupéré:', userEmail);
+      } catch (authError) {
+        console.warn('⚠️ Pas d\'utilisateur connecté, email sera vide');
+      }
 
       // Upload signature (optionnelle si pas de problème)
       let signatureUrl = '';
@@ -431,6 +441,8 @@ export default function ClientControleInventaire() {
         nombreAnimaux
       });
 
+      console.log('📝 Création FicheArrivee...');
+      
       // Créer la FicheArrivee pour la réception EN PREMIER
       const ficheArrivee = await base44.entities.FicheArrivee.create({
         client_nom: nom,
@@ -454,6 +466,8 @@ export default function ClientControleInventaire() {
         signature_url: signatureUrl,
         date_validation: new Date().toISOString()
       });
+      
+      console.log('✅ FicheArrivee créée:', ficheArrivee.id);
 
       // Préparer les items pour le suivi
       const itemsMenage = interventionsPreview.menage.map(interv => ({
@@ -472,9 +486,15 @@ export default function ClientControleInventaire() {
 
       let tacheMenageId = null;
       let tacheTechniqueId = null;
+      
+      console.log('📊 Interventions à créer:', {
+        menage: interventionsPreview.menage.length,
+        technique: interventionsPreview.technique.length
+      });
 
       // Créer UNE SEULE TÂCHE MÉNAGE regroupant tous les objets
       if (interventionsPreview.menage.length > 0) {
+        console.log('🧹 Création tâche MÉNAGE...');
         const objetsList = interventionsPreview.menage
           .map(interv => `• ${interv.objet}`)
           .join('\n');
@@ -509,13 +529,20 @@ export default function ClientControleInventaire() {
           date_echeance: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
         });
         tacheMenageId = tacheMenage.id;
+        console.log('✅ Tâche ménage créée:', tacheMenageId);
         
         // Notifier le service ménage
-        await notifierNouvelleTache(tacheMenage);
+        try {
+          await notifierNouvelleTache(tacheMenage);
+          console.log('📧 Notification ménage envoyée');
+        } catch (notifError) {
+          console.warn('⚠️ Erreur notification ménage:', notifError);
+        }
       }
 
       // Créer UNE SEULE TÂCHE TECHNIQUE regroupant tous les objets critiques
       if (interventionsPreview.technique.length > 0) {
+        console.log('🔧 Création tâche TECHNIQUE...');
         const objetsList = interventionsPreview.technique
           .map(interv => `• ${interv.objet}${interv.urgent ? ' 🚨 URGENT' : ''}`)
           .join('\n');
@@ -550,13 +577,20 @@ export default function ClientControleInventaire() {
           date_echeance: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString()
         });
         tacheTechniqueId = tacheTechnique.id;
+        console.log('✅ Tâche technique créée:', tacheTechniqueId);
         
         // Notifier le service technique
-        await notifierNouvelleTache(tacheTechnique);
+        try {
+          await notifierNouvelleTache(tacheTechnique);
+          console.log('📧 Notification technique envoyée');
+        } catch (notifError) {
+          console.warn('⚠️ Erreur notification technique:', notifError);
+        }
       }
 
       // Créer le SUIVI INVENTAIRE pour le client
       if (itemsMenage.length > 0 || itemsTechnique.length > 0) {
+        console.log('📦 Création SuiviInventaire...');
         const messageClient = lang === 'fr'
           ? `Votre inventaire a été enregistré. Les objets signalés sont en cours de traitement par nos équipes.`
           : `Your inventory has been registered. Reported items are being processed by our teams.`;
@@ -580,10 +614,12 @@ export default function ClientControleInventaire() {
           date_derniere_maj: new Date().toISOString(),
           fiche_arrivee_id: ficheArrivee.id
         });
+        console.log('✅ SuiviInventaire créé');
       }
 
       // Mettre à jour le dossier d'arrivée
       if (dossierId) {
+        console.log('📝 Mise à jour DossierArrivee...');
         await base44.entities.DossierArrivee.update(dossierId, {
           etape_3_terminee: true,
           etape_4_terminee: true,
@@ -604,24 +640,34 @@ export default function ClientControleInventaire() {
           nombre_bebes: parseInt(nombreBebes),
           nombre_animaux: parseInt(nombreAnimaux)
         });
+        console.log('✅ DossierArrivee mis à jour');
       }
 
       // Sauvegarder l'ID de la fiche pour le résumé
       sessionStorage.setItem('fiche_arrivee_id', ficheArrivee.id);
 
+      console.log('🎉 SUCCÈS - Tout est créé !');
+
       // Message de confirmation
-      alert(lang === 'fr' 
-        ? "Votre contrôle inventaire a bien été envoyé à la réception.\nMerci !"
-        : "Your inventory has been sent to reception.\nThank you!");
+      toast.success(lang === 'fr' 
+        ? "✅ Inventaire envoyé avec succès !"
+        : "✅ Inventory sent successfully!", 
+        { duration: 3000 });
 
       // Redirection vers le résumé
-      navigate(createPageUrl('ClientResume'));
+      setTimeout(() => {
+        navigate(createPageUrl('ClientResume'));
+      }, 1000);
 
     } catch (error) {
-      console.error('ERREUR ENVOI INVENTAIRE:', error);
-      alert(lang === 'fr' 
-        ? "Une erreur est survenue lors de l'envoi. Merci de réessayer."
-        : "An error occurred during submission. Please try again.");
+      console.error('❌ ERREUR ENVOI INVENTAIRE:', error);
+      console.error('Stack:', error.stack);
+      console.error('Message:', error.message);
+      
+      toast.error(lang === 'fr' 
+        ? `Erreur: ${error.message || 'Une erreur est survenue'}`
+        : `Error: ${error.message || 'An error occurred'}`,
+        { duration: 5000 });
     } finally {
       setSubmitting(false);
     }
