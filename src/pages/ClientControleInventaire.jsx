@@ -482,7 +482,9 @@ export default function ClientControleInventaire() {
           priorite: 'normale',
           statut: 'a_faire',
           hebergement: numero,
-          date_echeance: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // J+1
+          assignee: 'Service Ménage',
+          assignee_email: 'menage@campingparadis.com',
+          date_echeance: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
         });
       }
 
@@ -517,7 +519,9 @@ export default function ClientControleInventaire() {
           priorite: interventionsPreview.technique.some(i => i.urgent) ? 'urgente' : 'haute',
           statut: 'a_faire',
           hebergement: numero,
-          date_echeance: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString() // 12h pour technique
+          assignee: 'Service Technique',
+          assignee_email: 'technique@campingparadis.com',
+          date_echeance: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString()
         });
       }
 

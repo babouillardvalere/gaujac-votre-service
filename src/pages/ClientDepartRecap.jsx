@@ -196,6 +196,8 @@ export default function ClientDepartRecap() {
           priorite: evaluationProprete === 'pas_satisfaisant' ? 'haute' : 'normale',
           statut: 'a_faire',
           hebergement: numero,
+          assignee: 'Service Ménage',
+          assignee_email: 'menage@campingparadis.com',
           date_echeance: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
         });
       }
@@ -232,6 +234,8 @@ export default function ClientDepartRecap() {
           priorite: objetsTechnique.some(s => s.type === 'casse') ? 'urgente' : 'haute',
           statut: 'a_faire',
           hebergement: numero,
+          assignee: 'Service Technique',
+          assignee_email: 'technique@campingparadis.com',
           date_echeance: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString()
         });
       }
