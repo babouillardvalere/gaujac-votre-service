@@ -17,8 +17,9 @@ import {
   ArrowLeft, Clock, Star, AlertTriangle, TrendingUp, Loader2, 
   Users, Home as HomeIcon, Search, Building2, Filter, Calendar, CalendarDays,
   ChevronDown, ChevronUp, Eye, AlertCircle, MoreVertical, LogOut,
-  Trash2, ArrowUp, ArrowDown, CheckSquare, Square, Home
+  Trash2, ArrowUp, ArrowDown, CheckSquare, Square, Home, ListTodo, CheckCircle
 } from 'lucide-react';
+import SuiviInventaireStaff from '../components/staff/SuiviInventaireStaff';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import InterventionActions from '../components/bureau/InterventionActions';
 import BureauStatistiques from '../components/bureau/BureauStatistiques';
@@ -143,6 +144,11 @@ export default function Bureau() {
   const { data: avis = [] } = useQuery({
     queryKey: ['bureau-avis'],
     queryFn: () => base44.entities.Avis.filter({}, '-created_date', 500)
+  });
+
+  const { data: taches = [] } = useQuery({
+    queryKey: ['bureau-taches'],
+    queryFn: () => base44.entities.Tache.filter({}, '-created_date', 200)
   });
 
   // Mutations pour actions de groupe
@@ -479,6 +485,12 @@ export default function Bureau() {
             <TabsTrigger value="historique" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               📋 {t('historique')}
             </TabsTrigger>
+            <TabsTrigger value="taches" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
+              ✅ {lang === 'fr' ? 'Tâches' : 'Tasks'} ({taches.filter(t => t.statut !== 'terminee').length})
+            </TabsTrigger>
+            <TabsTrigger value="suivis" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
+              📦 {lang === 'fr' ? 'Suivis inventaires' : 'Inventory tracking'}
+            </TabsTrigger>
             <TabsTrigger value="frequentation" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               🔹 {lang === 'fr' ? 'Fréquentation' : 'Attendance'}
             </TabsTrigger>
@@ -501,6 +513,99 @@ export default function Bureau() {
               👷 {lang === 'fr' ? 'Collaborateurs' : 'Staff'}
             </TabsTrigger>
           </TabsList>
+
+          {/* Tâches d'inventaire */}
+          <TabsContent value="taches" className="space-y-4">
+            <Card className="border-2 border-[#00AEEF] rounded-xl">
+              <CardHeader>
+                <CardTitle className="font-heading text-[#0077A8]">
+                  ✅ {lang === 'fr' ? 'Tâches d\'inventaire' : 'Inventory tasks'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {taches.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <ListTodo className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                    <p>{lang === 'fr' ? 'Aucune tâche' : 'No tasks'}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {taches.map(tache => (
+                      <Card key={tache.id} className="border rounded-xl">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h3 className="font-heading text-[#0077A8]">{tache.titre}</h3>
+                              {tache.description && (
+                                <p className="text-sm text-gray-600 mt-2 whitespace-pre-line">{tache.description}</p>
+                              )}
+                              <div className="flex flex-wrap gap-2 mt-3">
+                                <Badge className={
+                                  tache.statut === 'terminee' ? 'bg-green-500 text-white' :
+                                  tache.statut === 'en_cours' ? 'bg-blue-500 text-white' :
+                                  'bg-orange-500 text-white'
+                                }>
+                                  {tache.statut === 'a_faire' ? (lang === 'fr' ? 'À faire' : 'To do') :
+                                   tache.statut === 'en_cours' ? (lang === 'fr' ? 'En cours' : 'In progress') :
+                                   tache.statut === 'terminee' ? (lang === 'fr' ? 'Terminée' : 'Completed') :
+                                   tache.statut}
+                                </Badge>
+                                <Badge className={
+                                  tache.categorie === 'technique' ? 'bg-purple-100 text-purple-700' :
+                                  tache.categorie === 'menage' ? 'bg-pink-100 text-pink-700' :
+                                  'bg-gray-100 text-gray-700'
+                                }>
+                                  {tache.categorie === 'technique' ? '🔧 Technique' :
+                                   tache.categorie === 'menage' ? '🧹 Ménage' :
+                                   tache.categorie}
+                                </Badge>
+                                {tache.priorite && (
+                                  <Badge className={
+                                    tache.priorite === 'urgente' ? 'bg-red-100 text-red-700' :
+                                    tache.priorite === 'haute' ? 'bg-orange-100 text-orange-700' :
+                                    'bg-blue-100 text-blue-700'
+                                  }>
+                                    {tache.priorite === 'urgente' ? '🔴 Urgent' :
+                                     tache.priorite === 'haute' ? '⬆️ Haute' :
+                                     tache.priorite === 'normale' ? '➡️ Normale' :
+                                     '⬇️ Basse'}
+                                  </Badge>
+                                )}
+                                {tache.assignee && (
+                                  <Badge variant="outline">{tache.assignee}</Badge>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            <Button
+              onClick={() => navigate(createPageUrl('Taches'))}
+              className="w-full h-12 bg-[#00AEEF] hover:bg-[#0077A8] text-white rounded-xl font-heading"
+            >
+              <ListTodo className="w-5 h-5 mr-2" />
+              {lang === 'fr' ? 'Voir toutes les tâches' : 'View all tasks'}
+            </Button>
+          </TabsContent>
+
+          {/* Suivis inventaires */}
+          <TabsContent value="suivis" className="space-y-4">
+            <Card className="border-2 border-purple-300 rounded-xl">
+              <CardHeader>
+                <CardTitle className="font-heading text-[#0077A8]">
+                  📦 {lang === 'fr' ? 'Suivis d\'inventaires clients' : 'Client inventory tracking'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <SuiviInventaireStaff serviceFilter="all" />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* Historique */}
           <TabsContent value="historique" className="space-y-4">
