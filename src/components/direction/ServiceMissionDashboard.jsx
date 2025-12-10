@@ -256,6 +256,38 @@ export default function ServiceMissionDashboard({ service, serviceLabel }) {
         </CardContent>
       </Card>
 
+      {/* Notifications récentes */}
+      {notifications.length > 0 && (
+        <Card className="border-2 border-orange-300/30">
+          <CardHeader>
+            <CardTitle className="font-heading text-orange-700 flex items-center gap-2">
+              <AlertCircle className="w-5 h-5" />
+              {lang === 'fr' ? 'Notifications récentes' : 'Recent notifications'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {notifications.slice(0, 5).map(notif => (
+              <div
+                key={notif.id}
+                className={`p-3 rounded-lg border ${
+                  notif.lue ? 'bg-white border-gray-200' : 'bg-orange-50 border-orange-300'
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h4 className="font-medium text-sm text-[#0077A8]">{notif.titre}</h4>
+                    <p className="text-xs text-gray-600 mt-1">{notif.message}</p>
+                  </div>
+                  {!notif.lue && (
+                    <Badge className="bg-orange-500 text-xs">New</Badge>
+                  )}
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Liste des missions */}
       {isLoading ? (
         <div className="flex justify-center py-12">
@@ -265,7 +297,7 @@ export default function ServiceMissionDashboard({ service, serviceLabel }) {
         <Card className="border-2 border-gray-200">
           <CardContent className="p-8 text-center">
             <p className="text-gray-500">
-              {lang === 'fr' ? 'Aucune mission assignée' : 'No assigned missions'}
+              {lang === 'fr' ? 'Aucune mission trouvée' : 'No missions found'}
             </p>
           </CardContent>
         </Card>
