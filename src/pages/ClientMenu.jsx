@@ -55,6 +55,17 @@ export default function ClientMenu() {
       disabled: false
     },
     {
+      title: '📋 Suivi',
+      titleEn: '📋 Tracking',
+      description: 'Mon suivi inventaire',
+      descriptionEn: 'My inventory tracking',
+      href: 'ClientSuiviInventaire',
+      color: 'bg-[#9333ea]',
+      textColor: 'text-white',
+      disabled: false,
+      comingSoon: false
+    },
+    {
       title: '🚗 Départ',
       titleEn: '🚗 Departure',
       description: 'Conditions de départ',

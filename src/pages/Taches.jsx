@@ -15,8 +15,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { 
   Plus, Search, Filter, Calendar as CalendarIcon, Clock, User, CheckCircle, 
   Circle, Pause, XCircle, AlertTriangle, ArrowLeft, Trash2, Edit, Link,
-  Bell, ListTodo, Loader2, Home, BarChart3
+  Bell, ListTodo, Loader2, Home, BarChart3, Package
 } from 'lucide-react';
+import SuiviInventaireStaff from '../components/staff/SuiviInventaireStaff';
 import { format, isToday, isTomorrow, isPast, addDays, differenceInHours } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -69,6 +70,11 @@ export default function Taches() {
   const { data: incidents = [] } = useQuery({
     queryKey: ['incidents-for-tasks'],
     queryFn: () => base44.entities.Incident.filter({}, '-date_saisie', 100)
+  });
+
+  const { data: suivis = [] } = useQuery({
+    queryKey: ['suivis-inventaire-count'],
+    queryFn: () => base44.entities.SuiviInventaire.list('-created_date', 20)
   });
 
   const createMutation = useMutation({
@@ -529,22 +535,25 @@ export default function Taches() {
 
         {/* Onglets */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="bg-[#00AEEF]/20 rounded-xl w-full">
-            <TabsTrigger value="toutes" className="flex-1 rounded-lg data-[state=active]:bg-[#00AEEF] data-[state=active]:text-white">
+          <TabsList className="bg-[#00AEEF]/20 rounded-xl w-full grid grid-cols-5">
+            <TabsTrigger value="toutes" className="rounded-lg data-[state=active]:bg-[#00AEEF] data-[state=active]:text-white">
               Toutes ({tachesParTab.toutes.length})
             </TabsTrigger>
-            <TabsTrigger value="miennes" className="flex-1 rounded-lg data-[state=active]:bg-[#00AEEF] data-[state=active]:text-white">
+            <TabsTrigger value="miennes" className="rounded-lg data-[state=active]:bg-[#00AEEF] data-[state=active]:text-white">
               Mes tâches ({tachesParTab.miennes.length})
             </TabsTrigger>
-            <TabsTrigger value="urgentes" className="flex-1 rounded-lg data-[state=active]:bg-red-500 data-[state=active]:text-white">
+            <TabsTrigger value="urgentes" className="rounded-lg data-[state=active]:bg-red-500 data-[state=active]:text-white">
               🔴 Urgentes ({tachesParTab.urgentes.length})
             </TabsTrigger>
-            <TabsTrigger value="terminees" className="flex-1 rounded-lg data-[state=active]:bg-green-500 data-[state=active]:text-white">
+            <TabsTrigger value="suivis" className="rounded-lg data-[state=active]:bg-purple-500 data-[state=active]:text-white">
+              📋 Suivis ({suivis.length})
+            </TabsTrigger>
+            <TabsTrigger value="terminees" className="rounded-lg data-[state=active]:bg-green-500 data-[state=active]:text-white">
               ✅ Terminées
             </TabsTrigger>
           </TabsList>
 
-          {['toutes', 'miennes', 'urgentes', 'terminees'].map(tab => (
+          {['toutes', 'miennes', 'urgentes'].map(tab => (
             <TabsContent key={tab} value={tab} className="mt-4 space-y-3">
               {isLoading ? (
                 <div className="flex justify-center py-12">
@@ -562,6 +571,23 @@ export default function Taches() {
               )}
             </TabsContent>
           ))}
+
+          <TabsContent value="suivis" className="mt-4">
+            <SuiviInventaireStaff serviceFilter="all" />
+          </TabsContent>
+
+          <TabsContent value="terminees" className="mt-4 space-y-3">
+            {tachesParTab.terminees.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                <CheckCircle className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                <p>Aucune tâche terminée</p>
+              </div>
+            ) : (
+              tachesParTab.terminees.map(task => (
+                <TaskCard key={task.id} task={task} />
+              ))
+            )}
+          </TabsContent>
         </Tabs>
       </div>
 
