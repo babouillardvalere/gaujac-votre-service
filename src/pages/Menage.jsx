@@ -17,6 +17,9 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ServiceMissionDashboard from '../components/direction/ServiceMissionDashboard';
+import InterventionHistorique from '../components/interventions/InterventionHistorique';
+import InterventionDocuments from '../components/interventions/InterventionDocuments';
+import ModeleInterventionSelector from '../components/interventions/ModeleInterventionSelector';
 import { 
   ArrowLeft, Clock, User, CheckCircle, Play, Loader2, Sparkles, Bed, UtensilsCrossed, Pause, DoorOpen, UserCheck, Camera, Home
 } from 'lucide-react';
@@ -76,6 +79,22 @@ export default function Menage() {
     queryKey: ['taches-menage'],
     queryFn: () => base44.entities.Tache.filter({ categorie: 'menage' }, '-created_date', 100),
     refetchInterval: 30000
+  });
+
+  const { data: logs = [] } = useQuery({
+    queryKey: ['intervention-logs', selectedIncident?.id],
+    queryFn: () => selectedIncident 
+      ? base44.entities.InterventionLog.filter({ incident_id: selectedIncident.id }, '-horodatage', 50)
+      : Promise.resolve([]),
+    enabled: !!selectedIncident
+  });
+
+  const { data: documents = [] } = useQuery({
+    queryKey: ['documents', selectedIncident?.id],
+    queryFn: () => selectedIncident
+      ? base44.entities.InterventionDocument.filter({ incident_id: selectedIncident.id }, '-created_date', 50)
+      : Promise.resolve([]),
+    enabled: !!selectedIncident
   });
 
   const updateMutation = useMutation({
@@ -388,7 +407,14 @@ export default function Menage() {
           </TabsList>
 
           <TabsContent value="interventions">
-            <Tabs value={filter} onValueChange={setFilter} className="mb-6">
+            <ModeleInterventionSelector 
+              onSelectModele={(template) => {
+                console.log('Modèle sélectionné:', template);
+                toast.success('Modèle appliqué - créez maintenant votre intervention depuis le menu principal');
+              }}
+            />
+
+            <Tabs value={filter} onValueChange={setFilter} className="mb-6 mt-6">
               <TabsList className="bg-[#FFF4B2] p-1 rounded-xl border border-[#FFD700]/50 w-full grid grid-cols-4">
                 <TabsTrigger value="en_attente" className="rounded-lg font-heading text-xs data-[state=active]:bg-[#FFA500] data-[state=active]:text-white relative">
                   {t('en_attente')}
@@ -697,7 +723,7 @@ export default function Menage() {
       </div>
 
       <Dialog open={!!selectedIncident} onOpenChange={() => setSelectedIncident(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-heading text-[#0077A8] flex items-center gap-2">
               <span className="text-2xl">{selectedIncident && getCategoryInfo(selectedIncident.categorie).emoji}</span>
@@ -784,6 +810,14 @@ export default function Menage() {
                   <p className="font-body text-gray-700 bg-gray-50 p-3 rounded-xl mt-1">{selectedIncident.commentaire_interne}</p>
                 </div>
               )}
+
+              <InterventionDocuments 
+                incidentId={selectedIncident.id} 
+                documents={documents}
+                canAdd={true}
+              />
+
+              <InterventionHistorique logs={logs} />
 
               {selectedIncident.statut === 'en_attente' && (
                 <div className="space-y-3 pt-4 border-t">
