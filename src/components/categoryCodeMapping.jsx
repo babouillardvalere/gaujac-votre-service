@@ -99,6 +99,8 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'pinces_linge', icon: '🧷', label_fr: 'Pinces à linge', label_en: 'Clothespins', quantity: 8 },
       { id: 'poubelle', icon: '🗑️', label_fr: 'Poubelle', label_en: 'Trash can', quantity: 1 },
       { id: 'detecteur_fumee', icon: '🚨', label_fr: 'Détecteur fumée', label_en: 'Smoke detector', quantity: 1 },
+      { id: 'lit_double', icon: '🛏️', label_fr: 'Lit double', label_en: 'Double bed', quantity: 1 },
+      { id: 'lits_superposes', icon: '🛏️', label_fr: 'Lit superposé', label_en: 'Bunk bed', quantity: 1 },
       { id: 'couette_double', icon: '🛏️', label_fr: 'Couette double', label_en: 'Double duvet', quantity: 1 },
       { id: 'oreillers', icon: '🛏️', label_fr: 'Oreillers', label_en: 'Pillows', quantity: 2 },
       { id: 'cintres', icon: '👗', label_fr: 'Cintres', label_en: 'Hangers', quantity: 6 },
