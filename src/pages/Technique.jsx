@@ -74,12 +74,26 @@ export default function Technique() {
     refetchInterval: 30000
   });
 
+  const { data: taches = [] } = useQuery({
+    queryKey: ['taches-technique'],
+    queryFn: () => base44.entities.Tache.filter({ categorie: 'technique' }, '-created_date', 100),
+    refetchInterval: 30000
+  });
+
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Incident.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['incidents-technique'] });
       toast.success(t('intervention_mise_a_jour'));
       setSelectedIncident(null);
+    }
+  });
+
+  const updateTacheMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Tache.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['taches-technique'] });
+      toast.success(lang === 'fr' ? 'Tâche mise à jour' : 'Task updated');
     }
   });
 
@@ -372,12 +386,15 @@ export default function Technique() {
 
       <div className="max-w-4xl mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="interventions">
               {lang === 'fr' ? 'Interventions' : 'Interventions'}
             </TabsTrigger>
+            <TabsTrigger value="taches">
+              ✅ {lang === 'fr' ? 'Tâches' : 'Tasks'} ({taches.filter(t => t.statut !== 'terminee').length})
+            </TabsTrigger>
             <TabsTrigger value="missions">
-              {lang === 'fr' ? 'Missions Direction' : 'Direction Missions'}
+              {lang === 'fr' ? 'Missions' : 'Missions'}
             </TabsTrigger>
           </TabsList>
 
@@ -526,6 +543,92 @@ export default function Technique() {
               })}
             </div>
           )}
+          </TabsContent>
+
+          <TabsContent value="taches">
+            <div className="space-y-4">
+              {taches.length === 0 ? (
+                <div className="text-center py-12">
+                  <CheckCircle className="w-16 h-16 text-[#00AEEF] mx-auto mb-4" />
+                  <p className="font-heading text-[#0077A8]">{lang === 'fr' ? 'Aucune tâche' : 'No tasks'}</p>
+                </div>
+              ) : (
+                taches.map(tache => (
+                  <Card key={tache.id} className="border-2 border-[#00AEEF]/30 rounded-xl">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="font-heading text-[#0077A8]">{tache.titre}</h3>
+                        <Badge className={
+                          tache.statut === 'terminee' ? 'bg-green-500 text-white' :
+                          tache.statut === 'en_cours' ? 'bg-blue-500 text-white' :
+                          'bg-orange-500 text-white'
+                        }>
+                          {tache.statut === 'a_faire' ? (lang === 'fr' ? '⏳ À faire' : '⏳ To do') :
+                           tache.statut === 'en_cours' ? (lang === 'fr' ? '🔵 En cours' : '🔵 In progress') :
+                           tache.statut === 'terminee' ? (lang === 'fr' ? '✅ Terminée' : '✅ Completed') :
+                           tache.statut}
+                        </Badge>
+                      </div>
+                      {tache.description && (
+                        <p className="text-sm text-gray-600 whitespace-pre-line mb-3">{tache.description}</p>
+                      )}
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {tache.priorite && (
+                          <Badge className={
+                            tache.priorite === 'urgente' ? 'bg-red-100 text-red-700' :
+                            tache.priorite === 'haute' ? 'bg-orange-100 text-orange-700' :
+                            'bg-blue-100 text-blue-700'
+                          }>
+                            {tache.priorite === 'urgente' ? '🔴 Urgent' :
+                             tache.priorite === 'haute' ? '⬆️ Haute' :
+                             '➡️ Normale'}
+                          </Badge>
+                        )}
+                        {tache.hebergement && (
+                          <Badge variant="outline">🏠 {tache.hebergement}</Badge>
+                        )}
+                        {tache.date_echeance && (
+                          <Badge variant="outline" className="text-xs">
+                            📅 {format(new Date(tache.date_echeance), 'dd/MM à HH:mm')}
+                          </Badge>
+                        )}
+                      </div>
+                      {tache.statut !== 'terminee' && (
+                        <div className="flex gap-2 mt-3">
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              updateTacheMutation.mutate({
+                                id: tache.id,
+                                data: { statut: 'en_cours', date_debut: new Date().toISOString() }
+                              });
+                            }}
+                            className="flex-1 bg-[#00AEEF] hover:bg-[#0077A8]"
+                            disabled={tache.statut === 'en_cours'}
+                          >
+                            <Play className="w-4 h-4 mr-1" />
+                            {lang === 'fr' ? 'Commencer' : 'Start'}
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              updateTacheMutation.mutate({
+                                id: tache.id,
+                                data: { statut: 'terminee', date_fin: new Date().toISOString() }
+                              });
+                            }}
+                            className="flex-1 bg-green-500 hover:bg-green-600"
+                          >
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            {lang === 'fr' ? 'Terminer' : 'Complete'}
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
           </TabsContent>
 
           <TabsContent value="missions">
