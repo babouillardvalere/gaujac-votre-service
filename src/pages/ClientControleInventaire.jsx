@@ -18,7 +18,7 @@ import { ArrowLeft, Camera, Check, AlertCircle, Smile, Meh, Frown, Send, Loader2
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
-import { notifierInventaireSoumis, notifierDossierFinalise } from '../components/notificationService';
+import { notifierInventaireSoumis, notifierDossierFinalise, notifierNouvelleTache } from '../components/notificationService';
 import { uploadCompressedImage } from '../components/imageCompression';
 import LazyInventaire from '../components/LazyInventaire';
 import { clearInventaireCache } from '../components/inventaireCache';
@@ -509,6 +509,9 @@ export default function ClientControleInventaire() {
           date_echeance: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
         });
         tacheMenageId = tacheMenage.id;
+        
+        // Notifier le service ménage
+        await notifierNouvelleTache(tacheMenage);
       }
 
       // Créer UNE SEULE TÂCHE TECHNIQUE regroupant tous les objets critiques
@@ -547,6 +550,9 @@ export default function ClientControleInventaire() {
           date_echeance: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString()
         });
         tacheTechniqueId = tacheTechnique.id;
+        
+        // Notifier le service technique
+        await notifierNouvelleTache(tacheTechnique);
       }
 
       // Créer le SUIVI INVENTAIRE pour le client

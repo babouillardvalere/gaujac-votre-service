@@ -88,10 +88,22 @@ export default function Menage() {
   });
 
   const updateTacheMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Tache.update(id, data),
-    onSuccess: () => {
+    mutationFn: async ({ id, data, ancienStatut }) => {
+      await base44.entities.Tache.update(id, data);
+      return { id, data, ancienStatut };
+    },
+    onSuccess: async ({ id, data, ancienStatut }) => {
       queryClient.invalidateQueries({ queryKey: ['taches-menage'] });
       toast.success(lang === 'fr' ? 'Tâche mise à jour' : 'Task updated');
+      
+      // Notifier changement de statut
+      if (ancienStatut && data.statut) {
+        const { notifierChangementStatutTache } = await import('../components/notificationService');
+        const tache = await base44.entities.Tache.filter({ id });
+        if (tache.length > 0) {
+          await notifierChangementStatutTache(tache[0], ancienStatut);
+        }
+      }
     }
   });
 
@@ -644,7 +656,8 @@ export default function Menage() {
                             onClick={() => {
                               updateTacheMutation.mutate({
                                 id: tache.id,
-                                data: { statut: 'en_cours', date_debut: new Date().toISOString() }
+                                data: { statut: 'en_cours', date_debut: new Date().toISOString() },
+                                ancienStatut: tache.statut
                               });
                             }}
                             className="flex-1 bg-[#FFD700] hover:bg-[#FFA500] text-[#0077A8]"
@@ -658,7 +671,8 @@ export default function Menage() {
                             onClick={() => {
                               updateTacheMutation.mutate({
                                 id: tache.id,
-                                data: { statut: 'terminee', date_fin: new Date().toISOString() }
+                                data: { statut: 'terminee', date_fin: new Date().toISOString() },
+                                ancienStatut: tache.statut
                               });
                             }}
                             className="flex-1 bg-green-500 hover:bg-green-600"
