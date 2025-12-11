@@ -37,6 +37,7 @@ export default function ClientDepartRecap() {
   const evaluationProprete = sessionStorage.getItem('depart_proprete_emoji');
   const commentaireProprete = sessionStorage.getItem('depart_proprete_commentaire');
   const remarques = sessionStorage.getItem('depart_remarques');
+  const isUrgentGlobal = JSON.parse(sessionStorage.getItem('depart_urgent_global') || 'false');
 
   const [signature, setSignature] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -216,6 +217,7 @@ export default function ClientDepartRecap() {
                   `📅 Arrivée: ${dateArrivee} | Départ: ${dateDepart}\n\n` +
                   `${objetsMenage.length > 0 ? `📝 Objets signalés:\n${objetsList}\n\n` : ''}` +
                   `${evaluationProprete === 'pas_satisfaisant' ? `🧽 Propreté insatisfaisante\n${commentaireProprete || ''}\n\n` : ''}` +
+                  `⚡ Niveau: ${isUrgentGlobal ? '🚨 URGENT' : '⚪ NORMAL'}\n` +
                   `⏰ Généré le: ${new Date().toLocaleString('fr-FR')}`
                 : `🧹 DEPARTURE INVENTORY - Missing/broken items (housekeeping)\n\n` +
                   `🏠 Accommodation: ${numero} (${categorie})\n` +
@@ -223,6 +225,7 @@ export default function ClientDepartRecap() {
                   `📅 Arrival: ${dateArrivee} | Departure: ${dateDepart}\n\n` +
                   `${objetsMenage.length > 0 ? `📝 Items reported:\n${objetsList}\n\n` : ''}` +
                   `${evaluationProprete === 'pas_satisfaisant' ? `🧽 Unsatisfactory cleanliness\n${commentaireProprete || ''}\n\n` : ''}` +
+                  `⚡ Level: ${isUrgentGlobal ? '🚨 URGENT' : '⚪ NORMAL'}\n` +
                   `⏰ Generated on: ${new Date().toLocaleString('en-GB')}`;
 
               const tacheMenage = await base44.entities.Tache.create({
@@ -231,7 +234,7 @@ export default function ClientDepartRecap() {
                   : `🧹 Departure Inventory - ${numero} - ${nom}`,
                 description: descriptionMenage,
                 categorie: 'menage',
-                priorite: evaluationProprete === 'pas_satisfaisant' ? 'haute' : 'normale',
+                priorite: isUrgentGlobal ? 'urgente' : (evaluationProprete === 'pas_satisfaisant' ? 'haute' : 'normale'),
                 statut: 'a_faire',
                 hebergement: numero,
                 assignee: 'Service Ménage',
@@ -256,12 +259,14 @@ export default function ClientDepartRecap() {
                   `👤 Client: ${nom} ${prenom}\n` +
                   `📅 Arrivée: ${dateArrivee} | Départ: ${dateDepart}\n\n` +
                   `⚠️ Objets critiques signalés:\n${objetsList}\n\n` +
+                  `⚡ Niveau: ${isUrgentGlobal ? '🚨 URGENT' : '⚪ NORMAL'}\n` +
                   `⏰ Généré le: ${new Date().toLocaleString('fr-FR')}`
                 : `🔧 DEPARTURE INVENTORY - Broken/missing items (technical)\n\n` +
                   `🏠 Accommodation: ${numero} (${categorie})\n` +
                   `👤 Guest: ${prenom} ${nom}\n` +
                   `📅 Arrival: ${dateArrivee} | Departure: ${dateDepart}\n\n` +
                   `⚠️ Critical items reported:\n${objetsList}\n\n` +
+                  `⚡ Level: ${isUrgentGlobal ? '🚨 URGENT' : '⚪ NORMAL'}\n` +
                   `⏰ Generated on: ${new Date().toLocaleString('en-GB')}`;
 
               const tacheTechnique = await base44.entities.Tache.create({
@@ -270,7 +275,7 @@ export default function ClientDepartRecap() {
                   : `🔧 Departure Inventory - ${numero} - ${nom}`,
                 description: descriptionTechnique,
                 categorie: 'technique',
-                priorite: objetsTechnique.some(s => s.type === 'casse') ? 'urgente' : 'haute',
+                priorite: isUrgentGlobal ? 'urgente' : (objetsTechnique.some(s => s.type === 'casse') ? 'urgente' : 'haute'),
                 statut: 'a_faire',
                 hebergement: numero,
                 assignee: 'Service Technique',
