@@ -43,20 +43,15 @@ export default function ReceptionFicheArrivee({ ficheId, onClose, lang }) {
   const genererPDF = async () => {
     setGeneratingPDF(true);
     
-    // Ajouter à la file d'attente
-    await addPDFToQueue({
-      type: 'arrivee',
-      entityId: fiche.id,
-      entityData: fiche,
-      generatorFn: async () => {
-        const doc = new jsPDF();
+    try {
+      const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.width;
       let yPos = 20;
 
       // Titre
       doc.setFontSize(20);
       doc.setFont('helvetica', 'bold');
-      doc.text(lang === 'fr' ? 'DOSSIER D\'ARRIVÉE' : 'ARRIVAL FILE', pageWidth / 2, yPos, { align: 'center' });
+      doc.text(lang === 'fr' ? 'DOSSIER D\'ARRIVEE' : 'ARRIVAL FILE', pageWidth / 2, yPos, { align: 'center' });
       yPos += 15;
 
       // Informations client
@@ -67,9 +62,9 @@ export default function ReceptionFicheArrivee({ ficheId, onClose, lang }) {
       doc.setFont('helvetica', 'normal');
       doc.text(`${lang === 'fr' ? 'Nom' : 'Name'}: ${fiche.client_prenom} ${fiche.client_nom}`, 15, yPos);
       yPos += 6;
-      doc.text(`${lang === 'fr' ? 'Arrivée' : 'Arrival'}: ${fiche.date_arrivee}`, 15, yPos);
+      doc.text(`${lang === 'fr' ? 'Arrivee' : 'Arrival'}: ${fiche.date_arrivee}`, 15, yPos);
       yPos += 6;
-      doc.text(`${lang === 'fr' ? 'Départ' : 'Departure'}: ${fiche.date_depart}`, 15, yPos);
+      doc.text(`${lang === 'fr' ? 'Depart' : 'Departure'}: ${fiche.date_depart}`, 15, yPos);
       yPos += 6;
       doc.text(`${lang === 'fr' ? 'Logement' : 'Accommodation'}: ${fiche.numero_logement} (${fiche.categorie_logement})`, 15, yPos);
       yPos += 10;
@@ -80,13 +75,13 @@ export default function ReceptionFicheArrivee({ ficheId, onClose, lang }) {
       doc.text(`${lang === 'fr' ? 'Occupants' : 'Occupants'}: ${totalPersonnes} personne(s)`, 15, yPos);
       yPos += 6;
       doc.setFontSize(10);
-      doc.text(`  • ${fiche.nombre_adultes || 0} ${lang === 'fr' ? 'adulte(s)' : 'adult(s)'}`, 15, yPos);
+      doc.text(`  ${fiche.nombre_adultes || 0} ${lang === 'fr' ? 'adulte(s)' : 'adult(s)'}`, 15, yPos);
       yPos += 5;
-      doc.text(`  • ${fiche.nombre_adolescents || 0} ${lang === 'fr' ? 'adolescent(s)' : 'teen(s)'}`, 15, yPos);
+      doc.text(`  ${fiche.nombre_adolescents || 0} ${lang === 'fr' ? 'adolescent(s)' : 'teen(s)'}`, 15, yPos);
       yPos += 5;
-      doc.text(`  • ${fiche.nombre_enfants || 0} ${lang === 'fr' ? 'enfant(s)' : 'child(ren)'}`, 15, yPos);
+      doc.text(`  ${fiche.nombre_enfants || 0} ${lang === 'fr' ? 'enfant(s)' : 'child(ren)'}`, 15, yPos);
       yPos += 5;
-      doc.text(`  • ${fiche.nombre_bebes || 0} ${lang === 'fr' ? 'bébé(s)' : 'baby/babies'}`, 15, yPos);
+      doc.text(`  ${fiche.nombre_bebes || 0} ${lang === 'fr' ? 'bebe(s)' : 'baby/babies'}`, 15, yPos);
       yPos += 10;
 
       // Inventaire
@@ -99,16 +94,15 @@ export default function ReceptionFicheArrivee({ ficheId, onClose, lang }) {
 
       if (fiche.inventaire_objets_valides && fiche.inventaire_objets_valides.length > 0) {
         doc.setTextColor(0, 128, 0);
-        doc.text(`${lang === 'fr' ? '✓ Objets validés' : '✓ Validated items'}: ${fiche.inventaire_objets_valides.length}`, 15, yPos);
+        doc.text(`Objets valides: ${fiche.inventaire_objets_valides.length}`, 15, yPos);
         doc.setTextColor(0, 0, 0);
         yPos += 8;
         
-        // Liste des objets validés
         doc.setFontSize(9);
         let colCount = 0;
         fiche.inventaire_objets_valides.forEach(obj => {
           const xPos = 20 + (colCount * 60);
-          doc.text(`• ${obj}`, xPos, yPos);
+          doc.text(`- ${obj}`, xPos, yPos);
           colCount++;
           if (colCount === 3) {
             colCount = 0;
@@ -123,16 +117,15 @@ export default function ReceptionFicheArrivee({ ficheId, onClose, lang }) {
       if (fiche.inventaire_objets_manquants && fiche.inventaire_objets_manquants.length > 0) {
         doc.setTextColor(255, 0, 0);
         doc.setFont('helvetica', 'bold');
-        doc.text(`${lang === 'fr' ? '✗ Objets manquants/cassés' : '✗ Missing/broken items'}: ${fiche.inventaire_objets_manquants.length}`, 15, yPos);
+        doc.text(`Objets manquants/casses: ${fiche.inventaire_objets_manquants.length}`, 15, yPos);
         doc.setFont('helvetica', 'normal');
         yPos += 8;
         
-        // Détail des objets manquants
         doc.setFontSize(9);
         fiche.inventaire_objets_manquants.forEach(obj => {
           const objetNom = typeof obj === 'string' ? obj : obj.objet;
           const commentaire = typeof obj === 'object' ? obj.commentaire : '';
-          doc.text(`• ${objetNom}${commentaire ? ' - ' + commentaire : ''}`, 20, yPos);
+          doc.text(`- ${objetNom}${commentaire ? ' - ' + commentaire : ''}`, 20, yPos);
           yPos += 5;
         });
         doc.setTextColor(0, 0, 0);
@@ -144,20 +137,21 @@ export default function ReceptionFicheArrivee({ ficheId, onClose, lang }) {
       yPos += 5;
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      doc.text(lang === 'fr' ? 'Propreté' : 'Cleanliness', 15, yPos);
+      doc.text(lang === 'fr' ? 'Proprete' : 'Cleanliness', 15, yPos);
       yPos += 8;
       doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
       
-      const proprete = fiche.evaluation_proprete === 'tres_propre' ? (lang === 'fr' ? '😊 Très propre' : '😊 Very clean') :
-                       fiche.evaluation_proprete === 'correct' ? (lang === 'fr' ? '😐 Correct' : '😐 OK') :
-                       (lang === 'fr' ? '😞 Pas satisfaisant' : '😞 Not satisfactory');
+      const proprete = fiche.evaluation_proprete === 'tres_propre' ? (lang === 'fr' ? 'Tres propre' : 'Very clean') :
+                       fiche.evaluation_proprete === 'correct' ? (lang === 'fr' ? 'Correct' : 'OK') :
+                       (lang === 'fr' ? 'Pas satisfaisant' : 'Not satisfactory');
       doc.text(proprete, 15, yPos);
       yPos += 8;
 
       if (fiche.commentaire_proprete) {
-        doc.text(`${lang === 'fr' ? 'Commentaire' : 'Comment'}: ${fiche.commentaire_proprete}`, 15, yPos);
-        yPos += 8;
+        const commentSplit = doc.splitTextToSize(`${lang === 'fr' ? 'Commentaire' : 'Comment'}: ${fiche.commentaire_proprete}`, pageWidth - 30);
+        doc.text(commentSplit, 15, yPos);
+        yPos += commentSplit.length * 6 + 5;
       }
 
       // Remarques
@@ -176,44 +170,63 @@ export default function ReceptionFicheArrivee({ ficheId, onClose, lang }) {
       // Date de validation
       yPos += 10;
       doc.setFontSize(10);
-      doc.text(`${lang === 'fr' ? 'Validé le' : 'Validated on'}: ${new Date(fiche.date_validation).toLocaleString(lang)}`, 15, yPos);
+      doc.text(`${lang === 'fr' ? 'Valide le' : 'Validated on'}: ${new Date(fiche.date_validation).toLocaleString(lang)}`, 15, yPos);
 
-      // Sauvegarder
-      const pdfBlob = doc.output('blob');
-      const pdfFile = new File([pdfBlob], `arrivee_${fiche.numero_logement}_${fiche.client_nom}.pdf`, { type: 'application/pdf' });
+      // Télécharger directement
+      doc.save(`arrivee_${fiche.numero_logement}_${fiche.client_nom}.pdf`);
       
-        const { file_url } = await base44.integrations.Core.UploadFile({ file: pdfFile });
-        
-        return file_url;
-      }
-    });
-    
-    queryClient.invalidateQueries({ queryKey: ['fiches-arrivee'] });
-    toast.success(lang === 'fr' 
-      ? 'PDF ajouté à la file de génération. Vous serez notifié quand il sera prêt.' 
-      : 'PDF added to generation queue. You will be notified when ready.');
-    setGeneratingPDF(false);
+      toast.success(lang === 'fr' ? 'PDF téléchargé' : 'PDF downloaded');
+    } catch (error) {
+      console.error('Erreur génération PDF:', error);
+      toast.error(lang === 'fr' ? 'Erreur génération PDF' : 'PDF generation error');
+    } finally {
+      setGeneratingPDF(false);
+    }
   };
 
   const envoyerEmail = async () => {
-    if (!fiche.pdf_url) {
-      toast.error(lang === 'fr' ? 'Veuillez d\'abord générer le PDF' : 'Please generate the PDF first');
-      return;
-    }
-
     setSendingEmail(true);
     try {
+      const totalPersonnes = (fiche.nombre_adultes || 0) + (fiche.nombre_adolescents || 0) + 
+                             (fiche.nombre_enfants || 0) + (fiche.nombre_bebes || 0);
+      
+      const objetsManquants = fiche.inventaire_objets_manquants && fiche.inventaire_objets_manquants.length > 0
+        ? fiche.inventaire_objets_manquants.map(obj => {
+            const objetNom = typeof obj === 'string' ? obj : obj.objet;
+            return `  - ${objetNom}`;
+          }).join('\n')
+        : (lang === 'fr' ? 'Aucun' : 'None');
+
+      const proprete = fiche.evaluation_proprete === 'tres_propre' ? (lang === 'fr' ? 'Très propre' : 'Very clean') :
+                       fiche.evaluation_proprete === 'correct' ? (lang === 'fr' ? 'Correct' : 'OK') :
+                       (lang === 'fr' ? 'Pas satisfaisant' : 'Not satisfactory');
+
       await base44.integrations.Core.SendEmail({
         to: 'reception@camping-paradis.fr',
         subject: lang === 'fr' 
-          ? `Dossier d'arrivée - ${fiche.client_nom} ${fiche.client_prenom}`
-          : `Arrival file - ${fiche.client_nom} ${fiche.client_prenom}`,
+          ? `Dossier d'arrivée - ${fiche.client_prenom} ${fiche.client_nom} - ${fiche.numero_logement}`
+          : `Arrival file - ${fiche.client_prenom} ${fiche.client_nom} - ${fiche.numero_logement}`,
         body: `
-          ${lang === 'fr' ? 'Dossier d\'arrivée pour' : 'Arrival file for'}: ${fiche.client_prenom} ${fiche.client_nom}
-          ${lang === 'fr' ? 'Logement' : 'Accommodation'}: ${fiche.numero_logement}
-          ${lang === 'fr' ? 'Dates' : 'Dates'}: ${fiche.date_arrivee} → ${fiche.date_depart}
-          
-          ${lang === 'fr' ? 'Lien PDF' : 'PDF link'}: ${fiche.pdf_url}
+${lang === 'fr' ? 'DOSSIER D\'ARRIVÉE' : 'ARRIVAL FILE'}
+
+${lang === 'fr' ? 'Client' : 'Guest'}: ${fiche.client_prenom} ${fiche.client_nom}
+${lang === 'fr' ? 'Logement' : 'Accommodation'}: ${fiche.numero_logement} (${fiche.categorie_logement})
+${lang === 'fr' ? 'Dates' : 'Dates'}: ${fiche.date_arrivee} → ${fiche.date_depart}
+${lang === 'fr' ? 'Occupants' : 'Occupants'}: ${totalPersonnes} personne(s)
+
+${lang === 'fr' ? 'INVENTAIRE' : 'INVENTORY'}
+---
+${lang === 'fr' ? 'Objets validés' : 'Validated items'}: ${fiche.inventaire_objets_valides?.length || 0}
+${lang === 'fr' ? 'Objets manquants/cassés' : 'Missing/broken items'}: ${fiche.inventaire_objets_manquants?.length || 0}
+
+${fiche.inventaire_objets_manquants?.length > 0 ? `\n${lang === 'fr' ? 'Détail objets manquants' : 'Missing items detail'}:\n${objetsManquants}\n` : ''}
+
+${lang === 'fr' ? 'PROPRETÉ' : 'CLEANLINESS'}: ${proprete}
+${fiche.commentaire_proprete ? `${lang === 'fr' ? 'Commentaire' : 'Comment'}: ${fiche.commentaire_proprete}` : ''}
+
+${fiche.remarques_client ? `\n${lang === 'fr' ? 'REMARQUES CLIENT' : 'GUEST REMARKS'}:\n${fiche.remarques_client}` : ''}
+
+${lang === 'fr' ? 'Validé le' : 'Validated on'}: ${new Date(fiche.date_validation).toLocaleString(lang)}
         `
       });
 
@@ -244,29 +257,15 @@ export default function ReceptionFicheArrivee({ ficheId, onClose, lang }) {
           {lang === 'fr' ? 'Retour à la liste' : 'Back to list'}
         </Button>
         <div className="flex gap-2">
-          {fiche.pdf_status === PDF_STATUS.EN_COURS && (
-            <Badge className="bg-blue-100 text-blue-700">
-              {lang === 'fr' ? '⏳ Génération en cours...' : '⏳ Generating...'}
-            </Badge>
-          )}
-          {fiche.pdf_status === PDF_STATUS.ERREUR && (
-            <Badge className="bg-red-100 text-red-700">
-              {lang === 'fr' ? '❌ Erreur génération' : '❌ Generation error'}
-            </Badge>
-          )}
           <Button 
             onClick={genererPDF} 
-            disabled={generatingPDF || fiche.pdf_status === PDF_STATUS.EN_COURS} 
+            disabled={generatingPDF} 
             className="gap-2 bg-[#00AEEF]"
           >
             <Download className="w-4 h-4" />
-            {fiche.pdf_status === PDF_STATUS.TERMINE && fiche.pdf_url
-              ? (lang === 'fr' ? 'Télécharger PDF' : 'Download PDF')
-              : generatingPDF 
-                ? (lang === 'fr' ? 'Ajout...' : 'Adding...') 
-                : (lang === 'fr' ? 'Générer PDF' : 'Generate PDF')}
+            {generatingPDF ? (lang === 'fr' ? 'Génération...' : 'Generating...') : (lang === 'fr' ? 'Générer PDF' : 'Generate PDF')}
           </Button>
-          <Button onClick={envoyerEmail} disabled={sendingEmail || !fiche.pdf_url} variant="outline" className="gap-2">
+          <Button onClick={envoyerEmail} disabled={sendingEmail} variant="outline" className="gap-2">
             <Mail className="w-4 h-4" />
             {sendingEmail ? (lang === 'fr' ? 'Envoi...' : 'Sending...') : (lang === 'fr' ? 'Envoyer par email' : 'Send by email')}
           </Button>
