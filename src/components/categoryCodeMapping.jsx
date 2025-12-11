@@ -14,9 +14,13 @@ export const categoryToCodeMapping = {
   "Mobil-home Classique Clim": "MH_CLASSIQUE_CLIM_2CH",
   "Mobil-home Classique 3ch": "MH_CLASSIQUE_3CH",
   
+  // Mobil-homes Confort
+  "Mobil-home Confort 2ch": "MH_CONFORT_2CH_4P",
+  "Mobil-home Confort 3ch": "MH_CONFORT_3CH_6P",
+  
   // Mobil-homes Confort+
-  "Confort+ 2ch": "MH_CONFORT_2CH_4P",
-  "Confort+ 3ch": "MH_CONFORT_3CH_6P",
+  "Confort+ 2ch": "MH_CONFORT_PLUS_2CH",
+  "Confort+ 3ch": "MH_CONFORT_PLUS_3CH",
   
   // Mobil-homes Premium
   "Premium 2ch": "MH_PREMIUM_2CH",
@@ -1107,6 +1111,16 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     'MH_CONFORT_3CH_6P': {
       titre_fr: 'Mobil-home Confort 3 chambres (6 personnes)',
       titre_en: 'Comfort Mobile Home 3 bedrooms (6 persons)',
+      objets: INVENTAIRES.MH_CONFORT_3CH_6P
+    },
+    'MH_CONFORT_PLUS_2CH': {
+      titre_fr: 'Mobil-home Confort+ 2 chambres',
+      titre_en: 'Comfort+ Mobile Home 2 bedrooms',
+      objets: INVENTAIRES.MH_CONFORT_2CH_4P
+    },
+    'MH_CONFORT_PLUS_3CH': {
+      titre_fr: 'Mobil-home Confort+ 3 chambres',
+      titre_en: 'Comfort+ Mobile Home 3 bedrooms',
       objets: INVENTAIRES.MH_CONFORT_3CH_6P
     },
     'MH_PREMIUM_2CH': {
