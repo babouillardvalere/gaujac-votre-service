@@ -306,38 +306,36 @@ export default function ClientDepartInventaire() {
           </Card>
 
           {/* Urgence globale */}
-          {objetsSignales.length > 0 && (
-            <Card className="border-2 border-red-400 rounded-xl mb-6">
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <input
-                    type="checkbox"
-                    id="urgence-globale-depart"
-                    checked={isUrgentGlobal}
-                    onChange={(e) => setIsUrgentGlobal(e.target.checked)}
-                    className="w-6 h-6 mt-1 cursor-pointer"
-                  />
-                  <div className="flex-1">
-                    <label htmlFor="urgence-globale-depart" className="font-heading text-lg text-[#0077A8] cursor-pointer block mb-2">
-                      🚨 {lang === 'fr' ? 'Activer l\'intervention en URGENCE' : 'Activate URGENT intervention'}
-                    </label>
-                    <p className="text-sm text-gray-600">
-                      {lang === 'fr' 
-                        ? 'Par défaut, votre demande est traitée normalement. Activez l\'urgence seulement en cas de besoin immédiat.'
-                        : 'By default, your request is processed normally. Activate urgency only for immediate needs.'}
-                    </p>
-                    {isUrgentGlobal && (
-                      <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-300">
-                        <p className="text-sm font-semibold text-red-800">
-                          ⚡ {lang === 'fr' ? 'Votre demande sera traitée en priorité' : 'Your request will be processed with priority'}
-                        </p>
-                      </div>
-                    )}
-                  </div>
+          <Card className="border-2 border-red-400 rounded-xl mb-6">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <input
+                  type="checkbox"
+                  id="urgence-globale-depart"
+                  checked={isUrgentGlobal}
+                  onChange={(e) => setIsUrgentGlobal(e.target.checked)}
+                  className="w-6 h-6 mt-1 cursor-pointer"
+                />
+                <div className="flex-1">
+                  <label htmlFor="urgence-globale-depart" className="font-heading text-lg text-[#0077A8] cursor-pointer block mb-2">
+                    🚨 {lang === 'fr' ? 'Activer l\'intervention en URGENCE' : 'Activate URGENT intervention'}
+                  </label>
+                  <p className="text-sm text-gray-600">
+                    {lang === 'fr' 
+                      ? 'Par défaut, votre demande est traitée normalement. Activez l\'urgence seulement en cas de besoin immédiat.'
+                      : 'By default, your request is processed normally. Activate urgency only for immediate needs.'}
+                  </p>
+                  {isUrgentGlobal && (
+                    <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-300">
+                      <p className="text-sm font-semibold text-red-800">
+                        ⚡ {lang === 'fr' ? 'Votre demande sera traitée en priorité' : 'Your request will be processed with priority'}
+                      </p>
+                    </div>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              </div>
+            </CardContent>
+          </Card>
 
           <Button
             onClick={handleContinue}

@@ -1209,39 +1209,37 @@ export default function ClientControleInventaire() {
             </CardContent>
           </Card>
 
-          {/* Bloc 6.5 - Urgence globale */}
-          {(Object.values(objetsCocheState).some(v => v === true) || objetsMissing.length > 0 || evaluationProprete === 'pas_satisfaisant') && (
-            <Card className="border-2 border-red-400 rounded-xl mb-6">
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <input
-                    type="checkbox"
-                    id="urgence-globale"
-                    checked={isUrgentGlobal}
-                    onChange={(e) => setIsUrgentGlobal(e.target.checked)}
-                    className="w-6 h-6 mt-1 cursor-pointer"
-                  />
-                  <div className="flex-1">
-                    <label htmlFor="urgence-globale" className="font-heading text-lg text-[#0077A8] cursor-pointer block mb-2">
-                      🚨 {lang === 'fr' ? 'Activer l\'intervention en URGENCE' : 'Activate URGENT intervention'}
-                    </label>
-                    <p className="text-sm text-gray-600">
-                      {lang === 'fr' 
-                        ? 'Par défaut, votre demande est traitée normalement. Activez l\'urgence seulement en cas de besoin immédiat.'
-                        : 'By default, your request is processed normally. Activate urgency only for immediate needs.'}
-                    </p>
-                    {isUrgentGlobal && (
-                      <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-300">
-                        <p className="text-sm font-semibold text-red-800">
-                          ⚡ {lang === 'fr' ? 'Votre demande sera traitée en priorité' : 'Your request will be processed with priority'}
-                        </p>
-                      </div>
-                    )}
-                  </div>
+          {/* Bloc 2.5 - Urgence globale */}
+          <Card className="border-2 border-red-400 rounded-xl mb-6">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <input
+                  type="checkbox"
+                  id="urgence-globale"
+                  checked={isUrgentGlobal}
+                  onChange={(e) => setIsUrgentGlobal(e.target.checked)}
+                  className="w-6 h-6 mt-1 cursor-pointer"
+                />
+                <div className="flex-1">
+                  <label htmlFor="urgence-globale" className="font-heading text-lg text-[#0077A8] cursor-pointer block mb-2">
+                    🚨 {lang === 'fr' ? 'Activer l\'intervention en URGENCE' : 'Activate URGENT intervention'}
+                  </label>
+                  <p className="text-sm text-gray-600">
+                    {lang === 'fr' 
+                      ? 'Par défaut, votre demande est traitée normalement. Activez l\'urgence seulement en cas de besoin immédiat.'
+                      : 'By default, your request is processed normally. Activate urgency only for immediate needs.'}
+                  </p>
+                  {isUrgentGlobal && (
+                    <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-300">
+                      <p className="text-sm font-semibold text-red-800">
+                        ⚡ {lang === 'fr' ? 'Votre demande sera traitée en priorité' : 'Your request will be processed with priority'}
+                      </p>
+                    </div>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Bloc 7 - Signature */}
           <SignaturePad onSave={setSignature} disabled={submitting} lang={lang} />
