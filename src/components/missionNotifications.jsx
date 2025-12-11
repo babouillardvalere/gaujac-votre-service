@@ -19,6 +19,42 @@ const SERVICE_TO_TEAM = {
 };
 
 /**
+ * Notifie un service lors de la création d'une mission par la direction
+ */
+export async function notifierMissionCreee(mission, service, lang = 'fr') {
+  const missionTypeLabels = {
+    'DESHIVERNAGE': lang === 'fr' ? 'Déshivernage' : 'Spring Opening',
+    'HIVERNAGE': lang === 'fr' ? 'Hivernage' : 'Winter Closing',
+    'SAISON': lang === 'fr' ? 'Saison' : 'Season'
+  };
+
+  const typeLabel = missionTypeLabels[mission.type] || mission.type;
+
+  try {
+    await base44.entities.Notification.create({
+      destinataire_type: 'collaborateur',
+      type: 'nouvelle_mission_direction',
+      titre: lang === 'fr' 
+        ? `📋 Nouvelle mission ${typeLabel}`
+        : `📋 New ${typeLabel} mission`,
+      message: `${mission.titre} - ${mission.date_debut} → ${mission.date_fin}`,
+      metadata: {
+        mission_id: mission.id,
+        mission_type: mission.type,
+        service: service,
+        role_cible: service.toLowerCase()
+      },
+      lue: false,
+      archivee: false
+    });
+    return { success: true };
+  } catch (error) {
+    console.error('Erreur notification mission créée:', error);
+    return { success: false, error };
+  }
+}
+
+/**
  * Envoie des notifications à tous les services assignés à une mission
  */
 export async function notifyMissionServices(mission, lang = 'fr') {
