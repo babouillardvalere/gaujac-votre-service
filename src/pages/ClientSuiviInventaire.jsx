@@ -12,11 +12,19 @@ import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import SuiviRechercheBar from '../components/suivi/SuiviRechercheBar';
+import SuiviTimeline from '../components/suivi/SuiviTimeline';
 
 export default function ClientSuiviInventaire() {
   const { t, lang } = useTranslation();
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
+  const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState({
+    statut: 'tous',
+    service: 'tous',
+    typeObjet: 'tous'
+  });
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -69,6 +77,98 @@ export default function ClientSuiviInventaire() {
     enabled: !!ficheArriveeActuelle
   });
 
+  // Génération de la timeline pour chaque suivi
+  const generateTimeline = (suivi) => {
+    const events = [];
+    
+    // Création
+    events.push({
+      time: format(new Date(suivi.created_date), 'HH:mm', { locale: fr }),
+      status: lang === 'fr' ? 'Inventaire réalisé' : 'Inventory completed',
+      detail: lang === 'fr' ? 'Enregistré par le client' : 'Registered by client'
+    });
+
+    // Notification envoyée
+    if (suivi.items_menage?.length > 0 || suivi.items_technique?.length > 0) {
+      const notifTime = new Date(new Date(suivi.created_date).getTime() + 1000 * 60);
+      events.push({
+        time: format(notifTime, 'HH:mm', { locale: fr }),
+        status: lang === 'fr' ? 'Notification envoyée' : 'Notification sent',
+        detail: suivi.items_menage?.length > 0 && suivi.items_technique?.length > 0
+          ? (lang === 'fr' ? 'Services ménage et technique notifiés' : 'Housekeeping and technical teams notified')
+          : suivi.items_menage?.length > 0
+          ? (lang === 'fr' ? 'Service ménage notifié' : 'Housekeeping team notified')
+          : (lang === 'fr' ? 'Service technique notifié' : 'Technical team notified')
+      });
+    }
+
+    // Statut ménage
+    if (suivi.statut_menage && suivi.statut_menage !== 'non_requis') {
+      const menageLabel = {
+        en_attente: lang === 'fr' ? 'Ménage : À traiter' : 'Housekeeping: Pending',
+        en_cours: lang === 'fr' ? 'Ménage : En cours' : 'Housekeeping: In progress',
+        termine: lang === 'fr' ? 'Ménage : Terminé' : 'Housekeeping: Completed'
+      }[suivi.statut_menage];
+      
+      if (menageLabel) {
+        events.push({
+          time: suivi.date_derniere_maj ? format(new Date(suivi.date_derniere_maj), 'HH:mm', { locale: fr }) : '--:--',
+          status: menageLabel,
+          detail: ''
+        });
+      }
+    }
+
+    // Statut technique
+    if (suivi.statut_technique && suivi.statut_technique !== 'non_requis') {
+      const techniqueLabel = {
+        en_attente: lang === 'fr' ? 'Technique : À traiter' : 'Technical: Pending',
+        en_cours: lang === 'fr' ? 'Technique : En cours' : 'Technical: In progress',
+        termine: lang === 'fr' ? 'Technique : Terminé' : 'Technical: Completed'
+      }[suivi.statut_technique];
+      
+      if (techniqueLabel) {
+        events.push({
+          time: suivi.date_derniere_maj ? format(new Date(suivi.date_derniere_maj), 'HH:mm', { locale: fr }) : '--:--',
+          status: techniqueLabel,
+          detail: ''
+        });
+      }
+    }
+
+    return events;
+  };
+
+  // Filtrage des suivis
+  const filteredSuivis = suivis.filter(suivi => {
+    // Recherche par nom client ou logement
+    const matchSearch = 
+      !search || 
+      suivi.client_nom?.toLowerCase().includes(search.toLowerCase()) ||
+      suivi.client_prenom?.toLowerCase().includes(search.toLowerCase()) ||
+      suivi.logement?.toLowerCase().includes(search.toLowerCase());
+
+    // Filtre statut
+    const matchStatut = filters.statut === 'tous' || 
+      (filters.statut === 'en_attente' && (suivi.statut_menage === 'en_attente' || suivi.statut_technique === 'en_attente')) ||
+      (filters.statut === 'en_cours' && (suivi.statut_menage === 'en_cours' || suivi.statut_technique === 'en_cours')) ||
+      (filters.statut === 'termine' && (suivi.statut_menage === 'termine' && suivi.statut_technique === 'termine')) ||
+      (filters.statut === 'non_requis' && (suivi.statut_menage === 'non_requis' && suivi.statut_technique === 'non_requis'));
+
+    // Filtre service
+    const matchService = filters.service === 'tous' || 
+      (filters.service === 'menage' && suivi.items_menage?.length > 0) ||
+      (filters.service === 'technique' && suivi.items_technique?.length > 0);
+
+    // Filtre type objet
+    const matchTypeObjet = filters.typeObjet === 'tous' || 
+      (filters.typeObjet === 'manquant' && [...(suivi.items_menage || []), ...(suivi.items_technique || [])].some(i => i.motif === 'manquant')) ||
+      (filters.typeObjet === 'casse' && [...(suivi.items_menage || []), ...(suivi.items_technique || [])].some(i => i.motif === 'cassé')) ||
+      (filters.typeObjet === 'sale' && [...(suivi.items_menage || []), ...(suivi.items_technique || [])].some(i => i.motif === 'sale'));
+
+    return matchSearch && matchStatut && matchService && matchTypeObjet;
+  });
+
   const getStatutConfig = (statut) => {
     const configs = {
       en_attente: {
@@ -118,8 +218,23 @@ export default function ClientSuiviInventaire() {
           <Logo className="h-16 mb-4" />
           
           <h1 className="font-handwritten text-3xl text-[#00AEEF] text-center mb-6">
-            📋 {lang === 'fr' ? 'Mon Suivi Inventaire' : 'My Inventory Tracking'}
+            📋 {lang === 'fr' ? 'Suivi des Interventions' : 'Interventions Tracking'}
           </h1>
+
+          {/* Barre de recherche et filtres */}
+          <SuiviRechercheBar 
+            search={search}
+            setSearch={setSearch}
+            filters={filters}
+            setFilters={setFilters}
+          />
+
+          {/* Compteur de résultats */}
+          {suivis.length > 0 && (
+            <div className="mb-4 text-sm text-gray-600">
+              {filteredSuivis.length} {lang === 'fr' ? 'résultat(s) trouvé(s)' : 'result(s) found'}
+            </div>
+          )}
 
           {suivis.length === 0 ? (
             <Card className="border-2 border-gray-200 rounded-xl">
@@ -137,9 +252,25 @@ export default function ClientSuiviInventaire() {
                 </p>
               </CardContent>
             </Card>
+          ) : filteredSuivis.length === 0 ? (
+            <Card className="border-2 border-gray-200 rounded-xl">
+              <CardContent className="p-12 text-center">
+                <AlertCircle className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                <p className="text-gray-500 font-heading">
+                  {lang === 'fr' 
+                    ? 'Aucun résultat trouvé' 
+                    : 'No results found'}
+                </p>
+                <p className="text-sm text-gray-400 mt-2">
+                  {lang === 'fr'
+                    ? 'Essayez de modifier vos critères de recherche'
+                    : 'Try changing your search criteria'}
+                </p>
+              </CardContent>
+            </Card>
           ) : (
             <div className="space-y-4">
-              {suivis.map(suivi => {
+              {filteredSuivis.map(suivi => {
                 const totalItems = (suivi.items_menage?.length || 0) + (suivi.items_technique?.length || 0);
                 const serviceMenageConfig = getStatutConfig(suivi.statut_menage);
                 const serviceTechniqueConfig = getStatutConfig(suivi.statut_technique);
@@ -149,20 +280,21 @@ export default function ClientSuiviInventaire() {
                 return (
                   <Card key={suivi.id} className="border-2 border-[#00AEEF]/30 rounded-xl">
                     <CardContent className="p-6">
-                      {/* En-tête */}
+                      {/* En-tête avec numéro d'intervention */}
                       <div className="flex items-start justify-between mb-4">
                         <div>
                           <h2 className="font-heading text-xl text-[#0077A8] mb-1">
-                            {lang === 'fr' ? 'Inventaire' : 'Inventory'} {suivi.type_inventaire === 'ARRIVEE' 
-                              ? (lang === 'fr' ? 'd\'arrivée' : 'on arrival')
-                              : (lang === 'fr' ? 'de départ' : 'on departure')}
+                            📌 {lang === 'fr' ? 'Intervention' : 'Intervention'} #{suivi.id?.slice(-4)} – {suivi.logement}
                           </h2>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-gray-600">
+                            {lang === 'fr' ? 'Client' : 'Guest'}: {suivi.client_nom} {suivi.client_prenom}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
                             {format(new Date(suivi.created_date), 'dd MMMM yyyy à HH:mm', { locale: fr })}
                           </p>
                         </div>
                         <Badge className="bg-[#FFD700] text-[#0077A8]">
-                          {suivi.logement}
+                          {suivi.categorie_logement}
                         </Badge>
                       </div>
 
@@ -244,6 +376,14 @@ export default function ClientSuiviInventaire() {
                           </p>
                         </div>
                       )}
+
+                      {/* Timeline détaillée */}
+                      <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                        <h4 className="font-heading text-sm text-[#0077A8] mb-3">
+                          📅 {lang === 'fr' ? 'Chronologie' : 'Timeline'}
+                        </h4>
+                        <SuiviTimeline events={generateTimeline(suivi)} />
+                      </div>
 
                       {/* Dernière mise à jour */}
                       {suivi.date_derniere_maj && (
