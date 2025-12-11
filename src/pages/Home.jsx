@@ -78,15 +78,15 @@ export default function Home() {
     {
       title: t('suivi_intervention'),
       icon: Search,
-      href: '/SuiviIntervention',
+      href: '/ClientSuiviInventaire',
       bgColor: 'bg-[#FFD700]',
       borderColor: 'border-[#FFD700]',
       iconBg: 'bg-[#00AEEF]',
       textColor: 'text-[#0077A8]',
       subtitleColor: 'text-[#0077A8]',
       arrowColor: 'text-[#0077A8]',
-      description: t('suivre_demande'),
-      ariaLabel: 'Suivre votre demande - Voir le statut de votre intervention',
+      description: lang === 'fr' ? 'Mon suivi inventaire' : 'My inventory tracking',
+      ariaLabel: 'Suivre votre inventaire - Voir le statut de vos interventions',
       iconColor: 'text-white'
     },
     {
