@@ -18,7 +18,7 @@ import { ArrowLeft, Camera, Check, AlertCircle, Smile, Meh, Frown, Send, Loader2
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
-import { notifierInventaireSoumis, notifierDossierFinalise, notifierNouvelleTache } from '../components/notificationService';
+import { notifierInventaireSoumis, notifierDossierFinalise, notifierInterventionCreee } from '../components/notificationService';
 import { uploadCompressedImage } from '../components/imageCompression';
 import LazyInventaire from '../components/LazyInventaire';
 import { clearInventaireCache } from '../components/inventaireCache';
@@ -492,100 +492,76 @@ export default function ClientControleInventaire() {
         technique: interventionsPreview.technique.length
       });
 
-      // Créer UNE SEULE TÂCHE MÉNAGE regroupant tous les objets
+      // Créer UNE SEULE INTERVENTION MÉNAGE regroupant tous les objets
       if (interventionsPreview.menage.length > 0) {
-        console.log('🧹 Création tâche MÉNAGE...');
+        console.log('🧹 Création intervention MÉNAGE...');
         const objetsList = interventionsPreview.menage
           .map(interv => `• ${interv.objet}`)
           .join('\n');
 
         const descriptionMenage = lang === 'fr'
           ? `📋 INVENTAIRE ARRIVÉE - Objets manquants (ménage)\n\n` +
-            `🏠 Logement: ${numero} (${categorie})\n` +
-            `👤 Client: ${nom} ${prenom}\n` +
-            `📅 Arrivée: ${dateArrivee} | Départ: ${dateDepart}\n\n` +
             `📝 Objets signalés:\n${objetsList}\n\n` +
-            `🔐 Autorisation d'accès: ${autorisationAcces === 'oui' ? 'OUI' : 'NON - ' + plageHoraire}\n` +
-            `⏰ Généré le: ${new Date().toLocaleString('fr-FR')}`
+            `🔐 Autorisation d'accès: ${autorisationAcces === 'oui' ? 'OUI' : 'NON - ' + plageHoraire}`
           : `📋 ARRIVAL INVENTORY - Missing items (housekeeping)\n\n` +
-            `🏠 Accommodation: ${numero} (${categorie})\n` +
-            `👤 Guest: ${prenom} ${nom}\n` +
-            `📅 Arrival: ${dateArrivee} | Departure: ${dateDepart}\n\n` +
             `📝 Items reported:\n${objetsList}\n\n` +
-            `🔐 Access authorization: ${autorisationAcces === 'oui' ? 'YES' : 'NO - ' + plageHoraire}\n` +
-            `⏰ Generated on: ${new Date().toLocaleString('en-GB')}`;
+            `🔐 Access authorization: ${autorisationAcces === 'oui' ? 'YES' : 'NO - ' + plageHoraire}`;
 
-        const tacheMenage = await base44.entities.Tache.create({
-          titre: lang === 'fr' 
-            ? `🧹 Inventaire Arrivée - ${numero} - ${nom}` 
-            : `🧹 Arrival Inventory - ${numero} - ${nom}`,
+        const incidentMenage = await base44.entities.Incident.create({
+          type: 'menage',
+          categorie: 'autre',
           description: descriptionMenage,
-          categorie: 'menage',
-          priorite: 'normale',
-          statut: 'a_faire',
-          hebergement: numero,
-          assignee: 'Service Ménage',
-          assignee_email: 'menage@campingparadis.com',
-          date_echeance: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+          urgent: false,
+          autorisation_acces: autorisationAcces,
+          plage_horaire_client: autorisationAcces === 'non' ? plageHoraire : null,
+          client_nom: nom,
+          client_prenom: prenom,
+          date_arrivee: dateArrivee,
+          date_depart: dateDepart,
+          logement: numero,
+          date_saisie: new Date().toISOString(),
+          statut: 'en_attente',
+          origine: 'arrivee',
+          fiche_arrivee_id: ficheArrivee.id
         });
-        tacheMenageId = tacheMenage.id;
-        console.log('✅ Tâche ménage créée:', tacheMenageId);
-        
-        // Notifier le service ménage
-        try {
-          await notifierNouvelleTache(tacheMenage);
-          console.log('📧 Notification ménage envoyée');
-        } catch (notifError) {
-          console.warn('⚠️ Erreur notification ménage:', notifError);
-        }
+        tacheMenageId = incidentMenage.id;
+        console.log('✅ Incident ménage créé:', tacheMenageId);
       }
 
-      // Créer UNE SEULE TÂCHE TECHNIQUE regroupant tous les objets critiques
+      // Créer UNE SEULE INTERVENTION TECHNIQUE regroupant tous les objets critiques
       if (interventionsPreview.technique.length > 0) {
-        console.log('🔧 Création tâche TECHNIQUE...');
+        console.log('🔧 Création intervention TECHNIQUE...');
         const objetsList = interventionsPreview.technique
           .map(interv => `• ${interv.objet}${interv.urgent ? ' 🚨 URGENT' : ''}`)
           .join('\n');
 
         const descriptionTechnique = lang === 'fr'
-          ? `🔧 INVENTAIRE ARRIVÉE - Objets cassés/défectueux (technique)\n\n` +
-            `🏠 Logement: ${numero} (${categorie})\n` +
-            `👤 Client: ${nom} ${prenom}\n` +
-            `📅 Arrivée: ${dateArrivee} | Départ: ${dateDepart}\n\n` +
+          ? `🔧 INVENTAIRE ARRIVÉE - Objets cassés/défectueux\n\n` +
             `⚠️ Objets critiques signalés:\n${objetsList}\n\n` +
-            `🔐 Autorisation d'accès: ${autorisationAcces === 'oui' ? 'OUI' : 'NON - ' + plageHoraire}\n` +
-            `⏰ Généré le: ${new Date().toLocaleString('fr-FR')}`
-          : `🔧 ARRIVAL INVENTORY - Broken/defective items (technical)\n\n` +
-            `🏠 Accommodation: ${numero} (${categorie})\n` +
-            `👤 Guest: ${prenom} ${nom}\n` +
-            `📅 Arrival: ${dateArrivee} | Departure: ${dateDepart}\n\n` +
+            `🔐 Autorisation d'accès: ${autorisationAcces === 'oui' ? 'OUI' : 'NON - ' + plageHoraire}`
+          : `🔧 ARRIVAL INVENTORY - Broken/defective items\n\n` +
             `⚠️ Critical items reported:\n${objetsList}\n\n` +
-            `🔐 Access authorization: ${autorisationAcces === 'oui' ? 'YES' : 'NO - ' + plageHoraire}\n` +
-            `⏰ Generated on: ${new Date().toLocaleString('en-GB')}`;
+            `🔐 Access authorization: ${autorisationAcces === 'oui' ? 'YES' : 'NO - ' + plageHoraire}`;
 
-        const tacheTechnique = await base44.entities.Tache.create({
-          titre: lang === 'fr' 
-            ? `🔧 Inventaire Arrivée - ${numero} - ${nom}` 
-            : `🔧 Arrival Inventory - ${numero} - ${nom}`,
+        const incidentTechnique = await base44.entities.Incident.create({
+          type: 'technique',
+          categorie: 'divers_technique',
           description: descriptionTechnique,
-          categorie: 'technique',
-          priorite: interventionsPreview.technique.some(i => i.urgent) ? 'urgente' : 'haute',
-          statut: 'a_faire',
-          hebergement: numero,
-          assignee: 'Service Technique',
-          assignee_email: 'technique@campingparadis.com',
-          date_echeance: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString()
+          urgent: interventionsPreview.technique.some(i => i.urgent),
+          autorisation_acces: autorisationAcces,
+          plage_horaire_client: autorisationAcces === 'non' ? plageHoraire : null,
+          client_nom: nom,
+          client_prenom: prenom,
+          date_arrivee: dateArrivee,
+          date_depart: dateDepart,
+          logement: numero,
+          date_saisie: new Date().toISOString(),
+          statut: 'en_attente',
+          origine: 'arrivee',
+          fiche_arrivee_id: ficheArrivee.id
         });
-        tacheTechniqueId = tacheTechnique.id;
-        console.log('✅ Tâche technique créée:', tacheTechniqueId);
-        
-        // Notifier le service technique
-        try {
-          await notifierNouvelleTache(tacheTechnique);
-          console.log('📧 Notification technique envoyée');
-        } catch (notifError) {
-          console.warn('⚠️ Erreur notification technique:', notifError);
-        }
+        tacheTechniqueId = incidentTechnique.id;
+        console.log('✅ Incident technique créé:', tacheTechniqueId);
       }
 
       // Créer le SUIVI INVENTAIRE pour le client
