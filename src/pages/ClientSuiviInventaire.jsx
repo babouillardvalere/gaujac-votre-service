@@ -30,17 +30,43 @@ export default function ClientSuiviInventaire() {
     checkAuth();
   }, [navigate]);
 
-  // Récupérer UNIQUEMENT les suivis du client connecté
-  const { data: suivis = [], isLoading } = useQuery({
-    queryKey: ['suivis-inventaire', currentUser?.email],
+  // Récupérer la fiche d'arrivée du séjour EN COURS
+  const { data: ficheArriveeActuelle } = useQuery({
+    queryKey: ['fiche-arrivee-actuelle', currentUser?.email],
     queryFn: async () => {
-      if (!currentUser?.email) return [];
-      // FILTRAGE STRICT côté serveur : uniquement les suivis pour cet email client
-      return await base44.entities.SuiviInventaire.filter({ 
+      if (!currentUser?.email) return null;
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayStr = today.toISOString().split('T')[0];
+      
+      const fiches = await base44.entities.FicheArrivee.filter({ 
         client_email: currentUser.email 
-      }, '-created_date', 200);
+      }, '-created_date', 100);
+      
+      // Trouver la fiche du séjour actif
+      return fiches.find(f => {
+        const arrivee = new Date(f.date_arrivee);
+        const depart = new Date(f.date_depart);
+        arrivee.setHours(0, 0, 0, 0);
+        depart.setHours(0, 0, 0, 0);
+        return arrivee <= today && today <= depart;
+      }) || null;
     },
     enabled: !!currentUser
+  });
+
+  // Récupérer UNIQUEMENT les suivis du séjour EN COURS
+  const { data: suivis = [], isLoading } = useQuery({
+    queryKey: ['suivis-inventaire', ficheArriveeActuelle?.id],
+    queryFn: async () => {
+      if (!ficheArriveeActuelle?.id) return [];
+      // FILTRAGE STRICT : uniquement les suivis liés à la fiche d'arrivée du séjour actuel
+      return await base44.entities.SuiviInventaire.filter({ 
+        fiche_arrivee_id: ficheArriveeActuelle.id 
+      }, '-created_date', 50);
+    },
+    enabled: !!ficheArriveeActuelle
   });
 
   const getStatutConfig = (statut) => {
