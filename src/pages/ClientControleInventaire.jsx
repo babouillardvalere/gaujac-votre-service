@@ -526,6 +526,14 @@ export default function ClientControleInventaire() {
         });
         tacheMenageId = incidentMenage.id;
         console.log('✅ Incident ménage créé:', tacheMenageId);
+        
+        // Notifier le service ménage
+        try {
+          await notifierInterventionCreee(incidentMenage);
+          console.log('📧 Notification ménage envoyée');
+        } catch (notifError) {
+          console.warn('⚠️ Erreur notification ménage:', notifError);
+        }
       }
 
       // Créer UNE SEULE INTERVENTION TECHNIQUE regroupant tous les objets critiques
@@ -562,6 +570,14 @@ export default function ClientControleInventaire() {
         });
         tacheTechniqueId = incidentTechnique.id;
         console.log('✅ Incident technique créé:', tacheTechniqueId);
+        
+        // Notifier le service technique
+        try {
+          await notifierInterventionCreee(incidentTechnique);
+          console.log('📧 Notification technique envoyée');
+        } catch (notifError) {
+          console.warn('⚠️ Erreur notification technique:', notifError);
+        }
       }
 
       // Créer le SUIVI INVENTAIRE pour le client
