@@ -693,7 +693,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'corbeille_pain', icon: '🍞', label_fr: 'Corbeille à pain', label_en: 'Bread basket', quantity: 1 },
       { id: 'plat_four_rond', icon: '🍛', label_fr: 'Plat four rond', label_en: 'Round baking dish', quantity: 1 },
       { id: 'cloche_micro_onde', icon: '🥤', label_fr: 'Cloche micro-onde', label_en: 'Microwave cover', quantity: 1 },
-      { id: 'bac_glacons', icon: '🧊', label_fr: 'Bac glaçons', label_en: 'Ice tray', quantity: 1 },
+      { id: 'bac_glacons', icon: '🧊', label_fr: 'Bac glaçons', label_en: 'Ice cube tray', quantity: 1 },
       // Cuisson / électroménager
       { id: 'casseroles', icon: '🍲', label_fr: 'Casseroles', label_en: 'Pots', quantity: 3 },
       { id: 'poeles', icon: '🍳', label_fr: 'Poêles', label_en: 'Pans', quantity: 2 },
