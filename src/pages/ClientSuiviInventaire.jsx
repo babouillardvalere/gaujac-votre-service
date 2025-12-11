@@ -35,9 +35,10 @@ export default function ClientSuiviInventaire() {
     queryKey: ['suivis-inventaire', currentUser?.email],
     queryFn: async () => {
       if (!currentUser?.email) return [];
-      // FILTRAGE STRICT : uniquement les suivis pour cet email client
-      const allSuivis = await base44.entities.SuiviInventaire.list('-created_date', 200);
-      return allSuivis.filter(s => s.client_email === currentUser.email);
+      // FILTRAGE STRICT côté serveur : uniquement les suivis pour cet email client
+      return await base44.entities.SuiviInventaire.filter({ 
+        client_email: currentUser.email 
+      }, '-created_date', 200);
     },
     enabled: !!currentUser
   });
