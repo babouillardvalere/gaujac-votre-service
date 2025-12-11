@@ -615,12 +615,54 @@ export default function ClientControleInventaire() {
         }
       }
 
-      // Créer le SUIVI INVENTAIRE pour le client
+      // Créer le SUIVI INVENTAIRE pour le client AVEC TIMELINE
       if (itemsMenage.length > 0 || itemsTechnique.length > 0) {
-        console.log('📦 Création SuiviInventaire...');
+        console.log('📦 Création SuiviInventaire avec timeline...');
         const messageClient = lang === 'fr'
           ? `Votre inventaire a été enregistré. Les objets signalés sont en cours de traitement par nos équipes.`
           : `Your inventory has been registered. Reported items are being processed by our teams.`;
+
+        const now = Date.now();
+
+        // Timeline ménage
+        const timelineMenage = itemsMenage.length > 0 ? [
+          {
+            timestamp: now,
+            status: 'EN_ATTENTE_INTERVENANT',
+            detail: lang === 'fr' 
+              ? `Inventaire client enregistré - ${itemsMenage.length} objet(s) signalé(s)`
+              : `Client inventory registered - ${itemsMenage.length} item(s) reported`,
+            utilisateur: `${prenom} ${nom}`
+          },
+          {
+            timestamp: now + 1000,
+            status: 'NOTIFICATION_ENVOYEE',
+            detail: lang === 'fr' 
+              ? 'Notification envoyée au service ménage'
+              : 'Notification sent to housekeeping team',
+            utilisateur: 'Système'
+          }
+        ] : [];
+
+        // Timeline technique
+        const timelineTechnique = itemsTechnique.length > 0 ? [
+          {
+            timestamp: now,
+            status: 'EN_ATTENTE_INTERVENANT',
+            detail: lang === 'fr' 
+              ? `Inventaire client enregistré - ${itemsTechnique.length} objet(s) critique(s) signalé(s)`
+              : `Client inventory registered - ${itemsTechnique.length} critical item(s) reported`,
+            utilisateur: `${prenom} ${nom}`
+          },
+          {
+            timestamp: now + 1000,
+            status: 'NOTIFICATION_ENVOYEE',
+            detail: lang === 'fr' 
+              ? 'Notification URGENTE envoyée au service technique'
+              : 'URGENT notification sent to technical team',
+            utilisateur: 'Système'
+          }
+        ] : [];
 
         await base44.entities.SuiviInventaire.create({
           client_nom: nom,
@@ -635,13 +677,15 @@ export default function ClientControleInventaire() {
           items_technique: itemsTechnique,
           statut_menage: itemsMenage.length > 0 ? 'en_attente' : 'non_requis',
           statut_technique: itemsTechnique.length > 0 ? 'en_attente' : 'non_requis',
+          timeline_menage: timelineMenage,
+          timeline_technique: timelineTechnique,
           tache_menage_id: tacheMenageId,
           tache_technique_id: tacheTechniqueId,
           message_client: messageClient,
           date_derniere_maj: new Date().toISOString(),
           fiche_arrivee_id: ficheArrivee.id
         });
-        console.log('✅ SuiviInventaire créé');
+        console.log('✅ SuiviInventaire créé avec timeline complète');
       }
 
       // Mettre à jour le dossier d'arrivée

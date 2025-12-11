@@ -77,66 +77,18 @@ export default function ClientSuiviInventaire() {
     enabled: !!ficheArriveeActuelle
   });
 
-  // Génération de la timeline pour chaque suivi
-  const generateTimeline = (suivi) => {
-    const events = [];
+  // Génération de la timeline détaillée depuis les timelines stockées
+  const generateTimelineFromData = (timeline) => {
+    if (!timeline || timeline.length === 0) return [];
     
-    // Création
-    events.push({
-      time: format(new Date(suivi.created_date), 'HH:mm', { locale: fr }),
-      status: lang === 'fr' ? 'Inventaire réalisé' : 'Inventory completed',
-      detail: lang === 'fr' ? 'Enregistré par le client' : 'Registered by client'
-    });
-
-    // Notification envoyée
-    if (suivi.items_menage?.length > 0 || suivi.items_technique?.length > 0) {
-      const notifTime = new Date(new Date(suivi.created_date).getTime() + 1000 * 60);
-      events.push({
-        time: format(notifTime, 'HH:mm', { locale: fr }),
-        status: lang === 'fr' ? 'Notification envoyée' : 'Notification sent',
-        detail: suivi.items_menage?.length > 0 && suivi.items_technique?.length > 0
-          ? (lang === 'fr' ? 'Services ménage et technique notifiés' : 'Housekeeping and technical teams notified')
-          : suivi.items_menage?.length > 0
-          ? (lang === 'fr' ? 'Service ménage notifié' : 'Housekeeping team notified')
-          : (lang === 'fr' ? 'Service technique notifié' : 'Technical team notified')
-      });
-    }
-
-    // Statut ménage
-    if (suivi.statut_menage && suivi.statut_menage !== 'non_requis') {
-      const menageLabel = {
-        en_attente: lang === 'fr' ? 'Ménage : À traiter' : 'Housekeeping: Pending',
-        en_cours: lang === 'fr' ? 'Ménage : En cours' : 'Housekeeping: In progress',
-        termine: lang === 'fr' ? 'Ménage : Terminé' : 'Housekeeping: Completed'
-      }[suivi.statut_menage];
-      
-      if (menageLabel) {
-        events.push({
-          time: suivi.date_derniere_maj ? format(new Date(suivi.date_derniere_maj), 'HH:mm', { locale: fr }) : '--:--',
-          status: menageLabel,
-          detail: ''
-        });
-      }
-    }
-
-    // Statut technique
-    if (suivi.statut_technique && suivi.statut_technique !== 'non_requis') {
-      const techniqueLabel = {
-        en_attente: lang === 'fr' ? 'Technique : À traiter' : 'Technical: Pending',
-        en_cours: lang === 'fr' ? 'Technique : En cours' : 'Technical: In progress',
-        termine: lang === 'fr' ? 'Technique : Terminé' : 'Technical: Completed'
-      }[suivi.statut_technique];
-      
-      if (techniqueLabel) {
-        events.push({
-          time: suivi.date_derniere_maj ? format(new Date(suivi.date_derniere_maj), 'HH:mm', { locale: fr }) : '--:--',
-          status: techniqueLabel,
-          detail: ''
-        });
-      }
-    }
-
-    return events;
+    return timeline
+      .sort((a, b) => a.timestamp - b.timestamp)
+      .map(event => ({
+        time: format(new Date(event.timestamp), 'HH:mm', { locale: fr }),
+        status: event.status,
+        detail: event.detail || '',
+        utilisateur: event.utilisateur
+      }));
   };
 
   // Filtrage des suivis
@@ -377,13 +329,27 @@ export default function ClientSuiviInventaire() {
                         </div>
                       )}
 
-                      {/* Timeline détaillée */}
-                      <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                        <h4 className="font-heading text-sm text-[#0077A8] mb-3">
-                          📅 {lang === 'fr' ? 'Chronologie' : 'Timeline'}
-                        </h4>
-                        <SuiviTimeline events={generateTimeline(suivi)} />
-                      </div>
+                      {/* Timeline détaillée - MÉNAGE */}
+                      {suivi.timeline_menage && suivi.timeline_menage.length > 0 && (
+                        <div className="mt-6 p-4 bg-pink-50 rounded-xl border border-pink-200">
+                          <h4 className="font-heading text-sm text-pink-800 mb-3 flex items-center gap-2">
+                            <Sparkles className="w-4 h-4" />
+                            📅 {lang === 'fr' ? 'Chronologie Ménage' : 'Housekeeping Timeline'}
+                          </h4>
+                          <SuiviTimeline events={generateTimelineFromData(suivi.timeline_menage)} />
+                        </div>
+                      )}
+
+                      {/* Timeline détaillée - TECHNIQUE */}
+                      {suivi.timeline_technique && suivi.timeline_technique.length > 0 && (
+                        <div className="mt-6 p-4 bg-purple-50 rounded-xl border border-purple-200">
+                          <h4 className="font-heading text-sm text-purple-800 mb-3 flex items-center gap-2">
+                            <Wrench className="w-4 h-4" />
+                            📅 {lang === 'fr' ? 'Chronologie Technique' : 'Technical Timeline'}
+                          </h4>
+                          <SuiviTimeline events={generateTimelineFromData(suivi.timeline_technique)} />
+                        </div>
+                      )}
 
                       {/* Dernière mise à jour */}
                       {suivi.date_derniere_maj && (
