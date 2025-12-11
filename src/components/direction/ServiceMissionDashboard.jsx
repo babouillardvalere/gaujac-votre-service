@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Calendar, CheckCircle2, Clock, Circle, AlertCircle, Plus, Loader2, Edit, Trash2, Filter, Play, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import MissionDocuments from '../interventions/MissionDocuments';
+import { notifierMissionCreee } from '../missionNotifications';
 
 export default function ServiceMissionDashboard({ service, serviceLabel }) {
   const { lang } = useTranslation();
@@ -61,10 +62,15 @@ export default function ServiceMissionDashboard({ service, serviceLabel }) {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Mission.create(data),
+    mutationFn: async (data) => {
+      const mission = await base44.entities.Mission.create(data);
+      // Notifier automatiquement le service assigné
+      await notifierMissionCreee(mission, service);
+      return mission;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['missions', service] });
-      toast.success('Mission créée avec succès');
+      toast.success('Mission créée avec succès - Service notifié');
       setShowCreateDialog(false);
       resetForm();
     }
