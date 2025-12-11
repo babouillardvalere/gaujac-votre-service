@@ -514,6 +514,7 @@ export default function ClientControleInventaire() {
           urgent: false,
           autorisation_acces: autorisationAcces,
           plage_horaire_client: autorisationAcces === 'non' ? plageHoraire : null,
+          clause_autorisation_acceptee: true,
           client_nom: nom,
           client_prenom: prenom,
           date_arrivee: dateArrivee,
@@ -526,6 +527,22 @@ export default function ClientControleInventaire() {
         });
         tacheMenageId = incidentMenage.id;
         console.log('✅ Incident ménage créé:', tacheMenageId);
+        
+        // Créer un log pour traçabilité
+        await base44.entities.InterventionLog.create({
+          incident_id: incidentMenage.id,
+          action: 'creation',
+          horodatage: new Date().toISOString(),
+          utilisateur: `${prenom} ${nom}`,
+          utilisateur_email: userEmail,
+          utilisateur_role: 'client',
+          commentaire: `Intervention ménage créée depuis inventaire arrivée - ${interventionsPreview.menage.length} objet(s) signalé(s)`,
+          metadata: {
+            origine: 'inventaire_arrivee',
+            nb_objets: interventionsPreview.menage.length,
+            objets: interventionsPreview.menage.map(i => i.objet)
+          }
+        });
         
         // Notifier le service ménage
         try {
@@ -558,6 +575,7 @@ export default function ClientControleInventaire() {
           urgent: interventionsPreview.technique.some(i => i.urgent),
           autorisation_acces: autorisationAcces,
           plage_horaire_client: autorisationAcces === 'non' ? plageHoraire : null,
+          clause_autorisation_acceptee: true,
           client_nom: nom,
           client_prenom: prenom,
           date_arrivee: dateArrivee,
@@ -570,6 +588,23 @@ export default function ClientControleInventaire() {
         });
         tacheTechniqueId = incidentTechnique.id;
         console.log('✅ Incident technique créé:', tacheTechniqueId);
+        
+        // Créer un log pour traçabilité
+        await base44.entities.InterventionLog.create({
+          incident_id: incidentTechnique.id,
+          action: 'creation',
+          horodatage: new Date().toISOString(),
+          utilisateur: `${prenom} ${nom}`,
+          utilisateur_email: userEmail,
+          utilisateur_role: 'client',
+          commentaire: `Intervention technique URGENTE créée depuis inventaire arrivée - ${interventionsPreview.technique.length} objet(s) critique(s)`,
+          metadata: {
+            origine: 'inventaire_arrivee',
+            nb_objets: interventionsPreview.technique.length,
+            objets: interventionsPreview.technique.map(i => i.objet),
+            objets_critiques: interventionsPreview.technique.filter(i => i.urgent).length
+          }
+        });
         
         // Notifier le service technique
         try {
