@@ -461,22 +461,37 @@ export default function ClientResume() {
           </div>
         </div>
 
-        {/* Actions non imprimables */}
-        <div className="mt-8 flex gap-3 print:hidden">
+        {/* Message de confirmation */}
+        <Card className="border-2 border-green-500 bg-green-50 mb-6 print:hidden">
+          <CardContent className="p-6 text-center">
+            <div className="text-5xl mb-4">✅</div>
+            <h2 className="font-handwritten text-2xl text-green-800 mb-2">
+              {lang === 'fr' ? 'Inventaire enregistré !' : 'Inventory registered!'}
+            </h2>
+            <p className="text-gray-700">
+              {lang === 'fr' 
+                ? 'Votre inventaire d\'arrivée a bien été enregistré. Vous pouvez consulter ce document ou retourner au menu.'
+                : 'Your arrival inventory has been registered. You can view this document or return to the menu.'}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Actions principales */}
+        <div className="space-y-3 print:hidden">
           <Button
-            variant="outline"
             onClick={() => navigate(createPageUrl('ClientMenu'))}
-            className="flex-1"
+            className="w-full h-14 bg-[#00AEEF] hover:bg-[#0077A8] text-white font-heading text-lg"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            {lang === 'fr' ? 'Retour au menu' : 'Back to menu'}
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            {lang === 'fr' ? 'Retour au menu principal' : 'Back to main menu'}
           </Button>
           <Button
             onClick={handlePrint}
-            className="flex-1 bg-[#00AEEF] hover:bg-[#0077A8]"
+            variant="outline"
+            className="w-full h-14 border-2 border-[#00AEEF] text-[#0077A8] font-heading text-lg hover:bg-blue-50"
           >
-            <Printer className="w-4 h-4 mr-2" />
-            {lang === 'fr' ? 'Imprimer / Télécharger PDF' : 'Print / Download PDF'}
+            <Download className="w-5 h-5 mr-2" />
+            {lang === 'fr' ? 'Télécharger / Imprimer le document' : 'Download / Print document'}
           </Button>
         </div>
       </div>
