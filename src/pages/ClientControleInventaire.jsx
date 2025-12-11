@@ -39,11 +39,11 @@ export default function ClientControleInventaire() {
   // État pour tracker les objets MANQUANTS/CASSÉS (cochés = problème signalé)
   const [objetsCocheState, setObjetsCocheState] = useState({});
   const [objetPhotos, setObjetPhotos] = useState({});
-  const [objetsUrgents, setObjetsUrgents] = useState({}); // NOUVEAU : tracker les objets marqués urgents
   const [objetsMissing, setObjetsMissing] = useState([]);
   const [showMissingDialog, setShowMissingDialog] = useState(false);
-  const [missingItem, setMissingItem] = useState({ objet: '', photo: '', commentaire: '', urgent: false });
+  const [missingItem, setMissingItem] = useState({ objet: '', photo: '', commentaire: '' });
   const [uploadingItemId, setUploadingItemId] = useState(null);
+  const [isUrgentGlobal, setIsUrgentGlobal] = useState(false);
   
   // Filtres
   const [searchTerm, setSearchTerm] = useState('');
@@ -184,22 +184,6 @@ export default function ClientControleInventaire() {
       ...prev,
       [objetId]: newState
     }));
-
-    // Si on décoche, retirer aussi l'urgence
-    if (!newState && objetsUrgents[objetId]) {
-      setObjetsUrgents(prev => {
-        const updated = { ...prev };
-        delete updated[objetId];
-        return updated;
-      });
-    }
-  };
-
-  const toggleUrgence = (objetId) => {
-    setObjetsUrgents(prev => ({
-      ...prev,
-      [objetId]: !prev[objetId]
-    }));
   };
 
   const handlePhotoLieu = async (lieuId, file) => {
@@ -225,7 +209,7 @@ export default function ClientControleInventaire() {
       return;
     }
     setObjetsMissing([...objetsMissing, { ...missingItem, date: new Date().toISOString() }]);
-    setMissingItem({ objet: '', photo: '', commentaire: '', urgent: false });
+    setMissingItem({ objet: '', photo: '', commentaire: '' });
     setShowMissingDialog(false);
     toast.success(lang === 'fr' ? 'Objet déclaré' : 'Item declared');
   };
@@ -290,12 +274,10 @@ export default function ClientControleInventaire() {
       const isCoche = objetsCocheState[item.id] === true;
       
       if (isCoche) {
-        const isUrgent = objetsUrgents[item.id] === true; // URGENT uniquement si coché par le client
-        
         const intervention = {
           objet: lang === 'fr' ? item.nom_fr : item.nom_en,
           description: `${lang === 'fr' ? 'Objet manquant ou cassé signalé à l\'arrivée' : 'Missing or broken item reported on arrival'}: ${lang === 'fr' ? item.nom_fr : item.nom_en}`,
-          urgent: isUrgent, // UTILISER LE CHOIX DU CLIENT
+          urgent: isUrgentGlobal,
           icon: item.icon,
           photo: objetPhotos[item.id] || null
         };
@@ -314,7 +296,7 @@ export default function ClientControleInventaire() {
       const intervention = {
         objet: obj.objet,
         description: obj.commentaire || `${lang === 'fr' ? 'Objet cassé ou endommagé' : 'Broken or damaged item'}: ${obj.objet}`,
-        urgent: obj.urgent === true, // URGENT uniquement si coché
+        urgent: isUrgentGlobal,
         photo: obj.photo
       };
 
@@ -322,12 +304,12 @@ export default function ClientControleInventaire() {
       interventionsTechnique.push(intervention);
     });
 
-    // Propreté insatisfaisante = intervention MÉNAGE (NORMAL, pas urgent par défaut)
+    // Propreté insatisfaisante = intervention MÉNAGE
     if (evaluationProprete === 'pas_satisfaisant') {
       interventionsMenage.push({
         objet: lang === 'fr' ? 'Propreté insatisfaisante' : 'Unsatisfactory cleanliness',
         description: commentaireProprete || (lang === 'fr' ? 'Propreté du logement non satisfaisante constatée à l\'arrivée' : 'Unsatisfactory cleanliness found on arrival'),
-        urgent: false, // NORMAL par défaut
+        urgent: isUrgentGlobal,
         photo: photoProprete
       });
     }
@@ -509,18 +491,18 @@ export default function ClientControleInventaire() {
         const descriptionMenage = lang === 'fr'
           ? `📋 INVENTAIRE ARRIVÉE - Objets manquants (ménage)\n\n` +
             `📝 Objets signalés:\n${objetsList}\n\n` +
-            `🔐 Autorisation d'accès: ${autorisationAcces === 'oui' ? 'OUI' : 'NON - ' + plageHoraire}`
+            `🔐 Autorisation d'accès: ${autorisationAcces === 'oui' ? 'OUI' : 'NON - ' + plageHoraire}\n` +
+            `⚡ Niveau: ${isUrgentGlobal ? '🚨 URGENT' : '⚪ NORMAL'}`
           : `📋 ARRIVAL INVENTORY - Missing items (housekeeping)\n\n` +
             `📝 Items reported:\n${objetsList}\n\n` +
-            `🔐 Access authorization: ${autorisationAcces === 'oui' ? 'YES' : 'NO - ' + plageHoraire}`;
-
-        const hasUrgentMenage = interventionsPreview.menage.some(i => i.urgent);
+            `🔐 Access authorization: ${autorisationAcces === 'oui' ? 'YES' : 'NO - ' + plageHoraire}\n` +
+            `⚡ Level: ${isUrgentGlobal ? '🚨 URGENT' : '⚪ NORMAL'}`;
 
         const incidentMenage = await base44.entities.Incident.create({
           type: 'menage',
           categorie: 'autre',
           description: descriptionMenage,
-          urgent: hasUrgentMenage, // URGENT si au moins un objet marqué urgent
+          urgent: isUrgentGlobal,
           autorisation_acces: autorisationAcces,
           plage_horaire_client: autorisationAcces === 'non' ? plageHoraire : null,
           clause_autorisation_acceptee: true,
@@ -572,18 +554,18 @@ export default function ClientControleInventaire() {
         const descriptionTechnique = lang === 'fr'
           ? `🔧 INVENTAIRE ARRIVÉE - Objets cassés/défectueux\n\n` +
             `⚠️ Objets critiques signalés:\n${objetsList}\n\n` +
-            `🔐 Autorisation d'accès: ${autorisationAcces === 'oui' ? 'OUI' : 'NON - ' + plageHoraire}`
+            `🔐 Autorisation d'accès: ${autorisationAcces === 'oui' ? 'OUI' : 'NON - ' + plageHoraire}\n` +
+            `⚡ Niveau: ${isUrgentGlobal ? '🚨 URGENT' : '⚪ NORMAL'}`
           : `🔧 ARRIVAL INVENTORY - Broken/defective items\n\n` +
             `⚠️ Critical items reported:\n${objetsList}\n\n` +
-            `🔐 Access authorization: ${autorisationAcces === 'oui' ? 'YES' : 'NO - ' + plageHoraire}`;
-
-        const hasUrgentTechnique = interventionsPreview.technique.some(i => i.urgent);
+            `🔐 Access authorization: ${autorisationAcces === 'oui' ? 'YES' : 'NO - ' + plageHoraire}\n` +
+            `⚡ Level: ${isUrgentGlobal ? '🚨 URGENT' : '⚪ NORMAL'}`;
 
         const incidentTechnique = await base44.entities.Incident.create({
           type: 'technique',
           categorie: 'divers_technique',
           description: descriptionTechnique,
-          urgent: hasUrgentTechnique, // URGENT si au moins un objet marqué urgent
+          urgent: isUrgentGlobal,
           autorisation_acces: autorisationAcces,
           plage_horaire_client: autorisationAcces === 'non' ? plageHoraire : null,
           clause_autorisation_acceptee: true,
@@ -906,85 +888,57 @@ export default function ClientControleInventaire() {
                     const isCoche = objetsCocheState[item.id] === true;
                     const hasPhoto = objetPhotos[item.id];
                     const isUploading = uploadingItemId === item.id;
-                    const isUrgent = objetsUrgents[item.id] === true;
 
                     return (
                     <div key={item.id} className="relative">
-                     <button
-                       onClick={() => toggleObjet(item.id)}
-                       className={`w-full p-4 rounded-lg border-2 transition-all ${
-                         isCoche 
-                           ? isUrgent 
-                             ? 'border-red-600 bg-red-100' 
-                             : 'border-orange-500 bg-orange-50'
-                           : 'border-gray-300 bg-white hover:border-[#00AEEF]'
-                       }`}
-                     >
-                       <div className="text-3xl mb-2">{item.icon}</div>
-                       <div className="text-sm font-heading text-[#0077A8]">
-                         {lang === 'fr' ? item.nom_fr : item.nom_en}
-                         {item.quantite && <> <strong>×{item.quantite}</strong></>}
-                       </div>
-                       {isCoche && (
-                         <div className="flex flex-col items-center gap-1 mt-2">
-                           <AlertCircle className={`w-5 h-5 ${isUrgent ? 'text-red-600' : 'text-orange-600'}`} />
-                           {isUrgent && (
-                             <span className="text-xs font-bold text-red-600">
-                               {lang === 'fr' ? 'URGENT' : 'URGENT'}
-                             </span>
-                           )}
-                         </div>
-                       )}
-                     </button>
+                    <button
+                      onClick={() => toggleObjet(item.id)}
+                      className={`w-full p-4 rounded-lg border-2 transition-all ${
+                        isCoche 
+                          ? 'border-orange-500 bg-orange-50'
+                          : 'border-gray-300 bg-white hover:border-[#00AEEF]'
+                      }`}
+                    >
+                      <div className="text-3xl mb-2">{item.icon}</div>
+                      <div className="text-sm font-heading text-[#0077A8]">
+                        {lang === 'fr' ? item.nom_fr : item.nom_en}
+                        {item.quantite && <> <strong>×{item.quantite}</strong></>}
+                      </div>
+                      {isCoche && (
+                        <div className="flex flex-col items-center gap-1 mt-2">
+                          <AlertCircle className="w-5 h-5 text-orange-600" />
+                        </div>
+                      )}
+                    </button>
 
-                     {isCoche && (
-                       <>
-                         {/* Bouton photo */}
-                         <label 
-                           className="absolute bottom-2 right-2 cursor-pointer"
-                           onClick={(e) => e.stopPropagation()}
-                         >
-                           <input
-                             type="file"
-                             accept="image/*"
-                             capture="environment"
-                             className="hidden"
-                             onChange={(e) => handleUploadItemPhoto(item.id, e.target.files[0])}
-                             disabled={isUploading}
-                           />
-                           <div className={`p-1.5 rounded-full ${
-                             hasPhoto 
-                               ? 'bg-green-500 hover:bg-green-600' 
-                               : 'bg-orange-500 hover:bg-orange-600'
-                           } ${isUploading ? 'opacity-50' : ''}`}>
-                             {isUploading ? (
-                               <Loader2 className="w-4 h-4 text-white animate-spin" />
-                             ) : hasPhoto ? (
-                               <Check className="w-4 h-4 text-white" />
-                             ) : (
-                               <Camera className="w-4 h-4 text-white" />
-                             )}
-                           </div>
-                         </label>
-
-                         {/* Case urgent en bas à gauche */}
-                         <div 
-                           className="absolute bottom-2 left-2 cursor-pointer"
-                           onClick={(e) => {
-                             e.stopPropagation();
-                             toggleUrgence(item.id);
-                           }}
-                         >
-                           <div className={`p-1.5 rounded-full ${
-                             isUrgent 
-                               ? 'bg-red-600 hover:bg-red-700' 
-                               : 'bg-gray-400 hover:bg-gray-500'
-                           }`}>
-                             <AlertCircle className="w-4 h-4 text-white" />
-                           </div>
-                         </div>
-                       </>
-                     )}
+                    {isCoche && (
+                      <label 
+                        className="absolute bottom-2 right-2 cursor-pointer"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <input
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          className="hidden"
+                          onChange={(e) => handleUploadItemPhoto(item.id, e.target.files[0])}
+                          disabled={isUploading}
+                        />
+                        <div className={`p-1.5 rounded-full ${
+                          hasPhoto 
+                            ? 'bg-green-500 hover:bg-green-600' 
+                            : 'bg-orange-500 hover:bg-orange-600'
+                        } ${isUploading ? 'opacity-50' : ''}`}>
+                          {isUploading ? (
+                            <Loader2 className="w-4 h-4 text-white animate-spin" />
+                          ) : hasPhoto ? (
+                            <Check className="w-4 h-4 text-white" />
+                          ) : (
+                            <Camera className="w-4 h-4 text-white" />
+                          )}
+                        </div>
+                      </label>
+                    )}
                     </div>
                     );
                     })}
@@ -1255,6 +1209,40 @@ export default function ClientControleInventaire() {
             </CardContent>
           </Card>
 
+          {/* Bloc 6.5 - Urgence globale */}
+          {(Object.values(objetsCocheState).some(v => v === true) || objetsMissing.length > 0 || evaluationProprete === 'pas_satisfaisant') && (
+            <Card className="border-2 border-red-400 rounded-xl mb-6">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <input
+                    type="checkbox"
+                    id="urgence-globale"
+                    checked={isUrgentGlobal}
+                    onChange={(e) => setIsUrgentGlobal(e.target.checked)}
+                    className="w-6 h-6 mt-1 cursor-pointer"
+                  />
+                  <div className="flex-1">
+                    <label htmlFor="urgence-globale" className="font-heading text-lg text-[#0077A8] cursor-pointer block mb-2">
+                      🚨 {lang === 'fr' ? 'Activer l\'intervention en URGENCE' : 'Activate URGENT intervention'}
+                    </label>
+                    <p className="text-sm text-gray-600">
+                      {lang === 'fr' 
+                        ? 'Par défaut, votre demande est traitée normalement. Activez l\'urgence seulement en cas de besoin immédiat.'
+                        : 'By default, your request is processed normally. Activate urgency only for immediate needs.'}
+                    </p>
+                    {isUrgentGlobal && (
+                      <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-300">
+                        <p className="text-sm font-semibold text-red-800">
+                          ⚡ {lang === 'fr' ? 'Votre demande sera traitée en priorité' : 'Your request will be processed with priority'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Bloc 7 - Signature */}
           <SignaturePad onSave={setSignature} disabled={submitting} lang={lang} />
 
@@ -1346,19 +1334,6 @@ export default function ClientControleInventaire() {
                 />
               </div>
 
-              <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
-                <input
-                  type="checkbox"
-                  id="urgent-missing"
-                  checked={missingItem.urgent}
-                  onChange={(e) => setMissingItem(prev => ({ ...prev, urgent: e.target.checked }))}
-                  className="w-5 h-5 cursor-pointer"
-                />
-                <label htmlFor="urgent-missing" className="text-sm font-heading text-[#0077A8] cursor-pointer">
-                  🚨 {lang === 'fr' ? 'Signaler comme URGENT' : 'Report as URGENT'}
-                </label>
-              </div>
-
               <div className="flex gap-2">
                 <Button
                   variant="outline"
@@ -1407,20 +1382,14 @@ export default function ClientControleInventaire() {
                       {lang === 'fr' ? '🧹 Objets Ménage' : '🧹 Housekeeping items'} ({interventionsPreview.menage.length})
                     </h3>
                     <div className="space-y-2">
-                      {interventionsPreview.menage.map((interv, idx) => (
-                        <div key={idx} className={`p-3 rounded-lg ${
-                          interv.urgent 
-                            ? 'bg-red-100 border-2 border-red-400' 
-                            : 'bg-white border border-gray-300'
-                        }`}>
-                          <div className="flex items-center gap-2">
-                            {interv.urgent && <span className="text-red-600 font-bold">🚨 URGENT</span>}
-                            {!interv.urgent && <span className="text-gray-600">⚪</span>}
-                            <span className="font-heading">{interv.objet}</span>
-                          </div>
-                          <p className="text-sm text-gray-600 mt-1">{interv.description}</p>
-                        </div>
-                      ))}
+                     {interventionsPreview.menage.map((interv, idx) => (
+                       <div key={idx} className="p-3 rounded-lg bg-white border border-gray-300">
+                         <div className="flex items-center gap-2">
+                           <span className="font-heading">{interv.objet}</span>
+                         </div>
+                         <p className="text-sm text-gray-600 mt-1">{interv.description}</p>
+                       </div>
+                     ))}
                     </div>
                   </CardContent>
                 </Card>
@@ -1435,20 +1404,14 @@ export default function ClientControleInventaire() {
                       {lang === 'fr' ? '🔧 Objets Technique' : '🔧 Technical items'} ({interventionsPreview.technique.length})
                     </h3>
                     <div className="space-y-2">
-                      {interventionsPreview.technique.map((interv, idx) => (
-                        <div key={idx} className={`p-3 rounded-lg ${
-                          interv.urgent 
-                            ? 'bg-red-100 border-2 border-red-400' 
-                            : 'bg-white border border-gray-300'
-                        }`}>
-                          <div className="flex items-center gap-2">
-                            {interv.urgent && <span className="text-red-600 font-bold">🚨 URGENT</span>}
-                            {!interv.urgent && <span className="text-gray-600">⚪</span>}
-                            <span className="font-heading">{interv.objet}</span>
-                          </div>
-                          <p className="text-sm text-gray-600 mt-1">{interv.description}</p>
-                        </div>
-                      ))}
+                     {interventionsPreview.technique.map((interv, idx) => (
+                       <div key={idx} className="p-3 rounded-lg bg-white border border-gray-300">
+                         <div className="flex items-center gap-2">
+                           <span className="font-heading">{interv.objet}</span>
+                         </div>
+                         <p className="text-sm text-gray-600 mt-1">{interv.description}</p>
+                       </div>
+                     ))}
                     </div>
                   </CardContent>
                 </Card>
@@ -1474,6 +1437,22 @@ export default function ClientControleInventaire() {
                   </h3>
                 </CardContent>
               </Card>
+
+              {/* Niveau d'urgence */}
+              {(interventionsPreview.menage.length > 0 || interventionsPreview.technique.length > 0) && (
+                <Card className={`border-2 ${isUrgentGlobal ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-50'}`}>
+                  <CardContent className="p-4">
+                    <h3 className="font-heading text-lg text-gray-800 flex items-center gap-2 mb-2">
+                      {isUrgentGlobal ? '🚨' : '⚪'} {lang === 'fr' ? 'Niveau d\'urgence' : 'Urgency level'}
+                    </h3>
+                    <p className={`font-bold ${isUrgentGlobal ? 'text-red-600' : 'text-gray-600'}`}>
+                      {isUrgentGlobal 
+                        ? (lang === 'fr' ? 'URGENT - Traitement prioritaire' : 'URGENT - Priority processing')
+                        : (lang === 'fr' ? 'NORMAL - Traitement standard' : 'NORMAL - Standard processing')}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Boutons validation */}
               <div className="flex gap-3 pt-4">
