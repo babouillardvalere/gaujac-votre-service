@@ -1,30 +1,76 @@
 import React from 'react';
-import { Clock, CheckCircle2, AlertCircle, Loader2, Bell } from 'lucide-react';
 import { useTranslation } from '../translations';
+
+// Statuts normalisés avec icônes et couleurs
+const STATUS_CONFIG = {
+  'demande_recue': {
+    label: { fr: 'Demande reçue', en: 'Request received' },
+    emoji: '📨',
+    bgColor: 'bg-gray-100',
+    textColor: 'text-gray-700'
+  },
+  'prise_en_charge': {
+    label: { fr: 'Prise en charge', en: 'Taken in charge' },
+    emoji: '👤',
+    bgColor: 'bg-blue-100',
+    textColor: 'text-blue-700'
+  },
+  'en_cours': {
+    label: { fr: 'Intervention en cours', en: 'Intervention in progress' },
+    emoji: '🔧',
+    bgColor: 'bg-blue-100',
+    textColor: 'text-blue-700'
+  },
+  'en_attente': {
+    label: { fr: 'En attente', en: 'On hold' },
+    emoji: '⏸️',
+    bgColor: 'bg-orange-100',
+    textColor: 'text-orange-700'
+  },
+  'reprise': {
+    label: { fr: 'Reprise de l\'intervention', en: 'Intervention resumed' },
+    emoji: '▶️',
+    bgColor: 'bg-indigo-100',
+    textColor: 'text-indigo-700'
+  },
+  'termine': {
+    label: { fr: 'Problème résolu', en: 'Problem solved' },
+    emoji: '✅',
+    bgColor: 'bg-green-100',
+    textColor: 'text-green-700'
+  },
+  'resolu': {
+    label: { fr: 'Problème résolu', en: 'Problem solved' },
+    emoji: '✅',
+    bgColor: 'bg-green-100',
+    textColor: 'text-green-700'
+  },
+  // Fallback pour anciens statuts
+  'cree': {
+    label: { fr: 'Demande reçue', en: 'Request received' },
+    emoji: '📨',
+    bgColor: 'bg-gray-100',
+    textColor: 'text-gray-700'
+  },
+  'notification': {
+    label: { fr: 'Notification envoyée', en: 'Notification sent' },
+    emoji: '🔔',
+    bgColor: 'bg-purple-100',
+    textColor: 'text-purple-700'
+  }
+};
 
 export default function SuiviTimeline({ events }) {
   const { lang } = useTranslation();
 
-  const getEventIcon = (status) => {
-    switch (status) {
-      case 'cree':
-      case 'Créé':
-        return <Bell className="w-4 h-4 text-blue-500" />;
-      case 'notification':
-      case 'Notification envoyée':
-        return <Bell className="w-4 h-4 text-purple-500" />;
-      case 'en_cours':
-      case 'En cours':
-        return <Loader2 className="w-4 h-4 text-blue-500" />;
-      case 'en_attente':
-      case 'En attente':
-        return <AlertCircle className="w-4 h-4 text-orange-500" />;
-      case 'termine':
-      case 'Terminé':
-        return <CheckCircle2 className="w-4 h-4 text-green-500" />;
-      default:
-        return <Clock className="w-4 h-4 text-gray-500" />;
-    }
+  const getStatusConfig = (status) => {
+    const statusKey = status?.toLowerCase().replace(/\s+/g, '_');
+    return STATUS_CONFIG[statusKey] || {
+      label: { fr: status, en: status },
+      emoji: '🔵',
+      bgColor: 'bg-gray-100',
+      textColor: 'text-gray-700'
+    };
   };
 
   if (!events || events.length === 0) {
@@ -36,23 +82,47 @@ export default function SuiviTimeline({ events }) {
   }
 
   return (
-    <div className="mt-4 space-y-3">
-      {events.map((event, idx) => (
-        <div key={idx} className="flex items-start gap-3 text-sm">
-          <div className="mt-0.5">
-            {getEventIcon(event.status)}
-          </div>
-          <div className="flex-1">
-            <div className="flex items-baseline gap-2">
-              <span className="text-xs text-gray-500">{event.time}</span>
-              <span className="font-medium text-gray-700">{event.status}</span>
+    <div className="space-y-2">
+      {events.map((event, idx) => {
+        const config = getStatusConfig(event.status);
+        const isLast = idx === events.length - 1;
+        
+        return (
+          <div key={idx} className="flex gap-3">
+            {/* Ligne verticale */}
+            <div className="flex flex-col items-center">
+              <div className={`w-8 h-8 rounded-full ${config.bgColor} flex items-center justify-center text-lg flex-shrink-0`}>
+                {config.emoji}
+              </div>
+              {!isLast && <div className="w-0.5 h-full bg-gray-200 mt-1" />}
             </div>
-            {event.detail && (
-              <p className="text-xs text-gray-600 mt-0.5">{event.detail}</p>
-            )}
+            
+            {/* Contenu */}
+            <div className="flex-1 pb-4">
+              <div className="flex items-baseline gap-2 mb-1">
+                <span className={`font-heading ${config.textColor}`}>
+                  {config.label[lang] || config.label.fr}
+                </span>
+                <span className="text-xs text-gray-500">
+                  {event.time}
+                </span>
+              </div>
+              
+              {event.utilisateur && (
+                <p className="text-xs text-gray-600 mb-1">
+                  👤 {event.utilisateur}
+                </p>
+              )}
+              
+              {event.detail && (
+                <p className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded">
+                  💬 {event.detail}
+                </p>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
