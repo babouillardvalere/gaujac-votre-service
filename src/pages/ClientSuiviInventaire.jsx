@@ -16,6 +16,29 @@ import { fr } from 'date-fns/locale';
 import SuiviRechercheBar from '../components/suivi/SuiviRechercheBar';
 import SuiviTimeline from '../components/suivi/SuiviTimeline';
 
+// Mappings UI → BASE (évite les erreurs de filtrage)
+const STATUT_MAP = {
+  'EN COURS': 'en_cours',
+  'EN ATTENTE': 'en_attente',
+  'TERMINÉ': 'termine',
+  'RÉSOLU': 'resolu',
+  'NON REQUIS': 'non_requis'
+};
+
+const SERVICE_MAP = {
+  'TECHNIQUE': 'technique',
+  'MENAGE': 'menage',
+  'MÉNAGE': 'menage',
+  'RECEPTION': 'reception'
+};
+
+const TYPE_OBJET_MAP = {
+  'CASSÉ': 'casse',
+  'MANQUANT': 'manquant',
+  'SALE': 'sale',
+  'INUTILISABLE': 'inutilisable'
+};
+
 export default function ClientSuiviInventaire() {
   const { t, lang } = useTranslation();
   const navigate = useNavigate();
@@ -109,39 +132,56 @@ export default function ClientSuiviInventaire() {
       }));
   };
 
-  // Filtrage des suivis
+  // Filtrage des suivis avec mapping strict UI → BASE
   const filteredSuivis = suivis.filter(suivi => {
-    // Recherche par nom client ou logement
-    const matchSearch = 
-      !search || 
-      suivi.client_nom?.toLowerCase().includes(search.toLowerCase()) ||
-      suivi.client_prenom?.toLowerCase().includes(search.toLowerCase()) ||
-      suivi.logement?.toLowerCase().includes(search.toLowerCase());
+    // Recherche par nom client ou logement (déjà fait dans queryFn)
+    const matchSearch = true;
 
-    // Filtre dates
-    const matchDateDebut = !filters.dateDebut || 
-      (suivi.date_arrivee && suivi.date_arrivee >= filters.dateDebut);
+    // Filtre dates avec parsing correct
+    let matchDateDebut = true;
+    let matchDateFin = true;
     
-    const matchDateFin = !filters.dateFin || 
-      (suivi.date_depart && suivi.date_depart <= filters.dateFin);
+    if (filters.dateDebut && suivi.date_arrivee) {
+      try {
+        const debutFilter = new Date(filters.dateDebut);
+        const arrivee = new Date(suivi.date_arrivee);
+        matchDateDebut = arrivee >= debutFilter;
+      } catch {
+        matchDateDebut = true;
+      }
+    }
+    
+    if (filters.dateFin && suivi.date_depart) {
+      try {
+        const finFilter = new Date(filters.dateFin);
+        finFilter.setHours(23, 59, 59, 999);
+        const depart = new Date(suivi.date_depart);
+        matchDateFin = depart <= finFilter;
+      } catch {
+        matchDateFin = true;
+      }
+    }
 
-    // Filtre statut
+    // Filtre statut avec mapping
+    const statutMapped = STATUT_MAP[filters.statut?.toUpperCase()] || filters.statut;
     const matchStatut = filters.statut === 'tous' || 
-      (filters.statut === 'en_attente' && (suivi.statut_menage === 'en_attente' || suivi.statut_technique === 'en_attente')) ||
-      (filters.statut === 'en_cours' && (suivi.statut_menage === 'en_cours' || suivi.statut_technique === 'en_cours')) ||
-      (filters.statut === 'termine' && (suivi.statut_menage === 'termine' && suivi.statut_technique === 'termine')) ||
-      (filters.statut === 'non_requis' && (suivi.statut_menage === 'non_requis' && suivi.statut_technique === 'non_requis'));
+      statutMapped === suivi.statut_menage || 
+      statutMapped === suivi.statut_technique;
 
-    // Filtre service
+    // Filtre service avec mapping
+    const serviceMapped = SERVICE_MAP[filters.service?.toUpperCase()] || filters.service;
     const matchService = filters.service === 'tous' || 
-      (filters.service === 'menage' && suivi.items_menage?.length > 0) ||
-      (filters.service === 'technique' && suivi.items_technique?.length > 0);
+      (serviceMapped === 'menage' && suivi.items_menage?.length > 0) ||
+      (serviceMapped === 'technique' && suivi.items_technique?.length > 0);
 
-    // Filtre type objet
+    // Filtre type objet avec mapping et vérification flexible
+    const typeObjetMapped = TYPE_OBJET_MAP[filters.typeObjet?.toUpperCase()] || filters.typeObjet;
     const matchTypeObjet = filters.typeObjet === 'tous' || 
-      (filters.typeObjet === 'manquant' && [...(suivi.items_menage || []), ...(suivi.items_technique || [])].some(i => i.motif === 'manquant')) ||
-      (filters.typeObjet === 'casse' && [...(suivi.items_menage || []), ...(suivi.items_technique || [])].some(i => i.motif === 'cassé')) ||
-      (filters.typeObjet === 'sale' && [...(suivi.items_menage || []), ...(suivi.items_technique || [])].some(i => i.motif === 'sale'));
+      [...(suivi.items_menage || []), ...(suivi.items_technique || [])].some(item => {
+        const motif = item.motif?.toLowerCase();
+        const targetMotif = typeObjetMapped?.toLowerCase();
+        return motif === targetMotif || motif?.includes(targetMotif);
+      });
 
     return matchSearch && matchDateDebut && matchDateFin && matchStatut && matchService && matchTypeObjet;
   });
