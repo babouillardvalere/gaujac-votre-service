@@ -80,28 +80,29 @@ export default function ClientResume() {
       if (!element) return;
 
       const canvas = await html2canvas(element, {
-        scale: 2,
+        scale: 1.5,
         logging: false,
-        useCORS: true
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
       });
 
-      const imgWidth = 210; // A4 width in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
       const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgWidth = 210;
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
+      let heightLeft = imgHeight;
       let position = 0;
-      const pageHeight = 297; // A4 height in mm
-      
-      if (imgHeight <= pageHeight) {
-        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight);
-      } else {
-        while (position < imgHeight) {
-          pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, -position, imgWidth, imgHeight);
-          position += pageHeight;
-          if (position < imgHeight) {
-            pdf.addPage();
-          }
-        }
+
+      pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
       }
 
       const fileName = `Arrivee_${fiche.client_nom}_${fiche.client_prenom}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
@@ -161,24 +162,21 @@ export default function ClientResume() {
         {/* Header - Non imprimable */}
         <div className="print:hidden mb-6">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-            <Logo className="h-16 mb-4" />
-            
             <h1 className="font-handwritten text-3xl text-[#22c55e] text-center mb-2">
               📋 {lang === 'fr' ? 'Résumé d\'arrivée' : 'Arrival Summary'}
             </h1>
           </motion.div>
         </div>
 
-        {/* Logo pour impression */}
-        <div className="hidden print:block mb-6">
-          <Logo className="h-12 mb-4" />
-          <h1 className="font-handwritten text-2xl text-center mb-4">
-            📋 {lang === 'fr' ? 'Résumé d\'arrivée' : 'Arrival Summary'}
-          </h1>
-        </div>
-
         {/* Contenu imprimable */}
-        <div id="resume-content" className="space-y-6 bg-white p-6 rounded-xl">
+        <div id="resume-content" className="space-y-4 bg-white p-6 rounded-xl">
+          {/* Logo dans le PDF */}
+          <div className="mb-4">
+            <Logo className="h-16 mb-2" />
+            <h1 className="font-handwritten text-2xl text-center text-[#0077A8]">
+              📋 {lang === 'fr' ? 'Résumé d\'arrivée' : 'Arrival Summary'}
+            </h1>
+          </div>
           {/* Informations générales */}
           <Card className="border-2 border-[#00AEEF]/30 rounded-xl">
             <CardContent className="p-6">
@@ -358,7 +356,7 @@ export default function ClientResume() {
           )}
 
           {/* Signature */}
-          <Card className="border-2 border-[#00AEEF]/30 rounded-xl">
+          <Card className="border-2 border-[#00AEEF]/30 rounded-xl break-inside-avoid">
             <CardContent className="p-6">
               <h2 className="font-heading text-xl text-[#0077A8] mb-4 flex items-center gap-2">
                 <span>✒️</span>
