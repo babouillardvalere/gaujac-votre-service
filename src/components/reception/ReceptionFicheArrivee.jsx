@@ -8,7 +8,9 @@ import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Download, Mail, FileText, CheckCircle, XCircle, Users, Calendar, Home } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { addPDFToQueue, PDF_STATUS } from '../pdfQueue';
+import Logo from '../Logo';
 
 export default function ReceptionFicheArrivee({ ficheId, onClose, lang }) {
   const [fiche, setFiche] = React.useState(null);
@@ -42,140 +44,43 @@ export default function ReceptionFicheArrivee({ ficheId, onClose, lang }) {
 
   const genererPDF = async () => {
     setGeneratingPDF(true);
+    toast.info(lang === 'fr' ? 'Génération du PDF...' : 'Generating PDF...');
     
     try {
-      const doc = new jsPDF();
-      const pageWidth = doc.internal.pageSize.width;
-      let yPos = 20;
+      const element = document.getElementById('fiche-arrivee-content');
+      if (!element) return;
 
-      // Titre
-      doc.setFontSize(20);
-      doc.setFont('helvetica', 'bold');
-      doc.text(lang === 'fr' ? 'DOSSIER D\'ARRIVEE' : 'ARRIVAL FILE', pageWidth / 2, yPos, { align: 'center' });
-      yPos += 15;
+      const canvas = await html2canvas(element, {
+        scale: 1.5,
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+      });
 
-      // Informations client
-      doc.setFontSize(14);
-      doc.text(lang === 'fr' ? 'Informations client' : 'Guest information', 15, yPos);
-      yPos += 8;
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`${lang === 'fr' ? 'Nom' : 'Name'}: ${fiche.client_prenom} ${fiche.client_nom}`, 15, yPos);
-      yPos += 6;
-      doc.text(`${lang === 'fr' ? 'Arrivee' : 'Arrival'}: ${fiche.date_arrivee}`, 15, yPos);
-      yPos += 6;
-      doc.text(`${lang === 'fr' ? 'Depart' : 'Departure'}: ${fiche.date_depart}`, 15, yPos);
-      yPos += 6;
-      doc.text(`${lang === 'fr' ? 'Logement' : 'Accommodation'}: ${fiche.numero_logement} (${fiche.categorie_logement})`, 15, yPos);
-      yPos += 10;
-
-      // Occupants
-      const totalPersonnes = (fiche.nombre_adultes || 0) + (fiche.nombre_adolescents || 0) + 
-                             (fiche.nombre_enfants || 0) + (fiche.nombre_bebes || 0);
-      doc.text(`${lang === 'fr' ? 'Occupants' : 'Occupants'}: ${totalPersonnes} personne(s)`, 15, yPos);
-      yPos += 6;
-      doc.setFontSize(10);
-      doc.text(`  ${fiche.nombre_adultes || 0} ${lang === 'fr' ? 'adulte(s)' : 'adult(s)'}`, 15, yPos);
-      yPos += 5;
-      doc.text(`  ${fiche.nombre_adolescents || 0} ${lang === 'fr' ? 'adolescent(s)' : 'teen(s)'}`, 15, yPos);
-      yPos += 5;
-      doc.text(`  ${fiche.nombre_enfants || 0} ${lang === 'fr' ? 'enfant(s)' : 'child(ren)'}`, 15, yPos);
-      yPos += 5;
-      doc.text(`  ${fiche.nombre_bebes || 0} ${lang === 'fr' ? 'bebe(s)' : 'baby/babies'}`, 15, yPos);
-      yPos += 10;
-
-      // Inventaire
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text(lang === 'fr' ? 'Inventaire' : 'Inventory', 15, yPos);
-      yPos += 8;
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'normal');
-
-      if (fiche.inventaire_objets_valides && fiche.inventaire_objets_valides.length > 0) {
-        doc.setTextColor(0, 128, 0);
-        doc.text(`Objets valides: ${fiche.inventaire_objets_valides.length}`, 15, yPos);
-        doc.setTextColor(0, 0, 0);
-        yPos += 8;
-        
-        doc.setFontSize(9);
-        let colCount = 0;
-        fiche.inventaire_objets_valides.forEach(obj => {
-          const xPos = 20 + (colCount * 60);
-          doc.text(`- ${obj}`, xPos, yPos);
-          colCount++;
-          if (colCount === 3) {
-            colCount = 0;
-            yPos += 5;
-          }
-        });
-        if (colCount > 0) yPos += 5;
-        yPos += 5;
-        doc.setFontSize(11);
-      }
-
-      if (fiche.inventaire_objets_manquants && fiche.inventaire_objets_manquants.length > 0) {
-        doc.setTextColor(255, 0, 0);
-        doc.setFont('helvetica', 'bold');
-        doc.text(`Objets manquants/casses: ${fiche.inventaire_objets_manquants.length}`, 15, yPos);
-        doc.setFont('helvetica', 'normal');
-        yPos += 8;
-        
-        doc.setFontSize(9);
-        fiche.inventaire_objets_manquants.forEach(obj => {
-          const objetNom = typeof obj === 'string' ? obj : obj.objet;
-          const commentaire = typeof obj === 'object' ? obj.commentaire : '';
-          doc.text(`- ${objetNom}${commentaire ? ' - ' + commentaire : ''}`, 20, yPos);
-          yPos += 5;
-        });
-        doc.setTextColor(0, 0, 0);
-        yPos += 5;
-        doc.setFontSize(11);
-      }
-
-      // Propreté
-      yPos += 5;
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text(lang === 'fr' ? 'Proprete' : 'Cleanliness', 15, yPos);
-      yPos += 8;
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'normal');
+      const doc = new jsPDF('p', 'mm', 'a4');
+      const imgWidth = 210;
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      const proprete = fiche.evaluation_proprete === 'tres_propre' ? (lang === 'fr' ? 'Tres propre' : 'Very clean') :
-                       fiche.evaluation_proprete === 'correct' ? (lang === 'fr' ? 'Correct' : 'OK') :
-                       (lang === 'fr' ? 'Pas satisfaisant' : 'Not satisfactory');
-      doc.text(proprete, 15, yPos);
-      yPos += 8;
+      let heightLeft = imgHeight;
+      let position = 0;
 
-      if (fiche.commentaire_proprete) {
-        const commentSplit = doc.splitTextToSize(`${lang === 'fr' ? 'Commentaire' : 'Comment'}: ${fiche.commentaire_proprete}`, pageWidth - 30);
-        doc.text(commentSplit, 15, yPos);
-        yPos += commentSplit.length * 6 + 5;
+      doc.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        doc.addPage();
+        doc.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
       }
 
-      // Remarques
-      if (fiche.remarques_client) {
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.text(lang === 'fr' ? 'Remarques' : 'Remarks', 15, yPos);
-        yPos += 8;
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'normal');
-        const splitText = doc.splitTextToSize(fiche.remarques_client, pageWidth - 30);
-        doc.text(splitText, 15, yPos);
-        yPos += splitText.length * 6;
-      }
-
-      // Date de validation
-      yPos += 10;
-      doc.setFontSize(10);
-      doc.text(`${lang === 'fr' ? 'Valide le' : 'Validated on'}: ${new Date(fiche.date_validation).toLocaleString(lang)}`, 15, yPos);
-
-      // Télécharger directement
       doc.save(`arrivee_${fiche.numero_logement}_${fiche.client_nom}.pdf`);
       
       toast.success(lang === 'fr' ? 'PDF téléchargé' : 'PDF downloaded');
+
+
     } catch (error) {
       console.error('Erreur génération PDF:', error);
       toast.error(lang === 'fr' ? 'Erreur génération PDF' : 'PDF generation error');
@@ -273,6 +178,15 @@ ${lang === 'fr' ? 'Validé le' : 'Validated on'}: ${new Date(fiche.date_validati
       </div>
 
       {/* Fiche complète */}
+      <div id="fiche-arrivee-content" className="bg-white p-6 space-y-4 rounded-xl">
+        {/* Logo et titre */}
+        <div className="mb-4">
+          <Logo className="h-16 mb-2" />
+          <h1 className="font-handwritten text-2xl text-center text-[#0077A8]">
+            📋 {lang === 'fr' ? 'Dossier d\'arrivée' : 'Arrival File'}
+          </h1>
+        </div>
+
       <Card className="border-2 border-[#00AEEF]">
         <CardHeader className="bg-gradient-to-r from-[#00AEEF] to-[#0077A8] text-white">
           <CardTitle className="text-2xl flex items-center gap-2">
@@ -463,8 +377,7 @@ ${lang === 'fr' ? 'Validé le' : 'Validated on'}: ${new Date(fiche.date_validati
           </div>
         </CardContent>
       </Card>
-
-
+      </div>
     </div>
   );
 }

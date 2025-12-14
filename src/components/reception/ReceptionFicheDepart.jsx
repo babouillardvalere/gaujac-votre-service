@@ -8,6 +8,8 @@ import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Download, Mail, FileText, AlertTriangle, CheckCircle, Calendar, Home } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import Logo from '../Logo';
 
 export default function ReceptionFicheDepart({ ficheId, onClose, lang }) {
   const [fiche, setFiche] = React.useState(null);
@@ -41,106 +43,43 @@ export default function ReceptionFicheDepart({ ficheId, onClose, lang }) {
 
   const genererPDF = async () => {
     setGeneratingPDF(true);
+    toast.info(lang === 'fr' ? 'Génération du PDF...' : 'Generating PDF...');
+    
     try {
-      const doc = new jsPDF();
-      const pageWidth = doc.internal.pageSize.width;
-      let yPos = 20;
+      const element = document.getElementById('fiche-depart-content');
+      if (!element) return;
 
-      doc.setFontSize(20);
-      doc.setFont('helvetica', 'bold');
-      doc.text(lang === 'fr' ? 'DOSSIER DE DÉPART' : 'DEPARTURE FILE', pageWidth / 2, yPos, { align: 'center' });
-      yPos += 15;
+      const canvas = await html2canvas(element, {
+        scale: 1.5,
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+      });
 
-      doc.setFontSize(14);
-      doc.text(lang === 'fr' ? 'Informations client' : 'Guest information', 15, yPos);
-      yPos += 8;
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`${lang === 'fr' ? 'Nom' : 'Name'}: ${fiche.client_prenom} ${fiche.client_nom}`, 15, yPos);
-      yPos += 6;
-      doc.text(`${lang === 'fr' ? 'Logement' : 'Accommodation'}: ${fiche.numero_logement} (${fiche.categorie_logement})`, 15, yPos);
-      yPos += 6;
-      doc.text(`${lang === 'fr' ? 'Dates' : 'Dates'}: ${fiche.date_arrivee} → ${fiche.date_depart}`, 15, yPos);
-      yPos += 15;
-
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text(lang === 'fr' ? 'État du logement au départ' : 'Accommodation condition on departure', 15, yPos);
-      yPos += 8;
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'normal');
-
-      // Inventaire état
-      if (fiche.inventaire_objets_etat && fiche.inventaire_objets_etat.length > 0) {
-        const objetsOK = fiche.inventaire_objets_etat.filter(o => o.etat === 'ok').length;
-        const objetsCasses = fiche.inventaire_objets_etat.filter(o => o.etat === 'casse_ou_manquant').length;
-        const objetsDejaManquants = fiche.inventaire_objets_etat.filter(o => o.etat === 'deja_manquant_arrivee').length;
-        
-        doc.setTextColor(0, 128, 0);
-        doc.text(`${lang === 'fr' ? '✓ Objets en bon état' : '✓ Items in good condition'}: ${objetsOK}`, 15, yPos);
-        doc.setTextColor(0, 0, 0);
-        yPos += 6;
-        
-        if (objetsCasses > 0) {
-          doc.setTextColor(255, 0, 0);
-          doc.text(`${lang === 'fr' ? '✗ Objets cassés/manquants au départ' : '✗ Items broken/missing on departure'}: ${objetsCasses}`, 15, yPos);
-          yPos += 6;
-          doc.setFontSize(9);
-          fiche.inventaire_objets_etat.filter(o => o.etat === 'casse_ou_manquant').forEach(obj => {
-            doc.text(`  • ${obj.objet}`, 20, yPos);
-            yPos += 5;
-          });
-          doc.setTextColor(0, 0, 0);
-          doc.setFontSize(11);
-          yPos += 3;
-        }
-        
-        if (objetsDejaManquants > 0) {
-          doc.setTextColor(255, 140, 0);
-          doc.text(`${lang === 'fr' ? '⚠ Déjà signalés à l\'arrivée' : '⚠ Already reported on arrival'}: ${objetsDejaManquants}`, 15, yPos);
-          doc.setTextColor(0, 0, 0);
-          yPos += 8;
-        }
-      }
-
-      if (fiche.degats_signales) {
-        doc.setTextColor(255, 0, 0);
-        doc.setFont('helvetica', 'bold');
-        doc.text(lang === 'fr' ? '⚠️ DÉGÂTS SIGNALÉS' : '⚠️ DAMAGES REPORTED', 15, yPos);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(0, 0, 0);
-        yPos += 8;
-      }
-
-      if (fiche.evaluation_proprete) {
-        const proprete = fiche.evaluation_proprete === 'tres_propre' ? (lang === 'fr' ? 'Très propre' : 'Very clean') :
-                         fiche.evaluation_proprete === 'correct' ? (lang === 'fr' ? 'Correct' : 'OK') :
-                         (lang === 'fr' ? 'Pas satisfaisant' : 'Not satisfactory');
-        doc.text(`${lang === 'fr' ? 'Propreté' : 'Cleanliness'}: ${proprete}`, 15, yPos);
-        yPos += 8;
-      }
-
-      if (fiche.remarques_staff) {
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.text(lang === 'fr' ? 'Remarques' : 'Remarks', 15, yPos);
-        yPos += 8;
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'normal');
-        const splitText = doc.splitTextToSize(fiche.remarques_staff, pageWidth - 30);
-        doc.text(splitText, 15, yPos);
-      }
-
-      const pdfBlob = doc.output('blob');
-      const pdfFile = new File([pdfBlob], `depart_${fiche.numero_logement}_${fiche.client_nom}.pdf`, { type: 'application/pdf' });
+      const doc = new jsPDF('p', 'mm', 'a4');
+      const imgWidth = 210;
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      const { file_url } = await base44.integrations.Core.UploadFile({ file: pdfFile });
-      
-      await base44.entities.FicheDepart.update(fiche.id, { pdf_url: file_url });
-      queryClient.invalidateQueries({ queryKey: ['fiches-depart'] });
+      let heightLeft = imgHeight;
+      let position = 0;
 
-      toast.success(lang === 'fr' ? 'PDF généré avec succès' : 'PDF generated successfully');
-      window.open(file_url, '_blank');
+      doc.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        doc.addPage();
+        doc.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      doc.save(`depart_${fiche.numero_logement}_${fiche.client_nom}.pdf`);
+      
+      toast.success(lang === 'fr' ? 'PDF téléchargé' : 'PDF downloaded');
+
+
     } catch (error) {
       console.error('Erreur génération PDF:', error);
       toast.error(lang === 'fr' ? 'Erreur lors de la génération du PDF' : 'Error generating PDF');
@@ -150,11 +89,6 @@ export default function ReceptionFicheDepart({ ficheId, onClose, lang }) {
   };
 
   const envoyerEmail = async () => {
-    if (!fiche.pdf_url) {
-      toast.error(lang === 'fr' ? 'Veuillez d\'abord générer le PDF' : 'Please generate the PDF first');
-      return;
-    }
-
     setSendingEmail(true);
     try {
       await base44.integrations.Core.SendEmail({
@@ -201,6 +135,15 @@ export default function ReceptionFicheDepart({ ficheId, onClose, lang }) {
           </Button>
         </div>
       </div>
+
+      <div id="fiche-depart-content" className="bg-white p-6 space-y-4 rounded-xl">
+        {/* Logo et titre */}
+        <div className="mb-4">
+          <Logo className="h-16 mb-2" />
+          <h1 className="font-handwritten text-2xl text-center text-[#0077A8]">
+            📋 {lang === 'fr' ? 'Dossier de départ' : 'Departure File'}
+          </h1>
+        </div>
 
       <Card className="border-2 border-[#FFA500]">
         <CardHeader className="bg-gradient-to-r from-[#FFA500] to-[#FF8C00] text-white">
@@ -368,8 +311,7 @@ export default function ReceptionFicheDepart({ ficheId, onClose, lang }) {
           </div>
         </CardContent>
       </Card>
-
-
+      </div>
     </div>
   );
 }
