@@ -79,40 +79,63 @@ export default function ClientResume() {
       const element = document.getElementById('resume-content');
       if (!element) return;
 
+      // Masquer temporairement les éléments non-imprimables
+      const printHiddenElements = element.querySelectorAll('.print\\:hidden');
+      printHiddenElements.forEach(el => el.style.display = 'none');
+
+      // Assurer que tous les éléments sont visibles
+      element.style.width = '800px';
+      element.style.maxWidth = '800px';
+
       const canvas = await html2canvas(element, {
-        scale: 2.5,
+        scale: 3,
         logging: false,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
+        width: element.scrollWidth,
+        height: element.scrollHeight,
         windowWidth: element.scrollWidth,
         windowHeight: element.scrollHeight,
-        imageTimeout: 0,
-        onclone: (clonedDoc) => {
-          const clonedElement = clonedDoc.getElementById('resume-content');
-          if (clonedElement) {
-            clonedElement.style.padding = '20px';
-          }
-        }
+        imageTimeout: 5000,
+        letterRendering: true,
+        removeContainer: false
       });
 
+      // Restaurer les éléments masqués
+      printHiddenElements.forEach(el => el.style.display = '');
+      element.style.width = '';
+      element.style.maxWidth = '';
+
       const pdf = new jsPDF('p', 'mm', 'a4');
-      const margin = 10;
-      const imgWidth = 210 - (2 * margin);
-      const pageHeight = 297;
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      const imgWidth = pdfWidth - 20;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      let heightLeft = imgHeight;
-      let position = margin;
-
-      pdf.addImage(canvas.toDataURL('image/png', 1.0), 'PNG', margin, position, imgWidth, imgHeight);
-      heightLeft -= (pageHeight - 2 * margin);
-
-      while (heightLeft > 0) {
-        pdf.addPage();
-        position = -(imgHeight - heightLeft) + margin;
-        pdf.addImage(canvas.toDataURL('image/png', 1.0), 'PNG', margin, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+      const totalPages = Math.ceil(imgHeight / (pdfHeight - 20));
+      
+      for (let i = 0; i < totalPages; i++) {
+        if (i > 0) pdf.addPage();
+        
+        const sourceY = i * canvas.height / totalPages;
+        const sourceHeight = canvas.height / totalPages;
+        
+        // Créer un canvas temporaire pour cette page
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.width = canvas.width;
+        pageCanvas.height = sourceHeight;
+        const pageCtx = pageCanvas.getContext('2d');
+        
+        pageCtx.drawImage(
+          canvas,
+          0, sourceY, canvas.width, sourceHeight,
+          0, 0, canvas.width, sourceHeight
+        );
+        
+        const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.98);
+        pdf.addImage(pageImgData, 'JPEG', 10, 10, imgWidth, pdfHeight - 20);
       }
 
       const fileName = `Arrivee_${fiche.client_nom}_${fiche.client_prenom}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
@@ -179,7 +202,7 @@ export default function ClientResume() {
         </div>
 
         {/* Contenu imprimable */}
-        <div id="resume-content" className="space-y-4 bg-white p-6 rounded-xl">
+        <div id="resume-content" className="space-y-4 bg-white p-6 rounded-xl" style={{ maxWidth: '800px', margin: '0 auto' }}>
           {/* Logo dans le PDF */}
           <div className="mb-4">
             <Logo className="h-16 mb-2" />
