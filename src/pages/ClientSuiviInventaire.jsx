@@ -46,11 +46,16 @@ export default function ClientSuiviInventaire() {
       
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const todayStr = today.toISOString().split('T')[0];
       
-      const fiches = await base44.entities.FicheArrivee.filter({ 
-        client_email: currentUser.email 
-      }, '-created_date', 100);
+      // Récupérer toutes les fiches et filtrer localement
+      const allFiches = await base44.entities.FicheArrivee.list('-created_date', 100);
+      
+      // Filtrer par email OU par correspondance nom/prénom de l'utilisateur
+      const fiches = allFiches.filter(f => 
+        f.client_email === currentUser.email || 
+        (currentUser.full_name && f.client_nom && f.client_prenom && 
+         `${f.client_prenom} ${f.client_nom}`.toLowerCase() === currentUser.full_name.toLowerCase())
+      );
       
       // Trouver la fiche du séjour actif
       return fiches.find(f => {
