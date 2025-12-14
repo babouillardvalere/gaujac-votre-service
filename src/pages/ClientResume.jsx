@@ -13,6 +13,8 @@ import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr, enUS } from 'date-fns/locale';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export default function ClientResume() {
   const { t, lang } = useTranslation();
@@ -70,8 +72,46 @@ export default function ClientResume() {
 
 
 
-  const handleDownload = () => {
-    window.print();
+  const handleDownload = async () => {
+    toast.info(lang === 'fr' ? 'Génération du PDF...' : 'Generating PDF...');
+    
+    try {
+      const element = document.getElementById('resume-content');
+      if (!element) return;
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        logging: false,
+        useCORS: true
+      });
+
+      const imgWidth = 210; // A4 width in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      let position = 0;
+      const pageHeight = 297; // A4 height in mm
+      
+      if (imgHeight <= pageHeight) {
+        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight);
+      } else {
+        while (position < imgHeight) {
+          pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, -position, imgWidth, imgHeight);
+          position += pageHeight;
+          if (position < imgHeight) {
+            pdf.addPage();
+          }
+        }
+      }
+
+      const fileName = `Arrivee_${fiche.client_nom}_${fiche.client_prenom}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      pdf.save(fileName);
+      
+      toast.success(lang === 'fr' ? 'PDF téléchargé' : 'PDF downloaded');
+    } catch (error) {
+      console.error(error);
+      toast.error(lang === 'fr' ? 'Erreur génération PDF' : 'PDF generation error');
+    }
   };
 
   if (isLoading) {
@@ -138,7 +178,7 @@ export default function ClientResume() {
         </div>
 
         {/* Contenu imprimable */}
-        <div className="space-y-6">
+        <div id="resume-content" className="space-y-6 bg-white p-6 rounded-xl">
           {/* Informations générales */}
           <Card className="border-2 border-[#00AEEF]/30 rounded-xl">
             <CardContent className="p-6">
