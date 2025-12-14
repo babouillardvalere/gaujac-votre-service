@@ -68,9 +68,7 @@ export default function ClientResume() {
     }
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
+
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -491,7 +489,7 @@ export default function ClientResume() {
             className="w-full h-14 border-2 border-[#00AEEF] text-[#0077A8] font-heading text-lg hover:bg-blue-50"
           >
             <Download className="w-5 h-5 mr-2" />
-            {lang === 'fr' ? 'Télécharger / Imprimer le document' : 'Download / Print document'}
+            {lang === 'fr' ? 'Télécharger le document' : 'Download document'}
           </Button>
         </div>
       </div>
