@@ -84,42 +84,22 @@ export default function SuiviIntervention() {
     }
   }, [navigate]);
 
+  // Récupérer le stay_id du séjour actuel
+  const stayId = sessionStorage.getItem('stay_id');
+
   const { data: incidents = [], isLoading, refetch } = useQuery({
-    queryKey: ['suivi-incidents', selectedNumero, hebergementType],
+    queryKey: ['suivi-incidents', stayId],
     queryFn: async () => {
-      if (!selectedNumero) return [];
-      const field = hebergementType === 'emplacement' ? 'emplacement' : 'logement';
-      return await base44.entities.Incident.filter({ [field]: selectedNumero }, '-date_saisie', 100);
+      if (!stayId) return [];
+      // FILTRAGE SÉCURISÉ À LA SOURCE : uniquement les incidents du séjour actuel
+      return await base44.entities.Incident.filter({ stay_id: stayId }, '-date_saisie', 100);
     },
-    enabled: !!selectedNumero && step === 'suivi',
+    enabled: !!stayId && step === 'suivi',
     refetchInterval: 10000
   });
 
-  // Filtrage STRICT : uniquement les interventions du séjour actuel du client
-  const filteredIncidents = incidents.filter(incident => {
-    // Vérifier que l'intervention correspond au client actuel
-    if (!userData.dateArrivee || !userData.dateDepart || !incident.date_saisie) return false;
-    
-    // Vérifier nom/prénom si disponibles
-    if (userData.nom && userData.prenom) {
-      const nomMatch = incident.client_nom?.toLowerCase() === userData.nom.toLowerCase();
-      const prenomMatch = incident.client_prenom?.toLowerCase() === userData.prenom.toLowerCase();
-      if (!nomMatch || !prenomMatch) return false;
-    }
-    
-    try {
-      const incidentDate = parseISO(incident.date_saisie);
-      const arrivee = parseISO(userData.dateArrivee);
-      // Ajouter 23h59 à la date de départ pour inclure toute la journée
-      const depart = new Date(userData.dateDepart);
-      depart.setHours(23, 59, 59, 999);
-      
-      // L'intervention doit être créée PENDANT le séjour du client
-      return incidentDate >= arrivee && incidentDate <= depart;
-    } catch {
-      return false;
-    }
-  });
+  // Les incidents sont déjà filtrés correctement par stay_id
+  const filteredIncidents = incidents;
 
   const checkAccess = () => {
     if (userData.dateArrivee && userData.dateDepart && incidents.length > 0 && filteredIncidents.length === 0) {

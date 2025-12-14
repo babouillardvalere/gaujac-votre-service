@@ -37,6 +37,20 @@ export default function Signalement() {
   const [lastIncidentId, setLastIncidentId] = useState(null);
 
   const [userData, setUserData] = useState({});
+  
+  // Générer ou récupérer le stay_id unique
+  const getStayId = () => {
+    let stayId = sessionStorage.getItem('stay_id');
+    if (!stayId) {
+      const logement = sessionStorage.getItem('hebergement_numero') || 'XX';
+      const dateArrivee = sessionStorage.getItem('user_date_arrivee') || new Date().toISOString().split('T')[0];
+      const dateFormatted = dateArrivee.replace(/-/g, '');
+      const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+      stayId = `ARR-${logement}-${dateFormatted}-${random}`;
+      sessionStorage.setItem('stay_id', stayId);
+    }
+    return stayId;
+  };
 
   const problemesTechniques = [
     { id: 'gaz', emoji: '🔥', label: t('gaz') },
@@ -169,7 +183,10 @@ export default function Signalement() {
         }
       }
 
+      const stayId = getStayId();
+      
       const newIncident = await base44.entities.Incident.create({
+        stay_id: stayId,
         type: isTechnique ? 'technique' : 'menage',
         categorie: selectedProblems[0],
         sous_categorie: selectedProblems.join(', '),
