@@ -68,20 +68,8 @@ export default function ClientArriveeIdentite() {
       return false;
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
     const arrivee = new Date(formData.date_arrivee);
     const depart = new Date(formData.date_depart);
-
-    if (arrivee > tomorrow) {
-      toast.error(lang === 'fr' 
-        ? 'La date d\'arrivée doit être aujourd\'hui ou demain maximum'
-        : 'Arrival date must be today or tomorrow at most');
-      return false;
-    }
 
     if (depart <= arrivee) {
       toast.error(t('date_error_ordre'));
