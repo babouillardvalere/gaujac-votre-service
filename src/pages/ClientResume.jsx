@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr, enUS } from 'date-fns/locale';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import 'jspdf-autotable';
 
 export default function ClientResume() {
   const { t, lang } = useTranslation();
@@ -76,91 +76,242 @@ export default function ClientResume() {
     toast.info(lang === 'fr' ? 'Génération du PDF...' : 'Generating PDF...');
     
     try {
-      const element = document.getElementById('resume-content');
-      if (!element) return;
+      const doc = new jsPDF('p', 'mm', 'a4');
+      let yPos = 20;
 
-      // Masquer temporairement les éléments non-imprimables
-      const printHiddenElements = element.querySelectorAll('.print\\:hidden');
-      printHiddenElements.forEach(el => el.style.display = 'none');
-
-      // Appliquer des polices système pour le PDF
-      const originalFontFamily = element.style.fontFamily;
-      element.style.fontFamily = 'Arial, Helvetica, sans-serif';
+      // Header avec logo (texte)
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Camping Paradis - Le Domaine de Gaujac', 105, yPos, { align: 'center' });
+      yPos += 8;
       
-      // Remplacer temporairement les polices personnalisées
-      const allElements = element.querySelectorAll('*');
-      const originalFonts = [];
-      allElements.forEach((el, index) => {
-        originalFonts[index] = el.style.fontFamily;
-        if (el.classList.contains('font-handwritten') || el.classList.contains('font-heading')) {
-          el.style.fontFamily = 'Arial, Helvetica, sans-serif';
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'normal');
+      doc.text(lang === 'fr' ? 'Fiche d\'arrivée' : 'Arrival Form', 105, yPos, { align: 'center' });
+      yPos += 15;
+
+      // Informations générales
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text(lang === 'fr' ? 'Informations du séjour' : 'Stay Information', 14, yPos);
+      yPos += 8;
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`${lang === 'fr' ? 'Client' : 'Guest'} : ${fiche.client_nom} ${fiche.client_prenom}`, 14, yPos);
+      yPos += 6;
+      doc.text(`${lang === 'fr' ? 'Hébergement' : 'Accommodation'} : ${fiche.numero_logement} (${fiche.categorie_logement})`, 14, yPos);
+      yPos += 6;
+      doc.text(`${lang === 'fr' ? 'Arrivée' : 'Check-in'} : ${fiche.date_arrivee}`, 14, yPos);
+      yPos += 6;
+      doc.text(`${lang === 'fr' ? 'Départ' : 'Check-out'} : ${fiche.date_depart}`, 14, yPos);
+      yPos += 10;
+
+      // Occupants
+      const occupants = [];
+      if (fiche.nombre_adultes > 0) occupants.push(`${fiche.nombre_adultes} ${lang === 'fr' ? 'adulte(s)' : 'adult(s)'}`);
+      if (fiche.nombre_adolescents > 0) occupants.push(`${fiche.nombre_adolescents} ${lang === 'fr' ? 'ado(s)' : 'teen(s)'}`);
+      if (fiche.nombre_enfants > 0) occupants.push(`${fiche.nombre_enfants} ${lang === 'fr' ? 'enfant(s)' : 'child(ren)'}`);
+      if (fiche.nombre_bebes > 0) occupants.push(`${fiche.nombre_bebes} ${lang === 'fr' ? 'bébé(s)' : 'baby/ies'}`);
+      if (fiche.nombre_animaux > 0) occupants.push(`${fiche.nombre_animaux} ${lang === 'fr' ? 'animal/aux' : 'pet(s)'}`);
+      
+      if (occupants.length > 0) {
+        doc.text(`${lang === 'fr' ? 'Occupants' : 'Occupants'} : ${occupants.join(', ')}`, 14, yPos);
+        yPos += 10;
+      }
+
+      // Inventaire - Objets conformes
+      if (fiche.inventaire_objets_valides?.length > 0) {
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${lang === 'fr' ? 'Objets conformes' : 'Items OK'} (${fiche.inventaire_objets_valides.length})`, 14, yPos);
+        yPos += 6;
+
+        const validesData = fiche.inventaire_objets_valides.map(obj => {
+          const label = typeof obj === 'string' ? obj : obj.label || obj.nom || obj;
+          return [label];
+        });
+
+        doc.autoTable({
+          startY: yPos,
+          head: [[lang === 'fr' ? 'Objet' : 'Item']],
+          body: validesData,
+          styles: { 
+            font: 'helvetica', 
+            fontSize: 9,
+            cellPadding: 2,
+            overflow: 'linebreak',
+            halign: 'left'
+          },
+          headStyles: { fillColor: [34, 197, 94], textColor: 255 },
+          columnStyles: { 0: { cellWidth: 180 } },
+          margin: { left: 14 }
+        });
+
+        yPos = doc.lastAutoTable.finalY + 8;
+      }
+
+      // Inventaire - Objets signalés
+      if (fiche.inventaire_objets_manquants?.length > 0) {
+        if (yPos > 250) {
+          doc.addPage();
+          yPos = 20;
         }
-      });
 
-      // Définir une largeur fixe pour le rendu
-      element.style.width = '794px';
-      element.style.maxWidth = '794px';
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${lang === 'fr' ? 'Objets signalés' : 'Reported Items'} (${fiche.inventaire_objets_manquants.length})`, 14, yPos);
+        yPos += 6;
 
-      // Attendre que les polices soient bien appliquées
-      await new Promise(resolve => setTimeout(resolve, 100));
+        const manquantsData = fiche.inventaire_objets_manquants.map(obj => {
+          const objet = typeof obj === 'string' ? obj : obj.objet || obj.label || obj.nom || obj;
+          const quantite = typeof obj === 'object' ? obj.quantite || 1 : 1;
+          const statut = typeof obj === 'object' ? obj.statut : '';
+          const commentaire = typeof obj === 'object' ? obj.commentaire || obj.motif || '' : '';
+          
+          let statutText = '';
+          if (statut === 'manquant') statutText = lang === 'fr' ? 'Manquant' : 'Missing';
+          else if (statut === 'casse') statutText = lang === 'fr' ? 'Cassé' : 'Broken';
+          else if (statut === 'inutilisable') statutText = lang === 'fr' ? 'Inutilisable' : 'Unusable';
+          
+          return [objet, `x${quantite}`, statutText, commentaire];
+        });
 
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        logging: false,
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: '#ffffff',
-        width: 794,
-        height: element.scrollHeight,
-        windowWidth: 794,
-        windowHeight: element.scrollHeight,
-        imageTimeout: 0,
-        letterRendering: true,
-        foreignObjectRendering: false,
-        removeContainer: true
-      });
+        doc.autoTable({
+          startY: yPos,
+          head: [[
+            lang === 'fr' ? 'Objet' : 'Item',
+            lang === 'fr' ? 'Qté' : 'Qty',
+            lang === 'fr' ? 'Statut' : 'Status',
+            lang === 'fr' ? 'Commentaire' : 'Comment'
+          ]],
+          body: manquantsData,
+          styles: { 
+            font: 'helvetica', 
+            fontSize: 9,
+            cellPadding: 2,
+            overflow: 'linebreak',
+            halign: 'left'
+          },
+          headStyles: { fillColor: [239, 68, 68], textColor: 255 },
+          columnStyles: {
+            0: { cellWidth: 60 },
+            1: { cellWidth: 15 },
+            2: { cellWidth: 35 },
+            3: { cellWidth: 70 }
+          },
+          margin: { left: 14 }
+        });
 
-      // Restaurer les polices originales
-      element.style.fontFamily = originalFontFamily;
-      allElements.forEach((el, index) => {
-        el.style.fontFamily = originalFonts[index] || '';
-      });
-      printHiddenElements.forEach(el => el.style.display = '');
-      element.style.width = '';
-      element.style.maxWidth = '';
+        yPos = doc.lastAutoTable.finalY + 8;
+      }
 
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      
-      const imgWidth = pdfWidth - 20;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      const totalPages = Math.ceil(imgHeight / (pdfHeight - 20));
-      
-      for (let i = 0; i < totalPages; i++) {
-        if (i > 0) pdf.addPage();
-        
-        const sourceY = (i * canvas.height) / totalPages;
-        const sourceHeight = canvas.height / totalPages;
-        
-        const pageCanvas = document.createElement('canvas');
-        pageCanvas.width = canvas.width;
-        pageCanvas.height = sourceHeight;
-        const pageCtx = pageCanvas.getContext('2d');
-        
-        pageCtx.drawImage(
-          canvas,
-          0, sourceY, canvas.width, sourceHeight,
-          0, 0, canvas.width, sourceHeight
+      // Propreté
+      if (yPos > 250) {
+        doc.addPage();
+        yPos = 20;
+      }
+
+      doc.setFont('helvetica', 'bold');
+      doc.text(lang === 'fr' ? 'Évaluation de la propreté' : 'Cleanliness Assessment', 14, yPos);
+      yPos += 6;
+
+      const propretéLabel = {
+        'pas_satisfaisant': lang === 'fr' ? 'Pas satisfaisant' : 'Unsatisfactory',
+        'correct': lang === 'fr' ? 'Correct' : 'Okay',
+        'tres_propre': lang === 'fr' ? 'Très propre' : 'Very clean'
+      }[fiche.evaluation_proprete];
+
+      doc.setFont('helvetica', 'normal');
+      doc.text(propretéLabel, 14, yPos);
+      yPos += 6;
+
+      if (fiche.commentaire_proprete) {
+        const splitComment = doc.splitTextToSize(fiche.commentaire_proprete, 180);
+        doc.text(splitComment, 14, yPos);
+        yPos += splitComment.length * 5 + 8;
+      } else {
+        yPos += 8;
+      }
+
+      // Remarques client
+      if (fiche.remarques_client) {
+        if (yPos > 250) {
+          doc.addPage();
+          yPos = 20;
+        }
+
+        doc.setFont('helvetica', 'bold');
+        doc.text(lang === 'fr' ? 'Remarques du client' : 'Guest Comments', 14, yPos);
+        yPos += 6;
+
+        doc.setFont('helvetica', 'normal');
+        const splitRemarques = doc.splitTextToSize(fiche.remarques_client, 180);
+        doc.text(splitRemarques, 14, yPos);
+        yPos += splitRemarques.length * 5 + 10;
+      }
+
+      // Signature électronique
+      if (yPos > 230) {
+        doc.addPage();
+        yPos = 20;
+      }
+
+      doc.setFont('helvetica', 'bold');
+      doc.text(lang === 'fr' ? 'Signature du client' : 'Guest Signature', 14, yPos);
+      yPos += 6;
+
+      if (fiche.signature_url) {
+        try {
+          // Convertir l'image en base64 si nécessaire
+          const imgData = fiche.signature_url.startsWith('data:') 
+            ? fiche.signature_url 
+            : await fetch(fiche.signature_url).then(r => r.blob()).then(blob => {
+                return new Promise((resolve) => {
+                  const reader = new FileReader();
+                  reader.onloadend = () => resolve(reader.result);
+                  reader.readAsDataURL(blob);
+                });
+              });
+
+          doc.addImage(imgData, 'PNG', 14, yPos, 60, 25);
+          yPos += 30;
+        } catch (err) {
+          console.error('Erreur chargement signature:', err);
+          doc.setFont('helvetica', 'italic');
+          doc.text(lang === 'fr' ? 'Erreur chargement signature' : 'Signature loading error', 14, yPos);
+          yPos += 8;
+        }
+      } else {
+        doc.setFont('helvetica', 'italic');
+        doc.text(lang === 'fr' ? 'Aucune signature enregistrée' : 'No signature recorded', 14, yPos);
+        yPos += 8;
+      }
+
+      if (fiche.date_validation) {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.text(
+          `${lang === 'fr' ? 'Signé le' : 'Signed on'} ${format(new Date(fiche.date_validation), 'PPP à HH:mm', { locale: dateLocale })}`,
+          14,
+          yPos
         );
-        
-        const pageImgData = pageCanvas.toDataURL('image/png', 1.0);
-        pdf.addImage(pageImgData, 'PNG', 10, 10, imgWidth, pdfHeight - 20);
+      }
+
+      // Footer
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.text(
+          `Camping Paradis - ${format(new Date(), 'PPP', { locale: dateLocale })} - Page ${i}/${pageCount}`,
+          105,
+          287,
+          { align: 'center' }
+        );
       }
 
       const fileName = `Arrivee_${fiche.client_nom}_${fiche.client_prenom}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-      pdf.save(fileName);
+      doc.save(fileName);
       
       toast.success(lang === 'fr' ? 'PDF téléchargé avec succès' : 'PDF downloaded successfully');
     } catch (error) {
