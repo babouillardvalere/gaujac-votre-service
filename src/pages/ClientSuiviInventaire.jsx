@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Clock, CheckCircle, AlertCircle, Loader2, Package, Wrench, Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { format } from 'date-fns';
@@ -28,6 +29,8 @@ export default function ClientSuiviInventaire() {
     dateFin: ''
   });
 
+  const [searchTriggered, setSearchTriggered] = useState(false);
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -40,24 +43,43 @@ export default function ClientSuiviInventaire() {
     checkAuth();
   }, [navigate]);
 
-  // Récupérer TOUS les suivis du client (historique complet)
-  const { data: suivis = [], isLoading } = useQuery({
-    queryKey: ['suivis-inventaire', currentUser?.email],
+  // Charger les suivis UNIQUEMENT après recherche
+  const { data: suivis = [], isLoading, refetch } = useQuery({
+    queryKey: ['suivis-inventaire', search, filters.dateDebut, filters.dateFin],
     queryFn: async () => {
-      if (!currentUser?.email) return [];
+      // Ne charger que si une recherche est déclenchée
+      if (!searchTriggered || !search || !filters.dateDebut || !filters.dateFin) {
+        return [];
+      }
       
       // Récupérer tous les suivis
       const allSuivis = await base44.entities.SuiviInventaire.list('-created_date', 200);
       
-      // Filtrer par email client
-      return allSuivis.filter(s => 
-        s.client_email === currentUser.email ||
-        (currentUser.full_name && s.client_nom && s.client_prenom && 
-         `${s.client_prenom} ${s.client_nom}`.toLowerCase() === currentUser.full_name.toLowerCase())
-      );
+      // Filtrer par nom/prénom ET dates
+      return allSuivis.filter(s => {
+        const matchNom = s.client_nom?.toLowerCase().includes(search.toLowerCase()) ||
+                        s.client_prenom?.toLowerCase().includes(search.toLowerCase());
+        
+        const matchDates = (!filters.dateDebut || s.date_arrivee >= filters.dateDebut) &&
+                          (!filters.dateFin || s.date_depart <= filters.dateFin);
+        
+        return matchNom && matchDates;
+      });
     },
-    enabled: !!currentUser
+    enabled: false // Désactiver le chargement automatique
   });
+
+  // Fonction de recherche
+  const handleSearch = () => {
+    if (!search || !filters.dateDebut || !filters.dateFin) {
+      toast.error(lang === 'fr' 
+        ? 'Veuillez renseigner le nom/prénom et les dates'
+        : 'Please provide name and dates');
+      return;
+    }
+    setSearchTriggered(true);
+    refetch();
+  };
 
   // Génération de la timeline détaillée depuis les timelines stockées
   const generateTimelineFromData = (timeline) => {
@@ -168,16 +190,33 @@ export default function ClientSuiviInventaire() {
             setSearch={setSearch}
             filters={filters}
             setFilters={setFilters}
+            onSearch={handleSearch}
           />
 
           {/* Compteur de résultats */}
-          {suivis.length > 0 && (
+          {searchTriggered && suivis.length > 0 && (
             <div className="mb-4 text-sm text-gray-600">
               {filteredSuivis.length} {lang === 'fr' ? 'résultat(s) trouvé(s)' : 'result(s) found'}
             </div>
           )}
 
-          {suivis.length === 0 ? (
+          {!searchTriggered ? (
+            <Card className="border-2 border-[#00AEEF]/30 rounded-xl">
+              <CardContent className="p-12 text-center">
+                <Package className="w-16 h-16 mx-auto mb-4 text-[#00AEEF]" />
+                <p className="text-gray-700 font-heading text-lg mb-2">
+                  {lang === 'fr' 
+                    ? '🔍 Rechercher un suivi d\'intervention' 
+                    : '🔍 Search intervention tracking'}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {lang === 'fr'
+                    ? 'Veuillez renseigner votre nom/prénom et les dates de séjour pour consulter vos suivis'
+                    : 'Please provide your name and stay dates to view your tracking'}
+                </p>
+              </CardContent>
+            </Card>
+          ) : suivis.length === 0 ? (
             <Card className="border-2 border-gray-200 rounded-xl">
               <CardContent className="p-12 text-center">
                 <Package className="w-16 h-16 mx-auto mb-4 text-gray-300" />
