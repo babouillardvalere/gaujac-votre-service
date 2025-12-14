@@ -23,7 +23,9 @@ export default function ClientSuiviInventaire() {
   const [filters, setFilters] = useState({
     statut: 'tous',
     service: 'tous',
-    typeObjet: 'tous'
+    typeObjet: 'tous',
+    dateDebut: '',
+    dateFin: ''
   });
 
   useEffect(() => {
@@ -38,48 +40,23 @@ export default function ClientSuiviInventaire() {
     checkAuth();
   }, [navigate]);
 
-  // Récupérer la fiche d'arrivée du séjour EN COURS
-  const { data: ficheArriveeActuelle } = useQuery({
-    queryKey: ['fiche-arrivee-actuelle', currentUser?.email],
+  // Récupérer TOUS les suivis du client (historique complet)
+  const { data: suivis = [], isLoading } = useQuery({
+    queryKey: ['suivis-inventaire', currentUser?.email],
     queryFn: async () => {
-      if (!currentUser?.email) return null;
+      if (!currentUser?.email) return [];
       
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      // Récupérer tous les suivis
+      const allSuivis = await base44.entities.SuiviInventaire.list('-created_date', 200);
       
-      // Récupérer toutes les fiches et filtrer localement
-      const allFiches = await base44.entities.FicheArrivee.list('-created_date', 100);
-      
-      // Filtrer par email OU par correspondance nom/prénom de l'utilisateur
-      const fiches = allFiches.filter(f => 
-        f.client_email === currentUser.email || 
-        (currentUser.full_name && f.client_nom && f.client_prenom && 
-         `${f.client_prenom} ${f.client_nom}`.toLowerCase() === currentUser.full_name.toLowerCase())
+      // Filtrer par email client
+      return allSuivis.filter(s => 
+        s.client_email === currentUser.email ||
+        (currentUser.full_name && s.client_nom && s.client_prenom && 
+         `${s.client_prenom} ${s.client_nom}`.toLowerCase() === currentUser.full_name.toLowerCase())
       );
-      
-      // Trouver la fiche du séjour actif
-      return fiches.find(f => {
-        const arrivee = new Date(f.date_arrivee);
-        const depart = new Date(f.date_depart);
-        arrivee.setHours(0, 0, 0, 0);
-        depart.setHours(0, 0, 0, 0);
-        return arrivee <= today && today <= depart;
-      }) || null;
     },
     enabled: !!currentUser
-  });
-
-  // Récupérer UNIQUEMENT les suivis du séjour EN COURS
-  const { data: suivis = [], isLoading } = useQuery({
-    queryKey: ['suivis-inventaire', ficheArriveeActuelle?.id],
-    queryFn: async () => {
-      if (!ficheArriveeActuelle?.id) return [];
-      // FILTRAGE STRICT : uniquement les suivis liés à la fiche d'arrivée du séjour actuel
-      return await base44.entities.SuiviInventaire.filter({ 
-        fiche_arrivee_id: ficheArriveeActuelle.id 
-      }, '-created_date', 50);
-    },
-    enabled: !!ficheArriveeActuelle
   });
 
   // Génération de la timeline détaillée depuis les timelines stockées
@@ -105,6 +82,13 @@ export default function ClientSuiviInventaire() {
       suivi.client_prenom?.toLowerCase().includes(search.toLowerCase()) ||
       suivi.logement?.toLowerCase().includes(search.toLowerCase());
 
+    // Filtre dates
+    const matchDateDebut = !filters.dateDebut || 
+      (suivi.date_arrivee && suivi.date_arrivee >= filters.dateDebut);
+    
+    const matchDateFin = !filters.dateFin || 
+      (suivi.date_depart && suivi.date_depart <= filters.dateFin);
+
     // Filtre statut
     const matchStatut = filters.statut === 'tous' || 
       (filters.statut === 'en_attente' && (suivi.statut_menage === 'en_attente' || suivi.statut_technique === 'en_attente')) ||
@@ -123,7 +107,7 @@ export default function ClientSuiviInventaire() {
       (filters.typeObjet === 'casse' && [...(suivi.items_menage || []), ...(suivi.items_technique || [])].some(i => i.motif === 'cassé')) ||
       (filters.typeObjet === 'sale' && [...(suivi.items_menage || []), ...(suivi.items_technique || [])].some(i => i.motif === 'sale'));
 
-    return matchSearch && matchStatut && matchService && matchTypeObjet;
+    return matchSearch && matchDateDebut && matchDateFin && matchStatut && matchService && matchTypeObjet;
   });
 
   const getStatutConfig = (statut) => {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, Calendar } from 'lucide-react';
 import { useTranslation } from '../translations';
 
 export default function SuiviRechercheBar({ search, setSearch, filters, setFilters }) {
@@ -14,11 +14,39 @@ export default function SuiviRechercheBar({ search, setSearch, filters, setFilte
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
         <Input
           type="text"
-          placeholder={lang === 'fr' ? 'Rechercher un client, logement...' : 'Search client, accommodation...'}
+          placeholder={lang === 'fr' ? 'Rechercher nom, prénom, logement...' : 'Search name, accommodation...'}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-10 border-2 border-purple-300/50 rounded-xl"
         />
+      </div>
+
+      {/* Filtres par dates */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="text-xs font-heading text-purple-700 mb-1 block flex items-center gap-1">
+            <Calendar className="w-3 h-3" />
+            {lang === 'fr' ? 'Date d\'arrivée (depuis)' : 'Arrival date (from)'}
+          </label>
+          <Input
+            type="date"
+            value={filters.dateDebut}
+            onChange={(e) => setFilters({ ...filters, dateDebut: e.target.value })}
+            className="border-2 border-purple-300/50 rounded-xl"
+          />
+        </div>
+        <div>
+          <label className="text-xs font-heading text-purple-700 mb-1 block flex items-center gap-1">
+            <Calendar className="w-3 h-3" />
+            {lang === 'fr' ? 'Date de départ (jusqu\'à)' : 'Departure date (until)'}
+          </label>
+          <Input
+            type="date"
+            value={filters.dateFin}
+            onChange={(e) => setFilters({ ...filters, dateFin: e.target.value })}
+            className="border-2 border-purple-300/50 rounded-xl"
+          />
+        </div>
       </div>
 
       {/* Filtres avancés */}
