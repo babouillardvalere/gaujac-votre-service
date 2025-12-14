@@ -72,6 +72,19 @@ export default function ClientControleInventaire() {
   const [autorisationAcces, setAutorisationAcces] = useState('');
   const [plageHoraire, setPlageHoraire] = useState('');
 
+  // Générer ou récupérer le stay_id unique
+  const getStayId = () => {
+    let stayId = sessionStorage.getItem('stay_id');
+    if (!stayId) {
+      const logement = numero || 'XX';
+      const dateFormatted = (dateArrivee || new Date().toISOString().split('T')[0]).replace(/-/g, '');
+      const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+      stayId = `ARR-${logement}-${dateFormatted}-${random}`;
+      sessionStorage.setItem('stay_id', stayId);
+    }
+    return stayId;
+  };
+
   useEffect(() => {
     if (!nom || !categorie) {
       navigate(createPageUrl('ClientArriveeIdentite'));
@@ -499,7 +512,10 @@ export default function ClientControleInventaire() {
             `🔐 Access authorization: ${autorisationAcces === 'oui' ? 'YES' : 'NO - ' + plageHoraire}\n` +
             `⚡ Level: ${isUrgentGlobal ? '🚨 URGENT' : '⚪ NORMAL'}`;
 
+        const stayId = getStayId();
+        
         const incidentMenage = await base44.entities.Incident.create({
+          stay_id: stayId,
           type: 'menage',
           categorie: 'autre',
           description: descriptionMenage,
@@ -562,7 +578,10 @@ export default function ClientControleInventaire() {
             `🔐 Access authorization: ${autorisationAcces === 'oui' ? 'YES' : 'NO - ' + plageHoraire}\n` +
             `⚡ Level: ${isUrgentGlobal ? '🚨 URGENT' : '⚪ NORMAL'}`;
 
+        const stayId = getStayId();
+        
         const incidentTechnique = await base44.entities.Incident.create({
+          stay_id: stayId,
           type: 'technique',
           categorie: 'divers_technique',
           description: descriptionTechnique,
