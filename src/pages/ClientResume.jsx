@@ -259,24 +259,27 @@ export default function ClientResume() {
                 {lang === 'fr' ? 'État de l\'inventaire' : 'Inventory Status'}
               </h2>
 
-              {/* Objets validés */}
+              {/* Objets validés - Liste complète */}
               {fiche.inventaire_objets_valides?.length > 0 && (
                 <div className="mb-4">
                   <h3 className="font-heading text-sm text-green-700 mb-2 flex items-center gap-2">
                     <Check className="w-4 h-4" />
                     {lang === 'fr' ? 'Objets conformes' : 'Items OK'} ({fiche.inventaire_objets_valides.length})
                   </h3>
-                  <div className="p-3 bg-green-50 rounded-lg">
-                    <p className="text-sm text-green-800">
-                      {lang === 'fr' 
-                        ? `${fiche.inventaire_objets_valides.length} objet(s) vérifié(s) et conforme(s)`
-                        : `${fiche.inventaire_objets_valides.length} item(s) checked and OK`}
-                    </p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {fiche.inventaire_objets_valides.map((obj, idx) => (
+                      <div key={idx} className="p-2 bg-green-50 rounded-lg border border-green-200">
+                        <p className="text-xs text-green-800 flex items-center gap-1">
+                          <Check className="w-3 h-3 flex-shrink-0" />
+                          <span className="truncate">{typeof obj === 'string' ? obj : obj.label || obj}</span>
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
 
-              {/* Objets manquants */}
+              {/* Objets manquants/cassés/inutilisables */}
               {fiche.inventaire_objets_manquants?.length > 0 && (
                 <div>
                   <h3 className="font-heading text-sm text-red-700 mb-2 flex items-center gap-2">
@@ -284,22 +287,52 @@ export default function ClientResume() {
                     {lang === 'fr' ? 'Objets signalés' : 'Reported Items'} ({fiche.inventaire_objets_manquants.length})
                   </h3>
                   <div className="space-y-2">
-                    {fiche.inventaire_objets_manquants.map((obj, idx) => (
-                      <div key={idx} className="p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
-                        <p className="font-heading text-sm text-red-900">
-                          {typeof obj === 'string' ? obj : obj.objet}
-                        </p>
-                        {obj.commentaire && (
-                          <p className="text-xs text-red-700 mt-1">{obj.commentaire}</p>
-                        )}
-                        {obj.critique && (
-                          <span className="inline-block mt-2 px-2 py-1 bg-red-600 text-white text-xs rounded">
-                            🚨 {lang === 'fr' ? 'CRITIQUE' : 'CRITICAL'}
-                          </span>
-                        )}
-                      </div>
-                    ))}
+                    {fiche.inventaire_objets_manquants.map((obj, idx) => {
+                      const objet = typeof obj === 'string' ? obj : obj.objet || obj.label || obj.nom;
+                      const commentaire = typeof obj === 'object' ? obj.commentaire || obj.motif : null;
+                      const quantite = typeof obj === 'object' ? obj.quantite : null;
+                      const statut = typeof obj === 'object' ? obj.statut : null;
+                      const critique = typeof obj === 'object' ? obj.critique : false;
+                      
+                      return (
+                        <div key={idx} className="p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <p className="font-heading text-sm text-red-900">
+                                {objet}
+                                {quantite && ` (x${quantite})`}
+                              </p>
+                              {statut && (
+                                <p className="text-xs text-red-700 mt-1">
+                                  {statut === 'manquant' && (lang === 'fr' ? '❌ Manquant' : '❌ Missing')}
+                                  {statut === 'casse' && (lang === 'fr' ? '🔨 Cassé' : '🔨 Broken')}
+                                  {statut === 'inutilisable' && (lang === 'fr' ? '⚠️ Inutilisable' : '⚠️ Unusable')}
+                                </p>
+                              )}
+                              {commentaire && (
+                                <p className="text-xs text-red-700 mt-1 italic">"{commentaire}"</p>
+                              )}
+                            </div>
+                            {critique && (
+                              <span className="inline-block ml-2 px-2 py-1 bg-red-600 text-white text-xs rounded whitespace-nowrap">
+                                🚨 {lang === 'fr' ? 'CRITIQUE' : 'CRITICAL'}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
+                </div>
+              )}
+              
+              {/* Si aucun objet signalé */}
+              {(!fiche.inventaire_objets_manquants || fiche.inventaire_objets_manquants.length === 0) && (
+                <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                  <p className="text-sm text-green-800 flex items-center gap-2">
+                    <Check className="w-4 h-4" />
+                    {lang === 'fr' ? 'Aucun problème signalé' : 'No issues reported'}
+                  </p>
                 </div>
               )}
             </CardContent>
