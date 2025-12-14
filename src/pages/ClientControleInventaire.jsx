@@ -436,6 +436,7 @@ export default function ClientControleInventaire() {
       const ficheArrivee = await base44.entities.FicheArrivee.create({
         client_nom: nom,
         client_prenom: prenom,
+        client_email: userEmail,
         date_arrivee: dateArrivee,
         date_depart: dateDepart,
         numero_logement: numero,
