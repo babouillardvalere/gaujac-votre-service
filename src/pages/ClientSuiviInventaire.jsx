@@ -118,18 +118,45 @@ export default function ClientSuiviInventaire() {
     setSearchTriggered(true);
   };
 
-  // Génération de la timeline depuis les données - UNIQUEMENT les actions réelles
-  const generateTimelineFromData = (timeline) => {
-    if (!timeline || timeline.length === 0) return [];
+  // Génération timeline - ACTIONS HUMAINES UNIQUEMENT (pas de notification)
+  const generateTimelineFromData = (timeline, items) => {
+    if (!timeline || timeline.length === 0) {
+      // Aucune action humaine = afficher la demande initiale uniquement
+      return items?.length > 0 ? [{
+        time: format(new Date(), 'dd/MM HH:mm', { locale: fr }),
+        status: 'demande_recue',
+        detail: lang === 'fr' 
+          ? 'Demande transmise au service' 
+          : 'Request sent to service',
+        utilisateur: ''
+      }] : [];
+    }
     
-    // Filtrer les états automatiques ou invalides
+    // Filtrer STRICTEMENT : enlever notification, états auto, et garder actions réelles
     const validEvents = timeline.filter(event => {
-      // Rejeter les états fantômes
-      const invalidStatus = ['notification', 'en_attente_intervenant', 'urgence'];
-      return !invalidStatus.includes(event.status?.toLowerCase());
+      const statusLower = event.status?.toLowerCase().replace(/\s+/g, '_');
+      const invalidStatus = [
+        'notification', 
+        'notification_envoyee',
+        'en_attente_intervenant', 
+        'urgence',
+        'automatique'
+      ];
+      return !invalidStatus.includes(statusLower);
     });
     
-    return validEvents
+    // Ajouter la demande initiale en première position si des actions existent
+    const events = validEvents.length > 0 ? [
+      {
+        timestamp: Math.min(...validEvents.map(e => e.timestamp)) - 1000,
+        status: 'demande_recue',
+        detail: lang === 'fr' ? 'Demande transmise au service' : 'Request sent to service',
+        utilisateur: ''
+      },
+      ...validEvents
+    ] : validEvents;
+    
+    return events
       .sort((a, b) => a.timestamp - b.timestamp)
       .map(event => ({
         time: format(new Date(event.timestamp), 'dd/MM HH:mm', { locale: fr }),
@@ -423,16 +450,49 @@ export default function ClientSuiviInventaire() {
                         <div className="mt-6 p-4 bg-pink-50 rounded-xl border border-pink-200">
                           <h4 className="font-heading text-sm text-pink-800 mb-3 flex items-center gap-2">
                             <Sparkles className="w-4 h-4" />
-                            📅 {lang === 'fr' ? 'Chronologie Ménage' : 'Housekeeping Timeline'}
+                            📅 {lang === 'fr' ? 'État Ménage' : 'Housekeeping Status'}
                           </h4>
-                          {suivi.timeline_menage && suivi.timeline_menage.length > 0 ? (
-                            <SuiviTimeline events={generateTimelineFromData(suivi.timeline_menage)} />
-                          ) : (
-                            <div className="text-sm text-gray-600 italic flex items-center gap-2">
-                              <span>⏳</span>
-                              <span>{lang === 'fr' ? 'En attente de prise en charge' : 'Waiting to be taken in charge'}</span>
-                            </div>
-                          )}
+                          {(() => {
+                            const timeline = generateTimelineFromData(suivi.timeline_menage, suivi.items_menage);
+                            const hasPriseEnCharge = timeline.some(e => 
+                              e.status?.toLowerCase().includes('prise_en_charge') ||
+                              e.status?.toLowerCase().includes('arrive') ||
+                              e.status?.toLowerCase().includes('en_cours')
+                            );
+                            
+                            if (timeline.length === 0 || !hasPriseEnCharge) {
+                              return (
+                                <div className="space-y-3">
+                                  <div className="flex gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-lg">📨</div>
+                                    <div>
+                                      <p className="font-heading text-gray-700">
+                                        {lang === 'fr' ? 'Demande transmise au service ménage' : 'Request sent to housekeeping'}
+                                      </p>
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        {format(new Date(suivi.created_date), 'dd/MM/yyyy à HH:mm', { locale: fr })}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-lg">⏳</div>
+                                    <div>
+                                      <p className="font-heading text-orange-700">
+                                        {lang === 'fr' ? 'En attente de prise en charge' : 'Waiting to be taken in charge'}
+                                      </p>
+                                      <p className="text-xs text-gray-600 mt-1">
+                                        {lang === 'fr' 
+                                          ? 'Le service ménage n\'a pas encore pris cette intervention' 
+                                          : 'Housekeeping has not taken this intervention yet'}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            }
+                            
+                            return <SuiviTimeline events={timeline} />;
+                          })()}
                         </div>
                       )}
 
@@ -441,16 +501,49 @@ export default function ClientSuiviInventaire() {
                         <div className="mt-6 p-4 bg-purple-50 rounded-xl border border-purple-200">
                           <h4 className="font-heading text-sm text-purple-800 mb-3 flex items-center gap-2">
                             <Wrench className="w-4 h-4" />
-                            📅 {lang === 'fr' ? 'Chronologie Technique' : 'Technical Timeline'}
+                            📅 {lang === 'fr' ? 'État Technique' : 'Technical Status'}
                           </h4>
-                          {suivi.timeline_technique && suivi.timeline_technique.length > 0 ? (
-                            <SuiviTimeline events={generateTimelineFromData(suivi.timeline_technique)} />
-                          ) : (
-                            <div className="text-sm text-gray-600 italic flex items-center gap-2">
-                              <span>⏳</span>
-                              <span>{lang === 'fr' ? 'En attente de prise en charge' : 'Waiting to be taken in charge'}</span>
-                            </div>
-                          )}
+                          {(() => {
+                            const timeline = generateTimelineFromData(suivi.timeline_technique, suivi.items_technique);
+                            const hasPriseEnCharge = timeline.some(e => 
+                              e.status?.toLowerCase().includes('prise_en_charge') ||
+                              e.status?.toLowerCase().includes('arrive') ||
+                              e.status?.toLowerCase().includes('en_cours')
+                            );
+                            
+                            if (timeline.length === 0 || !hasPriseEnCharge) {
+                              return (
+                                <div className="space-y-3">
+                                  <div className="flex gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-lg">📨</div>
+                                    <div>
+                                      <p className="font-heading text-gray-700">
+                                        {lang === 'fr' ? 'Demande transmise au service technique' : 'Request sent to technical service'}
+                                      </p>
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        {format(new Date(suivi.created_date), 'dd/MM/yyyy à HH:mm', { locale: fr })}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-lg">⏳</div>
+                                    <div>
+                                      <p className="font-heading text-orange-700">
+                                        {lang === 'fr' ? 'En attente de prise en charge' : 'Waiting to be taken in charge'}
+                                      </p>
+                                      <p className="text-xs text-gray-600 mt-1">
+                                        {lang === 'fr' 
+                                          ? 'Le service technique n\'a pas encore pris cette intervention' 
+                                          : 'Technical service has not taken this intervention yet'}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            }
+                            
+                            return <SuiviTimeline events={timeline} />;
+                          })()}
                         </div>
                       )}
 
