@@ -80,35 +80,45 @@ export default function ClientResume() {
       if (!element) return;
 
       const canvas = await html2canvas(element, {
-        scale: 1.5,
+        scale: 2.5,
         logging: false,
         useCORS: true,
         allowTaint: true,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight,
+        imageTimeout: 0,
+        onclone: (clonedDoc) => {
+          const clonedElement = clonedDoc.getElementById('resume-content');
+          if (clonedElement) {
+            clonedElement.style.padding = '20px';
+          }
+        }
       });
 
       const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210;
+      const margin = 10;
+      const imgWidth = 210 - (2 * margin);
       const pageHeight = 297;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
       let heightLeft = imgHeight;
-      let position = 0;
+      let position = margin;
 
-      pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+      pdf.addImage(canvas.toDataURL('image/png', 1.0), 'PNG', margin, position, imgWidth, imgHeight);
+      heightLeft -= (pageHeight - 2 * margin);
 
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
+      while (heightLeft > 0) {
         pdf.addPage();
-        pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, position, imgWidth, imgHeight);
+        position = -(imgHeight - heightLeft) + margin;
+        pdf.addImage(canvas.toDataURL('image/png', 1.0), 'PNG', margin, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
       }
 
       const fileName = `Arrivee_${fiche.client_nom}_${fiche.client_prenom}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
       pdf.save(fileName);
       
-      toast.success(lang === 'fr' ? 'PDF téléchargé' : 'PDF downloaded');
+      toast.success(lang === 'fr' ? 'PDF téléchargé avec succès' : 'PDF downloaded successfully');
     } catch (error) {
       console.error(error);
       toast.error(lang === 'fr' ? 'Erreur génération PDF' : 'PDF generation error');
@@ -355,9 +365,9 @@ export default function ClientResume() {
             </Card>
           )}
 
-          {/* Signature */}
-          <Card className="border-2 border-[#00AEEF]/30 rounded-xl break-inside-avoid">
-            <CardContent className="p-6">
+          {/* Signature - Positionnement amélioré pour PDF */}
+          <Card className="border-2 border-[#00AEEF]/30 rounded-xl" style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+            <CardContent className="p-6 pb-8">
               <h2 className="font-heading text-xl text-[#0077A8] mb-4 flex items-center gap-2">
                 <span>✒️</span>
                 {lang === 'fr' ? 'Signature du client' : 'Guest Signature'}
@@ -365,11 +375,15 @@ export default function ClientResume() {
 
               {fiche.signature_url ? (
                 <div className="space-y-4">
-                  <img 
-                    src={fiche.signature_url} 
-                    alt="Signature"
-                    className="w-full max-w-md h-32 object-contain border-2 border-gray-200 rounded-lg bg-white"
-                  />
+                  <div className="bg-white p-4 rounded-lg border-2 border-gray-200 inline-block">
+                    <img 
+                      src={fiche.signature_url} 
+                      alt="Signature"
+                      className="h-28 object-contain"
+                      crossOrigin="anonymous"
+                      style={{ display: 'block', maxWidth: '400px' }}
+                    />
+                  </div>
                   <p className="text-sm text-gray-600">
                     {lang === 'fr' ? 'Signé le' : 'Signed on'} {formattedDate}
                   </p>
