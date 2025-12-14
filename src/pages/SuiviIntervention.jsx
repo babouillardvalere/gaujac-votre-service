@@ -44,7 +44,8 @@ export default function SuiviIntervention() {
     nom: sessionStorage.getItem('user_nom'),
     prenom: sessionStorage.getItem('user_prenom'),
     dateArrivee: sessionStorage.getItem('user_date_arrivee'),
-    dateDepart: sessionStorage.getItem('user_date_depart')
+    dateDepart: sessionStorage.getItem('user_date_depart'),
+    stayId: sessionStorage.getItem('stay_id')
   };
 
   // Vérifier si le séjour est terminé
@@ -84,17 +85,14 @@ export default function SuiviIntervention() {
     }
   }, [navigate]);
 
-  // Récupérer le stay_id du séjour actuel
-  const stayId = sessionStorage.getItem('stay_id');
-
   const { data: incidents = [], isLoading, refetch } = useQuery({
-    queryKey: ['suivi-incidents', stayId],
+    queryKey: ['suivi-incidents', userData.stayId],
     queryFn: async () => {
-      if (!stayId) return [];
+      if (!userData.stayId) return [];
       // FILTRAGE SÉCURISÉ À LA SOURCE : uniquement les incidents du séjour actuel
-      return await base44.entities.Incident.filter({ stay_id: stayId }, '-date_saisie', 100);
+      return await base44.entities.Incident.filter({ stay_id: userData.stayId }, '-date_saisie', 200);
     },
-    enabled: !!stayId && step === 'suivi',
+    enabled: !!userData.stayId && step === 'suivi',
     refetchInterval: 10000
   });
 
