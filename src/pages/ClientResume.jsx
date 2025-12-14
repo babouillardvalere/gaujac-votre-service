@@ -7,7 +7,7 @@ import Logo from '../components/Logo';
 import SignaturePad from '../components/SignaturePad';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Printer, Check, AlertCircle, Smile, Meh, Frown, Download, Share2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Check, AlertCircle, Smile, Meh, Frown, Download, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
@@ -70,23 +70,8 @@ export default function ClientResume() {
 
 
 
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: lang === 'fr' ? 'Résumé d\'arrivée' : 'Arrival summary',
-          text: lang === 'fr' 
-            ? `Résumé d'arrivée - ${fiche?.client_nom} ${fiche?.client_prenom}`
-            : `Arrival summary - ${fiche?.client_prenom} ${fiche?.client_nom}`,
-          url: window.location.href
-        });
-      } catch (error) {
-        console.log('Share cancelled');
-      }
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast.success(lang === 'fr' ? 'Lien copié' : 'Link copied');
-    }
+  const handleDownload = () => {
+    window.print();
   };
 
   if (isLoading) {
@@ -136,37 +121,6 @@ export default function ClientResume() {
         {/* Header - Non imprimable */}
         <div className="print:hidden mb-6">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="flex items-center justify-between mb-4">
-              <button
-                onClick={() => navigate(createPageUrl('ClientMenu'))}
-                className="flex items-center gap-2 text-[#0077A8] hover:text-[#00AEEF]"
-              >
-                <ArrowLeft className="w-5 h-5" />
-                <span className="font-heading">{t('retour')}</span>
-              </button>
-
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleShare}
-                  className="gap-2"
-                >
-                  <Share2 className="w-4 h-4" />
-                  {lang === 'fr' ? 'Partager' : 'Share'}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handlePrint}
-                  className="gap-2"
-                >
-                  <Printer className="w-4 h-4" />
-                  {lang === 'fr' ? 'Imprimer' : 'Print'}
-                </Button>
-              </div>
-            </div>
-
             <Logo className="h-16 mb-4" />
             
             <h1 className="font-handwritten text-3xl text-[#22c55e] text-center mb-2">
@@ -484,7 +438,7 @@ export default function ClientResume() {
             {lang === 'fr' ? 'Retour au menu principal' : 'Back to main menu'}
           </Button>
           <Button
-            onClick={handlePrint}
+            onClick={handleDownload}
             variant="outline"
             className="w-full h-14 border-2 border-[#00AEEF] text-[#0077A8] font-heading text-lg hover:bg-blue-50"
           >
