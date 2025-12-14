@@ -37,7 +37,8 @@ export default function ClientSuiviInventaire() {
         const user = await base44.auth.me();
         setCurrentUser(user);
       } catch {
-        navigate(createPageUrl('Home'));
+        // Autoriser l'accès sans connexion pour la recherche publique
+        setCurrentUser({ email: 'guest' });
       }
     };
     checkAuth();
