@@ -83,26 +83,48 @@ export default function ClientResume() {
       const printHiddenElements = element.querySelectorAll('.print\\:hidden');
       printHiddenElements.forEach(el => el.style.display = 'none');
 
-      // Assurer que tous les éléments sont visibles
-      element.style.width = '800px';
-      element.style.maxWidth = '800px';
-
-      const canvas = await html2canvas(element, {
-        scale: 3,
-        logging: false,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        width: element.scrollWidth,
-        height: element.scrollHeight,
-        windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight,
-        imageTimeout: 5000,
-        letterRendering: true,
-        removeContainer: false
+      // Appliquer des polices système pour le PDF
+      const originalFontFamily = element.style.fontFamily;
+      element.style.fontFamily = 'Arial, Helvetica, sans-serif';
+      
+      // Remplacer temporairement les polices personnalisées
+      const allElements = element.querySelectorAll('*');
+      const originalFonts = [];
+      allElements.forEach((el, index) => {
+        originalFonts[index] = el.style.fontFamily;
+        if (el.classList.contains('font-handwritten') || el.classList.contains('font-heading')) {
+          el.style.fontFamily = 'Arial, Helvetica, sans-serif';
+        }
       });
 
-      // Restaurer les éléments masqués
+      // Définir une largeur fixe pour le rendu
+      element.style.width = '794px';
+      element.style.maxWidth = '794px';
+
+      // Attendre que les polices soient bien appliquées
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        logging: false,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: '#ffffff',
+        width: 794,
+        height: element.scrollHeight,
+        windowWidth: 794,
+        windowHeight: element.scrollHeight,
+        imageTimeout: 0,
+        letterRendering: true,
+        foreignObjectRendering: false,
+        removeContainer: true
+      });
+
+      // Restaurer les polices originales
+      element.style.fontFamily = originalFontFamily;
+      allElements.forEach((el, index) => {
+        el.style.fontFamily = originalFonts[index] || '';
+      });
       printHiddenElements.forEach(el => el.style.display = '');
       element.style.width = '';
       element.style.maxWidth = '';
@@ -119,10 +141,9 @@ export default function ClientResume() {
       for (let i = 0; i < totalPages; i++) {
         if (i > 0) pdf.addPage();
         
-        const sourceY = i * canvas.height / totalPages;
+        const sourceY = (i * canvas.height) / totalPages;
         const sourceHeight = canvas.height / totalPages;
         
-        // Créer un canvas temporaire pour cette page
         const pageCanvas = document.createElement('canvas');
         pageCanvas.width = canvas.width;
         pageCanvas.height = sourceHeight;
@@ -134,8 +155,8 @@ export default function ClientResume() {
           0, 0, canvas.width, sourceHeight
         );
         
-        const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.98);
-        pdf.addImage(pageImgData, 'JPEG', 10, 10, imgWidth, pdfHeight - 20);
+        const pageImgData = pageCanvas.toDataURL('image/png', 1.0);
+        pdf.addImage(pageImgData, 'PNG', 10, 10, imgWidth, pdfHeight - 20);
       }
 
       const fileName = `Arrivee_${fiche.client_nom}_${fiche.client_prenom}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
