@@ -46,40 +46,53 @@ export default function ClientSuiviInventaire() {
 
   // Charger les suivis UNIQUEMENT après recherche
   const { data: suivis = [], isLoading, refetch } = useQuery({
-    queryKey: ['suivis-inventaire', search, filters.dateDebut, filters.dateFin],
+    queryKey: ['suivis-inventaire', searchTriggered, search, filters.dateDebut, filters.dateFin],
     queryFn: async () => {
       // Ne charger que si une recherche est déclenchée
-      if (!searchTriggered || !search || !filters.dateDebut || !filters.dateFin) {
+      if (!searchTriggered) {
         return [];
       }
       
       // Récupérer tous les suivis
       const allSuivis = await base44.entities.SuiviInventaire.list('-created_date', 200);
       
-      // Filtrer par nom/prénom ET dates
-      return allSuivis.filter(s => {
-        const matchNom = s.client_nom?.toLowerCase().includes(search.toLowerCase()) ||
-                        s.client_prenom?.toLowerCase().includes(search.toLowerCase());
+      console.log('Total suivis:', allSuivis.length);
+      
+      // Filtrer par nom/prénom avec recherche flexible
+      const searchLower = search.toLowerCase().trim();
+      const filtered = allSuivis.filter(s => {
+        const nomComplet = `${s.client_prenom || ''} ${s.client_nom || ''}`.toLowerCase();
+        const nomInverse = `${s.client_nom || ''} ${s.client_prenom || ''}`.toLowerCase();
         
-        const matchDates = (!filters.dateDebut || s.date_arrivee >= filters.dateDebut) &&
-                          (!filters.dateFin || s.date_depart <= filters.dateFin);
+        const matchNom = !search || 
+                        nomComplet.includes(searchLower) ||
+                        nomInverse.includes(searchLower) ||
+                        s.client_nom?.toLowerCase().includes(searchLower) ||
+                        s.client_prenom?.toLowerCase().includes(searchLower);
+        
+        // Vérifier les dates de séjour qui chevauchent la période recherchée
+        const matchDates = !filters.dateDebut && !filters.dateFin ? true :
+                          (!filters.dateDebut || !s.date_arrivee || s.date_arrivee <= filters.dateFin) &&
+                          (!filters.dateFin || !s.date_depart || s.date_depart >= filters.dateDebut);
         
         return matchNom && matchDates;
       });
+      
+      console.log('Suivis filtrés:', filtered.length);
+      return filtered;
     },
-    enabled: false // Désactiver le chargement automatique
+    enabled: searchTriggered
   });
 
   // Fonction de recherche
   const handleSearch = () => {
-    if (!search || !filters.dateDebut || !filters.dateFin) {
+    if (!search) {
       toast.error(lang === 'fr' 
-        ? 'Veuillez renseigner le nom/prénom et les dates'
-        : 'Please provide name and dates');
+        ? 'Veuillez renseigner un nom/prénom'
+        : 'Please provide a name');
       return;
     }
     setSearchTriggered(true);
-    refetch();
   };
 
   // Génération de la timeline détaillée depuis les timelines stockées

@@ -36,27 +36,25 @@ export default function SuiviRechercheBar({ search, setSearch, filters, setFilte
         <div>
           <label className="text-xs font-heading text-purple-700 mb-1 block flex items-center gap-1">
             <Calendar className="w-3 h-3" />
-            {lang === 'fr' ? 'Date d\'arrivée (obligatoire)' : 'Arrival date (required)'}
+            {lang === 'fr' ? 'Date d\'arrivée (facultatif)' : 'Arrival date (optional)'}
           </label>
           <Input
             type="date"
             value={filters.dateDebut}
             onChange={(e) => setFilters({ ...filters, dateDebut: e.target.value })}
             className="border-2 border-purple-300/50 rounded-xl"
-            required
           />
         </div>
         <div>
           <label className="text-xs font-heading text-purple-700 mb-1 block flex items-center gap-1">
             <Calendar className="w-3 h-3" />
-            {lang === 'fr' ? 'Date de départ (obligatoire)' : 'Departure date (required)'}
+            {lang === 'fr' ? 'Date de départ (facultatif)' : 'Departure date (optional)'}
           </label>
           <Input
             type="date"
             value={filters.dateFin}
             onChange={(e) => setFilters({ ...filters, dateFin: e.target.value })}
             className="border-2 border-purple-300/50 rounded-xl"
-            required
           />
         </div>
       </div>
