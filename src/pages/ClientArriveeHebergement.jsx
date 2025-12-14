@@ -68,6 +68,13 @@ export default function ClientArriveeHebergement() {
       sessionStorage.setItem('arrivee_type_logement', selectedType);
       sessionStorage.setItem('arrivee_categorie', selectedCategorie);
       sessionStorage.setItem('arrivee_numero', selectedNumero);
+      
+      // Mettre à jour stay_id avec le vrai numéro de logement
+      const dateArrivee = sessionStorage.getItem('arrivee_date_arrivee') || new Date().toISOString().split('T')[0];
+      const dateFormatted = dateArrivee.replace(/-/g, '');
+      const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const stayId = `ARR-${selectedNumero}-${dateFormatted}-${random}`;
+      sessionStorage.setItem('stay_id', stayId);
 
       await base44.entities.DossierArrivee.update(dossierId, {
         type_logement: selectedType,
