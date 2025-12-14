@@ -99,26 +99,16 @@ export default function SuiviIntervention() {
   // Les incidents sont déjà filtrés correctement par stay_id
   const filteredIncidents = incidents;
 
-  const checkAccess = () => {
-    if (userData.dateArrivee && userData.dateDepart && incidents.length > 0 && filteredIncidents.length === 0) {
-      setAccessDenied(true);
-      return false;
-    }
-    setAccessDenied(false);
-    return true;
-  };
-
   useEffect(() => {
-    if (step === 'suivi' && incidents.length > 0) {
-      checkAccess();
+    if (step === 'suivi' && userData.stayId) {
+      setAccessDenied(false);
+    } else if (step === 'suivi' && !userData.stayId) {
+      setAccessDenied(true);
     }
-  }, [incidents, step]);
+  }, [step, userData.stayId]);
 
   const activeIncidents = filteredIncidents.filter(i => i.statut !== 'resolu');
   const resolvedIncidents = filteredIncidents.filter(i => i.statut === 'resolu');
-  
-  // Historique complet (toutes interventions passées du logement, visible après le séjour actuel)
-  const allPastIncidents = incidents.filter(i => i.statut === 'resolu' && !filteredIncidents.includes(i));
 
   const toggleExpand = (id) => {
     setExpandedIncidents(prev => ({ ...prev, [id]: !prev[id] }));
@@ -495,7 +485,7 @@ export default function SuiviIntervention() {
               <div className="flex justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-[#00AEEF]" />
               </div>
-            ) : filteredIncidents.length === 0 && allPastIncidents.length === 0 ? (
+            ) : filteredIncidents.length === 0 ? (
               <div className="text-center py-12">
                 <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="font-heading text-xl text-[#0077A8] mb-2">{t('aucun_signalement')}</h3>
@@ -518,15 +508,6 @@ export default function SuiviIntervention() {
                     <CheckCircle className="w-4 h-4 mr-1" />
                     {lang === 'en' ? 'Resolved' : 'Résolues'} ({resolvedIncidents.length})
                   </TabsTrigger>
-                  {allPastIncidents.length > 0 && (
-                    <TabsTrigger 
-                      value="history" 
-                      className="flex-1 rounded-lg font-heading text-sm data-[state=active]:bg-gray-500 data-[state=active]:text-white"
-                    >
-                      <History className="w-4 h-4 mr-1" />
-                      {lang === 'en' ? 'History' : 'Historique'}
-                    </TabsTrigger>
-                  )}
                 </TabsList>
                 
                 <TabsContent value="current" className="space-y-4">
@@ -647,34 +628,6 @@ export default function SuiviIntervention() {
                   </div>
                 )}
                 </TabsContent>
-                
-                {allPastIncidents.length > 0 && (
-                  <TabsContent value="history" className="space-y-3">
-                    <p className="text-sm text-gray-500 font-body mb-4">
-                      {lang === 'en' 
-                        ? 'Previous interventions on this accommodation' 
-                        : 'Interventions précédentes sur cet hébergement'}
-                    </p>
-                    {allPastIncidents.slice(0, 10).map((incident) => (
-                      <Card key={incident.id} className="border border-gray-100 rounded-xl">
-                        <CardContent className="p-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg">{categoryEmojis[incident.categorie]}</span>
-                              <div>
-                                <p className="text-sm font-body text-gray-700 line-clamp-1">{incident.description}</p>
-                                <p className="text-xs text-gray-400">
-                                  {incident.date_saisie && format(new Date(incident.date_saisie), 'dd/MM/yyyy', { locale: fr })}
-                                </p>
-                              </div>
-                            </div>
-                            <Badge className="bg-gray-200 text-gray-600 text-xs">{t('resolu')}</Badge>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </TabsContent>
-                )}
               </Tabs>
             )}
           </motion.div>
