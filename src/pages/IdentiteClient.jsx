@@ -65,6 +65,14 @@ export default function IdentiteClient() {
       sessionStorage.setItem('user_prenom', formData.prenom);
       sessionStorage.setItem('user_date_arrivee', formData.dateArrivee);
       sessionStorage.setItem('user_date_depart', formData.dateDepart);
+      
+      // Générer stay_id unique pour ce séjour
+      const logement = sessionStorage.getItem('hebergement_numero') || 'TEMP';
+      const dateFormatted = formData.dateArrivee.replace(/-/g, '');
+      const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const stayId = `ARR-${logement}-${dateFormatted}-${random}`;
+      sessionStorage.setItem('stay_id', stayId);
+      
       navigate(createPageUrl('ConditionsClient'));
     }
   };
