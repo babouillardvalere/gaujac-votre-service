@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from '../translations';
 
-// Statuts normalisés avec icônes et couleurs
+// Machine d'état stricte - UN ÉTAT = UNE ACTION HUMAINE
 const STATUS_CONFIG = {
   'demande_recue': {
     label: { fr: 'Demande reçue', en: 'Request received' },
@@ -10,8 +10,14 @@ const STATUS_CONFIG = {
     textColor: 'text-gray-700'
   },
   'prise_en_charge': {
-    label: { fr: 'Prise en charge', en: 'Taken in charge' },
+    label: { fr: 'Intervention prise en charge', en: 'Intervention taken in charge' },
     emoji: '👤',
+    bgColor: 'bg-blue-100',
+    textColor: 'text-blue-700'
+  },
+  'intervenant_arrive': {
+    label: { fr: 'Technicien arrivé', en: 'Technician arrived' },
+    emoji: '🚗',
     bgColor: 'bg-blue-100',
     textColor: 'text-blue-700'
   },
@@ -28,11 +34,24 @@ const STATUS_CONFIG = {
     textColor: 'text-orange-700'
   },
   'reprise': {
-    label: { fr: 'Reprise de l\'intervention', en: 'Intervention resumed' },
+    label: { fr: 'Intervention reprise', en: 'Intervention resumed' },
     emoji: '▶️',
     bgColor: 'bg-indigo-100',
     textColor: 'text-indigo-700'
   },
+  'intervention_terminee': {
+    label: { fr: 'Problème résolu', en: 'Problem solved' },
+    emoji: '✅',
+    bgColor: 'bg-green-100',
+    textColor: 'text-green-700'
+  },
+  'intervenant_reparti': {
+    label: { fr: 'Technicien reparti', en: 'Technician left' },
+    emoji: '🚶',
+    bgColor: 'bg-gray-100',
+    textColor: 'text-gray-600'
+  },
+  // Alias pour compatibilité
   'termine': {
     label: { fr: 'Problème résolu', en: 'Problem solved' },
     emoji: '✅',
@@ -44,19 +63,6 @@ const STATUS_CONFIG = {
     emoji: '✅',
     bgColor: 'bg-green-100',
     textColor: 'text-green-700'
-  },
-  // Fallback pour anciens statuts
-  'cree': {
-    label: { fr: 'Demande reçue', en: 'Request received' },
-    emoji: '📨',
-    bgColor: 'bg-gray-100',
-    textColor: 'text-gray-700'
-  },
-  'notification': {
-    label: { fr: 'Notification envoyée', en: 'Notification sent' },
-    emoji: '🔔',
-    bgColor: 'bg-purple-100',
-    textColor: 'text-purple-700'
   }
 };
 

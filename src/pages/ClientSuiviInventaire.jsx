@@ -118,14 +118,21 @@ export default function ClientSuiviInventaire() {
     setSearchTriggered(true);
   };
 
-  // Génération de la timeline détaillée depuis les timelines stockées
+  // Génération de la timeline depuis les données - UNIQUEMENT les actions réelles
   const generateTimelineFromData = (timeline) => {
     if (!timeline || timeline.length === 0) return [];
     
-    return timeline
+    // Filtrer les états automatiques ou invalides
+    const validEvents = timeline.filter(event => {
+      // Rejeter les états fantômes
+      const invalidStatus = ['notification', 'en_attente_intervenant', 'urgence'];
+      return !invalidStatus.includes(event.status?.toLowerCase());
+    });
+    
+    return validEvents
       .sort((a, b) => a.timestamp - b.timestamp)
       .map(event => ({
-        time: format(new Date(event.timestamp), 'HH:mm', { locale: fr }),
+        time: format(new Date(event.timestamp), 'dd/MM HH:mm', { locale: fr }),
         status: event.status,
         detail: event.detail || '',
         utilisateur: event.utilisateur
@@ -412,24 +419,38 @@ export default function ClientSuiviInventaire() {
                       )}
 
                       {/* Timeline détaillée - MÉNAGE */}
-                      {suivi.timeline_menage && suivi.timeline_menage.length > 0 && (
+                      {suivi.items_menage && suivi.items_menage.length > 0 && (
                         <div className="mt-6 p-4 bg-pink-50 rounded-xl border border-pink-200">
                           <h4 className="font-heading text-sm text-pink-800 mb-3 flex items-center gap-2">
                             <Sparkles className="w-4 h-4" />
                             📅 {lang === 'fr' ? 'Chronologie Ménage' : 'Housekeeping Timeline'}
                           </h4>
-                          <SuiviTimeline events={generateTimelineFromData(suivi.timeline_menage)} />
+                          {suivi.timeline_menage && suivi.timeline_menage.length > 0 ? (
+                            <SuiviTimeline events={generateTimelineFromData(suivi.timeline_menage)} />
+                          ) : (
+                            <div className="text-sm text-gray-600 italic flex items-center gap-2">
+                              <span>⏳</span>
+                              <span>{lang === 'fr' ? 'En attente de prise en charge' : 'Waiting to be taken in charge'}</span>
+                            </div>
+                          )}
                         </div>
                       )}
 
                       {/* Timeline détaillée - TECHNIQUE */}
-                      {suivi.timeline_technique && suivi.timeline_technique.length > 0 && (
+                      {suivi.items_technique && suivi.items_technique.length > 0 && (
                         <div className="mt-6 p-4 bg-purple-50 rounded-xl border border-purple-200">
                           <h4 className="font-heading text-sm text-purple-800 mb-3 flex items-center gap-2">
                             <Wrench className="w-4 h-4" />
                             📅 {lang === 'fr' ? 'Chronologie Technique' : 'Technical Timeline'}
                           </h4>
-                          <SuiviTimeline events={generateTimelineFromData(suivi.timeline_technique)} />
+                          {suivi.timeline_technique && suivi.timeline_technique.length > 0 ? (
+                            <SuiviTimeline events={generateTimelineFromData(suivi.timeline_technique)} />
+                          ) : (
+                            <div className="text-sm text-gray-600 italic flex items-center gap-2">
+                              <span>⏳</span>
+                              <span>{lang === 'fr' ? 'En attente de prise en charge' : 'Waiting to be taken in charge'}</span>
+                            </div>
+                          )}
                         </div>
                       )}
 
