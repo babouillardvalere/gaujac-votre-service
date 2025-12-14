@@ -86,26 +86,74 @@ export default function SuiviIntervention() {
   }, [navigate]);
 
   const { data: incidents = [], isLoading, refetch } = useQuery({
-    queryKey: ['suivi-incidents', userData.stayId],
+    queryKey: ['suivi-incidents', userData.stayId, selectedNumero],
     queryFn: async () => {
-      if (!userData.stayId) return [];
-      // FILTRAGE SÉCURISÉ À LA SOURCE : uniquement les incidents du séjour actuel
-      return await base44.entities.Incident.filter({ stay_id: userData.stayId }, '-date_saisie', 200);
+      console.log('🔍 DEBUG SUIVI - Données recherche:', {
+        stayId: userData.stayId,
+        nom: userData.nom,
+        prenom: userData.prenom,
+        selectedNumero,
+        hebergementType
+      });
+
+      // PRIORITÉ 1: Filtrer par stay_id (sécurisé)
+      if (userData.stayId) {
+        const byStayId = await base44.entities.Incident.filter({ stay_id: userData.stayId }, '-date_saisie', 200);
+        console.log('✅ Résultats par stay_id:', byStayId.length);
+        if (byStayId.length > 0) return byStayId;
+      }
+
+      // FALLBACK TEMPORAIRE: Filtrer par logement + nom + prénom
+      // ⚠️ À retirer une fois stay_id fiable partout
+      if (!selectedNumero || !userData.nom || !userData.prenom) {
+        console.warn('⚠️ Données insuffisantes pour fallback');
+        return [];
+      }
+
+      const field = hebergementType === 'emplacement' ? 'emplacement' : 'logement';
+      const byLogement = await base44.entities.Incident.filter({ [field]: selectedNumero }, '-date_saisie', 100);
+      
+      // Filtrer côté client par nom/prénom ET dates de séjour
+      const filtered = byLogement.filter(incident => {
+        const nomMatch = incident.client_nom?.toLowerCase() === userData.nom.toLowerCase();
+        const prenomMatch = incident.client_prenom?.toLowerCase() === userData.prenom.toLowerCase();
+        
+        // Vérifier que l'incident est dans la période du séjour
+        if (userData.dateArrivee && userData.dateDepart && incident.date_saisie) {
+          try {
+            const incidentDate = new Date(incident.date_saisie);
+            const arrivee = new Date(userData.dateArrivee);
+            const depart = new Date(userData.dateDepart);
+            depart.setHours(23, 59, 59, 999);
+            
+            const inPeriod = incidentDate >= arrivee && incidentDate <= depart;
+            return nomMatch && prenomMatch && inPeriod;
+          } catch {
+            return nomMatch && prenomMatch;
+          }
+        }
+        
+        return nomMatch && prenomMatch;
+      });
+
+      console.log('⚠️ Fallback logement:', byLogement.length, '→ filtré:', filtered.length);
+      return filtered;
     },
-    enabled: !!userData.stayId && step === 'suivi',
+    enabled: step === 'suivi' && (!!userData.stayId || !!selectedNumero),
     refetchInterval: 10000
   });
 
-  // Les incidents sont déjà filtrés correctement par stay_id
+  // Les incidents sont déjà filtrés
   const filteredIncidents = incidents;
 
   useEffect(() => {
-    if (step === 'suivi' && userData.stayId) {
+    // Accepter si stay_id OU si données nom/prénom/logement présentes (fallback)
+    if (step === 'suivi' && (userData.stayId || (userData.nom && userData.prenom && selectedNumero))) {
       setAccessDenied(false);
-    } else if (step === 'suivi' && !userData.stayId) {
+    } else if (step === 'suivi' && !userData.stayId && (!userData.nom || !userData.prenom)) {
       setAccessDenied(true);
     }
-  }, [step, userData.stayId]);
+  }, [step, userData.stayId, userData.nom, userData.prenom, selectedNumero]);
 
   const activeIncidents = filteredIncidents.filter(i => i.statut !== 'resolu');
   const resolvedIncidents = filteredIncidents.filter(i => i.statut === 'resolu');
