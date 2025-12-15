@@ -701,8 +701,10 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'couvercle', icon: '🔥', label_fr: 'Couvercle', label_en: 'Lid', quantity: 1 },
       { id: 'cafetiere', icon: '☕', label_fr: 'Cafetière électrique', label_en: 'Electric coffee maker', quantity: 1 },
       { id: 'micro_ondes', icon: '📡', label_fr: 'Micro-ondes', label_en: 'Microwave', quantity: 1 },
+      { id: 'tv', icon: '📺', label_fr: 'TV + télécommande', label_en: 'TV + remote', quantity: 1 },
       { id: 'telecommande_clim', icon: '❄️', label_fr: 'Télécommande climatisation', label_en: 'AC remote', quantity: 1 },
       { id: 'refrigerateur_congelateur', icon: '🧊', label_fr: 'Réfrigérateur-congélateur', label_en: 'Fridge-freezer', quantity: 1 },
+      { id: 'lave_vaisselle', icon: '🍽️', label_fr: 'Lave-vaisselle', label_en: 'Dishwasher', quantity: 1 },
       // Ménage
       { id: 'kit_wc', icon: '🚽', label_fr: 'Kit WC', label_en: 'WC kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
@@ -723,8 +725,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       // Extérieur
       { id: 'table_jardin', icon: '🍽️', label_fr: 'Table de jardin', label_en: 'Garden table', quantity: 1 },
       { id: 'chaises_jardin', icon: '🪑', label_fr: 'Chaises de jardin', label_en: 'Garden chairs', quantity: 6 },
-      { id: 'terrasse_couverte', icon: '🌤️', label_fr: 'Terrasse semi-couverte', label_en: 'Semi-covered terrace', quantity: 1 },
-      { id: 'animaux_autorises', icon: '🐾', label_fr: 'Animaux autorisés', label_en: 'Pets allowed', quantity: 1 }
+      { id: 'terrasse_couverte', icon: '🌤️', label_fr: 'Terrasse semi-couverte', label_en: 'Semi-covered terrace', quantity: 1 }
     ],
 
     MH_PREMIUM_2CH: [
