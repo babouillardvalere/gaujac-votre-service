@@ -5,7 +5,7 @@ import Logo from '../components/Logo';
 import HomeAvisSection from '../components/HomeAvisSection';
 import CustomUsersIcon from '../components/CustomUsersIcon';
 import AccessibilityPanel, { getAccessibilitySettings, saveAccessibilitySettings, speakText, stopSpeaking } from '../components/AccessibilityPanel';
-import { Users, Star, Briefcase, Search, Accessibility, Plus, Minus, Volume2, VolumeX, X, BookOpen } from 'lucide-react';
+import { Users, Star, Briefcase, Accessibility, Plus, Minus, Volume2, VolumeX, X, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { Button } from '@/components/ui/button';
@@ -74,20 +74,6 @@ export default function Home() {
       ariaLabel: 'Signaler un problème - Accéder au formulaire client',
       iconColor: 'text-white',
       customIcon: true
-    },
-    {
-      title: t('suivi_intervention'),
-      icon: Search,
-      href: '/ClientSuiviInventaire',
-      bgColor: 'bg-[#FFD700]',
-      borderColor: 'border-[#FFD700]',
-      iconBg: 'bg-[#00AEEF]',
-      textColor: 'text-[#0077A8]',
-      subtitleColor: 'text-[#0077A8]',
-      arrowColor: 'text-[#0077A8]',
-      description: lang === 'fr' ? 'Mon suivi inventaire' : 'My inventory tracking',
-      ariaLabel: 'Suivre votre inventaire - Voir le statut de vos interventions',
-      iconColor: 'text-white'
     },
     {
       title: t('avis'),
