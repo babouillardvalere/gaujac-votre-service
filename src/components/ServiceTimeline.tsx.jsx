@@ -1,8 +1,8 @@
 import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { listEvents } from "../services/interventionService";
-import type { InterventionEvent, ServiceIntervention, TimelineType } from "../services/types";
+import { listEvents } from "./interventionService";
+import type { InterventionEvent, ServiceIntervention, TimelineType } from "./interventionTypes";
 import { format } from "date-fns";
 import jsPDF from "jspdf";
 

@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { addEvent } from "../services/interventionService";
-import type { ServiceIntervention, TimelineType, AttenteRaison } from "../services/types";
+import { addEvent } from "./interventionService";
+import type { ServiceIntervention, TimelineType, AttenteRaison } from "./interventionTypes";
 import { toast } from "sonner";
 
 const TYPES: { value: TimelineType; label: string }[] = [

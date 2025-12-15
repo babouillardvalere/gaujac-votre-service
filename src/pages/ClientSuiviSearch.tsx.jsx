@@ -6,8 +6,8 @@ import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "../utils";
-import { searchInterventionsBySejour } from "../services/interventionService";
-import type { Intervention } from "../services/types";
+import { searchInterventionsBySejour } from "../components/interventionService";
+import type { Intervention } from "../components/interventionTypes";
 import Logo from "../components/Logo";
 import { ArrowLeft } from "lucide-react";
 
