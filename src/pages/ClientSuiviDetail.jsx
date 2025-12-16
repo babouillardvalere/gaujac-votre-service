@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
@@ -21,14 +21,31 @@ import { fr } from "date-fns/locale";
 import { createPageUrl } from "../utils";
 import Logo from "../components/Logo";
 
-/* Statuts affichés au client */
+/* Statuts affichés au client (timeline) */
 const STATUS = {
-  PRISE_EN_CHARGE: { label: "Demande enregistrée", icon: Clock, color: "bg-orange-100 text-orange-700" },
-  EN_COURS: { label: "Intervention en cours", icon: PlayCircle, color: "bg-blue-100 text-blue-700" },
-  EN_ATTENTE: { label: "En attente", icon: PauseCircle, color: "bg-yellow-100 text-yellow-700" },
-  TERMINEE: { label: "Intervention terminée", icon: CheckCircle, color: "bg-green-100 text-green-700" }
+  PRISE_EN_CHARGE: {
+    label: "Demande enregistrée",
+    icon: Clock,
+    color: "bg-orange-100 text-orange-700"
+  },
+  EN_COURS: {
+    label: "Intervention en cours",
+    icon: PlayCircle,
+    color: "bg-blue-100 text-blue-700"
+  },
+  EN_ATTENTE: {
+    label: "En attente",
+    icon: PauseCircle,
+    color: "bg-yellow-100 text-yellow-700"
+  },
+  TERMINEE: {
+    label: "Intervention terminée",
+    icon: CheckCircle,
+    color: "bg-green-100 text-green-700"
+  }
 };
 
+/* Motifs d’attente */
 const WAITING_REASON = {
   MATERIEL: "Attente de matériel",
   FOURNISSEUR: "Attente du fournisseur",
@@ -37,35 +54,72 @@ const WAITING_REASON = {
   SECOND_TECHNICIEN: "Besoin d’un second technicien"
 };
 
+/* Mapping “statut_*” (SuiviInventaire) → affichage */
+const SUIVI_STATUT_LABEL = {
+  en_attente: "En attente",
+  en_cours: "En cours",
+  resolu: "Terminé",
+  termine: "Terminé",
+  non_requis: "Non requis",
+  non_requise: "Non requis"
+};
+
+const SUIVI_STATUT_BADGE = {
+  en_attente: "bg-yellow-100 text-yellow-800",
+  en_cours: "bg-blue-100 text-blue-800",
+  resolu: "bg-green-100 text-green-800",
+  termine: "bg-green-100 text-green-800",
+  non_requis: "bg-gray-100 text-gray-700",
+  non_requise: "bg-gray-100 text-gray-700"
+};
+
 export default function ClientSuiviDetail() {
   const navigate = useNavigate();
   const pageRef = useRef(null);
   const [params] = useSearchParams();
 
-  const type = params.get("type"); // ARRIVEE | SEJOUR
+  const type = params.get("type"); // ARRIVEE (ici)
   const ficheId = params.get("fiche_id");
 
   const { data, isLoading } = useQuery({
     queryKey: ["client-suivi-detail", type, ficheId],
     enabled: type === "ARRIVEE" && !!ficheId,
     queryFn: async () => {
+      // 1) fiche arrivée
       const fiche = await base44.entities.FicheArrivee.get(ficheId);
 
-      // Suivi inventaire (celui que tu crées à l’envoi)
+      // 2) suivi inventaire (celui créé lors de l’envoi)
       const suivis = await base44.entities.SuiviInventaire.filter(
         { fiche_arrivee_id: ficheId },
         "-created_at",
         10
       );
+      const suivi = suivis?.[0] || null;
 
-      // Events client-safe (créés par tes équipes / sync)
-      const events = await base44.entities.InterventionEvent.filter(
-        { fiche_arrivee_id: ficheId, visible_client: true },
-        "at",
-        200
+      // 3) interventions rattachées à cette fiche d’arrivée
+      // IMPORTANT : c’est cette relation qui permet ensuite de récupérer les events via intervention_id
+      const interventions = await base44.entities.Intervention.filter(
+        { fiche_arrivee_id: ficheId },
+        "-created_at",
+        50
       );
 
-      return { fiche, suivi: suivis?.[0] || null, events };
+      const interventionIds = interventions.map((i) => i.id);
+
+      // 4) events visibles client
+      // Base44 ne gère pas toujours les requêtes "IN", donc on liste et on filtre en JS
+      // (on limite la taille à 500 pour rester performant)
+      const allClientEvents = await base44.entities.InterventionEvent.list(
+        "-at",
+        500
+      );
+
+      const events = (allClientEvents || [])
+        .filter((e) => e.visible_client === true)
+        .filter((e) => interventionIds.includes(e.intervention_id))
+        .sort((a, b) => new Date(a.at) - new Date(b.at)); // ordre chronologique
+
+      return { fiche, suivi, interventions, events };
     }
   });
 
@@ -127,14 +181,18 @@ export default function ClientSuiviDetail() {
 
   const { fiche, suivi, events } = data;
 
-  // Statuts globaux (si tu as déjà les champs dans SuiviInventaire)
-  const statutMenage = suivi?.statut_menage || null;      // ex: en_attente / en_cours / resolu...
+  const statutMenage = suivi?.statut_menage || null; // ex: en_attente / en_cours / non_requis
   const statutTech = suivi?.statut_technique || null;
+
+  const badgeMenage = statutMenage ? (SUIVI_STATUT_BADGE[statutMenage] || "bg-gray-100 text-gray-700") : null;
+  const badgeTech = statutTech ? (SUIVI_STATUT_BADGE[statutTech] || "bg-gray-100 text-gray-700") : null;
+
+  const labelMenage = statutMenage ? (SUIVI_STATUT_LABEL[statutMenage] || statutMenage) : null;
+  const labelTech = statutTech ? (SUIVI_STATUT_LABEL[statutTech] || statutTech) : null;
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-6">
       <div className="max-w-3xl mx-auto space-y-6">
-
         <button
           onClick={() => navigate(createPageUrl("ClientSuiviSearch"))}
           className="flex items-center gap-2 text-[#0077A8]"
@@ -152,7 +210,6 @@ export default function ClientSuiviDetail() {
         </div>
 
         <div ref={pageRef} className="space-y-6">
-
           {/* INFOS CLIENT */}
           <Card>
             <CardContent className="p-4 space-y-1">
@@ -168,7 +225,7 @@ export default function ClientSuiviDetail() {
             </CardContent>
           </Card>
 
-          {/* MESSAGE CLIENT (si présent dans SuiviInventaire) */}
+          {/* MESSAGE CLIENT */}
           {suivi?.message_client && (
             <Card>
               <CardContent className="p-4">
@@ -177,7 +234,7 @@ export default function ClientSuiviDetail() {
             </Card>
           )}
 
-          {/* STATUTS MENAGE / TECH (si tu les as) */}
+          {/* STATUTS MENAGE / TECH */}
           {(statutMenage || statutTech) && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {statutMenage && (
@@ -187,9 +244,7 @@ export default function ClientSuiviDetail() {
                       <Sparkles className="w-5 h-5" />
                       <span className="font-semibold">Ménage</span>
                     </div>
-                    <Badge className="bg-gray-100 text-gray-700">
-                      {statutMenage}
-                    </Badge>
+                    <Badge className={badgeMenage}>{labelMenage}</Badge>
                   </CardContent>
                 </Card>
               )}
@@ -201,9 +256,7 @@ export default function ClientSuiviDetail() {
                       <Wrench className="w-5 h-5" />
                       <span className="font-semibold">Technique</span>
                     </div>
-                    <Badge className="bg-gray-100 text-gray-700">
-                      {statutTech}
-                    </Badge>
+                    <Badge className={badgeTech}>{labelTech}</Badge>
                   </CardContent>
                 </Card>
               )}
@@ -246,9 +299,7 @@ export default function ClientSuiviDetail() {
                       )}
 
                       <p className="text-xs text-gray-400 mt-1">
-                        {e.at
-                          ? format(new Date(e.at), "dd/MM/yyyy HH:mm", { locale: fr })
-                          : ""}
+                        {e.at ? format(new Date(e.at), "dd/MM/yyyy HH:mm", { locale: fr }) : ""}
                       </p>
                     </div>
                   );
@@ -256,7 +307,6 @@ export default function ClientSuiviDetail() {
               )}
             </CardContent>
           </Card>
-
         </div>
       </div>
     </div>
