@@ -18,25 +18,21 @@ export default function ClientSuiviSearch() {
 
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
-  const [dateDebut, setDateDebut] = useState("");
-  const [dateFin, setDateFin] = useState("");
   const [search, setSearch] = useState(false);
 
   const { data: interventions = [], isLoading } = useQuery({
-    queryKey: ["client-suivi-search", nom, prenom, dateDebut, dateFin],
+    queryKey: ["client-suivi-search", nom, prenom],
     enabled: search,
     queryFn: async () => {
       const filters = {};
 
-      if (nom) filters.client_nom = nom;
-      if (prenom) filters.client_prenom = prenom;
-
-      if (dateDebut) {
-        filters.date_arrivee = { $gte: dateDebut };
+      // 🔹 Recherche souple
+      if (nom) {
+        filters.client_nom = { $contains: nom };
       }
 
-      if (dateFin) {
-        filters.date_depart = { $lte: dateFin };
+      if (prenom) {
+        filters.client_prenom = { $contains: prenom };
       }
 
       return await base44.entities.Intervention.filter(
@@ -54,50 +50,33 @@ export default function ClientSuiviSearch() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-6">
       <div className="max-w-3xl mx-auto space-y-6">
-        
+
+        {/* Retour */}
         <button
-          onClick={() => navigate(createPageUrl('Home'))}
-          className="flex items-center gap-2 text-[#0077A8] hover:text-[#00AEEF] mb-4"
+          onClick={() => navigate(createPageUrl("Home"))}
+          className="flex items-center gap-2 text-[#0077A8] hover:text-[#00AEEF]"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span className="font-heading">{t('retour')}</span>
+          <span className="font-heading">{t("retour")}</span>
         </button>
 
-        <Logo className="h-16 mb-4" />
+        <Logo className="h-16" />
 
         <h1 className="text-2xl font-bold text-[#0077A8] font-handwritten">
-          📋 {lang === 'fr' ? 'Suivi des interventions' : 'Track interventions'}
+          📋 {lang === "fr" ? "Suivi des interventions" : "Track interventions"}
         </h1>
 
         {/* FORMULAIRE */}
         <Card className="border-2 border-[#00AEEF]/30">
           <CardContent className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label>{lang === 'fr' ? 'Nom' : 'Last name'}</Label>
+              <Label>{lang === "fr" ? "Nom" : "Last name"}</Label>
               <Input value={nom} onChange={(e) => setNom(e.target.value)} />
             </div>
 
             <div>
-              <Label>{lang === 'fr' ? 'Prénom' : 'First name'}</Label>
+              <Label>{lang === "fr" ? "Prénom" : "First name"}</Label>
               <Input value={prenom} onChange={(e) => setPrenom(e.target.value)} />
-            </div>
-
-            <div>
-              <Label>{lang === 'fr' ? "Date d'arrivée" : 'Arrival date'}</Label>
-              <Input
-                type="date"
-                value={dateDebut}
-                onChange={(e) => setDateDebut(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <Label>{lang === 'fr' ? 'Date de départ' : 'Departure date'}</Label>
-              <Input
-                type="date"
-                value={dateFin}
-                onChange={(e) => setDateFin(e.target.value)}
-              />
             </div>
 
             <div className="md:col-span-2">
@@ -106,7 +85,7 @@ export default function ClientSuiviSearch() {
                 className="w-full bg-[#00AEEF] hover:bg-[#0077A8]"
               >
                 <Search className="w-4 h-4 mr-2" />
-                {lang === 'fr' ? 'Rechercher' : 'Search'}
+                {lang === "fr" ? "Rechercher" : "Search"}
               </Button>
             </div>
           </CardContent>
@@ -115,6 +94,7 @@ export default function ClientSuiviSearch() {
         {/* RÉSULTATS */}
         <Card className="border-2 border-[#00AEEF]/30">
           <CardContent className="p-4">
+
             {isLoading && (
               <div className="flex justify-center py-6">
                 <Loader2 className="animate-spin w-6 h-6 text-[#00AEEF]" />
@@ -123,13 +103,15 @@ export default function ClientSuiviSearch() {
 
             {!isLoading && search && interventions.length === 0 && (
               <p className="text-center text-gray-500">
-                {lang === 'fr' ? 'Aucun résultat trouvé' : 'No results found'}
+                {lang === "fr" ? "Aucun résultat trouvé" : "No results found"}
               </p>
             )}
 
             {!isLoading && !search && (
               <p className="text-center text-gray-500">
-                {lang === 'fr' ? 'Veuillez effectuer une recherche' : 'Please search'}
+                {lang === "fr"
+                  ? "Veuillez effectuer une recherche"
+                  : "Please search"}
               </p>
             )}
 
@@ -140,22 +122,35 @@ export default function ClientSuiviSearch() {
                     key={intervention.id}
                     className="cursor-pointer hover:shadow-md transition border-2 border-gray-200 hover:border-[#00AEEF]"
                     onClick={() =>
-                      navigate(createPageUrl('ClientSuiviDetail') + `?id=${intervention.id}`)
+                      navigate(
+                        createPageUrl("ClientSuiviDetail") +
+                          `?id=${intervention.id}`
+                      )
                     }
                   >
                     <CardContent className="p-4 space-y-1">
                       <p className="font-semibold text-[#0077A8]">
-                        {intervention.client_prenom} {intervention.client_nom}
+                        {intervention.client_prenom}{" "}
+                        {intervention.client_nom}
                       </p>
 
                       <p className="text-sm text-gray-600">
-                        {lang === 'fr' ? 'Logement' : 'Accommodation'} : {intervention.logement_numero} — {intervention.categorie_logement}
+                        {lang === "fr" ? "Logement" : "Accommodation"} :{" "}
+                        {intervention.logement_numero} —{" "}
+                        {intervention.categorie_logement}
                       </p>
 
                       <p className="text-sm text-gray-500">
-                        {lang === 'fr' ? 'Séjour' : 'Stay'} :{" "}
-                        {format(new Date(intervention.date_arrivee), "dd/MM/yyyy")} →{" "}
-                        {format(new Date(intervention.date_depart), "dd/MM/yyyy")}
+                        {lang === "fr" ? "Séjour" : "Stay"} :{" "}
+                        {format(
+                          new Date(intervention.date_arrivee),
+                          "dd/MM/yyyy"
+                        )}{" "}
+                        →{" "}
+                        {format(
+                          new Date(intervention.date_depart),
+                          "dd/MM/yyyy"
+                        )}
                       </p>
                     </CardContent>
                   </Card>
@@ -164,7 +159,6 @@ export default function ClientSuiviSearch() {
             )}
           </CardContent>
         </Card>
-
       </div>
     </div>
   );
