@@ -1,37 +1,48 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
+
+import OfflineBanner from "../components/OfflineBanner";
+import CollaborateurNotificationBell from "../components/CollaborateurNotificationBell";
+import MettreEnAttenteDialog from "../components/MettreEnAttenteDialog";
+import PhotoInterventionCapture from "../components/PhotoInterventionCapture";
+import InterventionHistorique from "../components/interventions/InterventionHistorique";
+import InterventionDocuments from "../components/interventions/InterventionDocuments";
+import InterventionTimer from "../components/InterventionTimer";
+import { useTranslation } from "../components/translations";
+import { createPageUrl } from "../utils";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+import {
+  Clock,
+  User,
+  CheckCircle,
+  Play,
+  Pause,
+  Loader2,
+  Camera,
+  Home,
+  Wrench,
+} from "lucide-react";
+
 import { format, differenceInMinutes } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 
-import Logo from "../components/Logo";
-import OfflineBanner from "../components/OfflineBanner";
-import CollaborateurNotificationBell from "../components/CollaborateurNotificationBell";
-import InterventionTimer from "../components/InterventionTimer";
-import MettreEnAttenteDialog from "../components/MettreEnAttenteDialog";
-import PhotoInterventionCapture from "../components/PhotoInterventionCapture";
-import { useTranslation } from "../components/translations";
-import { createPageUrl } from "../utils";
-
-import {
-  Button,
-  Card,
-  CardContent,
-  Badge,
-  Input,
-  Textarea,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle
-} from "@/components/ui";
-
-import { Play, Pause, CheckCircle, Loader2 } from "lucide-react";
-
 /* ============================================================
-   TECHNIQUE – INTERVENTIONS (SYNC SUIVI + TIMELINE CLIENT)
+   TECHNIQUE – PAGE COLLABORATEUR
 ============================================================ */
 
 export default function Technique() {
@@ -39,29 +50,28 @@ export default function Technique() {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
 
+  /* ======================= STATES ======================= */
   const [selectedIncident, setSelectedIncident] = useState(null);
   const [collaborateurNom, setCollaborateurNom] = useState("");
   const [commentaire, setCommentaire] = useState("");
+  const [filter, setFilter] = useState("en_attente");
 
-  const [incidentToWait, setIncidentToWait] = useState(null);
-  const [showAttenteDialog, setShowAttenteDialog] = useState(false);
-
+  const [incidentForPhoto, setIncidentForPhoto] = useState(null);
   const [showPhotoAvant, setShowPhotoAvant] = useState(false);
   const [showPhotoApres, setShowPhotoApres] = useState(false);
-  const [incidentForPhoto, setIncidentForPhoto] = useState(null);
 
-  /* =======================
-     AUTH
-  ======================= */
+  const [showAttenteDialog, setShowAttenteDialog] = useState(false);
+  const [incidentToWait, setIncidentToWait] = useState(null);
+
+  /* ======================= AUTH ======================= */
   useEffect(() => {
-    if (sessionStorage.getItem("collaborateur_authenticated") !== "true") {
+    const auth = sessionStorage.getItem("collaborateur_authenticated");
+    if (auth !== "true") {
       navigate(createPageUrl("Collaborateur"));
     }
   }, [navigate]);
 
-  /* =======================
-     DATA
-  ======================= */
+  /* ======================= DATA ======================= */
   const { data: incidents = [], isLoading } = useQuery({
     queryKey: ["incidents-technique"],
     queryFn: () =>
@@ -70,79 +80,47 @@ export default function Technique() {
         "-date_saisie",
         200
       ),
-    refetchInterval: 30000
+    refetchInterval: 30000,
   });
 
-  /* =======================
-     CLIENT EVENT (Timeline ClientSuiviDetail)
-  ======================= */
-  const pushClientEvent = async ({
-    incident,
-    type,
-    message,
-    attenteRaison = null,
-    delaiEstime = null
-  }) => {
-    if (!incident?.intervention_id) return;
+  const { data: logs = [] } = useQuery({
+    queryKey: ["intervention-logs-tech", selectedIncident?.id],
+    enabled: !!selectedIncident,
+    queryFn: () =>
+      base44.entities.InterventionLog.filter(
+        { incident_id: selectedIncident.id },
+        "-horodatage",
+        50
+      ),
+  });
 
-    await base44.entities.InterventionEvent.create({
-      intervention_id: incident.intervention_id,
-      fiche_arrivee_id: incident.fiche_arrivee_id,
-      type, // "PRISE_EN_CHARGE" | "EN_COURS" | "EN_ATTENTE" | "TERMINEE"
-      message_client: message,
-      attente_raison: attenteRaison,
-      delai_estime: delaiEstime,
-      visible_client: true,
-      at: new Date().toISOString()
-    });
-  };
+  const { data: documents = [] } = useQuery({
+    queryKey: ["documents-tech", selectedIncident?.id],
+    enabled: !!selectedIncident,
+    queryFn: () =>
+      base44.entities.InterventionDocument.filter(
+        { incident_id: selectedIncident.id },
+        "-created_date",
+        50
+      ),
+  });
 
-  /* =======================
-     MUTATION
-  ======================= */
+  /* ======================= MUTATIONS ======================= */
   const updateIncident = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Incident.update(id, data),
+    mutationFn: ({ id, data }) =>
+      base44.entities.Incident.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["incidents-technique"] });
-    }
+      queryClient.invalidateQueries({
+        queryKey: ["incidents-technique"],
+      });
+      toast.success("Intervention mise à jour");
+      setSelectedIncident(null);
+    },
   });
 
-  /**
-   * Sync SuiviInventaire (statut_technique)
-   * IMPORTANT :
-   * - si ton Base44 n’a pas "updateByFicheArrivee", remplace par :
-   *   - filter({ fiche_arrivee_id }) puis update(suivi.id, {...})
-   */
-  const updateSuiviTechnique = async (incident, statut) => {
-    if (!incident?.fiche_arrivee_id) return;
+  /* ======================= ACTIONS ======================= */
 
-    // Option A (si tu as une méthode custom)
-    if (base44.entities.SuiviInventaire.updateByFicheArrivee) {
-      await base44.entities.SuiviInventaire.updateByFicheArrivee({
-        fiche_arrivee_id: incident.fiche_arrivee_id,
-        statut_technique: statut
-      });
-      return;
-    }
-
-    // Option B (fallback standard)
-    const suivis = await base44.entities.SuiviInventaire.filter(
-      { fiche_arrivee_id: incident.fiche_arrivee_id },
-      "-created_at",
-      1
-    );
-    if (suivis?.[0]?.id) {
-      await base44.entities.SuiviInventaire.update(suivis[0].id, {
-        statut_technique: statut
-      });
-    }
-  };
-
-  /* ============================================================
-     ACTIONS : PRISE EN CHARGE / PHOTOS / ATTENTE / TERMINE
-  ============================================================ */
-
-  const prendreEnChargeSansPhoto = async (incident) => {
+  const prendreEnCharge = async (incident) => {
     if (!collaborateurNom.trim()) {
       toast.error("Nom obligatoire");
       return;
@@ -156,77 +134,23 @@ export default function Technique() {
     await base44.entities.InterventionLog.create({
       incident_id: incident.id,
       action: "prise_en_charge",
-      horodatage: now.toISOString(),
       utilisateur: collaborateurNom,
-      commentaire: "Intervention prise en charge"
+      horodatage: now.toISOString(),
+      commentaire: "Intervention prise en charge",
     });
 
-    await updateIncident.mutateAsync({
+    updateIncident.mutate({
       id: incident.id,
       data: {
-        statut: "en_cours",
         pris_par: collaborateurNom,
-        date_debut: now.toISOString(),
-        temps_prise_en_charge: delai
-      }
-    });
-
-    await pushClientEvent({
-      incident,
-      type: "EN_COURS",
-      message: "L’équipe technique est en cours d’intervention."
-    });
-
-    await updateSuiviTechnique(incident, "en_cours");
-
-    toast.success("Intervention prise en charge");
-    setSelectedIncident(null);
-  };
-
-  const handlePhotoAvantUploaded = async (photoData) => {
-    if (!incidentForPhoto) return;
-
-    const now = new Date();
-    const delai = incidentForPhoto.date_saisie
-      ? differenceInMinutes(now, new Date(incidentForPhoto.date_saisie))
-      : 0;
-
-    await base44.entities.InterventionLog.create({
-      incident_id: incidentForPhoto.id,
-      action: "prise_en_charge",
-      horodatage: now.toISOString(),
-      utilisateur: collaborateurNom,
-      commentaire: "Intervention prise en charge avec photo AVANT"
-    });
-
-    await updateIncident.mutateAsync({
-      id: incidentForPhoto.id,
-      data: {
         statut: "en_cours",
-        pris_par: collaborateurNom,
         date_debut: now.toISOString(),
         temps_prise_en_charge: delai,
-        photo_avant_url: photoData.url,
-        photo_avant_timestamp: photoData.timestamp,
-        photo_avant_hash: photoData.hash
-      }
+      },
     });
-
-    await pushClientEvent({
-      incident: incidentForPhoto,
-      type: "EN_COURS",
-      message: "L’équipe technique est en cours d’intervention."
-    });
-
-    await updateSuiviTechnique(incidentForPhoto, "en_cours");
-
-    toast.success("Intervention prise en charge (avec photo avant)");
-    setIncidentForPhoto(null);
-    setShowPhotoAvant(false);
-    setSelectedIncident(null);
   };
 
-  const terminerSansPhoto = async (incident) => {
+  const terminerIntervention = async (incident) => {
     const now = new Date();
     const total = incident.date_saisie
       ? differenceInMinutes(now, new Date(incident.date_saisie))
@@ -235,320 +159,180 @@ export default function Technique() {
     await base44.entities.InterventionLog.create({
       incident_id: incident.id,
       action: "resolu",
-      horodatage: now.toISOString(),
       utilisateur: incident.pris_par || collaborateurNom,
-      commentaire: "Intervention résolue"
+      horodatage: now.toISOString(),
+      commentaire: "Intervention résolue",
     });
 
-    await updateIncident.mutateAsync({
+    updateIncident.mutate({
       id: incident.id,
       data: {
         statut: "resolu",
         date_resolution: now.toISOString(),
-        commentaire_interne: commentaire || incident.commentaire_interne,
-        temps_total_intervention: total
-      }
-    });
-
-    await pushClientEvent({
-      incident,
-      type: "TERMINEE",
-      message: "L’intervention technique est terminée."
-    });
-
-    await updateSuiviTechnique(incident, "resolu");
-
-    toast.success("Intervention terminée");
-    setCommentaire("");
-    setSelectedIncident(null);
-  };
-
-  const handlePhotoApresUploaded = async (photoData) => {
-    if (!incidentForPhoto) return;
-
-    const now = new Date();
-    const total = incidentForPhoto.date_saisie
-      ? differenceInMinutes(now, new Date(incidentForPhoto.date_saisie))
-      : 0;
-
-    await base44.entities.InterventionLog.create({
-      incident_id: incidentForPhoto.id,
-      action: "resolu",
-      horodatage: now.toISOString(),
-      utilisateur: incidentForPhoto.pris_par || collaborateurNom,
-      commentaire: "Intervention résolue avec photo APRES"
-    });
-
-    await updateIncident.mutateAsync({
-      id: incidentForPhoto.id,
-      data: {
-        statut: "resolu",
-        date_resolution: now.toISOString(),
-        commentaire_interne: commentaire || incidentForPhoto.commentaire_interne,
+        commentaire_interne: commentaire,
         temps_total_intervention: total,
-        photo_apres_url: photoData.url,
-        photo_apres_timestamp: photoData.timestamp,
-        photo_apres_hash: photoData.hash
-      }
+      },
     });
 
-    await pushClientEvent({
-      incident: incidentForPhoto,
-      type: "TERMINEE",
-      message: "L’intervention technique est terminée."
-    });
-
-    await updateSuiviTechnique(incidentForPhoto, "resolu");
-
-    toast.success("Intervention terminée (avec photo après)");
-    setIncidentForPhoto(null);
-    setShowPhotoApres(false);
     setCommentaire("");
-    setSelectedIncident(null);
   };
 
-  const mettreEnAttente = async (data) => {
-    if (!incidentToWait?.id) return;
-
-    await updateIncident.mutateAsync({
+  const confirmerAttente = (formData) => {
+    updateIncident.mutate({
       id: incidentToWait.id,
       data: {
         statut: "en_attente_materiel",
-        attente_raison: data.raison,
-        attente_delai: data.delai,
-        motif_attente: data.motifAttente,
-        attente_materiel: data.materiel,
-        attente_materiel_detail: data.materielDetail,
-        attente_commentaire: data.commentaire,
-        attente_date: new Date().toISOString()
-      }
+        motif_attente: formData.motifAttente,
+        attente_materiel_detail: formData.materielDetail,
+        attente_delai: formData.delai,
+        attente_commentaire: formData.commentaire,
+        attente_date: new Date().toISOString(),
+      },
     });
-
-    await pushClientEvent({
-      incident: incidentToWait,
-      type: "EN_ATTENTE",
-      message: "Intervention technique en attente.",
-      attenteRaison: data.raison,
-      delaiEstime: data.delai
-    });
-
-    await updateSuiviTechnique(incidentToWait, "en_attente");
-
-    toast.success("Intervention mise en attente");
     setShowAttenteDialog(false);
     setIncidentToWait(null);
-    setSelectedIncident(null);
   };
 
-  const reprendre = async (incident) => {
-    const now = new Date();
+  /* ======================= HELPERS ======================= */
 
-    await base44.entities.InterventionLog.create({
-      incident_id: incident.id,
-      action: "reprise",
-      horodatage: now.toISOString(),
-      utilisateur: incident.pris_par || collaborateurNom,
-      commentaire: "Intervention reprise"
-    });
-
-    await updateIncident.mutateAsync({
-      id: incident.id,
-      data: { statut: "en_cours" }
-    });
-
-    await pushClientEvent({
-      incident,
-      type: "EN_COURS",
-      message: "L’équipe technique a repris l’intervention."
-    });
-
-    await updateSuiviTechnique(incident, "en_cours");
-
-    toast.success("Intervention reprise");
-    queryClient.invalidateQueries({ queryKey: ["incidents-technique"] });
+  const badgeStatut = (statut) => {
+    switch (statut) {
+      case "en_attente":
+        return <Badge className="bg-orange-500 text-white">En attente</Badge>;
+      case "en_cours":
+        return <Badge className="bg-blue-500 text-white">En cours</Badge>;
+      case "en_attente_materiel":
+        return <Badge className="bg-gray-500 text-white">En attente</Badge>;
+      case "resolu":
+        return <Badge className="bg-green-500 text-white">Résolu</Badge>;
+      default:
+        return <Badge>{statut}</Badge>;
+    }
   };
 
-  /* =======================
-     UI HELPERS
-  ======================= */
-  const statutLabel = (s) => {
-    if (s === "en_attente") return "⏳ En attente";
-    if (s === "en_cours") return "▶️ En cours";
-    if (s === "en_attente_materiel") return "⏸ En attente";
-    if (s === "resolu") return "✅ Terminé";
-    return s || "—";
-  };
+  const filtered = incidents.filter((i) =>
+    filter === "tous" ? true : i.statut === filter
+  );
 
-  /* =======================
-     RENDER
-  ======================= */
+  /* ======================= RENDER ======================= */
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen pb-8">
       <OfflineBanner />
 
-      <header className="bg-[#00AEEF] text-white px-4 py-4 flex justify-between items-center">
-        <Logo />
-        <CollaborateurNotificationBell />
-      </header>
+      {/* HEADER */}
+      <div className="bg-[#0077A8] text-white px-4 py-4 sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <Wrench />
+            <h1 className="text-xl font-bold">Technique</h1>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => navigate(createPageUrl("MenuCollaborateur"))}
+            >
+              <Home />
+            </button>
+            <CollaborateurNotificationBell />
+          </div>
+        </div>
+      </div>
 
-      <main className="max-w-4xl mx-auto p-4">
+      {/* LISTE */}
+      <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
         {isLoading ? (
           <div className="flex justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-[#00AEEF]" />
+            <Loader2 className="animate-spin" />
           </div>
-        ) : incidents.length === 0 ? (
-          <p className="text-center text-gray-500 py-10">
-            Aucune intervention technique.
-          </p>
         ) : (
-          incidents.map((incident) => (
+          filtered.map((incident) => (
             <Card
               key={incident.id}
-              className="mb-4 cursor-pointer border-2 border-[#00AEEF]/20 rounded-xl"
+              className="border-2 cursor-pointer"
               onClick={() => setSelectedIncident(incident)}
             >
-              <CardContent className="p-4">
-                <div className="flex justify-between gap-3">
-                  <div>
-                    <p className="font-bold">
-                      Logement {incident.logement || incident.emplacement || "—"}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {incident.client_prenom} {incident.client_nom}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {incident.date_saisie
-                        ? format(new Date(incident.date_saisie), "dd/MM HH:mm", {
-                            locale: fr
-                          })
-                        : ""}
-                    </p>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex justify-between items-center">
+                  <div className="font-semibold">
+                    {incident.logement || incident.emplacement}
                   </div>
+                  {badgeStatut(incident.statut)}
+                </div>
 
-                  <Badge>{statutLabel(incident.statut)}</Badge>
+                <p className="text-sm text-gray-700">
+                  {incident.description}
+                </p>
+
+                <div className="text-xs text-gray-500 flex justify-between">
+                  <span>
+                    <User className="inline w-3 h-3 mr-1" />
+                    {incident.client_prenom} {incident.client_nom}
+                  </span>
+                  <span>
+                    <Clock className="inline w-3 h-3 mr-1" />
+                    {incident.date_saisie &&
+                      format(
+                        new Date(incident.date_saisie),
+                        "dd/MM HH:mm",
+                        { locale: fr }
+                      )}
+                  </span>
                 </div>
               </CardContent>
             </Card>
           ))
         )}
-      </main>
+      </div>
 
-      {/* =======================
-          MODAL DETAIL
-      ======================= */}
+      {/* DIALOG DETAIL */}
       <Dialog
         open={!!selectedIncident}
         onOpenChange={() => setSelectedIncident(null)}
       >
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              Intervention technique –{" "}
-              {selectedIncident?.logement || selectedIncident?.emplacement || "—"}
-            </DialogTitle>
+            <DialogTitle>Intervention technique</DialogTitle>
           </DialogHeader>
 
-          {!!selectedIncident && (
+          {selectedIncident && (
             <div className="space-y-4">
-              <div className="bg-[#e6f7ff] rounded-xl p-4 space-y-1">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Client</span>
-                  <span className="font-semibold">
-                    {selectedIncident.client_prenom} {selectedIncident.client_nom}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Signalée</span>
-                  <span>
-                    {selectedIncident.date_saisie
-                      ? format(new Date(selectedIncident.date_saisie), "dd/MM/yyyy HH:mm", { locale: fr })
-                      : "—"}
-                  </span>
-                </div>
-              </div>
+              <p>{selectedIncident.description}</p>
 
-              {selectedIncident.description && (
-                <div>
-                  <p className="font-semibold">Description</p>
-                  <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-xl">
-                    {selectedIncident.description}
-                  </p>
-                </div>
-              )}
+              <InterventionDocuments
+                incidentId={selectedIncident.id}
+                documents={documents}
+                canAdd
+              />
 
-              {selectedIncident.photo_avant_url && (
-                <div>
-                  <p className="font-semibold">📸 Photo AVANT</p>
-                  <img
-                    src={selectedIncident.photo_avant_url}
-                    alt="Avant"
-                    className="w-full h-48 object-cover rounded-xl"
-                  />
-                </div>
-              )}
-
-              {selectedIncident.photo_apres_url && (
-                <div>
-                  <p className="font-semibold">📸 Photo APRÈS</p>
-                  <img
-                    src={selectedIncident.photo_apres_url}
-                    alt="Après"
-                    className="w-full h-48 object-cover rounded-xl"
-                  />
-                </div>
-              )}
-
-              {/* =======================
-                  ACTIONS PAR STATUT
-              ======================= */}
+              <InterventionHistorique logs={logs} />
 
               {selectedIncident.statut === "en_attente" && (
-                <div className="space-y-3 pt-3 border-t">
+                <>
                   <Input
                     placeholder="Votre nom"
                     value={collaborateurNom}
                     onChange={(e) => setCollaborateurNom(e.target.value)}
                   />
-
                   <Button
-                    className="w-full bg-[#00AEEF] hover:bg-[#0077A8]"
-                    onClick={() => prendreEnChargeSansPhoto(selectedIncident)}
-                    disabled={!collaborateurNom.trim()}
+                    onClick={() => prendreEnCharge(selectedIncident)}
                   >
-                    <Play className="w-4 h-4 mr-2" /> Prendre en charge
+                    <Play className="mr-2" />
+                    Prendre en charge
                   </Button>
-
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => {
-                      setIncidentForPhoto(selectedIncident);
-                      setShowPhotoAvant(true);
-                    }}
-                    disabled={!collaborateurNom.trim()}
-                  >
-                    Prendre en charge avec photo avant
-                  </Button>
-                </div>
+                </>
               )}
 
               {selectedIncident.statut === "en_cours" && (
-                <div className="space-y-3 pt-3 border-t">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-[#0077A8]">
-                      Pris en charge par : <b>{selectedIncident.pris_par}</b>
-                    </p>
-                    {selectedIncident.date_debut && (
-                      <InterventionTimer startTime={selectedIncident.date_debut} />
-                    )}
-                  </div>
-
+                <>
+                  <InterventionTimer
+                    startTime={selectedIncident.date_debut}
+                    isActive
+                  />
                   <Textarea
-                    placeholder="Commentaire interne (optionnel)"
+                    placeholder="Commentaire"
                     value={commentaire}
                     onChange={(e) => setCommentaire(e.target.value)}
                   />
-
                   <div className="grid grid-cols-2 gap-2">
                     <Button
                       variant="outline"
@@ -557,126 +341,45 @@ export default function Technique() {
                         setShowAttenteDialog(true);
                       }}
                     >
-                      <Pause className="w-4 h-4 mr-2" /> Attente
+                      <Pause className="mr-2" />
+                      Mettre en attente
                     </Button>
-
                     <Button
-                      className="bg-green-500 hover:bg-green-600"
-                      onClick={() => terminerSansPhoto(selectedIncident)}
+                      className="bg-green-600"
+                      onClick={() => terminerIntervention(selectedIncident)}
                     >
-                      <CheckCircle className="w-4 h-4 mr-2" /> Terminer
+                      <CheckCircle className="mr-2" />
+                      Terminer
                     </Button>
                   </div>
-
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => {
-                      setIncidentForPhoto(selectedIncident);
-                      setShowPhotoApres(true);
-                    }}
-                  >
-                    Terminer avec photo après
-                  </Button>
-                </div>
-              )}
-
-              {selectedIncident.statut === "en_attente_materiel" && (
-                <div className="space-y-3 pt-3 border-t">
-                  <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-xl text-sm">
-                    <p className="font-semibold">⏸ Intervention en attente</p>
-                    {selectedIncident.motif_attente && (
-                      <p className="mt-1">
-                        <b>Motif :</b> {selectedIncident.motif_attente}
-                      </p>
-                    )}
-                    {selectedIncident.attente_delai && (
-                      <p className="mt-1">
-                        <b>Délai :</b> {selectedIncident.attente_delai}
-                      </p>
-                    )}
-                    {selectedIncident.attente_materiel_detail && (
-                      <p className="mt-1">
-                        <b>Matériel :</b> {selectedIncident.attente_materiel_detail}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      className="bg-[#00AEEF] hover:bg-[#0077A8]"
-                      onClick={() => reprendre(selectedIncident)}
-                    >
-                      <Play className="w-4 h-4 mr-2" /> Reprendre
-                    </Button>
-
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setIncidentToWait(selectedIncident);
-                        setShowAttenteDialog(true);
-                      }}
-                    >
-                      Modifier motif
-                    </Button>
-                  </div>
-
-                  <Button
-                    className="w-full bg-green-500 hover:bg-green-600"
-                    onClick={() => terminerSansPhoto(selectedIncident)}
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" /> Passer terminé
-                  </Button>
-                </div>
-              )}
-
-              {selectedIncident.statut === "resolu" && (
-                <div className="pt-3 border-t">
-                  <p className="text-green-700 text-sm">
-                    ✅ Intervention terminée{" "}
-                    {selectedIncident.date_resolution
-                      ? `le ${format(new Date(selectedIncident.date_resolution), "dd/MM/yyyy HH:mm", { locale: fr })}`
-                      : ""}
-                  </p>
-                </div>
+                </>
               )}
             </div>
           )}
         </DialogContent>
       </Dialog>
 
-      {/* =======================
-          DIALOGS
-      ======================= */}
       <MettreEnAttenteDialog
         open={showAttenteDialog}
         onOpenChange={setShowAttenteDialog}
-        onConfirm={mettreEnAttente}
+        onConfirm={confirmerAttente}
         isLoading={updateIncident.isPending}
       />
 
       <PhotoInterventionCapture
         open={showPhotoAvant}
-        onOpenChange={(open) => {
-          setShowPhotoAvant(open);
-          if (!open) setIncidentForPhoto(null);
-        }}
+        onOpenChange={setShowPhotoAvant}
         type="avant"
         interventionId={incidentForPhoto?.id || ""}
         collaborateurNom={collaborateurNom}
-        onPhotoUploaded={handlePhotoAvantUploaded}
       />
 
       <PhotoInterventionCapture
         open={showPhotoApres}
-        onOpenChange={(open) => {
-          setShowPhotoApres(open);
-          if (!open) setIncidentForPhoto(null);
-        }}
+        onOpenChange={setShowPhotoApres}
         type="apres"
         interventionId={incidentForPhoto?.id || ""}
-        collaborateurNom={incidentForPhoto?.pris_par || collaborateurNom}
-        onPhotoUploaded={handlePhotoApresUploaded}
+        collaborateurNom={collaborateurNom}
       />
     </div>
   );
