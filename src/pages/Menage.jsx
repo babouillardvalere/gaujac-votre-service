@@ -1,168 +1,132 @@
-// ===============================
-// MENAGE.jsx – VERSION FINALE
-// Fonctionnalités intactes + suivi client
-// ===============================
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { base44 } from "@/api/base44Client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { format, differenceInMinutes } from "date-fns";
+import { fr } from "date-fns/locale";
+import { toast } from "sonner";
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import OfflineBanner from '../components/OfflineBanner';
-import CollaborateurNotificationBell from '../components/CollaborateurNotificationBell';
-import { useNotifications } from '../components/useNotifications';
-import MettreEnAttenteDialog from '../components/MettreEnAttenteDialog';
-import PhotoInterventionCapture from '../components/PhotoInterventionCapture';
-import InterventionTimer from '../components/InterventionTimer';
-import { useTranslation } from '../components/translations';
-import { base44 } from '@/api/base44Client';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import Logo from "../components/Logo";
+import OfflineBanner from "../components/OfflineBanner";
+import CollaborateurNotificationBell from "../components/CollaborateurNotificationBell";
+import InterventionTimer from "../components/InterventionTimer";
+import MettreEnAttenteDialog from "../components/MettreEnAttenteDialog";
+import PhotoInterventionCapture from "../components/PhotoInterventionCapture";
+import { useTranslation } from "../components/translations";
+import { createPageUrl } from "../utils";
+
 import {
-  Clock,
-  User,
-  CheckCircle,
+  Button,
+  Card,
+  CardContent,
+  Badge,
+  Input,
+  Textarea,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui";
+
+import {
   Play,
   Pause,
-  DoorOpen,
-  UserCheck,
-  Camera,
-  Home,
+  CheckCircle,
+  Clock,
   Loader2,
-  Sparkles
-} from 'lucide-react';
-import { motion } from 'framer-motion';
-import { toast } from 'sonner';
-import { format, differenceInMinutes } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { createPageUrl } from '../utils';
-import ServiceMissionDashboard from '../components/direction/ServiceMissionDashboard';
-import InterventionHistorique from '../components/interventions/InterventionHistorique';
-import InterventionDocuments from '../components/interventions/InterventionDocuments';
-import ModeleInterventionSelector from '../components/interventions/ModeleInterventionSelector';
-import { notifierClientPriseEnCharge, notifierClientResolution } from '../components/notificationService';
+  Camera
+} from "lucide-react";
 
 /* ============================================================
-   CONFIG
-============================================================ */
-
-const categoryIcons = {
-  literie: { emoji: '🛏️', label: 'literie' },
-  vaisselle: { emoji: '🍽️', label: 'vaisselle' },
-  nettoyage: { emoji: '🧽', label: 'nettoyage' },
-  materiel_menage: { emoji: '🧹', label: 'menage' }
-};
-
-const isPhotoRequired = () => false;
-
-/* ============================================================
-   COMPOSANT
+   MENAGE – INTERVENTIONS
 ============================================================ */
 
 export default function Menage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { t, lang } = useTranslation();
-  const { counts } = useNotifications();
+  const { t } = useTranslation();
 
   const [selectedIncident, setSelectedIncident] = useState(null);
-  const [collaborateurNom, setCollaborateurNom] = useState('');
-  const [commentaire, setCommentaire] = useState('');
-  const [filter, setFilter] = useState('en_attente');
-  const [showAttenteDialog, setShowAttenteDialog] = useState(false);
+  const [collaborateurNom, setCollaborateurNom] = useState("");
+  const [commentaire, setCommentaire] = useState("");
   const [incidentToWait, setIncidentToWait] = useState(null);
+  const [showAttenteDialog, setShowAttenteDialog] = useState(false);
   const [showPhotoAvant, setShowPhotoAvant] = useState(false);
   const [showPhotoApres, setShowPhotoApres] = useState(false);
   const [incidentForPhoto, setIncidentForPhoto] = useState(null);
-  const [activeTab, setActiveTab] = useState('interventions');
 
-  /* ============================================================
+  /* =======================
      AUTH
-  ============================================================ */
-
+  ======================= */
   useEffect(() => {
-    if (sessionStorage.getItem('collaborateur_authenticated') !== 'true') {
-      navigate(createPageUrl('Collaborateur'));
+    if (sessionStorage.getItem("collaborateur_authenticated") !== "true") {
+      navigate(createPageUrl("Collaborateur"));
     }
   }, [navigate]);
 
-  /* ============================================================
+  /* =======================
      DATA
-  ============================================================ */
-
+  ======================= */
   const { data: incidents = [], isLoading } = useQuery({
-    queryKey: ['incidents-menage'],
+    queryKey: ["incidents-menage"],
     queryFn: () =>
-      base44.entities.Incident.filter({ type: 'menage' }, '-date_saisie', 200),
+      base44.entities.Incident.filter(
+        { type: "menage" },
+        "-date_saisie",
+        200
+      ),
     refetchInterval: 30000
   });
 
-  const { data: logs = [] } = useQuery({
-    queryKey: ['intervention-logs', selectedIncident?.id],
-    queryFn: () =>
-      selectedIncident
-        ? base44.entities.InterventionLog.filter(
-            { incident_id: selectedIncident.id },
-            '-horodatage',
-            50
-          )
-        : Promise.resolve([]),
-    enabled: !!selectedIncident
-  });
-
-  const { data: documents = [] } = useQuery({
-    queryKey: ['documents', selectedIncident?.id],
-    queryFn: () =>
-      selectedIncident
-        ? base44.entities.InterventionDocument.filter(
-            { incident_id: selectedIncident.id },
-            '-created_date',
-            50
-          )
-        : Promise.resolve([]),
-    enabled: !!selectedIncident
-  });
-
-  /* ============================================================
-     🔁 SUIVI CLIENT (AJOUT)
-  ============================================================ */
-
-  const pushClientEvent = async ({ incident, type, message, meta = {} }) => {
+  /* =======================
+     CLIENT EVENT
+  ======================= */
+  const pushClientEvent = async ({
+    incident,
+    type,
+    message,
+    attenteRaison = null,
+    delaiEstime = null
+  }) => {
     if (!incident?.intervention_id) return;
 
     await base44.entities.InterventionEvent.create({
       intervention_id: incident.intervention_id,
-      incident_id: incident.id,
+      fiche_arrivee_id: incident.fiche_arrivee_id,
       type,
       message_client: message,
-      meta,
+      attente_raison: attenteRaison,
+      delai_estime: delaiEstime,
       visible_client: true,
       at: new Date().toISOString()
     });
   };
 
-  /* ============================================================
+  /* =======================
      MUTATION
-  ============================================================ */
-
-  const updateMutation = useMutation({
+  ======================= */
+  const updateIncident = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Incident.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['incidents-menage'] });
-      setSelectedIncident(null);
+      queryClient.invalidateQueries({ queryKey: ["incidents-menage"] });
     }
   });
 
-  /* ============================================================
+  const updateSuiviMenage = async (incident, statut) => {
+    if (!incident.fiche_arrivee_id) return;
+    await base44.entities.SuiviInventaire.updateByFicheArrivee({
+      fiche_arrivee_id: incident.fiche_arrivee_id,
+      statut_menage: statut
+    });
+  };
+
+  /* =======================
      ACTIONS
-  ============================================================ */
+  ======================= */
 
   const prendreEnCharge = async (incident) => {
     if (!collaborateurNom.trim()) {
-      toast.error(t('champs_obligatoires'));
+      toast.error("Nom obligatoire");
       return;
     }
 
@@ -171,30 +135,31 @@ export default function Menage() {
 
     await base44.entities.InterventionLog.create({
       incident_id: incident.id,
-      action: 'prise_en_charge',
+      action: "prise_en_charge",
       horodatage: now.toISOString(),
       utilisateur: collaborateurNom
     });
 
-    await updateMutation.mutateAsync({
+    await updateIncident.mutateAsync({
       id: incident.id,
       data: {
-        statut: 'en_cours',
+        statut: "en_cours",
         pris_par: collaborateurNom,
         date_debut: now.toISOString(),
         temps_prise_en_charge: delai
       }
     });
 
-    await notifierClientPriseEnCharge(incident, collaborateurNom);
-
     await pushClientEvent({
       incident,
-      type: 'EN_COURS',
-      message: 'L’équipe ménage est en cours d’intervention.'
+      type: "EN_COURS",
+      message: "L’équipe ménage est en cours d’intervention."
     });
 
-    toast.success('Intervention prise en charge');
+    await updateSuiviMenage(incident, "en_cours");
+
+    toast.success("Intervention prise en charge");
+    setSelectedIncident(null);
   };
 
   const terminer = async (incident) => {
@@ -203,37 +168,39 @@ export default function Menage() {
 
     await base44.entities.InterventionLog.create({
       incident_id: incident.id,
-      action: 'resolu',
+      action: "resolu",
       horodatage: now.toISOString(),
       utilisateur: incident.pris_par
     });
 
-    await updateMutation.mutateAsync({
+    await updateIncident.mutateAsync({
       id: incident.id,
       data: {
-        statut: 'resolu',
+        statut: "resolu",
         date_resolution: now.toISOString(),
         commentaire_interne: commentaire,
         temps_total_intervention: total
       }
     });
 
-    await notifierClientResolution(incident);
-
     await pushClientEvent({
       incident,
-      type: 'TERMINEE',
-      message: 'L’intervention ménage est terminée.'
+      type: "TERMINEE",
+      message: "L’intervention ménage est terminée."
     });
 
-    setCommentaire('');
+    await updateSuiviMenage(incident, "resolu");
+
+    toast.success("Intervention terminée");
+    setCommentaire("");
+    setSelectedIncident(null);
   };
 
   const mettreEnAttente = async (data) => {
-    await updateMutation.mutateAsync({
+    await updateIncident.mutateAsync({
       id: incidentToWait.id,
       data: {
-        statut: 'en_attente_materiel',
+        statut: "en_attente_materiel",
         attente_raison: data.raison,
         attente_delai: data.delai
       }
@@ -241,35 +208,32 @@ export default function Menage() {
 
     await pushClientEvent({
       incident: incidentToWait,
-      type: 'EN_ATTENTE',
-      message: 'Intervention ménage en attente.',
-      meta: data
+      type: "EN_ATTENTE",
+      message: "Intervention ménage en attente.",
+      attenteRaison: data.raison,
+      delaiEstime: data.delai
     });
 
+    await updateSuiviMenage(incidentToWait, "en_attente");
+
+    toast.success("Intervention mise en attente");
     setShowAttenteDialog(false);
     setIncidentToWait(null);
   };
 
-  /* ============================================================
+  /* =======================
      RENDER
-  ============================================================ */
+  ======================= */
 
   return (
-    <div className="min-h-screen pb-8">
+    <div className="min-h-screen bg-gray-50">
       <OfflineBanner />
 
-      <header className="bg-[#FFD700] px-4 py-4 flex justify-between items-center">
-        <h1 className="font-heading text-xl">{t('menu_menage')}</h1>
-        <div className="flex items-center gap-2">
-          <button onClick={() => navigate(createPageUrl('MenuCollaborateur'))}>
-            <Home />
-          </button>
-          <CollaborateurNotificationBell />
-          <Sparkles />
-        </div>
+      <header className="bg-yellow-400 px-4 py-4 flex justify-between items-center">
+        <Logo />
+        <CollaborateurNotificationBell />
       </header>
 
-      {/* LISTE */}
       <main className="max-w-4xl mx-auto p-4">
         {isLoading ? (
           <Loader2 className="animate-spin mx-auto" />
@@ -283,14 +247,18 @@ export default function Menage() {
               <CardContent>
                 <div className="flex justify-between">
                   <div>
-                    <p className="font-bold">
-                      Logement {incident.logement}
-                    </p>
+                    <p className="font-bold">Logement {incident.logement}</p>
                     <p className="text-sm text-gray-600">
                       {incident.client_prenom} {incident.client_nom}
                     </p>
                   </div>
-                  <Badge>{incident.statut}</Badge>
+                  <Badge>
+                    {incident.statut === "en_attente"
+                      ? "⏳ En attente"
+                      : incident.statut === "en_cours"
+                      ? "▶️ En cours"
+                      : "✅ Terminé"}
+                  </Badge>
                 </div>
               </CardContent>
             </Card>
@@ -298,8 +266,11 @@ export default function Menage() {
         )}
       </main>
 
-      {/* MODAL */}
-      <Dialog open={!!selectedIncident} onOpenChange={() => setSelectedIncident(null)}>
+      {/* MODAL DETAIL */}
+      <Dialog
+        open={!!selectedIncident}
+        onOpenChange={() => setSelectedIncident(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
@@ -307,7 +278,7 @@ export default function Menage() {
             </DialogTitle>
           </DialogHeader>
 
-          {selectedIncident?.statut === 'en_attente' && (
+          {selectedIncident?.statut === "en_attente" && (
             <>
               <Input
                 placeholder="Votre nom"
@@ -320,7 +291,7 @@ export default function Menage() {
             </>
           )}
 
-          {selectedIncident?.statut === 'en_cours' && (
+          {selectedIncident?.statut === "en_cours" && (
             <>
               <InterventionTimer startTime={selectedIncident.date_debut} />
               <Textarea
@@ -344,6 +315,17 @@ export default function Menage() {
               </div>
             </>
           )}
+
+          {selectedIncident?.statut === "resolu" && (
+            <p className="text-green-600">
+              Intervention terminée le{" "}
+              {format(
+                new Date(selectedIncident.date_resolution),
+                "dd/MM/yyyy HH:mm",
+                { locale: fr }
+              )}
+            </p>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -351,22 +333,6 @@ export default function Menage() {
         open={showAttenteDialog}
         onOpenChange={setShowAttenteDialog}
         onConfirm={mettreEnAttente}
-      />
-
-      <PhotoInterventionCapture
-        open={showPhotoAvant}
-        onOpenChange={setShowPhotoAvant}
-        type="avant"
-        interventionId={incidentForPhoto?.id}
-        collaborateurNom={collaborateurNom}
-      />
-
-      <PhotoInterventionCapture
-        open={showPhotoApres}
-        onOpenChange={setShowPhotoApres}
-        type="apres"
-        interventionId={incidentForPhoto?.id}
-        collaborateurNom={collaborateurNom}
       />
     </div>
   );
