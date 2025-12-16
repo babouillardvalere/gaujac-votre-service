@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from "react";
+import React, { useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
@@ -13,7 +13,6 @@ import {
   PauseCircle,
   PlayCircle,
   FileDown,
-  Camera,
   Sparkles,
   Wrench
 } from "lucide-react";
@@ -65,35 +64,23 @@ export default function ClientSuiviDetail() {
   const [params] = useSearchParams();
 
   const type = params.get("type"); // ARRIVEE | SEJOUR
-  const ficheId = params.get("fiche_id");
   const stayId = params.get("stay_id");
-  const date = params.get("date");
 
   /* =========================
      CHARGEMENT DONNÉES
   ========================= */
   const { data, isLoading } = useQuery({
-    queryKey: ["client-suivi-detail", type, ficheId, stayId, date],
-    enabled: type === "ARRIVEE" ? !!ficheId : !!stayId,
+    queryKey: ["client-suivi-detail", stayId, type],
+    enabled: !!stayId && !!type,
     queryFn: async () => {
-      let interventions = [];
-
-      if (type === "ARRIVEE") {
-        interventions = await base44.entities.Intervention.filter({
-          fiche_arrivee_id: ficheId
-        });
-      } else {
-        interventions = await base44.entities.Intervention.filter({
-          stay_id: stayId,
-          ...(date ? { date_signalement: date } : {})
-        });
-      }
+      const interventions = await base44.entities.Intervention.filter({
+        stay_id: stayId,
+        origine: type
+      });
 
       const events = await base44.entities.InterventionEvent.filter(
         {
-          ...(type === "ARRIVEE"
-            ? { fiche_arrivee_id: ficheId }
-            : { stay_id: stayId }),
+          stay_id: stayId,
           visible_client: true
         },
         "at",
@@ -175,7 +162,6 @@ export default function ClientSuiviDetail() {
     <div className="min-h-screen bg-gray-50 px-4 py-6">
       <div className="max-w-3xl mx-auto space-y-6">
 
-        {/* RETOUR */}
         <button
           onClick={() => navigate(createPageUrl("ClientSuiviSearch"))}
           className="flex items-center gap-2 text-[#0077A8]"
@@ -184,7 +170,6 @@ export default function ClientSuiviDetail() {
           Retour
         </button>
 
-        {/* HEADER */}
         <div className="flex items-center justify-between">
           <Logo className="h-14" />
           <Button variant="outline" onClick={exportPdf}>
@@ -195,7 +180,6 @@ export default function ClientSuiviDetail() {
 
         <div ref={pageRef} className="space-y-6">
 
-          {/* INFOS CLIENT */}
           <Card>
             <CardContent className="p-4 space-y-1">
               <p className="font-semibold text-lg">
@@ -204,15 +188,9 @@ export default function ClientSuiviDetail() {
               <p className="text-gray-600">
                 Logement {intervention.logement}
               </p>
-              <p className="text-gray-500">
-                {type === "ARRIVEE"
-                  ? "Suivi du contrôle inventaire"
-                  : "Suivi pendant votre séjour"}
-              </p>
             </CardContent>
           </Card>
 
-          {/* SERVICE */}
           <Card>
             <CardContent className="p-4 flex items-center gap-3">
               {intervention.type === "menage" ? (
@@ -226,7 +204,6 @@ export default function ClientSuiviDetail() {
             </CardContent>
           </Card>
 
-          {/* TIMELINE */}
           <Card>
             <CardContent className="p-4 space-y-4">
               <h3 className="font-semibold text-[#0077A8]">
@@ -238,7 +215,10 @@ export default function ClientSuiviDetail() {
                 const Icon = conf.icon;
 
                 return (
-                  <div key={e.id} className="relative pl-6 border-l-2 border-[#00AEEF]">
+                  <div
+                    key={e.id}
+                    className="relative pl-6 border-l-2 border-[#00AEEF]"
+                  >
                     <div className="absolute -left-[9px] top-1 bg-white rounded-full">
                       <Icon className="w-4 h-4 text-[#00AEEF]" />
                     </div>
@@ -250,19 +230,6 @@ export default function ClientSuiviDetail() {
                       <div className="mt-1 text-sm text-yellow-700 bg-yellow-50 p-2 rounded">
                         ⏸ {WAITING_REASON[e.attente_raison]}
                         {e.delai_estime && <> — délai estimé : {e.delai_estime}</>}
-                      </div>
-                    )}
-
-                    {e.photos?.length > 0 && (
-                      <div className="flex gap-2 mt-2">
-                        {e.photos.map((p, i) => (
-                          <img
-                            key={i}
-                            src={p}
-                            alt="preuve"
-                            className="w-20 h-20 object-cover rounded border"
-                          />
-                        ))}
                       </div>
                     )}
 
