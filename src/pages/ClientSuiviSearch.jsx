@@ -1,4 +1,16 @@
-// … imports inchangés …
+import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Loader2, ChevronRight } from "lucide-react";
+import { createPageUrl } from "../utils";
+import Logo from "../components/Logo";
+import { useTranslation } from "../components/translations";
+
+const normalize = (str) => str?.toLowerCase().trim() || "";
 
 export default function ClientSuiviSearch() {
   const navigate = useNavigate();
@@ -73,7 +85,7 @@ export default function ClientSuiviSearch() {
               <Loader2 className="animate-spin mx-auto" />
             ) : fiches.length === 0 ? (
               <p className="text-center text-gray-500">
-                Aucun contrôle d’arrivée trouvé
+                Aucun contrôle d'arrivée trouvé
               </p>
             ) : (
               fiches.map(f => (
