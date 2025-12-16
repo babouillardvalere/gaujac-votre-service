@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -9,25 +10,29 @@ import { Loader2, Search } from "lucide-react";
 import { format } from "date-fns";
 
 export default function ClientSuiviSearch() {
+  const navigate = useNavigate();
+
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
   const [dateDebut, setDateDebut] = useState("");
   const [dateFin, setDateFin] = useState("");
   const [search, setSearch] = useState(false);
 
-  const { data: dossiers = [], isLoading } = useQuery({
+  const { data: interventions = [], isLoading } = useQuery({
     queryKey: ["client-suivi-search", nom, prenom, dateDebut, dateFin],
     enabled: search,
     queryFn: async () => {
-      const filters: any = {};
+      const filters = {};
 
       if (nom) filters.client_nom = nom;
       if (prenom) filters.client_prenom = prenom;
 
-      if (dateDebut || dateFin) {
-        filters.date_arrivee = {};
-        if (dateDebut) filters.date_arrivee.$gte = dateDebut;
-        if (dateFin) filters.date_depart = { $lte: dateFin };
+      if (dateDebut) {
+        filters.date_arrivee = { $gte: dateDebut };
+      }
+
+      if (dateFin) {
+        filters.date_depart = { $lte: dateFin };
       }
 
       return await base44.entities.Intervention.filter(
@@ -50,7 +55,7 @@ export default function ClientSuiviSearch() {
           📋 Suivi des interventions
         </h1>
 
-        {/* FORMULAIRE DE RECHERCHE */}
+        {/* FORMULAIRE */}
         <Card>
           <CardContent className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -65,16 +70,27 @@ export default function ClientSuiviSearch() {
 
             <div>
               <Label>Date d’arrivée</Label>
-              <Input type="date" value={dateDebut} onChange={(e) => setDateDebut(e.target.value)} />
+              <Input
+                type="date"
+                value={dateDebut}
+                onChange={(e) => setDateDebut(e.target.value)}
+              />
             </div>
 
             <div>
               <Label>Date de départ</Label>
-              <Input type="date" value={dateFin} onChange={(e) => setDateFin(e.target.value)} />
+              <Input
+                type="date"
+                value={dateFin}
+                onChange={(e) => setDateFin(e.target.value)}
+              />
             </div>
 
             <div className="md:col-span-2">
-              <Button onClick={handleSearch} className="w-full bg-[#00AEEF]">
+              <Button
+                onClick={handleSearch}
+                className="w-full bg-[#00AEEF]"
+              >
                 <Search className="w-4 h-4 mr-2" />
                 Rechercher
               </Button>
@@ -91,33 +107,35 @@ export default function ClientSuiviSearch() {
               </div>
             )}
 
-            {!isLoading && search && dossiers.length === 0 && (
+            {!isLoading && search && interventions.length === 0 && (
               <p className="text-center text-gray-500">
                 Aucun résultat trouvé
               </p>
             )}
 
-            {!isLoading && dossiers.length > 0 && (
+            {!isLoading && interventions.length > 0 && (
               <div className="space-y-3">
-                {dossiers.map((dossier: any) => (
+                {interventions.map((intervention) => (
                   <Card
-                    key={dossier.id}
+                    key={intervention.id}
                     className="cursor-pointer hover:shadow-md transition"
                     onClick={() =>
-                      window.location.href = `/ClientSuiviDetail?id=${dossier.id}`
+                      navigate(`/client/suivi/${intervention.id}`)
                     }
                   >
                     <CardContent className="p-4 space-y-1">
                       <p className="font-semibold">
-                        {dossier.client_prenom} {dossier.client_nom}
+                        {intervention.client_prenom} {intervention.client_nom}
                       </p>
+
                       <p className="text-sm text-gray-600">
-                        Logement : {dossier.logement} — {dossier.categorie}
+                        Logement : {intervention.logement} — {intervention.categorie}
                       </p>
+
                       <p className="text-sm text-gray-500">
                         Séjour :{" "}
-                        {format(new Date(dossier.date_arrivee), "dd/MM/yyyy")} →{" "}
-                        {format(new Date(dossier.date_depart), "dd/MM/yyyy")}
+                        {format(new Date(intervention.date_arrivee), "dd/MM/yyyy")} →{" "}
+                        {format(new Date(intervention.date_depart), "dd/MM/yyyy")}
                       </p>
                     </CardContent>
                   </Card>
