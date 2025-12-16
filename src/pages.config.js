@@ -66,6 +66,8 @@ import DirectionMenu from './pages/DirectionMenu';
 import Bar from './pages/Bar';
 import Animations from './pages/Animations';
 import ClientSuiviInventaire from './pages/ClientSuiviInventaire';
+import ClientSuiviSearch from './pages/ClientSuiviSearch';
+import ClientSuiviDetail from './pages/ClientSuiviDetail';
 import __Layout from './Layout.jsx';
 
 
@@ -138,6 +140,8 @@ export const PAGES = {
     "Bar": Bar,
     "Animations": Animations,
     "ClientSuiviInventaire": ClientSuiviInventaire,
+    "ClientSuiviSearch": ClientSuiviSearch,
+    "ClientSuiviDetail": ClientSuiviDetail,
 }
 
 export const pagesConfig = {
