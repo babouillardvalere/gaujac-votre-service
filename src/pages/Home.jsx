@@ -90,6 +90,20 @@ export default function Home() {
       iconColor: 'text-black'
     },
     {
+      title: lang === 'fr' ? '📋 Suivi interventions' : '📋 Track interventions',
+      icon: BookOpen,
+      href: '/ClientSuiviInventaire',
+      bgColor: 'bg-[#9333ea]',
+      borderColor: 'border-[#9333ea]',
+      iconBg: 'bg-white',
+      textColor: 'text-white',
+      subtitleColor: 'text-white/90',
+      arrowColor: 'text-white',
+      description: lang === 'fr' ? 'Suivre ménage & technique' : 'Track housekeeping & technical',
+      ariaLabel: lang === 'fr' ? 'Suivi des interventions' : 'Track interventions',
+      iconColor: 'text-[#9333ea]'
+    },
+    {
       title: lang === 'fr' ? '📖 Infos Pratiques' : '📖 Practical Info',
       icon: BookOpen,
       href: '/InfosPratiques',
