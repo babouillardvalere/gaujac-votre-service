@@ -1,19 +1,22 @@
 import React, { useMemo, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Loader2,
   ArrowLeft,
+  Loader2,
   Clock,
   CheckCircle,
   AlertCircle,
-  Sparkles,
+  PlayCircle,
+  PauseCircle,
   Wrench,
-  FileDown
+  Sparkles,
+  FileDown,
+  Camera
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -21,80 +24,95 @@ import { createPageUrl } from "../utils";
 import Logo from "../components/Logo";
 import { useTranslation } from "../components/translations";
 
+/* ======================================================
+   MAPPING STATUTS → CLIENT
+====================================================== */
+const STATUS_LABELS = {
+  PRISE_EN_CHARGE: {
+    icon: Clock,
+    label: "Demande enregistrée",
+    color: "bg-orange-100 text-orange-700"
+  },
+  EN_COURS: {
+    icon: PlayCircle,
+    label: "Intervention en cours",
+    color: "bg-blue-100 text-blue-700"
+  },
+  EN_ATTENTE: {
+    icon: PauseCircle,
+    label: "En attente",
+    color: "bg-yellow-100 text-yellow-700"
+  },
+  TERMINEE: {
+    icon: CheckCircle,
+    label: "Intervention terminée",
+    color: "bg-green-100 text-green-700"
+  }
+};
+
+/* ======================================================
+   MOTIFS D’ATTENTE (CLIENT-FRIENDLY)
+====================================================== */
+const WAITING_REASONS = {
+  MATERIEL: "Attente de matériel",
+  FOURNISSEUR: "Attente du fournisseur",
+  CLIENT_ABSENT: "Client absent",
+  PIECE_SPECIFIQUE: "Besoin d’une pièce spécifique",
+  SECOND_TECHNICIEN: "Besoin d’un second technicien"
+};
+
 export default function ClientSuiviDetail() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const interventionId = searchParams.get("id");
-  const { t, lang } = useTranslation();
+  const { lang } = useTranslation();
   const pageRef = useRef(null);
+  const [params] = useSearchParams();
 
-  /* =========================
-     CHARGEMENT INTERVENTION
-  ========================= */
-  const { data: intervention, isLoading } = useQuery({
-    queryKey: ["client-intervention", interventionId],
-    enabled: !!interventionId,
-    queryFn: () => base44.entities.Intervention.get(interventionId)
-  });
+  const stayId = params.get("stay_id");
+  const type = params.get("type"); // ARRIVEE | SEJOUR
+  const date = params.get("date"); // optionnel pour séjour
 
-  /* =========================
-     EVENTS CLIENT-SAFE
-  ========================= */
-  const { data: events = [] } = useQuery({
-    queryKey: ["client-intervention-events", interventionId],
-    enabled: !!interventionId,
-    queryFn: () =>
-      base44.entities.InterventionEvent.filter(
-        { intervention_id: interventionId, visible_client: true },
+  /* ======================================================
+     CHARGEMENT DES DONNÉES
+  ====================================================== */
+  const { data, isLoading } = useQuery({
+    queryKey: ["client-suivi-detail", stayId, type, date],
+    enabled: !!stayId,
+    queryFn: async () => {
+      const interventions = await base44.entities.Intervention.filter({
+        stay_id: stayId,
+        origine: type,
+        ...(date ? { date_signalement: date } : {})
+      });
+
+      const timeline = await base44.entities.InterventionEvent.filter(
+        {
+          stay_id: stayId,
+          origine: type,
+          visible_client: true
+        },
         "at",
         100
-      )
+      );
+
+      return { interventions, timeline };
+    }
   });
 
-  /* =========================
-     STATUTS CLIENT
-  ========================= */
-  const statusMap = useMemo(
-    () => ({
-      OUVERTE: {
-        icon: Clock,
-        label: lang === "fr" ? "Demande envoyée" : "Request sent",
-        color: "bg-orange-100 text-orange-700"
-      },
-      EN_COURS: {
-        icon: Loader2,
-        label: lang === "fr" ? "En cours" : "In progress",
-        color: "bg-blue-100 text-blue-700"
-      },
-      EN_ATTENTE: {
-        icon: AlertCircle,
-        label: lang === "fr" ? "En attente" : "On hold",
-        color: "bg-yellow-100 text-yellow-700"
-      },
-      TERMINEE: {
-        icon: CheckCircle,
-        label: lang === "fr" ? "Terminée" : "Completed",
-        color: "bg-green-100 text-green-700"
-      }
-    }),
-    [lang]
-  );
-
-  /* =========================
-     EXPORT PDF AVEC LOGO
-  ========================= */
+  /* ======================================================
+     EXPORT PDF
+  ====================================================== */
   const exportPdf = () => {
-    const content = pageRef.current?.innerHTML || "";
+    const content = pageRef.current.innerHTML;
     const original = document.body.innerHTML;
 
     document.body.innerHTML = `
       <html>
         <head>
           <meta charset="utf-8"/>
-          <title>Suivi intervention</title>
+          <title>Suivi client</title>
           <style>
-            body { font-family: Arial, sans-serif; padding: 24px; }
-            .pdf-header {
+            body { font-family: Arial; padding: 24px; }
+            .header {
               display: flex;
               align-items: center;
               gap: 16px;
@@ -102,26 +120,14 @@ export default function ClientSuiviDetail() {
               padding-bottom: 12px;
               margin-bottom: 24px;
             }
-            .pdf-logo { height: 60px; }
-            .card {
-              border: 1px solid #e5e7eb;
-              border-radius: 12px;
-              padding: 16px;
-              margin-bottom: 16px;
-            }
-            .badge {
-              display: inline-block;
-              padding: 4px 10px;
-              border-radius: 999px;
-              font-size: 12px;
-              border: 1px solid #e5e7eb;
-            }
+            img { height: 60px; }
+            .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin-bottom: 12px; }
           </style>
         </head>
         <body>
-          <div class="pdf-header">
-            <img src="/logo-camping.png" class="pdf-logo" />
-            <h2>${lang === "fr" ? "Suivi de votre intervention" : "Intervention tracking"}</h2>
+          <div class="header">
+            <img src="/logo-camping.png" />
+            <h2>Suivi de votre ${type === "ARRIVEE" ? "arrivée" : "séjour"}</h2>
           </div>
           ${content}
         </body>
@@ -133,9 +139,9 @@ export default function ClientSuiviDetail() {
     window.location.reload();
   };
 
-  /* =========================
+  /* ======================================================
      ÉTATS
-  ========================= */
+  ====================================================== */
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -144,22 +150,24 @@ export default function ClientSuiviDetail() {
     );
   }
 
-  if (!intervention) {
+  if (!data || data.interventions.length === 0) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <p className="text-gray-500">
-          {lang === "fr" ? "Intervention introuvable" : "Intervention not found"}
+          Aucune intervention trouvée pour ce séjour.
         </p>
         <Button onClick={() => navigate(createPageUrl("ClientSuiviSearch"))}>
-          {t("retour")}
+          Retour
         </Button>
       </div>
     );
   }
 
-  const menage = statusMap[intervention.menage_statut] || statusMap.OUVERTE;
-  const technique = statusMap[intervention.technique_statut] || statusMap.OUVERTE;
+  const intervention = data.interventions[0];
 
+  /* ======================================================
+     RENDER
+  ====================================================== */
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-6">
       <div className="max-w-3xl mx-auto space-y-6">
@@ -170,7 +178,7 @@ export default function ClientSuiviDetail() {
           className="flex items-center gap-2 text-[#0077A8]"
         >
           <ArrowLeft className="w-5 h-5" />
-          {t("retour")}
+          Retour
         </button>
 
         {/* HEADER */}
@@ -182,75 +190,98 @@ export default function ClientSuiviDetail() {
           </Button>
         </div>
 
-        <div ref={pageRef}>
+        <div ref={pageRef} className="space-y-6">
 
-          {/* INFO CLIENT */}
+          {/* INFOS CLIENT */}
           <Card>
             <CardContent className="p-4 space-y-1">
               <p className="font-semibold text-lg">
                 {intervention.client_prenom} {intervention.client_nom}
               </p>
               <p className="text-gray-600">
-                {intervention.logement_numero} — {intervention.categorie_logement}
+                Logement {intervention.logement}
               </p>
               <p className="text-gray-500">
-                {format(new Date(intervention.date_arrivee), "dd/MM/yyyy", { locale: fr })}
-                {" → "}
-                {format(new Date(intervention.date_depart), "dd/MM/yyyy", { locale: fr })}
+                {type === "ARRIVEE"
+                  ? "Suivi du contrôle inventaire"
+                  : "Suivi pendant votre séjour"}
               </p>
             </CardContent>
           </Card>
 
-          {/* STATUTS */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="w-5 h-5" />
-                  <span>🧹 {lang === "fr" ? "Ménage" : "Housekeeping"}</span>
-                </div>
-                <Badge className={menage.color}>{menage.label}</Badge>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Wrench className="w-5 h-5" />
-                  <span>🔧 {lang === "fr" ? "Technique" : "Technical"}</span>
-                </div>
-                <Badge className={technique.color}>{technique.label}</Badge>
-              </CardContent>
-            </Card>
-          </div>
+          {/* STATUT GLOBAL */}
+          <Card>
+            <CardContent className="p-4 flex items-center gap-3">
+              {intervention.type === "menage" ? (
+                <Sparkles className="w-6 h-6" />
+              ) : (
+                <Wrench className="w-6 h-6" />
+              )}
+              <Badge className={STATUS_LABELS[intervention.statut].color}>
+                {STATUS_LABELS[intervention.statut].label}
+              </Badge>
+            </CardContent>
+          </Card>
 
           {/* TIMELINE */}
           <Card>
-            <CardContent className="p-4 space-y-3">
+            <CardContent className="p-4 space-y-4">
               <h3 className="font-semibold text-[#0077A8]">
-                📅 {lang === "fr" ? "Historique" : "Timeline"}
+                📅 Historique de votre demande
               </h3>
 
-              {events.length === 0 && (
-                <p className="text-sm text-gray-500">
-                  {lang === "fr"
-                    ? "Aucune mise à jour pour le moment."
-                    : "No updates yet."}
-                </p>
-              )}
+              {data.timeline.map((event) => {
+                const status = STATUS_LABELS[event.type];
+                const Icon = status.icon;
 
-              {events.map((e) => (
-                <div key={e.id} className="border-l-2 pl-3 border-[#00AEEF]">
-                  <p className="font-semibold">{e.titre_client}</p>
-                  <p className="text-sm text-gray-700">{e.message_client}</p>
-                  <p className="text-xs text-gray-400">
-                    {format(new Date(e.at), "dd/MM/yyyy HH:mm", { locale: fr })}
-                  </p>
-                </div>
-              ))}
+                return (
+                  <div
+                    key={event.id}
+                    className="relative pl-6 border-l-2 border-[#00AEEF]"
+                  >
+                    <div className="absolute -left-[9px] top-1 bg-white rounded-full">
+                      <Icon className="w-4 h-4 text-[#00AEEF]" />
+                    </div>
+
+                    <div className="space-y-1">
+                      <p className="font-semibold">{status.label}</p>
+                      <p className="text-sm text-gray-700">
+                        {event.message_client}
+                      </p>
+
+                      {event.attente_raison && (
+                        <div className="text-sm text-yellow-700 bg-yellow-50 p-2 rounded">
+                          ⏸ {WAITING_REASONS[event.attente_raison]}
+                          {event.delai_estime && (
+                            <> — délai estimé : {event.delai_estime}</>
+                          )}
+                        </div>
+                      )}
+
+                      {event.photos?.length > 0 && (
+                        <div className="flex gap-2 mt-2">
+                          {event.photos.map((p, i) => (
+                            <img
+                              key={i}
+                              src={p}
+                              alt="preuve"
+                              className="w-20 h-20 object-cover rounded border"
+                            />
+                          ))}
+                        </div>
+                      )}
+
+                      <p className="text-xs text-gray-400">
+                        {format(new Date(event.at), "dd/MM/yyyy HH:mm", {
+                          locale: fr
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
             </CardContent>
           </Card>
-
         </div>
       </div>
     </div>
