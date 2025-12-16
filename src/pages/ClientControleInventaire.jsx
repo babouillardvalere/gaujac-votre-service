@@ -1,33 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+import { base44 } from '../api/base44Client';
+import { createPageUrl } from '../utils';
 import { useTranslation } from '../components/translations';
-import { base44 } from '@/api/base44Client';
+
 import Logo from '../components/Logo';
 import SignaturePad from '../components/SignaturePad';
 import ArriveeProgressBar from '../components/ArriveeProgressBar';
 import LazyInventaire from '../components/LazyInventaire';
 import { clearInventaireCache } from '../components/inventaireCache';
-import { getInventaireParCategorie, getCodeFromCategory } from '../components/categoryCodeMapping';
+import { getInventaireParCategorie } from '../components/categoryCodeMapping';
+
 import { uploadCompressedImage } from '../components/imageCompression';
 import { notifierInterventionCreee } from '../components/notificationService';
-import { createPageUrl } from '../utils';
+
+import { Button } from '../components/ui/button';
+import { Card, CardContent } from '../components/ui/card';
+import { Input } from '../components/ui/input';
+import { Textarea } from '../components/ui/textarea';
 
 import {
-  Button,
-  Card,
-  CardContent,
-  Input,
-  Textarea,
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle
-} from '@/components/ui';
+} from '../components/ui/dialog';
 
 import {
   ArrowLeft,
@@ -38,22 +36,20 @@ import {
   Meh,
   Frown,
   Send,
-  Loader2,
-  Wrench,
-  Sparkles
+  Loader2
 } from 'lucide-react';
 
 import { toast } from 'sonner';
 
 /* ============================================================
-   COMPOSANT
+   CLIENT – CONTRÔLE INVENTAIRE ARRIVÉE
 ============================================================ */
 export default function ClientControleInventaire() {
   const { lang } = useTranslation();
   const navigate = useNavigate();
 
   /* =======================
-     SESSION
+     DONNÉES SESSION
   ======================= */
   const nom = sessionStorage.getItem('arrivee_nom');
   const prenom = sessionStorage.getItem('arrivee_prenom');
@@ -61,7 +57,6 @@ export default function ClientControleInventaire() {
   const dateDepart = sessionStorage.getItem('arrivee_date_depart');
   const categorie = sessionStorage.getItem('arrivee_categorie');
   const numero = sessionStorage.getItem('arrivee_numero');
-  const typeLogement = sessionStorage.getItem('arrivee_type_logement') || 'mobilhome';
 
   /* =======================
      STATES
@@ -73,14 +68,23 @@ export default function ClientControleInventaire() {
   const [signature, setSignature] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [showRecap, setShowRecap] = useState(false);
-  const [interventionsPreview, setInterventionsPreview] = useState({ menage: [], technique: [] });
+  const [interventionsPreview, setInterventionsPreview] = useState({
+    menage: [],
+    technique: []
+  });
 
   /* =======================
-     CRITICAL ITEMS
+     OBJETS CRITIQUES
   ======================= */
   const CRITICAL_ITEMS = [
-    'tv', 'refrigerateur', 'micro_ondes', 'chauffage',
-    'plaque_cuisson', 'chauffe_eau', 'wc', 'douche'
+    'tv',
+    'refrigerateur',
+    'micro_ondes',
+    'chauffage',
+    'plaque_cuisson',
+    'chauffe_eau',
+    'wc',
+    'douche'
   ];
 
   /* =======================
@@ -89,6 +93,9 @@ export default function ClientControleInventaire() {
   const inventaire = getInventaireParCategorie(categorie, lang);
   const items = inventaire?.objets || [];
 
+  /* =======================
+     INIT
+  ======================= */
   useEffect(() => {
     if (!nom || !categorie) {
       navigate(createPageUrl('ClientArriveeIdentite'));
@@ -99,7 +106,9 @@ export default function ClientControleInventaire() {
 
   useEffect(() => {
     const init = {};
-    items.forEach(i => (init[i.id] = false));
+    items.forEach(item => {
+      init[item.id] = false;
+    });
     setObjetsCoches(init);
   }, [items.length]);
 
@@ -107,7 +116,19 @@ export default function ClientControleInventaire() {
      HELPERS
   ======================= */
   const toggleObjet = id => {
-    setObjetsCoches(p => ({ ...p, [id]: !p[id] }));
+    setObjetsCoches(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleUploadPhoto = async (id, file) => {
+    if (!file) return;
+    try {
+      const result = await uploadCompressedImage(file, compressed =>
+        base44.integrations.Core.UploadFile({ file: compressed })
+      );
+      setPhotosObjets(p => ({ ...p, [id]: result.file_url }));
+    } catch {
+      toast.error('Erreur upload photo');
+    }
   };
 
   const analyzeInterventions = () => {
@@ -116,47 +137,56 @@ export default function ClientControleInventaire() {
 
     items.forEach(item => {
       if (objetsCoches[item.id]) {
-        const target = CRITICAL_ITEMS.includes(item.id) ? technique : menage;
+        const target = CRITICAL_ITEMS.includes(item.id)
+          ? technique
+          : menage;
+
         target.push({
           objet: item.label,
-          icon: item.icon
+          icon: item.icon,
+          photo: photosObjets[item.id] || null
         });
       }
     });
 
     if (evaluationProprete === 'pas_satisfaisant') {
-      menage.push({ objet: 'Propreté du logement' });
+      menage.push({
+        objet: lang === 'fr' ? 'Propreté du logement' : 'Cleanliness issue'
+      });
     }
 
     return { menage, technique };
   };
 
   /* =======================
-     SUBMIT
+     VALIDATION
   ======================= */
   const handlePrepareSubmit = () => {
     if (!evaluationProprete) {
       toast.error('Veuillez évaluer la propreté');
       return;
     }
-    if (
-      (Object.values(objetsCoches).includes(true) ||
-        evaluationProprete === 'pas_satisfaisant') &&
-      !signature
-    ) {
+
+    const hasIssue =
+      Object.values(objetsCoches).some(v => v) ||
+      evaluationProprete === 'pas_satisfaisant';
+
+    if (hasIssue && !signature) {
       toast.error('Signature obligatoire en cas de problème');
       return;
     }
+
     setInterventionsPreview(analyzeInterventions());
     setShowRecap(true);
   };
 
+  /* =======================
+     ENVOI FINAL
+  ======================= */
   const handleFinalSubmit = async () => {
     setSubmitting(true);
+
     try {
-      /* =======================
-         MESSAGE CLIENT CLAIR
-      ======================= */
       const { menage, technique } = interventionsPreview;
 
       const messageClient =
@@ -168,41 +198,41 @@ export default function ClientControleInventaire() {
           ? 'Votre inventaire a été enregistré. La technique s’en occupe.'
           : 'Votre inventaire a été enregistré.';
 
-      /* =======================
-         FICHE ARRIVEE
-      ======================= */
+      /* FICHE ARRIVÉE */
       const fiche = await base44.entities.FicheArrivee.create({
         client_nom: nom,
         client_prenom: prenom,
         date_arrivee: dateArrivee,
         date_depart: dateDepart,
         logement: numero,
-        inventaire_objets_manquants: Object.keys(objetsCoches).filter(k => objetsCoches[k]),
+        inventaire_objets_manquants: Object.keys(objetsCoches).filter(
+          k => objetsCoches[k]
+        ),
         evaluation_proprete: evaluationProprete,
         commentaire_proprete: commentaireProprete,
         signature_url: signature
       });
 
-      /* =======================
-         SUIVI INVENTAIRE
-      ======================= */
+      /* SUIVI INVENTAIRE CLIENT */
       await base44.entities.SuiviInventaire.create({
         client_nom: nom,
         client_prenom: prenom,
         logement: numero,
         type_inventaire: 'ARRIVEE',
+
         items_menage: menage,
         items_technique: technique,
+
         statut_menage: menage.length ? 'en_attente' : 'non_requis',
         statut_technique: technique.length ? 'en_attente' : 'non_requis',
+
         message_client: messageClient,
 
-        /* PDF */
+        fiche_arrivee_id: fiche.id,
+
         pdf_autorise: true,
         nom_camping: 'Camping Paradis',
-        logo_camping_url: '/assets/logo-camping.png',
-
-        fiche_arrivee_id: fiche.id
+        logo_camping_url: '/assets/logo-camping.png'
       });
 
       toast.success('Inventaire envoyé avec succès');
@@ -219,7 +249,7 @@ export default function ClientControleInventaire() {
      RENDER
   ======================= */
   return (
-    <div className="min-h-screen px-6 py-8 max-w-2xl mx-auto">
+    <div className="min-h-screen max-w-2xl mx-auto px-6 py-8">
       <Logo className="h-16 mb-4" />
 
       <h1 className="text-2xl font-bold text-center mb-6">
@@ -232,22 +262,42 @@ export default function ClientControleInventaire() {
         </CardContent>
       </Card>
 
-      <Card className="mb-6">
-        <CardContent className="grid grid-cols-2 gap-3">
-          {items.map(item => (
-            <button
-              key={item.id}
-              onClick={() => toggleObjet(item.id)}
-              className={`p-4 border rounded ${
-                objetsCoches[item.id] ? 'bg-orange-50 border-orange-500' : ''
-              }`}
-            >
-              <div className="text-3xl">{item.icon}</div>
-              <div>{item.label}</div>
-            </button>
-          ))}
-        </CardContent>
-      </Card>
+      <LazyInventaire>
+        <Card className="mb-6">
+          <CardContent className="grid grid-cols-2 gap-3">
+            {items.map(item => (
+              <button
+                key={item.id}
+                onClick={() => toggleObjet(item.id)}
+                className={`p-4 border rounded-lg ${
+                  objetsCoches[item.id]
+                    ? 'bg-orange-50 border-orange-500'
+                    : 'border-gray-300'
+                }`}
+              >
+                <div className="text-3xl mb-1">{item.icon}</div>
+                <div className="text-sm font-semibold">{item.label}</div>
+
+                {objetsCoches[item.id] && (
+                  <label className="mt-2 block">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={e =>
+                        handleUploadPhoto(item.id, e.target.files[0])
+                      }
+                    />
+                    <span className="text-xs text-blue-600 cursor-pointer">
+                      📸 Ajouter photo
+                    </span>
+                  </label>
+                )}
+              </button>
+            ))}
+          </CardContent>
+        </Card>
+      </LazyInventaire>
 
       <Card className="mb-6">
         <CardContent>
@@ -263,13 +313,27 @@ export default function ClientControleInventaire() {
               <Smile />
             </button>
           </div>
+
+          {(evaluationProprete === 'pas_satisfaisant' ||
+            evaluationProprete === 'correct') && (
+            <Textarea
+              className="mt-3"
+              placeholder="Commentaire"
+              value={commentaireProprete}
+              onChange={e => setCommentaireProprete(e.target.value)}
+            />
+          )}
         </CardContent>
       </Card>
 
       <SignaturePad onSave={setSignature} disabled={submitting} />
 
-      <Button onClick={handlePrepareSubmit} className="w-full h-14 mt-6">
-        <Send className="mr-2" /> Envoyer
+      <Button
+        onClick={handlePrepareSubmit}
+        className="w-full h-14 mt-6"
+      >
+        <Send className="mr-2" />
+        Envoyer
       </Button>
 
       <Dialog open={showRecap} onOpenChange={setShowRecap}>
@@ -277,6 +341,7 @@ export default function ClientControleInventaire() {
           <DialogHeader>
             <DialogTitle>Récapitulatif</DialogTitle>
           </DialogHeader>
+
           <Button onClick={handleFinalSubmit} disabled={submitting}>
             {submitting ? <Loader2 className="animate-spin" /> : 'Valider'}
           </Button>
