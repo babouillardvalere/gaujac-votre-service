@@ -10,50 +10,48 @@ import {
   Loader2,
   Clock,
   CheckCircle,
-  AlertCircle,
-  PlayCircle,
   PauseCircle,
-  Wrench,
-  Sparkles,
+  PlayCircle,
   FileDown,
-  Camera
+  Camera,
+  Sparkles,
+  Wrench
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { createPageUrl } from "../utils";
 import Logo from "../components/Logo";
-import { useTranslation } from "../components/translations";
 
-/* ======================================================
-   MAPPING STATUTS → CLIENT
-====================================================== */
-const STATUS_LABELS = {
+/* =========================
+   STATUTS CLIENT
+========================= */
+const STATUS = {
   PRISE_EN_CHARGE: {
-    icon: Clock,
     label: "Demande enregistrée",
+    icon: Clock,
     color: "bg-orange-100 text-orange-700"
   },
   EN_COURS: {
-    icon: PlayCircle,
     label: "Intervention en cours",
+    icon: PlayCircle,
     color: "bg-blue-100 text-blue-700"
   },
   EN_ATTENTE: {
-    icon: PauseCircle,
     label: "En attente",
+    icon: PauseCircle,
     color: "bg-yellow-100 text-yellow-700"
   },
   TERMINEE: {
-    icon: CheckCircle,
     label: "Intervention terminée",
+    icon: CheckCircle,
     color: "bg-green-100 text-green-700"
   }
 };
 
-/* ======================================================
-   MOTIFS D’ATTENTE (CLIENT-FRIENDLY)
-====================================================== */
-const WAITING_REASONS = {
+/* =========================
+   MOTIFS D’ATTENTE
+========================= */
+const WAITING_REASON = {
   MATERIEL: "Attente de matériel",
   FOURNISSEUR: "Attente du fournisseur",
   CLIENT_ABSENT: "Client absent",
@@ -63,44 +61,52 @@ const WAITING_REASONS = {
 
 export default function ClientSuiviDetail() {
   const navigate = useNavigate();
-  const { lang } = useTranslation();
   const pageRef = useRef(null);
   const [params] = useSearchParams();
 
-  const stayId = params.get("stay_id");
   const type = params.get("type"); // ARRIVEE | SEJOUR
-  const date = params.get("date"); // optionnel pour séjour
+  const ficheId = params.get("fiche_id");
+  const stayId = params.get("stay_id");
+  const date = params.get("date");
 
-  /* ======================================================
-     CHARGEMENT DES DONNÉES
-  ====================================================== */
+  /* =========================
+     CHARGEMENT DONNÉES
+  ========================= */
   const { data, isLoading } = useQuery({
-    queryKey: ["client-suivi-detail", stayId, type, date],
-    enabled: !!stayId,
+    queryKey: ["client-suivi-detail", type, ficheId, stayId, date],
+    enabled: type === "ARRIVEE" ? !!ficheId : !!stayId,
     queryFn: async () => {
-      const interventions = await base44.entities.Intervention.filter({
-        stay_id: stayId,
-        origine: type,
-        ...(date ? { date_signalement: date } : {})
-      });
+      let interventions = [];
 
-      const timeline = await base44.entities.InterventionEvent.filter(
-        {
+      if (type === "ARRIVEE") {
+        interventions = await base44.entities.Intervention.filter({
+          fiche_arrivee_id: ficheId
+        });
+      } else {
+        interventions = await base44.entities.Intervention.filter({
           stay_id: stayId,
-          origine: type,
+          ...(date ? { date_signalement: date } : {})
+        });
+      }
+
+      const events = await base44.entities.InterventionEvent.filter(
+        {
+          ...(type === "ARRIVEE"
+            ? { fiche_arrivee_id: ficheId }
+            : { stay_id: stayId }),
           visible_client: true
         },
         "at",
-        100
+        200
       );
 
-      return { interventions, timeline };
+      return { interventions, events };
     }
   });
 
-  /* ======================================================
+  /* =========================
      EXPORT PDF
-  ====================================================== */
+  ========================= */
   const exportPdf = () => {
     const content = pageRef.current.innerHTML;
     const original = document.body.innerHTML;
@@ -121,12 +127,11 @@ export default function ClientSuiviDetail() {
               margin-bottom: 24px;
             }
             img { height: 60px; }
-            .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin-bottom: 12px; }
           </style>
         </head>
         <body>
           <div class="header">
-            <img src="/logo-camping.png" />
+            <img src="/assets/logo-camping.png" />
             <h2>Suivi de votre ${type === "ARRIVEE" ? "arrivée" : "séjour"}</h2>
           </div>
           ${content}
@@ -139,9 +144,9 @@ export default function ClientSuiviDetail() {
     window.location.reload();
   };
 
-  /* ======================================================
+  /* =========================
      ÉTATS
-  ====================================================== */
+  ========================= */
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -153,9 +158,7 @@ export default function ClientSuiviDetail() {
   if (!data || data.interventions.length === 0) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <p className="text-gray-500">
-          Aucune intervention trouvée pour ce séjour.
-        </p>
+        <p className="text-gray-500">Aucune information disponible.</p>
         <Button onClick={() => navigate(createPageUrl("ClientSuiviSearch"))}>
           Retour
         </Button>
@@ -165,9 +168,9 @@ export default function ClientSuiviDetail() {
 
   const intervention = data.interventions[0];
 
-  /* ======================================================
+  /* =========================
      RENDER
-  ====================================================== */
+  ========================= */
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-6">
       <div className="max-w-3xl mx-auto space-y-6">
@@ -209,7 +212,7 @@ export default function ClientSuiviDetail() {
             </CardContent>
           </Card>
 
-          {/* STATUT GLOBAL */}
+          {/* SERVICE */}
           <Card>
             <CardContent className="p-4 flex items-center gap-3">
               {intervention.type === "menage" ? (
@@ -217,8 +220,8 @@ export default function ClientSuiviDetail() {
               ) : (
                 <Wrench className="w-6 h-6" />
               )}
-              <Badge className={STATUS_LABELS[intervention.statut].color}>
-                {STATUS_LABELS[intervention.statut].label}
+              <Badge className={STATUS[intervention.statut].color}>
+                {STATUS[intervention.statut].label}
               </Badge>
             </CardContent>
           </Card>
@@ -230,58 +233,48 @@ export default function ClientSuiviDetail() {
                 📅 Historique de votre demande
               </h3>
 
-              {data.timeline.map((event) => {
-                const status = STATUS_LABELS[event.type];
-                const Icon = status.icon;
+              {data.events.map((e) => {
+                const conf = STATUS[e.type];
+                const Icon = conf.icon;
 
                 return (
-                  <div
-                    key={event.id}
-                    className="relative pl-6 border-l-2 border-[#00AEEF]"
-                  >
+                  <div key={e.id} className="relative pl-6 border-l-2 border-[#00AEEF]">
                     <div className="absolute -left-[9px] top-1 bg-white rounded-full">
                       <Icon className="w-4 h-4 text-[#00AEEF]" />
                     </div>
 
-                    <div className="space-y-1">
-                      <p className="font-semibold">{status.label}</p>
-                      <p className="text-sm text-gray-700">
-                        {event.message_client}
-                      </p>
+                    <p className="font-semibold">{conf.label}</p>
+                    <p className="text-sm text-gray-700">{e.message_client}</p>
 
-                      {event.attente_raison && (
-                        <div className="text-sm text-yellow-700 bg-yellow-50 p-2 rounded">
-                          ⏸ {WAITING_REASONS[event.attente_raison]}
-                          {event.delai_estime && (
-                            <> — délai estimé : {event.delai_estime}</>
-                          )}
-                        </div>
-                      )}
+                    {e.attente_raison && (
+                      <div className="mt-1 text-sm text-yellow-700 bg-yellow-50 p-2 rounded">
+                        ⏸ {WAITING_REASON[e.attente_raison]}
+                        {e.delai_estime && <> — délai estimé : {e.delai_estime}</>}
+                      </div>
+                    )}
 
-                      {event.photos?.length > 0 && (
-                        <div className="flex gap-2 mt-2">
-                          {event.photos.map((p, i) => (
-                            <img
-                              key={i}
-                              src={p}
-                              alt="preuve"
-                              className="w-20 h-20 object-cover rounded border"
-                            />
-                          ))}
-                        </div>
-                      )}
+                    {e.photos?.length > 0 && (
+                      <div className="flex gap-2 mt-2">
+                        {e.photos.map((p, i) => (
+                          <img
+                            key={i}
+                            src={p}
+                            alt="preuve"
+                            className="w-20 h-20 object-cover rounded border"
+                          />
+                        ))}
+                      </div>
+                    )}
 
-                      <p className="text-xs text-gray-400">
-                        {format(new Date(event.at), "dd/MM/yyyy HH:mm", {
-                          locale: fr
-                        })}
-                      </p>
-                    </div>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {format(new Date(e.at), "dd/MM/yyyy HH:mm", { locale: fr })}
+                    </p>
                   </div>
                 );
               })}
             </CardContent>
           </Card>
+
         </div>
       </div>
     </div>
