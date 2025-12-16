@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Search, ArrowLeft } from "lucide-react";
+import { Loader2, Search, ArrowLeft, HelpCircle } from "lucide-react";
 import { format } from "date-fns";
 import { createPageUrl } from "../utils";
 import Logo from "../components/Logo";
@@ -25,15 +25,8 @@ export default function ClientSuiviSearch() {
     enabled: search,
     queryFn: async () => {
       const filters = {};
-
-      // 🔹 Recherche souple
-      if (nom) {
-        filters.client_nom = { $contains: nom };
-      }
-
-      if (prenom) {
-        filters.client_prenom = { $contains: prenom };
-      }
+      if (nom) filters.client_nom = { $contains: nom };
+      if (prenom) filters.client_prenom = { $contains: prenom };
 
       return await base44.entities.Intervention.filter(
         filters,
@@ -43,21 +36,17 @@ export default function ClientSuiviSearch() {
     }
   });
 
-  const handleSearch = () => {
-    setSearch(true);
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-6">
       <div className="max-w-3xl mx-auto space-y-6">
 
-        {/* Retour */}
+        {/* Retour accueil */}
         <button
           onClick={() => navigate(createPageUrl("Home"))}
-          className="flex items-center gap-2 text-[#0077A8] hover:text-[#00AEEF]"
+          className="flex items-center gap-2 text-[#0077A8]"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span className="font-heading">{t("retour")}</span>
+          {t("retour")}
         </button>
 
         <Logo className="h-16" />
@@ -81,8 +70,8 @@ export default function ClientSuiviSearch() {
 
             <div className="md:col-span-2">
               <Button
-                onClick={handleSearch}
-                className="w-full bg-[#00AEEF] hover:bg-[#0077A8]"
+                onClick={() => setSearch(true)}
+                className="w-full bg-[#00AEEF]"
               >
                 <Search className="w-4 h-4 mr-2" />
                 {lang === "fr" ? "Rechercher" : "Search"}
@@ -102,17 +91,22 @@ export default function ClientSuiviSearch() {
             )}
 
             {!isLoading && search && interventions.length === 0 && (
-              <p className="text-center text-gray-500">
-                {lang === "fr" ? "Aucun résultat trouvé" : "No results found"}
-              </p>
-            )}
+              <div className="text-center space-y-3">
+                <p className="text-gray-500">
+                  {lang === "fr"
+                    ? "Aucune intervention n’a encore été créée."
+                    : "No intervention created yet."}
+                </p>
 
-            {!isLoading && !search && (
-              <p className="text-center text-gray-500">
-                {lang === "fr"
-                  ? "Veuillez effectuer une recherche"
-                  : "Please search"}
-              </p>
+                <Button
+                  variant="outline"
+                  className="border-2 border-[#00AEEF] text-[#00AEEF]"
+                  onClick={() => navigate(createPageUrl("ClientMenu"))}
+                >
+                  <HelpCircle className="w-4 h-4 mr-2" />
+                  {lang === "fr" ? "Signaler un problème" : "Report an issue"}
+                </Button>
+              </div>
             )}
 
             {!isLoading && interventions.length > 0 && (
@@ -120,7 +114,7 @@ export default function ClientSuiviSearch() {
                 {interventions.map((intervention) => (
                   <Card
                     key={intervention.id}
-                    className="cursor-pointer hover:shadow-md transition border-2 border-gray-200 hover:border-[#00AEEF]"
+                    className="cursor-pointer border-2 hover:border-[#00AEEF]"
                     onClick={() =>
                       navigate(
                         createPageUrl("ClientSuiviDetail") +
@@ -128,35 +122,23 @@ export default function ClientSuiviSearch() {
                       )
                     }
                   >
-                    <CardContent className="p-4 space-y-1">
+                    <CardContent className="p-4">
                       <p className="font-semibold text-[#0077A8]">
-                        {intervention.client_prenom}{" "}
-                        {intervention.client_nom}
+                        {intervention.client_prenom} {intervention.client_nom}
                       </p>
-
                       <p className="text-sm text-gray-600">
-                        {lang === "fr" ? "Logement" : "Accommodation"} :{" "}
-                        {intervention.logement_numero} —{" "}
-                        {intervention.categorie_logement}
+                        {intervention.logement_numero} — {intervention.categorie_logement}
                       </p>
-
                       <p className="text-sm text-gray-500">
-                        {lang === "fr" ? "Séjour" : "Stay"} :{" "}
-                        {format(
-                          new Date(intervention.date_arrivee),
-                          "dd/MM/yyyy"
-                        )}{" "}
-                        →{" "}
-                        {format(
-                          new Date(intervention.date_depart),
-                          "dd/MM/yyyy"
-                        )}
+                        {format(new Date(intervention.date_arrivee), "dd/MM/yyyy")} →{" "}
+                        {format(new Date(intervention.date_depart), "dd/MM/yyyy")}
                       </p>
                     </CardContent>
                   </Card>
                 ))}
               </div>
             )}
+
           </CardContent>
         </Card>
       </div>
