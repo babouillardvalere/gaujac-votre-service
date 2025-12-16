@@ -1,36 +1,38 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useTranslation, getLanguage } from '../components/translations';
 import Logo from '../components/Logo';
 import HomeAvisSection from '../components/HomeAvisSection';
 import CustomUsersIcon from '../components/CustomUsersIcon';
-import AccessibilityPanel, {
-  getAccessibilitySettings,
-  saveAccessibilitySettings,
-  speakText,
-  stopSpeaking
+import {
+  getAccessibilitySettings
 } from '../components/AccessibilityPanel';
-import { Users, Star, Briefcase, BookOpen } from 'lucide-react';
+import { Star, Briefcase, BookOpen } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { Button } from '@/components/ui/button';
 
 export default function Home() {
   const { t, lang } = useTranslation();
-  const navigate = useNavigate();
-  const [accessibilitySettings, setAccessibilitySettings] = useState(getAccessibilitySettings());
+  const [accessibilitySettings] = useState(getAccessibilitySettings());
 
+  /* =====================================================
+     REDIRECTION LANGUE (SAFE BASE44)
+  ===================================================== */
   useEffect(() => {
     if (!getLanguage()) {
-      navigate('/ChoixLangue');
+      window.location.href = createPageUrl('ChoixLangue');
     }
-  }, [navigate]);
+  }, []);
 
+  /* =====================================================
+     MENU PRINCIPAL
+  ===================================================== */
   const menuItems = [
     {
       title: t('client'),
       icon: CustomUsersIcon,
-      href: '/ClientMenu',
+      href: 'ClientMenu',
       borderColor: 'border-[#00AEEF]',
       description: t('signaler_probleme'),
       ariaLabel: 'Signaler un problème'
@@ -38,17 +40,15 @@ export default function Home() {
     {
       title: t('avis'),
       icon: Star,
-      href: '/AvisMenu',
+      href: 'AvisMenu',
       borderColor: 'border-[#FFA500]',
       description: t('donner_avis'),
       ariaLabel: 'Voir les avis clients'
     },
-
-    /** ✅ CORRECTION ICI : SUIVI CLIENT */
     {
       title: lang === 'fr' ? '📋 Suivi interventions' : '📋 Track interventions',
       icon: BookOpen,
-      href: '/ClientSuiviSearch', // ✅ BON LIEN
+      href: 'ClientSuiviSearch',
       borderColor: 'border-[#9333ea]',
       description:
         lang === 'fr'
@@ -59,11 +59,10 @@ export default function Home() {
           ? 'Suivi des interventions'
           : 'Track interventions'
     },
-
     {
       title: lang === 'fr' ? '📖 Infos Pratiques' : '📖 Practical Info',
       icon: BookOpen,
-      href: '/InfosPratiques',
+      href: 'InfosPratiques',
       borderColor: 'border-[#22c55e]',
       description:
         lang === 'fr'
@@ -77,18 +76,21 @@ export default function Home() {
     {
       title: t('collaborateur'),
       icon: Briefcase,
-      href: '/Collaborateur',
+      href: 'Collaborateur',
       borderColor: 'border-[#FFA500]',
       description: t('espace_collaborateurs'),
       ariaLabel: 'Espace collaborateurs'
     }
   ];
 
+  /* =====================================================
+     RENDER
+  ===================================================== */
   return (
     <div className="min-h-screen px-6 py-8" role="main">
       <div className="max-w-lg mx-auto">
 
-        {/* Header */}
+        {/* HEADER */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -103,7 +105,7 @@ export default function Home() {
           </p>
         </motion.div>
 
-        {/* Menu principal */}
+        {/* MENU */}
         <nav className="space-y-4 mb-6">
           {menuItems.map((item, index) => (
             <motion.div
@@ -113,7 +115,7 @@ export default function Home() {
               transition={{ delay: index * 0.1 }}
             >
               <Link
-                to={createPageUrl(item.href.replace('/', ''))}
+                to={createPageUrl(item.href)}
                 className="block rounded-2xl focus:ring-4 focus:ring-yellow-400"
                 aria-label={item.ariaLabel}
               >
@@ -146,7 +148,11 @@ export default function Home() {
                       stroke="currentColor"
                       strokeWidth={3}
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M9 5l7 7-7 7"
+                      />
                     </svg>
                   </div>
                 </div>
@@ -155,10 +161,10 @@ export default function Home() {
           ))}
         </nav>
 
-        {/* Avis */}
+        {/* AVIS */}
         <HomeAvisSection />
 
-        {/* Langue */}
+        {/* LANGUE */}
         <div className="mt-8 text-center">
           <Link to={createPageUrl('ChoixLangue')}>
             <Button variant="outline">
