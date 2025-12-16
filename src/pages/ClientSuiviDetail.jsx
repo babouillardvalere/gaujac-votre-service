@@ -21,35 +21,14 @@ import { fr } from "date-fns/locale";
 import { createPageUrl } from "../utils";
 import Logo from "../components/Logo";
 
-/* =========================
-   STATUTS CLIENT
-========================= */
+/* Statuts affichés au client */
 const STATUS = {
-  PRISE_EN_CHARGE: {
-    label: "Demande enregistrée",
-    icon: Clock,
-    color: "bg-orange-100 text-orange-700"
-  },
-  EN_COURS: {
-    label: "Intervention en cours",
-    icon: PlayCircle,
-    color: "bg-blue-100 text-blue-700"
-  },
-  EN_ATTENTE: {
-    label: "En attente",
-    icon: PauseCircle,
-    color: "bg-yellow-100 text-yellow-700"
-  },
-  TERMINEE: {
-    label: "Intervention terminée",
-    icon: CheckCircle,
-    color: "bg-green-100 text-green-700"
-  }
+  PRISE_EN_CHARGE: { label: "Demande enregistrée", icon: Clock, color: "bg-orange-100 text-orange-700" },
+  EN_COURS: { label: "Intervention en cours", icon: PlayCircle, color: "bg-blue-100 text-blue-700" },
+  EN_ATTENTE: { label: "En attente", icon: PauseCircle, color: "bg-yellow-100 text-yellow-700" },
+  TERMINEE: { label: "Intervention terminée", icon: CheckCircle, color: "bg-green-100 text-green-700" }
 };
 
-/* =========================
-   MOTIFS D’ATTENTE
-========================= */
 const WAITING_REASON = {
   MATERIEL: "Attente de matériel",
   FOURNISSEUR: "Attente du fournisseur",
@@ -64,38 +43,34 @@ export default function ClientSuiviDetail() {
   const [params] = useSearchParams();
 
   const type = params.get("type"); // ARRIVEE | SEJOUR
-  const stayId = params.get("stay_id");
+  const ficheId = params.get("fiche_id");
 
-  /* =========================
-     CHARGEMENT DONNÉES
-  ========================= */
   const { data, isLoading } = useQuery({
-    queryKey: ["client-suivi-detail", stayId, type],
-    enabled: !!stayId && !!type,
+    queryKey: ["client-suivi-detail", type, ficheId],
+    enabled: type === "ARRIVEE" && !!ficheId,
     queryFn: async () => {
-      const interventions = await base44.entities.Intervention.filter({
-        stay_id: stayId,
-        origine: type
-      });
+      const fiche = await base44.entities.FicheArrivee.get(ficheId);
 
+      // Suivi inventaire (celui que tu crées à l’envoi)
+      const suivis = await base44.entities.SuiviInventaire.filter(
+        { fiche_arrivee_id: ficheId },
+        "-created_at",
+        10
+      );
+
+      // Events client-safe (créés par tes équipes / sync)
       const events = await base44.entities.InterventionEvent.filter(
-        {
-          stay_id: stayId,
-          visible_client: true
-        },
+        { fiche_arrivee_id: ficheId, visible_client: true },
         "at",
         200
       );
 
-      return { interventions, events };
+      return { fiche, suivi: suivis?.[0] || null, events };
     }
   });
 
-  /* =========================
-     EXPORT PDF
-  ========================= */
   const exportPdf = () => {
-    const content = pageRef.current.innerHTML;
+    const content = pageRef.current?.innerHTML || "";
     const original = document.body.innerHTML;
 
     document.body.innerHTML = `
@@ -119,7 +94,7 @@ export default function ClientSuiviDetail() {
         <body>
           <div class="header">
             <img src="/assets/logo-camping.png" />
-            <h2>Suivi de votre ${type === "ARRIVEE" ? "arrivée" : "séjour"}</h2>
+            <h2>Suivi de votre arrivée</h2>
           </div>
           ${content}
         </body>
@@ -131,9 +106,6 @@ export default function ClientSuiviDetail() {
     window.location.reload();
   };
 
-  /* =========================
-     ÉTATS
-  ========================= */
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -142,7 +114,7 @@ export default function ClientSuiviDetail() {
     );
   }
 
-  if (!data || data.interventions.length === 0) {
+  if (!data || !data.fiche) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <p className="text-gray-500">Aucune information disponible.</p>
@@ -153,11 +125,12 @@ export default function ClientSuiviDetail() {
     );
   }
 
-  const intervention = data.interventions[0];
+  const { fiche, suivi, events } = data;
 
-  /* =========================
-     RENDER
-  ========================= */
+  // Statuts globaux (si tu as déjà les champs dans SuiviInventaire)
+  const statutMenage = suivi?.statut_menage || null;      // ex: en_attente / en_cours / resolu...
+  const statutTech = suivi?.statut_technique || null;
+
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-6">
       <div className="max-w-3xl mx-auto space-y-6">
@@ -180,65 +153,107 @@ export default function ClientSuiviDetail() {
 
         <div ref={pageRef} className="space-y-6">
 
+          {/* INFOS CLIENT */}
           <Card>
             <CardContent className="p-4 space-y-1">
               <p className="font-semibold text-lg">
-                {intervention.client_prenom} {intervention.client_nom}
+                {fiche.client_prenom} {fiche.client_nom}
               </p>
               <p className="text-gray-600">
-                Logement {intervention.logement}
+                Logement {fiche.logement || fiche.numero_logement || "—"}
+              </p>
+              <p className="text-gray-500">
+                {fiche.date_arrivee || "—"} → {fiche.date_depart || "—"}
               </p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-4 flex items-center gap-3">
-              {intervention.type === "menage" ? (
-                <Sparkles className="w-6 h-6" />
-              ) : (
-                <Wrench className="w-6 h-6" />
-              )}
-              <Badge className={STATUS[intervention.statut].color}>
-                {STATUS[intervention.statut].label}
-              </Badge>
-            </CardContent>
-          </Card>
+          {/* MESSAGE CLIENT (si présent dans SuiviInventaire) */}
+          {suivi?.message_client && (
+            <Card>
+              <CardContent className="p-4">
+                <p className="text-sm text-gray-700">{suivi.message_client}</p>
+              </CardContent>
+            </Card>
+          )}
 
+          {/* STATUTS MENAGE / TECH (si tu les as) */}
+          {(statutMenage || statutTech) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {statutMenage && (
+                <Card>
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-5 h-5" />
+                      <span className="font-semibold">Ménage</span>
+                    </div>
+                    <Badge className="bg-gray-100 text-gray-700">
+                      {statutMenage}
+                    </Badge>
+                  </CardContent>
+                </Card>
+              )}
+
+              {statutTech && (
+                <Card>
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Wrench className="w-5 h-5" />
+                      <span className="font-semibold">Technique</span>
+                    </div>
+                    <Badge className="bg-gray-100 text-gray-700">
+                      {statutTech}
+                    </Badge>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+
+          {/* TIMELINE */}
           <Card>
             <CardContent className="p-4 space-y-4">
               <h3 className="font-semibold text-[#0077A8]">
                 📅 Historique de votre demande
               </h3>
 
-              {data.events.map((e) => {
-                const conf = STATUS[e.type];
-                const Icon = conf.icon;
+              {events.length === 0 ? (
+                <p className="text-sm text-gray-500">
+                  Aucune mise à jour pour le moment.
+                </p>
+              ) : (
+                events.map((e) => {
+                  const conf = STATUS[e.type] || STATUS.PRISE_EN_CHARGE;
+                  const Icon = conf.icon;
 
-                return (
-                  <div
-                    key={e.id}
-                    className="relative pl-6 border-l-2 border-[#00AEEF]"
-                  >
-                    <div className="absolute -left-[9px] top-1 bg-white rounded-full">
-                      <Icon className="w-4 h-4 text-[#00AEEF]" />
-                    </div>
-
-                    <p className="font-semibold">{conf.label}</p>
-                    <p className="text-sm text-gray-700">{e.message_client}</p>
-
-                    {e.attente_raison && (
-                      <div className="mt-1 text-sm text-yellow-700 bg-yellow-50 p-2 rounded">
-                        ⏸ {WAITING_REASON[e.attente_raison]}
-                        {e.delai_estime && <> — délai estimé : {e.delai_estime}</>}
+                  return (
+                    <div
+                      key={e.id}
+                      className="relative pl-6 border-l-2 border-[#00AEEF]"
+                    >
+                      <div className="absolute -left-[9px] top-1 bg-white rounded-full">
+                        <Icon className="w-4 h-4 text-[#00AEEF]" />
                       </div>
-                    )}
 
-                    <p className="text-xs text-gray-400 mt-1">
-                      {format(new Date(e.at), "dd/MM/yyyy HH:mm", { locale: fr })}
-                    </p>
-                  </div>
-                );
-              })}
+                      <p className="font-semibold">{conf.label}</p>
+                      <p className="text-sm text-gray-700">{e.message_client}</p>
+
+                      {e.attente_raison && (
+                        <div className="mt-1 text-sm text-yellow-700 bg-yellow-50 p-2 rounded">
+                          ⏸ {WAITING_REASON[e.attente_raison] || "En attente"}
+                          {e.delai_estime && <> — délai estimé : {e.delai_estime}</>}
+                        </div>
+                      )}
+
+                      <p className="text-xs text-gray-400 mt-1">
+                        {e.at
+                          ? format(new Date(e.at), "dd/MM/yyyy HH:mm", { locale: fr })
+                          : ""}
+                      </p>
+                    </div>
+                  );
+                })
+              )}
             </CardContent>
           </Card>
 
