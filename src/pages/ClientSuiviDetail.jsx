@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -11,8 +11,9 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
+  Broom,
   Wrench,
-  Broom
+  FileDown
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -25,101 +26,67 @@ export default function ClientSuiviDetail() {
   const [searchParams] = useSearchParams();
   const interventionId = searchParams.get("id");
   const { t, lang } = useTranslation();
+  const pageRef = useRef(null);
 
-  /* =========================
-     INTERVENTION
-  ========================= */
   const { data: intervention, isLoading } = useQuery({
     queryKey: ["client-intervention", interventionId],
     enabled: !!interventionId,
-    queryFn: async () => {
-      return await base44.entities.Intervention.get(interventionId);
-    }
+    queryFn: () => base44.entities.Intervention.get(interventionId)
   });
 
-  /* =========================
-     EVENTS (CLIENT SAFE)
-  ========================= */
   const { data: events = [] } = useQuery({
     queryKey: ["client-intervention-events", interventionId],
     enabled: !!interventionId,
-    queryFn: async () => {
-      return await base44.entities.InterventionEvent.filter(
-        {
-          intervention_id: interventionId,
-          visible_client: true
-        },
+    queryFn: () =>
+      base44.entities.InterventionEvent.filter(
+        { intervention_id: interventionId, visible_client: true },
         "at",
         100
-      );
-    }
+      )
   });
 
-  /* =========================
-     STATUS CONFIG
-  ========================= */
-  const statusConfig = {
-    OUVERTE: {
-      icon: Clock,
-      color: "bg-orange-100 text-orange-700",
-      label: lang === "fr" ? "Demande envoyée" : "Request sent"
-    },
-    EN_COURS: {
-      icon: Loader2,
-      color: "bg-blue-100 text-blue-700",
-      label: lang === "fr" ? "En cours" : "In progress"
-    },
-    EN_ATTENTE: {
-      icon: AlertCircle,
-      color: "bg-yellow-100 text-yellow-700",
-      label: lang === "fr" ? "En attente" : "On hold"
-    },
-    TERMINEE: {
-      icon: CheckCircle,
-      color: "bg-green-100 text-green-700",
-      label: lang === "fr" ? "Terminée" : "Completed"
-    }
+  const statusMap = useMemo(() => ({
+    OUVERTE: { icon: Clock, label: "Demande envoyée", color: "bg-orange-100 text-orange-700" },
+    EN_COURS: { icon: Loader2, label: "En cours", color: "bg-blue-100 text-blue-700" },
+    EN_ATTENTE: { icon: AlertCircle, label: "En attente", color: "bg-yellow-100 text-yellow-700" },
+    TERMINEE: { icon: CheckCircle, label: "Terminée", color: "bg-green-100 text-green-700" }
+  }), []);
+
+  const exportPdf = () => {
+    const content = pageRef.current.innerHTML;
+    const original = document.body.innerHTML;
+
+    document.body.innerHTML = `
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial; padding: 24px; }
+            .pdf-header { display:flex; gap:16px; align-items:center; border-bottom:2px solid #00AEEF; padding-bottom:12px; }
+            .pdf-logo { height:60px; }
+          </style>
+        </head>
+        <body>
+          <div class="pdf-header">
+            <img src="/logo-camping.png" class="pdf-logo"/>
+            <h2>Suivi de votre intervention</h2>
+          </div>
+          ${content}
+        </body>
+      </html>
+    `;
+    window.print();
+    document.body.innerHTML = original;
+    window.location.reload();
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#00AEEF]" />
-      </div>
-    );
+  if (isLoading || !intervention) {
+    return <Loader2 className="animate-spin mx-auto mt-20" />;
   }
-
-  if (!intervention) {
-    return (
-      <div className="min-h-screen px-4 py-6 text-center">
-        <p className="text-gray-500">
-          {lang === "fr"
-            ? "Intervention introuvable"
-            : "Intervention not found"}
-        </p>
-        <Button
-          className="mt-4 bg-[#00AEEF]"
-          onClick={() => navigate(createPageUrl("ClientSuiviSearch"))}
-        >
-          {t("retour")}
-        </Button>
-      </div>
-    );
-  }
-
-  const menage = statusConfig[intervention.menage_statut] || statusConfig.OUVERTE;
-  const technique =
-    statusConfig[intervention.technique_statut] ||
-    statusConfig.OUVERTE;
-
-  const MenageIcon = menage.icon;
-  const TechniqueIcon = technique.icon;
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-6">
       <div className="max-w-3xl mx-auto space-y-6">
 
-        {/* Retour */}
         <button
           onClick={() => navigate(createPageUrl("ClientSuiviSearch"))}
           className="flex items-center gap-2 text-[#0077A8]"
@@ -128,93 +95,54 @@ export default function ClientSuiviDetail() {
           {t("retour")}
         </button>
 
-        <Logo className="h-16" />
+        <div className="flex justify-between items-center">
+          <Logo className="h-14" />
+          <Button variant="outline" onClick={exportPdf}>
+            <FileDown className="w-4 h-4 mr-2" /> PDF
+          </Button>
+        </div>
 
-        <h1 className="text-2xl font-bold text-[#0077A8] font-handwritten">
-          📋 {lang === "fr" ? "Suivi de votre intervention" : "Intervention tracking"}
-        </h1>
-
-        {/* INFO CLIENT */}
-        <Card>
-          <CardContent className="p-6 space-y-2">
-            <p className="font-semibold">
-              {intervention.client_prenom} {intervention.client_nom}
-            </p>
-            <p className="text-sm text-gray-600">
-              {intervention.logement_numero} — {intervention.categorie_logement}
-            </p>
-            <p className="text-sm text-gray-500">
-              {format(new Date(intervention.date_arrivee), "dd MMMM yyyy", { locale: fr })}
-              {" → "}
-              {format(new Date(intervention.date_depart), "dd MMMM yyyy", { locale: fr })}
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* STATUTS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div ref={pageRef}>
           <Card>
             <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Broom className="w-5 h-5" />
-                🧹 {lang === "fr" ? "Ménage" : "Housekeeping"}
-              </div>
-              <Badge className={menage.color}>{menage.label}</Badge>
+              <p className="font-bold">{intervention.client_prenom} {intervention.client_nom}</p>
+              <p>{intervention.logement_numero} — {intervention.categorie_logement}</p>
+              <p>
+                {format(new Date(intervention.date_arrivee), "dd/MM/yyyy")} →{" "}
+                {format(new Date(intervention.date_depart), "dd/MM/yyyy")}
+              </p>
             </CardContent>
           </Card>
 
+          <div className="grid grid-cols-2 gap-4">
+            <Card><CardContent>
+              <Broom /> <Badge className={statusMap[intervention.menage_statut]?.color}>
+                {statusMap[intervention.menage_statut]?.label}
+              </Badge>
+            </CardContent></Card>
+
+            <Card><CardContent>
+              <Wrench /> <Badge className={statusMap[intervention.technique_statut]?.color}>
+                {statusMap[intervention.technique_statut]?.label}
+              </Badge>
+            </CardContent></Card>
+          </div>
+
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Wrench className="w-5 h-5" />
-                🔧 {lang === "fr" ? "Technique" : "Technical"}
-              </div>
-              <Badge className={technique.color}>{technique.label}</Badge>
+            <CardContent>
+              <h3>Historique</h3>
+              {events.map(e => (
+                <div key={e.id}>
+                  <p className="font-semibold">{e.titre_client}</p>
+                  <p>{e.message_client}</p>
+                  <p className="text-xs">
+                    {format(new Date(e.at), "dd/MM/yyyy HH:mm", { locale: fr })}
+                  </p>
+                </div>
+              ))}
             </CardContent>
           </Card>
         </div>
-
-        {/* TIMELINE */}
-        <Card>
-          <CardContent className="p-6">
-            <h3 className="font-semibold mb-4">
-              📅 {lang === "fr" ? "Historique" : "Timeline"}
-            </h3>
-
-            {events.length === 0 ? (
-              <p className="text-sm text-gray-500">
-                {lang === "fr"
-                  ? "Aucune mise à jour pour le moment"
-                  : "No updates yet"}
-              </p>
-            ) : (
-              <div className="space-y-4">
-                {events.map((event) => (
-                  <div key={event.id} className="flex gap-3">
-                    <div className="w-3 h-3 mt-2 bg-[#00AEEF] rounded-full" />
-                    <div>
-                      <p className="font-semibold">{event.titre_client}</p>
-                      <p className="text-sm text-gray-600">{event.message_client}</p>
-                      <p className="text-xs text-gray-400">
-                        {format(new Date(event.at), "dd/MM/yyyy à HH:mm", {
-                          locale: fr
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Button
-          variant="outline"
-          className="w-full border-[#00AEEF] text-[#00AEEF]"
-          onClick={() => navigate(createPageUrl("ClientSuiviSearch"))}
-        >
-          {t("retour")}
-        </Button>
 
       </div>
     </div>
