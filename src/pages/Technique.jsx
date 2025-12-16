@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
@@ -7,9 +7,11 @@ import OfflineBanner from "../components/OfflineBanner";
 import CollaborateurNotificationBell from "../components/CollaborateurNotificationBell";
 import MettreEnAttenteDialog from "../components/MettreEnAttenteDialog";
 import PhotoInterventionCapture from "../components/PhotoInterventionCapture";
+import InterventionTimer from "../components/InterventionTimer";
 import InterventionHistorique from "../components/interventions/InterventionHistorique";
 import InterventionDocuments from "../components/interventions/InterventionDocuments";
-import InterventionTimer from "../components/InterventionTimer";
+import ModeleInterventionSelector from "../components/interventions/ModeleInterventionSelector";
+import ServiceMissionDashboard from "../components/direction/ServiceMissionDashboard";
 import { useTranslation } from "../components/translations";
 import { createPageUrl } from "../utils";
 
@@ -24,6 +26,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 import {
   Clock,
@@ -34,36 +42,45 @@ import {
   Loader2,
   Camera,
   Home,
-  Wrench,
+  Sparkles,
+  AlertTriangle,
 } from "lucide-react";
 
+import { motion } from "framer-motion";
+import { toast } from "sonner";
 import { format, differenceInMinutes } from "date-fns";
 import { fr } from "date-fns/locale";
-import { toast } from "sonner";
 
 /* ============================================================
-   TECHNIQUE – PAGE COLLABORATEUR
+   TECHNIQUE – VERSION FINALE COMPLÈTE
+   - Photos AVANT / APRÈS
+   - Mise en attente
+   - Logs + documents
+   - Synchronisation SUIVI CLIENT (ARRIVÉE)
 ============================================================ */
 
 export default function Technique() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
 
-  /* ======================= STATES ======================= */
   const [selectedIncident, setSelectedIncident] = useState(null);
   const [collaborateurNom, setCollaborateurNom] = useState("");
   const [commentaire, setCommentaire] = useState("");
   const [filter, setFilter] = useState("en_attente");
 
-  const [incidentForPhoto, setIncidentForPhoto] = useState(null);
-  const [showPhotoAvant, setShowPhotoAvant] = useState(false);
-  const [showPhotoApres, setShowPhotoApres] = useState(false);
-
   const [showAttenteDialog, setShowAttenteDialog] = useState(false);
   const [incidentToWait, setIncidentToWait] = useState(null);
 
-  /* ======================= AUTH ======================= */
+  const [showPhotoAvant, setShowPhotoAvant] = useState(false);
+  const [showPhotoApres, setShowPhotoApres] = useState(false);
+  const [incidentForPhoto, setIncidentForPhoto] = useState(null);
+
+  const [activeTab, setActiveTab] = useState("interventions");
+
+  /* =======================
+     AUTH
+  ======================= */
   useEffect(() => {
     const auth = sessionStorage.getItem("collaborateur_authenticated");
     if (auth !== "true") {
@@ -71,7 +88,9 @@ export default function Technique() {
     }
   }, [navigate]);
 
-  /* ======================= DATA ======================= */
+  /* =======================
+     DATA
+  ======================= */
   const { data: incidents = [], isLoading } = useQuery({
     queryKey: ["incidents-technique"],
     queryFn: () =>
@@ -85,40 +104,92 @@ export default function Technique() {
 
   const { data: logs = [] } = useQuery({
     queryKey: ["intervention-logs-tech", selectedIncident?.id],
-    enabled: !!selectedIncident,
     queryFn: () =>
-      base44.entities.InterventionLog.filter(
-        { incident_id: selectedIncident.id },
-        "-horodatage",
-        50
-      ),
+      selectedIncident
+        ? base44.entities.InterventionLog.filter(
+            { incident_id: selectedIncident.id },
+            "-horodatage",
+            50
+          )
+        : Promise.resolve([]),
+    enabled: !!selectedIncident,
   });
 
   const { data: documents = [] } = useQuery({
     queryKey: ["documents-tech", selectedIncident?.id],
-    enabled: !!selectedIncident,
     queryFn: () =>
-      base44.entities.InterventionDocument.filter(
-        { incident_id: selectedIncident.id },
-        "-created_date",
-        50
-      ),
+      selectedIncident
+        ? base44.entities.InterventionDocument.filter(
+            { incident_id: selectedIncident.id },
+            "-created_date",
+            50
+          )
+        : Promise.resolve([]),
+    enabled: !!selectedIncident,
   });
 
-  /* ======================= MUTATIONS ======================= */
-  const updateIncident = useMutation({
-    mutationFn: ({ id, data }) =>
-      base44.entities.Incident.update(id, data),
+  /* =======================
+     SYNC CLIENT
+  ======================= */
+  const mapToSuivi = (status) => {
+    if (status === "en_cours") return "en_cours";
+    if (status === "resolu") return "resolu";
+    return "en_attente";
+  };
+
+  const updateSuiviClient = async (incident, status) => {
+    if (!incident?.fiche_arrivee_id) return;
+
+    const suivis = await base44.entities.SuiviInventaire.filter(
+      { fiche_arrivee_id: incident.fiche_arrivee_id },
+      "-created_at",
+      5
+    );
+    const suivi = suivis?.[0];
+    if (!suivi) return;
+
+    await base44.entities.SuiviInventaire.update(suivi.id, {
+      statut_technique: mapToSuivi(status),
+    });
+  };
+
+  const pushClientEvent = async ({
+    incident,
+    type,
+    message,
+    attenteRaison = null,
+    delaiEstime = null,
+  }) => {
+    if (!incident?.intervention_id) return;
+
+    await base44.entities.InterventionEvent.create({
+      intervention_id: incident.intervention_id,
+      fiche_arrivee_id: incident.fiche_arrivee_id,
+      type,
+      message_client: message,
+      attente_raison: attenteRaison,
+      delai_estime: delaiEstime,
+      visible_client: true,
+      at: new Date().toISOString(),
+    });
+  };
+
+  /* =======================
+     MUTATION
+  ======================= */
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Incident.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["incidents-technique"],
       });
-      toast.success("Intervention mise à jour");
       setSelectedIncident(null);
     },
   });
 
-  /* ======================= ACTIONS ======================= */
+  /* =======================
+     ACTIONS
+  ======================= */
 
   const prendreEnCharge = async (incident) => {
     if (!collaborateurNom.trim()) {
@@ -134,23 +205,32 @@ export default function Technique() {
     await base44.entities.InterventionLog.create({
       incident_id: incident.id,
       action: "prise_en_charge",
-      utilisateur: collaborateurNom,
       horodatage: now.toISOString(),
-      commentaire: "Intervention prise en charge",
+      utilisateur: collaborateurNom,
     });
 
-    updateIncident.mutate({
+    updateMutation.mutate({
       id: incident.id,
       data: {
-        pris_par: collaborateurNom,
         statut: "en_cours",
+        pris_par: collaborateurNom,
         date_debut: now.toISOString(),
         temps_prise_en_charge: delai,
       },
     });
+
+    await updateSuiviClient(incident, "en_cours");
+    await pushClientEvent({
+      incident,
+      type: "EN_COURS",
+      message:
+        lang === "fr"
+          ? "L’équipe technique est en cours d’intervention."
+          : "Technical team is working on your request.",
+    });
   };
 
-  const terminerIntervention = async (incident) => {
+  const terminer = async (incident) => {
     const now = new Date();
     const total = incident.date_saisie
       ? differenceInMinutes(now, new Date(incident.date_saisie))
@@ -159,12 +239,11 @@ export default function Technique() {
     await base44.entities.InterventionLog.create({
       incident_id: incident.id,
       action: "resolu",
-      utilisateur: incident.pris_par || collaborateurNom,
       horodatage: now.toISOString(),
-      commentaire: "Intervention résolue",
+      utilisateur: incident.pris_par,
     });
 
-    updateIncident.mutate({
+    updateMutation.mutate({
       id: incident.id,
       data: {
         statut: "resolu",
@@ -174,187 +253,157 @@ export default function Technique() {
       },
     });
 
+    await updateSuiviClient(incident, "resolu");
+    await pushClientEvent({
+      incident,
+      type: "TERMINEE",
+      message:
+        lang === "fr"
+          ? "L’intervention technique est terminée."
+          : "Technical intervention completed.",
+    });
+
     setCommentaire("");
   };
 
-  const confirmerAttente = (formData) => {
-    updateIncident.mutate({
+  const mettreEnAttente = async (formData) => {
+    if (!incidentToWait) return;
+
+    updateMutation.mutate({
       id: incidentToWait.id,
       data: {
         statut: "en_attente_materiel",
-        motif_attente: formData.motifAttente,
-        attente_materiel_detail: formData.materielDetail,
+        attente_raison: formData.raison,
         attente_delai: formData.delai,
-        attente_commentaire: formData.commentaire,
-        attente_date: new Date().toISOString(),
       },
     });
-    setShowAttenteDialog(false);
+
+    await updateSuiviClient(incidentToWait, "en_attente");
+    await pushClientEvent({
+      incident: incidentToWait,
+      type: "EN_ATTENTE",
+      message:
+        lang === "fr"
+          ? "Intervention technique en attente."
+          : "Technical intervention on hold.",
+      attenteRaison: formData.raison,
+      delaiEstime: formData.delai,
+    });
+
     setIncidentToWait(null);
+    setShowAttenteDialog(false);
   };
 
-  /* ======================= HELPERS ======================= */
+  /* =======================
+     RENDER
+  ======================= */
 
-  const badgeStatut = (statut) => {
-    switch (statut) {
-      case "en_attente":
-        return <Badge className="bg-orange-500 text-white">En attente</Badge>;
-      case "en_cours":
-        return <Badge className="bg-blue-500 text-white">En cours</Badge>;
-      case "en_attente_materiel":
-        return <Badge className="bg-gray-500 text-white">En attente</Badge>;
-      case "resolu":
-        return <Badge className="bg-green-500 text-white">Résolu</Badge>;
-      default:
-        return <Badge>{statut}</Badge>;
-    }
-  };
-
-  const filtered = incidents.filter((i) =>
-    filter === "tous" ? true : i.statut === filter
-  );
-
-  /* ======================= RENDER ======================= */
+  const filteredIncidents = useMemo(() => {
+    return incidents.filter((i) =>
+      filter === "tous" ? true : i.statut === filter
+    );
+  }, [incidents, filter]);
 
   return (
-    <div className="min-h-screen pb-8">
+    <div className="min-h-screen bg-gray-50">
       <OfflineBanner />
 
-      {/* HEADER */}
-      <div className="bg-[#0077A8] text-white px-4 py-4 sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Wrench />
-            <h1 className="text-xl font-bold">Technique</h1>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => navigate(createPageUrl("MenuCollaborateur"))}
-            >
-              <Home />
-            </button>
-            <CollaborateurNotificationBell />
-          </div>
+      <header className="bg-[#00AEEF] text-white px-4 py-4 flex justify-between items-center">
+        <h1 className="font-bold text-lg">Technique</h1>
+        <div className="flex gap-2 items-center">
+          <button
+            onClick={() => navigate(createPageUrl("MenuCollaborateur"))}
+            className="p-2 hover:bg-white/20 rounded"
+          >
+            <Home />
+          </button>
+          <CollaborateurNotificationBell />
+          <Sparkles />
         </div>
-      </div>
+      </header>
 
-      {/* LISTE */}
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
+      <main className="max-w-4xl mx-auto p-4">
         {isLoading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="animate-spin" />
-          </div>
+          <Loader2 className="animate-spin mx-auto" />
         ) : (
-          filtered.map((incident) => (
+          filteredIncidents.map((incident) => (
             <Card
               key={incident.id}
-              className="border-2 cursor-pointer"
+              className="mb-4 cursor-pointer"
               onClick={() => setSelectedIncident(incident)}
             >
-              <CardContent className="p-4 space-y-2">
-                <div className="flex justify-between items-center">
-                  <div className="font-semibold">
-                    {incident.logement || incident.emplacement}
+              <CardContent>
+                <div className="flex justify-between">
+                  <div>
+                    <p className="font-bold">
+                      Logement {incident.logement}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {incident.client_prenom} {incident.client_nom}
+                    </p>
                   </div>
-                  {badgeStatut(incident.statut)}
-                </div>
-
-                <p className="text-sm text-gray-700">
-                  {incident.description}
-                </p>
-
-                <div className="text-xs text-gray-500 flex justify-between">
-                  <span>
-                    <User className="inline w-3 h-3 mr-1" />
-                    {incident.client_prenom} {incident.client_nom}
-                  </span>
-                  <span>
-                    <Clock className="inline w-3 h-3 mr-1" />
-                    {incident.date_saisie &&
-                      format(
-                        new Date(incident.date_saisie),
-                        "dd/MM HH:mm",
-                        { locale: fr }
-                      )}
-                  </span>
+                  <Badge>
+                    {incident.statut === "en_attente"
+                      ? "⏳ En attente"
+                      : incident.statut === "en_cours"
+                      ? "▶️ En cours"
+                      : "✅ Terminé"}
+                  </Badge>
                 </div>
               </CardContent>
             </Card>
           ))
         )}
-      </div>
+      </main>
 
-      {/* DIALOG DETAIL */}
+      {/* MODAL DETAIL */}
       <Dialog
         open={!!selectedIncident}
         onOpenChange={() => setSelectedIncident(null)}
       >
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Intervention technique</DialogTitle>
+            <DialogTitle>
+              Intervention technique – {selectedIncident?.logement}
+            </DialogTitle>
           </DialogHeader>
 
-          {selectedIncident && (
-            <div className="space-y-4">
-              <p>{selectedIncident.description}</p>
-
-              <InterventionDocuments
-                incidentId={selectedIncident.id}
-                documents={documents}
-                canAdd
+          {selectedIncident?.statut === "en_attente" && (
+            <>
+              <Input
+                placeholder="Votre nom"
+                value={collaborateurNom}
+                onChange={(e) => setCollaborateurNom(e.target.value)}
               />
+              <Button onClick={() => prendreEnCharge(selectedIncident)}>
+                <Play className="mr-2" /> Prendre en charge
+              </Button>
+            </>
+          )}
 
-              <InterventionHistorique logs={logs} />
-
-              {selectedIncident.statut === "en_attente" && (
-                <>
-                  <Input
-                    placeholder="Votre nom"
-                    value={collaborateurNom}
-                    onChange={(e) => setCollaborateurNom(e.target.value)}
-                  />
-                  <Button
-                    onClick={() => prendreEnCharge(selectedIncident)}
-                  >
-                    <Play className="mr-2" />
-                    Prendre en charge
-                  </Button>
-                </>
-              )}
-
-              {selectedIncident.statut === "en_cours" && (
-                <>
-                  <InterventionTimer
-                    startTime={selectedIncident.date_debut}
-                    isActive
-                  />
-                  <Textarea
-                    placeholder="Commentaire"
-                    value={commentaire}
-                    onChange={(e) => setCommentaire(e.target.value)}
-                  />
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setIncidentToWait(selectedIncident);
-                        setShowAttenteDialog(true);
-                      }}
-                    >
-                      <Pause className="mr-2" />
-                      Mettre en attente
-                    </Button>
-                    <Button
-                      className="bg-green-600"
-                      onClick={() => terminerIntervention(selectedIncident)}
-                    >
-                      <CheckCircle className="mr-2" />
-                      Terminer
-                    </Button>
-                  </div>
-                </>
-              )}
-            </div>
+          {selectedIncident?.statut === "en_cours" && (
+            <>
+              <InterventionTimer startTime={selectedIncident.date_debut} />
+              <Textarea
+                placeholder="Commentaire"
+                value={commentaire}
+                onChange={(e) => setCommentaire(e.target.value)}
+              />
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIncidentToWait(selectedIncident);
+                    setShowAttenteDialog(true);
+                  }}
+                >
+                  <Pause className="mr-2" /> Attente
+                </Button>
+                <Button onClick={() => terminer(selectedIncident)}>
+                  <CheckCircle className="mr-2" /> Terminer
+                </Button>
+              </div>
+            </>
           )}
         </DialogContent>
       </Dialog>
@@ -362,8 +411,7 @@ export default function Technique() {
       <MettreEnAttenteDialog
         open={showAttenteDialog}
         onOpenChange={setShowAttenteDialog}
-        onConfirm={confirmerAttente}
-        isLoading={updateIncident.isPending}
+        onConfirm={mettreEnAttente}
       />
 
       <PhotoInterventionCapture
