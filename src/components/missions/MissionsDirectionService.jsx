@@ -24,7 +24,10 @@ export default function MissionsDirectionService({ service }) {
 
   const { data: missions = [], isLoading } = useQuery({
     queryKey: ['interventions-direction', service],
-    queryFn: () => base44.entities.InterventionDirection.filter({ service }, '-created_date', 100),
+    queryFn: async () => {
+      const allMissions = await base44.entities.InterventionDirection.list('-created_date', 200);
+      return allMissions.filter(m => m.service === service);
+    },
     refetchInterval: 30000
   });
 
