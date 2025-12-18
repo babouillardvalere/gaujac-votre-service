@@ -52,6 +52,12 @@ export default function Menage() {
   const [showPhotoAvant, setShowPhotoAvant] = useState(false);
   const [showPhotoApres, setShowPhotoApres] = useState(false);
   const [incidentForPhoto, setIncidentForPhoto] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterCategorie, setFilterCategorie] = useState('tous');
+  const [filterCollaborateur, setFilterCollaborateur] = useState('tous');
+  const [filterDateDebut, setFilterDateDebut] = useState('');
+  const [filterDateFin, setFilterDateFin] = useState('');
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   useEffect(() => {
     const auth = sessionStorage.getItem('collaborateur_authenticated');
@@ -306,8 +312,41 @@ export default function Menage() {
     return new Date(a.date_saisie) - new Date(b.date_saisie);
   };
 
+  const collaborateurs = [...new Set(incidents.map(i => i.pris_par).filter(Boolean))];
+
   const filteredIncidents = incidents
-    .filter(i => filter === 'tous' ? true : i.statut === filter)
+    .filter(i => {
+      // Filtre statut
+      if (filter !== 'tous' && i.statut !== filter) return false;
+      
+      // Filtre catégorie
+      if (filterCategorie !== 'tous' && i.categorie !== filterCategorie) return false;
+      
+      // Filtre collaborateur
+      if (filterCollaborateur !== 'tous' && i.pris_par !== filterCollaborateur) return false;
+      
+      // Filtre date début
+      if (filterDateDebut && i.date_saisie) {
+        const dateSignalement = new Date(i.date_saisie).toISOString().split('T')[0];
+        if (dateSignalement < filterDateDebut) return false;
+      }
+      
+      // Filtre date fin
+      if (filterDateFin && i.date_saisie) {
+        const dateSignalement = new Date(i.date_saisie).toISOString().split('T')[0];
+        if (dateSignalement > filterDateFin) return false;
+      }
+      
+      // Recherche textuelle
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const logement = (i.logement || i.emplacement || '').toLowerCase();
+        const client = `${i.client_prenom} ${i.client_nom}`.toLowerCase();
+        if (!logement.includes(query) && !client.includes(query)) return false;
+      }
+      
+      return true;
+    })
     .sort(sortByPriority);
 
   const getCategoryInfo = (cat) => {
@@ -343,7 +382,18 @@ export default function Menage() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6">
-        <div className="flex gap-2 mb-6 overflow-x-auto">
+        {/* Barre de recherche */}
+        <div className="mb-4">
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={lang === 'fr' ? "🔍 Rechercher par logement ou client..." : "🔍 Search by accommodation or guest..."}
+            className="w-full border-2 border-[#FFD700]/30 rounded-xl"
+          />
+        </div>
+
+        {/* Filtres rapides statut */}
+        <div className="flex gap-2 mb-4 overflow-x-auto">
           {['en_attente', 'en_cours', 'en_attente_materiel', 'resolu'].map((s) => (
             <Button
               key={s}
@@ -355,6 +405,102 @@ export default function Menage() {
             </Button>
           ))}
         </div>
+
+        {/* Bouton filtres avancés */}
+        <div className="mb-4">
+          <Button
+            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            variant="outline"
+            className="w-full"
+          >
+            {showAdvancedFilters ? '▼' : '▶'} {lang === 'fr' ? 'Filtres avancés' : 'Advanced filters'}
+          </Button>
+        </div>
+
+        {/* Filtres avancés */}
+        {showAdvancedFilters && (
+          <Card className="mb-6 border-2 border-[#FFD700]/30">
+            <CardContent className="p-4 space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* Filtre catégorie */}
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 mb-1 block">
+                    {lang === 'fr' ? 'Catégorie' : 'Category'}
+                  </label>
+                  <select
+                    value={filterCategorie}
+                    onChange={(e) => setFilterCategorie(e.target.value)}
+                    className="w-full border rounded-lg px-3 py-2 text-sm"
+                  >
+                    <option value="tous">{lang === 'fr' ? 'Toutes' : 'All'}</option>
+                    {Object.keys(categoryIcons).map(cat => (
+                      <option key={cat} value={cat}>{categoryIcons[cat].emoji} {t(categoryIcons[cat].label)}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Filtre collaborateur */}
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 mb-1 block">
+                    {lang === 'fr' ? 'Collaborateur' : 'Staff'}
+                  </label>
+                  <select
+                    value={filterCollaborateur}
+                    onChange={(e) => setFilterCollaborateur(e.target.value)}
+                    className="w-full border rounded-lg px-3 py-2 text-sm"
+                  >
+                    <option value="tous">{lang === 'fr' ? 'Tous' : 'All'}</option>
+                    {collaborateurs.map(collab => (
+                      <option key={collab} value={collab}>{collab}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Date début */}
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 mb-1 block">
+                    {lang === 'fr' ? 'Du' : 'From'}
+                  </label>
+                  <Input
+                    type="date"
+                    value={filterDateDebut}
+                    onChange={(e) => setFilterDateDebut(e.target.value)}
+                    className="text-sm"
+                  />
+                </div>
+
+                {/* Date fin */}
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 mb-1 block">
+                    {lang === 'fr' ? 'Au' : 'To'}
+                  </label>
+                  <Input
+                    type="date"
+                    value={filterDateFin}
+                    onChange={(e) => setFilterDateFin(e.target.value)}
+                    className="text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Bouton réinitialiser */}
+              <Button
+                onClick={() => {
+                  setSearchQuery('');
+                  setFilterCategorie('tous');
+                  setFilterCollaborateur('tous');
+                  setFilterDateDebut('');
+                  setFilterDateFin('');
+                  setFilter('en_attente');
+                }}
+                variant="outline"
+                className="w-full"
+              >
+                {lang === 'fr' ? '🔄 Réinitialiser les filtres' : '🔄 Reset filters'}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {isLoading ? (
           <div className="flex justify-center py-12">
@@ -423,10 +569,16 @@ export default function Menage() {
                         </div>
                       )}
 
-                      {incident.pris_par && incident.statut === 'en_cours' && (
+                      {incident.pris_par && (incident.statut === 'en_cours' || incident.statut === 'resolu') && (
                         <div className="mt-2 pt-2 border-t flex items-center justify-between">
                           <p className="text-xs text-[#FFD700]">{t('pris_en_charge_par')}: {incident.pris_par}</p>
-                          {incident.date_debut && <InterventionTimer startTime={incident.date_debut} isActive />}
+                          {incident.date_debut && (
+                            <InterventionTimer 
+                              startTime={incident.date_debut} 
+                              endTime={incident.date_resolution}
+                              isActive={incident.statut === 'en_cours'} 
+                            />
+                          )}
                         </div>
                       )}
                     </CardContent>
@@ -490,7 +642,11 @@ export default function Menage() {
                 <div className="space-y-3 pt-4 border-t">
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-[#FFD700]">{t('pris_en_charge_par')}: {selectedIncident.pris_par}</p>
-                    <InterventionTimer startTime={selectedIncident.date_debut} isActive />
+                    <InterventionTimer 
+                      startTime={selectedIncident.date_debut} 
+                      endTime={selectedIncident.date_resolution}
+                      isActive 
+                    />
                   </div>
                   <Textarea
                     value={commentaire}
