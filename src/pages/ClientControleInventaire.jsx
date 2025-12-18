@@ -395,7 +395,9 @@ ${allPhotos.length > 0 ? `📸 ${allPhotos.length} photo(s) jointe(s)` : ''}
         commentaire_proprete: commentaireProprete,
         signature_url: signature,
         photos_pieces: allPhotos,
-        date_validation: new Date().toISOString()
+        date_validation: new Date().toISOString(),
+        autorisation_acces: autorisationAcces,
+        plage_horaire_client: autorisationAcces === 'non' ? plagesHoraires.join(', ') : null
       });
 
       // Ajouter autorisation + plages dans les interventions

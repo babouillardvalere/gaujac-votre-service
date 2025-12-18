@@ -73,6 +73,24 @@ export default function ClientResume() {
 
 
   const handleDownload = async () => {
+    // Si un PDF existe déjà, le télécharger directement
+    if (fiche.pdf_url) {
+      toast.info(lang === 'fr' ? 'Téléchargement du PDF...' : 'Downloading PDF...');
+      try {
+        const link = document.createElement('a');
+        link.href = fiche.pdf_url;
+        link.download = `Arrivee_${fiche.client_nom}_${fiche.client_prenom}.pdf`;
+        link.click();
+        toast.success(lang === 'fr' ? 'PDF téléchargé ✅' : 'PDF downloaded ✅');
+        return;
+      } catch (error) {
+        console.error('Erreur téléchargement:', error);
+        toast.error(lang === 'fr' ? 'Erreur téléchargement' : 'Download error');
+      }
+      return;
+    }
+    
+    // Sinon, générer le PDF
     toast.info(lang === 'fr' ? 'Génération du PDF...' : 'Generating PDF...');
     
     try {
@@ -119,7 +137,26 @@ export default function ClientResume() {
       doc.text(`${lang === 'fr' ? 'Arrivée' : 'Check-in'} : ${fiche.date_arrivee}`, 14, yPos);
       yPos += 6;
       doc.text(`${lang === 'fr' ? 'Départ' : 'Check-out'} : ${fiche.date_depart}`, 14, yPos);
-      yPos += 10;
+      yPos += 6;
+      
+      // Autorisation d'accès
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${lang === 'fr' ? 'Autorisation accès' : 'Access authorization'} :`, 14, yPos);
+      doc.setFont('helvetica', 'normal');
+      const autorisationText = (fiche.autorisation_acces === 'oui' || fiche.autorisation_acces === true) ? 
+        (lang === 'fr' ? 'Oui - Accès autorisé' : 'Yes - Access authorized') : 
+        (lang === 'fr' ? 'Non - Présence requise' : 'No - Presence required');
+      doc.text(autorisationText, 70, yPos);
+      yPos += 6;
+      
+      if (fiche.plage_horaire_client) {
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(9);
+        doc.text(`${lang === 'fr' ? 'Plages horaires' : 'Time slots'}: ${fiche.plage_horaire_client}`, 14, yPos);
+        doc.setFontSize(10);
+        yPos += 6;
+      }
+      yPos += 4;
 
       // Occupants
       const occupants = [];
@@ -712,12 +749,12 @@ export default function ClientResume() {
           <CardContent className="p-6 text-center">
             <div className="text-5xl mb-4">✅</div>
             <h2 className="font-handwritten text-2xl text-green-800 mb-2">
-              {lang === 'fr' ? 'Inventaire enregistré !' : 'Inventory registered!'}
+              {lang === 'fr' ? '🙏 Merci pour votre retour' : '🙏 Thank you for your feedback'}
             </h2>
             <p className="text-gray-700">
               {lang === 'fr' 
-                ? 'Votre inventaire d\'arrivée a bien été enregistré. Vous pouvez consulter ce document ou retourner au menu.'
-                : 'Your arrival inventory has been registered. You can view this document or return to the menu.'}
+                ? 'Nous vous remercions pour le retour de votre hébergement. Nous espérons que vous passerez un excellent séjour au Camping Paradis Domaine de Gaujac.'
+                : 'Thank you for the feedback on your accommodation. We hope you have an excellent stay at Camping Paradis Domaine de Gaujac.'}
             </p>
           </CardContent>
         </Card>
