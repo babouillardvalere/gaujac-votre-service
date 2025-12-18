@@ -133,6 +133,43 @@ export default function Menage() {
     await notifyBureau(`Intervention ménage prise en charge par ${collaborateurNom} - ${incident.logement || incident.emplacement}`);
   };
 
+  const handlePhotoAvantUploaded = async (photoData) => {
+    if (!incidentForPhoto) return;
+
+    const now = new Date();
+    const tempsPriseEnCharge = incidentForPhoto.date_saisie ? differenceInMinutes(now, new Date(incidentForPhoto.date_saisie)) : 0;
+
+    await base44.entities.InterventionLog.create({
+      incident_id: incidentForPhoto.id,
+      action: 'prise_en_charge',
+      horodatage: now.toISOString(),
+      utilisateur: collaborateurNom,
+      commentaire: 'Intervention prise en charge avec photo AVANT'
+    });
+
+    updateMutation.mutate({
+      id: incidentForPhoto.id,
+      data: {
+        pris_par: collaborateurNom,
+        date_debut: now.toISOString(),
+        statut: 'en_cours',
+        temps_prise_en_charge: tempsPriseEnCharge,
+        photo_avant_url: photoData.url,
+        photo_avant_timestamp: photoData.timestamp,
+        photo_avant_hash: photoData.hash
+      }
+    });
+
+    await pushClientEvent({
+      incident: incidentForPhoto,
+      type: 'PRISE_EN_CHARGE',
+      message: "L'équipe ménage est en cours d'intervention."
+    });
+
+    await notifyBureau(`Intervention ménage prise en charge par ${collaborateurNom} (avec photo)`);
+    setIncidentForPhoto(null);
+  };
+
   const handleTerminer = async (incident) => {
     const now = new Date();
     const tempsTotal = incident.date_saisie ? differenceInMinutes(now, new Date(incident.date_saisie)) : 0;
@@ -162,6 +199,44 @@ export default function Menage() {
     });
 
     await notifyBureau(`Intervention ménage clôturée (${incident.logement || incident.emplacement})`);
+    setCommentaire('');
+  };
+
+  const handlePhotoApresUploaded = async (photoData) => {
+    if (!incidentForPhoto) return;
+
+    const now = new Date();
+    const tempsTotal = incidentForPhoto.date_saisie ? differenceInMinutes(now, new Date(incidentForPhoto.date_saisie)) : 0;
+
+    await base44.entities.InterventionLog.create({
+      incident_id: incidentForPhoto.id,
+      action: 'resolu',
+      horodatage: now.toISOString(),
+      utilisateur: incidentForPhoto.pris_par || collaborateurNom,
+      commentaire: 'Intervention résolue avec photo APRES'
+    });
+
+    updateMutation.mutate({
+      id: incidentForPhoto.id,
+      data: {
+        date_resolution: now.toISOString(),
+        statut: 'resolu',
+        commentaire_interne: commentaire || incidentForPhoto.commentaire_interne,
+        temps_total_intervention: tempsTotal,
+        photo_apres_url: photoData.url,
+        photo_apres_timestamp: photoData.timestamp,
+        photo_apres_hash: photoData.hash
+      }
+    });
+
+    await pushClientEvent({
+      incident: incidentForPhoto,
+      type: 'TERMINEE',
+      message: "L'intervention ménage est terminée."
+    });
+
+    await notifyBureau(`Intervention ménage clôturée avec photo (${incidentForPhoto.logement || incidentForPhoto.emplacement})`);
+    setIncidentForPhoto(null);
     setCommentaire('');
   };
 
