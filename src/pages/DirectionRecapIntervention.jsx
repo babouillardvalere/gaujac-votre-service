@@ -61,7 +61,16 @@ export default function DirectionRecapIntervention() {
   };
 
   if (!intervention) {
-    return <div>Erreur: données manquantes</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="text-center">
+          <p className="text-red-500 font-heading text-xl mb-4">⚠️ Erreur: données manquantes</p>
+          <Button onClick={() => navigate(createPageUrl('DirectionMenu'))} className="bg-purple-600">
+            Retour au menu Direction
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
