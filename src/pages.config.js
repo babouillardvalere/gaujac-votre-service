@@ -71,6 +71,7 @@ import Menage from './pages/Menage';
 import ClientControleInventaireEmplacement from './pages/ClientControleInventaireEmplacement';
 import ClientControleInventaireCottage from './pages/ClientControleInventaireCottage';
 import ClientControleInventairePremiumTwins from './pages/ClientControleInventairePremiumTwins';
+import ClientControleInventairePremium3ch from './pages/ClientControleInventairePremium3ch';
 import __Layout from './Layout.jsx';
 
 
@@ -148,6 +149,7 @@ export const PAGES = {
     "ClientControleInventaireEmplacement": ClientControleInventaireEmplacement,
     "ClientControleInventaireCottage": ClientControleInventaireCottage,
     "ClientControleInventairePremiumTwins": ClientControleInventairePremiumTwins,
+    "ClientControleInventairePremium3ch": ClientControleInventairePremium3ch,
 }
 
 export const pagesConfig = {
