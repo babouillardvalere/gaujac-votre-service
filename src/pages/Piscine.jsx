@@ -10,12 +10,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { 
   Lock, Eye, EyeOff, Droplet, Thermometer, FlaskConical, 
-  Plus, AlertTriangle, CheckCircle, Loader2, ArrowLeft
+  Plus, AlertTriangle, CheckCircle, Loader2, ArrowLeft, Home
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import ServiceTabs from '../components/missions/ServiceTabs';
+import MissionsDirectionTab from '../components/missions/MissionsDirectionTab';
+import { createPageUrl } from '../utils';
 
 const PASSWORD = '2024TECH';
 
@@ -46,6 +49,13 @@ export default function Piscine() {
     queryKey: ['piscine-mesures'],
     queryFn: () => base44.entities.Piscine.filter({}, '-date_mesure', 100),
     enabled: isAuthenticated
+  });
+
+  const { data: missions = [] } = useQuery({
+    queryKey: ['missions-internes', 'BNSSA'],
+    queryFn: () => base44.entities.MissionInterne.filter({ service: 'BNSSA' }, '-date_debut', 100),
+    enabled: isAuthenticated,
+    refetchInterval: 60000
   });
 
   const createMutation = useMutation({
@@ -136,17 +146,36 @@ export default function Piscine() {
 
   return (
     <div className="min-h-screen px-4 py-6">
-      <div className="max-w-2xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <Logo className="h-12" />
-          <Button
-            onClick={() => setShowForm(!showForm)}
-            className="bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nouvelle mesure
-          </Button>
+      <div className="bg-[#3b82f6] text-white px-4 py-4 sticky top-0 z-10 -mx-4 -mt-6 mb-6">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <h1 className="font-heading text-xl">🏊 BNSSA - Piscine</h1>
+          <div className="flex items-center gap-2">
+            <button onClick={() => navigate(createPageUrl('MenuCollaborateur'))} className="p-2 hover:bg-white/20 rounded-lg">
+              <Home className="w-6 h-6" />
+            </button>
+            <Droplet className="w-8 h-8" />
+          </div>
         </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto">
+        <ServiceTabs
+          service="BNSSA"
+          interventionsCount={0}
+          missionsCount={missions.filter(m => m.statut === 'A_FAIRE').length}
+          lang="fr"
+          interventionsContent={
+            <>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="font-heading text-lg">Mesures quotidiennes</h2>
+                <Button
+                  onClick={() => setShowForm(!showForm)}
+                  className="bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl font-heading"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nouvelle mesure
+                </Button>
+              </div>
 
         {/* Form */}
         {showForm && (
@@ -333,6 +362,10 @@ export default function Piscine() {
             )}
           </CardContent>
         </Card>
+            </>
+          }
+          missionsContent={<MissionsDirectionTab service="BNSSA" lang="fr" />}
+        />
       </div>
     </div>
   );
