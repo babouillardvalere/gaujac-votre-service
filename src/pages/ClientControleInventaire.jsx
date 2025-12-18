@@ -34,12 +34,13 @@ export default function ClientControleInventaire() {
   const [urgencies, setUrgencies] = useState({});
   const [problemesTechniques, setProblemesTechniques] = useState({});
   const [autorisationAcces, setAutorisationAcces] = useState("");
+  const [plagesHoraires, setPlagesHoraires] = useState([]);
   const [evaluationProprete, setEvaluationProprete] = useState("");
   const [commentaireProprete, setCommentaireProprete] = useState("");
   const [signature, setSignature] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showRecap, setShowRecap] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState("");
 
   const inventaire = useMemo(() => getInventaireParCategorie(categorie, lang), [categorie, lang]);
   const items = inventaire?.objets || [];
@@ -128,6 +129,11 @@ export default function ClientControleInventaire() {
 
     if (!autorisationAcces) {
       toast.error(lang === "fr" ? "Veuillez indiquer l'autorisation d'accès" : "Please indicate access authorization");
+      return;
+    }
+
+    if (autorisationAcces === "non" && plagesHoraires.length === 0) {
+      toast.error(lang === "fr" ? "Veuillez sélectionner au moins une plage horaire" : "Please select at least one time slot");
       return;
     }
 
@@ -227,6 +233,143 @@ ${allPhotos.length > 0 ? `📸 ${allPhotos.length} photo(s) jointe(s)` : ''}
     return incident;
   };
 
+  const genererPDF = async ({ ficheId, interventions }) => {
+    try {
+      const { default: jsPDF } = await import('jspdf');
+      await import('jspdf-autotable');
+      
+      const doc = new jsPDF();
+      
+      // Logo
+      const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/user_6930cc5060a27d8dfd0bf5fd/aa24decb4_logo.png';
+      try {
+        const response = await fetch(logoUrl);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        const logoBase64 = await new Promise((resolve) => {
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(blob);
+        });
+        doc.addImage(logoBase64, 'PNG', 70, 10, 70, 25);
+      } catch (error) {
+        console.error('Erreur logo:', error);
+      }
+      
+      // Titre
+      let y = 45;
+      doc.setFontSize(18);
+      doc.setTextColor(0, 119, 168);
+      doc.text(lang === "fr" ? 'CONTRÔLE INVENTAIRE ARRIVÉE' : 'ARRIVAL INVENTORY CHECK', 105, y, { align: 'center' });
+      y += 15;
+      
+      // Infos
+      doc.setFontSize(11);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`${lang === "fr" ? "Client" : "Guest"}: ${prenom} ${nom}`, 20, y);
+      y += 6;
+      doc.text(`${lang === "fr" ? "Hébergement" : "Accommodation"}: ${categorie} ${numero}`, 20, y);
+      y += 6;
+      doc.text(`${lang === "fr" ? "Séjour" : "Stay"}: ${dateArrivee} → ${dateDepart}`, 20, y);
+      y += 12;
+      
+      // Interventions
+      if (interventions.menage.length > 0 || interventions.technique.length > 0 || interventions.reception.length > 0) {
+        doc.setFont(undefined, 'bold');
+        doc.text(lang === "fr" ? "INTERVENTIONS DÉTECTÉES" : "INTERVENTIONS DETECTED", 20, y);
+        y += 8;
+        
+        const renderInterventions = (items, emoji, titre) => {
+          if (items.length === 0) return;
+          doc.setFont(undefined, 'bold');
+          doc.text(`${emoji} ${titre} (${items.length})`, 20, y);
+          y += 6;
+          doc.setFont(undefined, 'normal');
+          items.forEach(item => {
+            const ligne = `• ${item.emoji} ${item.label}${item.problemeTechnique ? ' - Défectueux' : item.qtyManquante > 0 ? ` - ${item.qtyManquante} manquant(s)` : ''}${item.urgent ? ' 🔴' : ''}`;
+            doc.text(ligne, 25, y);
+            y += 5;
+            if (item.remarque) {
+              const remarqueLines = doc.splitTextToSize(`  💬 ${item.remarque}`, 160);
+              doc.setFontSize(9);
+              doc.text(remarqueLines, 30, y);
+              y += remarqueLines.length * 4;
+              doc.setFontSize(11);
+            }
+          });
+          y += 5;
+        };
+        
+        renderInterventions(interventions.technique, '🔧', lang === "fr" ? 'Technique' : 'Technical');
+        renderInterventions(interventions.menage, '🧹', lang === "fr" ? 'Ménage' : 'Housekeeping');
+        renderInterventions(interventions.reception, '🏠', lang === "fr" ? 'Réception' : 'Reception');
+      }
+      
+      // Autorisation
+      y += 5;
+      doc.setFont(undefined, 'bold');
+      doc.text(lang === "fr" ? "AUTORISATION D'ACCÈS" : "ACCESS AUTHORIZATION", 20, y);
+      y += 6;
+      doc.setFont(undefined, 'normal');
+      doc.text(autorisationAcces === 'oui' ? '✅ Oui' : '❌ Non', 20, y);
+      y += 6;
+      if (autorisationAcces === 'non' && plagesHoraires.length > 0) {
+        doc.setFontSize(10);
+        doc.text(lang === "fr" ? "Plages horaires demandées:" : "Requested time slots:", 20, y);
+        y += 5;
+        plagesHoraires.forEach(plage => {
+          doc.text(`  • ${plage}`, 25, y);
+          y += 5;
+        });
+        doc.setFontSize(11);
+      }
+      
+      // Appréciation
+      y += 5;
+      doc.setFont(undefined, 'bold');
+      doc.text(lang === "fr" ? "APPRÉCIATION GLOBALE" : "OVERALL RATING", 20, y);
+      y += 6;
+      doc.setFont(undefined, 'normal');
+      const appreciationText = evaluationProprete === "pas_satisfaisant" ? "😠 Insatisfaisant" :
+                               evaluationProprete === "correct" ? "😐 Correct" : "😄 Très propre";
+      doc.text(appreciationText, 20, y);
+      y += 6;
+      if (commentaireProprete) {
+        const commentLines = doc.splitTextToSize(commentaireProprete, 170);
+        doc.text(commentLines, 20, y);
+        y += commentLines.length * 5;
+      }
+      
+      // Signature
+      if (signature) {
+        y += 10;
+        if (y > 250) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.setFont(undefined, 'bold');
+        doc.text(lang === "fr" ? "SIGNATURE CLIENT" : "CLIENT SIGNATURE", 20, y);
+        y += 6;
+        try {
+          doc.addImage(signature, 'PNG', 20, y, 60, 25);
+        } catch (e) {
+          console.error('Erreur signature:', e);
+        }
+      }
+      
+      // Footer
+      doc.setFontSize(8);
+      doc.text(`Camping Paradis - ${new Date().toLocaleDateString()} - Page 1`, 105, 287, { align: 'center' });
+      
+      const pdfBlob = doc.output('blob');
+      const pdfFile = new File([pdfBlob], `Arrivee_${nom}_${prenom}.pdf`, { type: 'application/pdf' });
+      const { file_url } = await base44.integrations.Core.UploadFile({ file: pdfFile });
+      return file_url;
+    } catch (error) {
+      console.error('Erreur PDF:', error);
+      return null;
+    }
+  };
+
   const handleFinalSubmit = async () => {
     setSubmitting(true);
     try {
@@ -255,9 +398,25 @@ ${allPhotos.length > 0 ? `📸 ${allPhotos.length} photo(s) jointe(s)` : ''}
         date_validation: new Date().toISOString()
       });
 
-      // Créer les interventions regroupées
-      const interventionMenage = await createIntervention({ service: "MENAGE", items: menage, ficheId: fiche.id });
-      const interventionTechnique = await createIntervention({ service: "TECHNIQUE", items: technique, ficheId: fiche.id });
+      // Ajouter autorisation + plages dans les interventions
+      const createInterventionWithAccess = async ({ service, items, ficheId }) => {
+        if (!items || items.length === 0) return null;
+        
+        const incident = await createIntervention({ service, items, ficheId });
+        
+        // Mise à jour avec autorisation et plages
+        if (incident) {
+          await base44.entities.Incident.update(incident.id, {
+            autorisation_acces: autorisationAcces,
+            plage_horaire_client: autorisationAcces === 'non' ? plagesHoraires.join(', ') : null
+          });
+        }
+        
+        return incident;
+      };
+      
+      const interventionMenage = await createInterventionWithAccess({ service: "MENAGE", items: menage, ficheId: fiche.id });
+      const interventionTechnique = await createInterventionWithAccess({ service: "TECHNIQUE", items: technique, ficheId: fiche.id });
 
       // Notification globale RÉCEPTION (vision consolidée multi-services)
       if (menage.length > 0 || technique.length > 0 || reception.length > 0) {
@@ -294,6 +453,17 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
         });
       }
 
+      // Générer PDF
+      const pdfGenere = await genererPDF({ 
+        ficheId: fiche.id, 
+        interventions: { menage, technique, reception } 
+      });
+      
+      if (pdfGenere) {
+        await base44.entities.FicheArrivee.update(fiche.id, { pdf_url: pdfGenere });
+        setPdfUrl(pdfGenere);
+      }
+
       const dossierId = sessionStorage.getItem('arrivee_dossier_id');
       if (dossierId) {
         await base44.entities.DossierArrivee.update(dossierId, {
@@ -304,9 +474,10 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
         });
       }
 
-      toast.success(lang === "fr" ? "Inventaire envoyé avec succès" : "Inventory sent successfully");
+      sessionStorage.setItem('fiche_arrivee_id', fiche.id);
+      toast.success(lang === "fr" ? "Inventaire validé ✅" : "Inventory validated ✅");
       setShowRecap(false);
-      setShowSuccess(true);
+      navigate(createPageUrl('ClientResume'));
     } catch (e) {
       console.error(e);
       toast.error(lang === "fr" ? "Erreur lors de l'envoi" : "Error while sending");
@@ -315,27 +486,7 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
     }
   };
 
-  if (showSuccess) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="text-center max-w-md space-y-6">
-          <CheckCircle className="w-20 h-20 text-green-500 mx-auto" />
-          <h2 className="text-2xl font-bold text-[#0077A8]">
-            {lang === "fr" 
-              ? `Nous vous remercions pour le retour concernant votre hébergement. Nous vous souhaitons un excellent séjour au Camping Paradis Domaine de Gaujac.`
-              : `Thank you for your feedback. We wish you an excellent stay at Camping Paradis Domaine de Gaujac.`
-            }
-          </h2>
-          <div className="space-y-3">
-            <Button onClick={() => navigate(createPageUrl("ClientMenu"))} className="w-full bg-[#00AEEF]">
-              <Home className="mr-2" />
-              {lang === "fr" ? "Retour menu principal" : "Back to main menu"}
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="min-h-screen max-w-4xl mx-auto px-6 py-8">
@@ -387,7 +538,10 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
               ? "Autorisez-vous notre intervenant à entrer dans votre hébergement en votre absence ?"
               : "Do you authorize our staff to enter your accommodation in your absence?"}
           </p>
-          <RadioGroup value={autorisationAcces} onValueChange={setAutorisationAcces}>
+          <RadioGroup value={autorisationAcces} onValueChange={(val) => {
+            setAutorisationAcces(val);
+            if (val === 'oui') setPlagesHoraires([]);
+          }}>
             <div className="flex items-center space-x-2 p-3 border rounded-lg">
               <RadioGroupItem value="oui" id="acces-oui" />
               <Label htmlFor="acces-oui" className="cursor-pointer flex-1">
@@ -401,6 +555,38 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
               </Label>
             </div>
           </RadioGroup>
+
+          {autorisationAcces === "non" && (
+            <div className="mt-4 p-4 bg-orange-50 rounded-lg border-2 border-orange-300">
+              <h4 className="font-semibold text-orange-800 mb-3">
+                ⏰ {lang === "fr" ? "Merci de sélectionner une ou plusieurs plages horaires possibles:" : "Please select one or more available time slots:"}
+              </h4>
+              <div className="space-y-2">
+                {['09h - 12h', '14h - 16h', '17h - 19h'].map(plage => (
+                  <label key={plage} className="flex items-center space-x-3 p-2 hover:bg-orange-100 rounded cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={plagesHoraires.includes(plage)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setPlagesHoraires([...plagesHoraires, plage]);
+                        } else {
+                          setPlagesHoraires(plagesHoraires.filter(p => p !== plage));
+                        }
+                      }}
+                      className="w-5 h-5"
+                    />
+                    <span className="text-sm font-medium">{plage}</span>
+                  </label>
+                ))}
+              </div>
+              {plagesHoraires.length === 0 && (
+                <p className="text-xs text-red-600 mt-2">
+                  {lang === "fr" ? "⚠️ Au moins une plage horaire est obligatoire" : "⚠️ At least one time slot is required"}
+                </p>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -534,12 +720,19 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
               <p className="font-bold text-orange-800">
                 🔐 {lang === "fr" ? "Autorisation d'accès" : "Access authorization"}: {autorisationAcces === 'oui' ? '✅ Oui' : '❌ Non'}
               </p>
-              {autorisationAcces === 'non' && (
-                <p className="text-xs text-orange-700 mt-1">
-                  {lang === "fr" 
-                    ? "Le client doit être présent lors de l'intervention"
-                    : "Client must be present during intervention"}
-                </p>
+              {autorisationAcces === 'non' && plagesHoraires.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-xs text-orange-700 font-semibold mb-1">
+                    {lang === "fr" ? "Plages horaires demandées:" : "Requested time slots:"}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {plagesHoraires.map(plage => (
+                      <span key={plage} className="px-2 py-1 bg-orange-200 text-orange-900 text-xs rounded">
+                        {plage}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
 
