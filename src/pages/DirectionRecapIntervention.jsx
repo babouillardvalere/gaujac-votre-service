@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import Logo from '../components/Logo';
 import { toast } from 'sonner';
+import jsPDF from 'jspdf';
 
 export default function DirectionRecapIntervention() {
   const navigate = useNavigate();
@@ -48,37 +49,76 @@ export default function DirectionRecapIntervention() {
     }
   });
 
-  const handleDownloadPDF = async () => {
+  const handleDownloadPDF = () => {
     setIsGeneratingPDF(true);
     try {
-      const prompt = `Génère un PDF professionnel de récapitulatif d'intervention Direction avec:
-
-TYPE: ${intervention.typeIntervention === 'HIVERNAGE' ? 'HIVERNAGE ❄️' : 'DÉSHIVERNAGE 🌞'}
-HÉBERGEMENT: ${intervention.typeHebergement} - ${intervention.numeroHebergement}
-SERVICE ASSIGNÉ: ${intervention.service === 'TECHNIQUE' ? 'TECHNIQUE 🧰' : 'MÉNAGE 🧽'}
-PRIORITÉ: ${intervention.priorite}
-
-DESCRIPTION:
-${intervention.description}
-
-TÂCHES À EFFECTUER:
-${intervention.taches.map(t => `${t.numero}. ${t.texte}`).join('\n')}
-
-Date d'émission: ${new Date().toLocaleDateString('fr-FR')}
-
-Créer un PDF avec en-tête "Camping Paradis - Domaine de Gaujac", logo, et mise en forme professionnelle.`;
-
-      const { file_url } = await base44.integrations.Core.InvokeLLM({
-        prompt,
-        add_context_from_internet: false
+      const doc = new jsPDF();
+      
+      // En-tête
+      doc.setFontSize(20);
+      doc.setTextColor(0, 119, 168);
+      doc.text('Camping Paradis - Domaine de Gaujac', 105, 20, { align: 'center' });
+      
+      doc.setFontSize(16);
+      doc.text('RECAPITULATIF INTERVENTION DIRECTION', 105, 35, { align: 'center' });
+      
+      // Corps
+      let y = 50;
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      
+      doc.text('Type d\'intervention:', 20, y);
+      doc.setFont(undefined, 'bold');
+      doc.text(intervention.typeIntervention === 'HIVERNAGE' ? 'HIVERNAGE' : 'DESHIVERNAGE', 80, y);
+      doc.setFont(undefined, 'normal');
+      y += 10;
+      
+      doc.text('Hebergement:', 20, y);
+      doc.setFont(undefined, 'bold');
+      doc.text(`${intervention.typeHebergement} - ${intervention.numeroHebergement}`, 80, y);
+      doc.setFont(undefined, 'normal');
+      y += 10;
+      
+      doc.text('Service assigne:', 20, y);
+      doc.setFont(undefined, 'bold');
+      doc.text(intervention.service === 'TECHNIQUE' ? 'TECHNIQUE' : 'MENAGE', 80, y);
+      doc.setFont(undefined, 'normal');
+      y += 10;
+      
+      doc.text('Priorite:', 20, y);
+      doc.setFont(undefined, 'bold');
+      doc.text(intervention.priorite, 80, y);
+      doc.setFont(undefined, 'normal');
+      y += 15;
+      
+      doc.text('Description:', 20, y);
+      y += 7;
+      const descLines = doc.splitTextToSize(intervention.description, 170);
+      doc.text(descLines, 20, y);
+      y += descLines.length * 7 + 10;
+      
+      doc.setFont(undefined, 'bold');
+      doc.text('TACHES A EFFECTUER:', 20, y);
+      doc.setFont(undefined, 'normal');
+      y += 10;
+      
+      intervention.taches.forEach(tache => {
+        const tacheLines = doc.splitTextToSize(`${tache.numero}. ${tache.texte}`, 170);
+        doc.text(tacheLines, 25, y);
+        y += tacheLines.length * 7 + 5;
       });
-
-      // Télécharger le fichier
-      window.open(file_url, '_blank');
+      
+      y += 15;
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Date d'emission: ${new Date().toLocaleDateString('fr-FR')}`, 20, y);
+      
+      // Télécharger
+      doc.save(`Intervention_${intervention.numeroHebergement}_${new Date().getTime()}.pdf`);
       toast.success('PDF téléchargé ✅');
     } catch (error) {
       console.error('Erreur PDF:', error);
-      toast.error('Erreur lors de la génération du PDF');
+      toast.error('Erreur génération PDF');
     } finally {
       setIsGeneratingPDF(false);
     }
