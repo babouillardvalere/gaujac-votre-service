@@ -50,10 +50,38 @@ export default function DirectionRecapIntervention() {
 
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);
-    // Simuler génération PDF
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    toast.success('PDF téléchargé');
-    setIsGeneratingPDF(false);
+    try {
+      const prompt = `Génère un PDF professionnel de récapitulatif d'intervention Direction avec:
+
+TYPE: ${intervention.typeIntervention === 'HIVERNAGE' ? 'HIVERNAGE ❄️' : 'DÉSHIVERNAGE 🌞'}
+HÉBERGEMENT: ${intervention.typeHebergement} - ${intervention.numeroHebergement}
+SERVICE ASSIGNÉ: ${intervention.service === 'TECHNIQUE' ? 'TECHNIQUE 🧰' : 'MÉNAGE 🧽'}
+PRIORITÉ: ${intervention.priorite}
+
+DESCRIPTION:
+${intervention.description}
+
+TÂCHES À EFFECTUER:
+${intervention.taches.map(t => `${t.numero}. ${t.texte}`).join('\n')}
+
+Date d'émission: ${new Date().toLocaleDateString('fr-FR')}
+
+Créer un PDF avec en-tête "Camping Paradis - Domaine de Gaujac", logo, et mise en forme professionnelle.`;
+
+      const { file_url } = await base44.integrations.Core.InvokeLLM({
+        prompt,
+        add_context_from_internet: false
+      });
+
+      // Télécharger le fichier
+      window.open(file_url, '_blank');
+      toast.success('PDF téléchargé ✅');
+    } catch (error) {
+      console.error('Erreur PDF:', error);
+      toast.error('Erreur lors de la génération du PDF');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
   };
 
   const handleValider = () => {
