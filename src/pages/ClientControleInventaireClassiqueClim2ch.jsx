@@ -14,7 +14,7 @@ import { Send, Loader2, Smile, Meh, Frown, Download, Home, CheckCircle } from "l
 import { toast } from "sonner";
 
 /* ============================================================
-   MH CLASSIQUE CLIM 2CH - INVENTAIRE COMPLET (D01 à D21)
+   MH CLASSIQUE CLIM 2CH - INVENTAIRE COMPLET (V01 à V22)
 ============================================================ */
 
 const INVENTAIRE_CLASSIQUE_CLIM_2CH = {
