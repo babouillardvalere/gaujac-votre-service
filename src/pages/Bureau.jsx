@@ -152,24 +152,9 @@ export default function Bureau() {
   });
 
   const { data: missionsDirection = [] } = useQuery({
-    queryKey: ['bureau-missions-direction'],
-    queryFn: () => base44.entities.MissionInterne.filter({ service: 'TOUS' }, '-date_debut', 200)
-  });
-
-  const { data: sousMissions = [] } = useQuery({
-    queryKey: ['bureau-sous-missions'],
-    queryFn: async () => {
-      try {
-        const allMissions = await base44.entities.MissionInterne.filter({}, '-date_debut', 500);
-        // Filtrer uniquement les sous-missions valides (dont la mission mère existe)
-        const missionMereIds = missionsDirection.map(m => m.id);
-        return allMissions.filter(m => m.mission_mere_id && missionMereIds.includes(m.mission_mere_id));
-      } catch (error) {
-        console.error('Erreur chargement sous-missions:', error);
-        return [];
-      }
-    },
-    enabled: missionsDirection.length > 0
+    queryKey: ['bureau-interventions-direction'],
+    queryFn: () => base44.entities.InterventionDirection.filter({}, '-created_date', 200),
+    refetchInterval: 60000
   });
 
   // Mutations pour actions de groupe
@@ -181,11 +166,11 @@ export default function Bureau() {
     mutationFn: (id) => base44.entities.Incident.delete(id),
   });
 
-  const deleteMissionMutation = useMutation({
-    mutationFn: (id) => base44.entities.MissionInterne.delete(id),
+  const deleteInterventionDirectionMutation = useMutation({
+    mutationFn: (id) => base44.entities.InterventionDirection.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bureau-missions-direction'] });
-      queryClient.invalidateQueries({ queryKey: ['bureau-sous-missions'] });
+      queryClient.invalidateQueries({ queryKey: ['bureau-interventions-direction'] });
+      toast.success(lang === 'fr' ? 'Intervention supprimée' : 'Intervention deleted');
     }
   });
 
@@ -518,7 +503,7 @@ export default function Bureau() {
               ✅ {lang === 'fr' ? 'Tâches' : 'Tasks'} ({taches.filter(t => t.statut !== 'terminee').length})
             </TabsTrigger>
             <TabsTrigger value="missions-direction" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              🎯 {lang === 'fr' ? 'Missions Direction' : 'Management Missions'} ({missionsDirection.filter(m => m.statut !== 'TERMINE').length})
+              🔧 {lang === 'fr' ? 'Interventions Direction' : 'Direction Interventions'} ({missionsDirection.filter(m => m.statut !== 'TERMINEE').length})
             </TabsTrigger>
             <TabsTrigger value="suivis" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               📦 {lang === 'fr' ? 'Suivis inventaires' : 'Inventory tracking'}
@@ -546,83 +531,90 @@ export default function Bureau() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Missions Direction */}
+          {/* Interventions Direction */}
           <TabsContent value="missions-direction" className="space-y-4">
             <Card className="border-2 border-purple-300 rounded-xl">
               <CardHeader>
                 <CardTitle className="font-heading text-purple-700">
-                  🎯 {lang === 'fr' ? 'Missions Direction' : 'Management Missions'}
+                  🔧 {lang === 'fr' ? 'Interventions Direction' : 'Direction Interventions'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {missionsDirection.length === 0 ? (
                   <div className="text-center py-12 text-gray-500">
                     <CheckCircle className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                    <p>{lang === 'fr' ? 'Aucune mission Direction' : 'No management missions'}</p>
+                    <p>{lang === 'fr' ? 'Aucune intervention Direction' : 'No direction interventions'}</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {missionsDirection.map(mission => {
-                      const ssMissions = sousMissions.filter(sm => sm.mission_mere_id === mission.id);
-                      const completees = ssMissions.filter(sm => sm.statut === 'TERMINE').length;
-                      const total = ssMissions.length;
-                      const progress = total > 0 ? Math.round((completees / total) * 100) : 0;
+                    {missionsDirection.map(intervention => {
+                      const tachesCompletees = intervention.taches?.filter(t => t.faite).length || 0;
+                      const tachesTotal = intervention.taches?.length || 0;
+                      const progress = tachesTotal > 0 ? Math.round((tachesCompletees / tachesTotal) * 100) : 0;
                       
                       return (
-                        <Card key={mission.id} className="border rounded-xl">
+                        <Card key={intervention.id} className="border rounded-xl">
                           <CardContent className="p-4">
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <h3 className="font-heading text-purple-700">{mission.titre}</h3>
+                                <div className="flex items-center gap-2 mb-2 flex-wrap">
                                   <Badge className={
-                                    mission.statut === 'TERMINE' ? 'bg-green-500 text-white' :
-                                    mission.statut === 'EN_COURS' ? 'bg-blue-500 text-white' :
-                                    'bg-orange-500 text-white'
+                                    intervention.type_intervention === 'HIVERNAGE' ? 'bg-blue-500' : 'bg-yellow-500'
                                   }>
-                                    {mission.statut === 'A_FAIRE' ? (lang === 'fr' ? 'À faire' : 'To do') :
-                                     mission.statut === 'EN_COURS' ? (lang === 'fr' ? 'En cours' : 'In progress') :
-                                     mission.statut === 'TERMINE' ? (lang === 'fr' ? 'Terminée' : 'Completed') :
-                                     mission.statut}
+                                    {intervention.type_intervention === 'HIVERNAGE' ? '❄️ Hivernage' : '🌞 Déshivernage'}
                                   </Badge>
                                   <Badge className={
-                                    mission.priorite === 'CRITIQUE' ? 'bg-red-500 text-white' :
-                                    mission.priorite === 'HAUTE' ? 'bg-orange-500 text-white' :
-                                    mission.priorite === 'NORMALE' ? 'bg-blue-100 text-blue-700' :
-                                    'bg-gray-100 text-gray-700'
+                                    intervention.service === 'TECHNIQUE' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'
                                   }>
-                                    {mission.priorite}
+                                    {intervention.service === 'TECHNIQUE' ? '🧰 Technique' : '🧽 Ménage'}
+                                  </Badge>
+                                  {intervention.priorite === 'URGENTE' && (
+                                    <Badge className="bg-red-500 text-white">⚠️ Urgent</Badge>
+                                  )}
+                                  <Badge className={
+                                    intervention.statut === 'TERMINEE' ? 'bg-green-500 text-white' :
+                                    intervention.statut === 'EN_COURS' ? 'bg-blue-500 text-white' :
+                                    intervention.statut === 'EN_ATTENTE' ? 'bg-orange-500 text-white' :
+                                    'bg-gray-500 text-white'
+                                  }>
+                                    {intervention.statut === 'A_FAIRE' ? (lang === 'fr' ? 'À faire' : 'To do') :
+                                     intervention.statut === 'EN_COURS' ? (lang === 'fr' ? 'En cours' : 'In progress') :
+                                     intervention.statut === 'EN_ATTENTE' ? (lang === 'fr' ? 'En attente' : 'On hold') :
+                                     (lang === 'fr' ? 'Terminée' : 'Completed')}
                                   </Badge>
                                 </div>
                                 
-                                {mission.description && (
-                                  <p className="text-sm text-gray-600 mt-2 whitespace-pre-line">{mission.description}</p>
+                                <h3 className="font-heading text-lg text-purple-700">
+                                  {intervention.type_hebergement} - {intervention.numero_hebergement}
+                                </h3>
+                                
+                                {intervention.description && (
+                                  <p className="text-sm text-gray-600 mt-2">{intervention.description}</p>
                                 )}
                                 
-                                <div className="flex flex-wrap gap-2 mt-3">
-                                  <Badge variant="outline">
-                                    📅 {mission.date_debut} → {mission.date_fin}
-                                  </Badge>
-                                  <Badge className="bg-purple-100 text-purple-700">
-                                    {mission.type_mission === 'DESHIVERNAGE' ? '🌞 Déshivernage' :
-                                     mission.type_mission === 'HIVERNAGE' ? '❄️ Hivernage' :
-                                     mission.type_mission === 'SAISON' ? '🏖️ Saison' :
-                                     '📢 Directive'}
-                                  </Badge>
-                                  {mission.hebergement_concerne && (
-                                    <Badge variant="outline">🏠 {mission.hebergement_concerne}</Badge>
+                                <div className="mt-3 space-y-1">
+                                  <p className="text-xs text-gray-600">
+                                    📋 {tachesTotal} tâche(s) - {tachesCompletees} terminée(s)
+                                  </p>
+                                  {intervention.pris_en_charge_par && (
+                                    <div className="flex items-center gap-3 text-xs text-gray-600">
+                                      <span className="flex items-center gap-1">
+                                        <User className="w-3 h-3" />
+                                        {intervention.pris_en_charge_par}
+                                      </span>
+                                      {intervention.temps_ecoule_minutes > 0 && (
+                                        <span className="flex items-center gap-1">
+                                          <Clock className="w-3 h-3" />
+                                          {intervention.temps_ecoule_minutes} min
+                                        </span>
+                                      )}
+                                    </div>
                                   )}
                                 </div>
 
-                                {/* Progression */}
-                                {total > 0 && (
+                                {/* Barre de progression */}
+                                {tachesTotal > 0 && (
                                   <div className="mt-3">
-                                    <div className="flex items-center justify-between mb-1">
-                                      <span className="text-xs text-gray-600">
-                                        {lang === 'fr' ? 'Progression' : 'Progress'}: {completees}/{total}
-                                      </span>
-                                      <span className="text-xs font-bold text-purple-600">{progress}%</span>
-                                    </div>
                                     <div className="w-full bg-gray-200 rounded-full h-2">
                                       <div 
                                         className="bg-purple-600 h-2 rounded-full transition-all"
@@ -638,12 +630,9 @@ export default function Bureau() {
                                 size="icon"
                                 onClick={async () => {
                                   if (confirm(lang === 'fr' 
-                                    ? `Supprimer la mission "${mission.titre}" et toutes ses sous-missions ?`
-                                    : `Delete mission "${mission.titre}" and all its sub-missions?`)) {
-                                    // Supprimer les sous-missions d'abord
-                                    await Promise.all(ssMissions.map(sm => deleteMissionMutation.mutateAsync(sm.id)));
-                                    // Puis la mission mère
-                                    await deleteMissionMutation.mutateAsync(mission.id);
+                                    ? `Supprimer l'intervention "${intervention.type_hebergement} - ${intervention.numero_hebergement}" ?`
+                                    : `Delete intervention "${intervention.type_hebergement} - ${intervention.numero_hebergement}"?`)) {
+                                    await deleteInterventionDirectionMutation.mutateAsync(intervention.id);
                                   }
                                 }}
                                 className="text-red-500 hover:text-red-700"
@@ -659,13 +648,6 @@ export default function Bureau() {
                 )}
               </CardContent>
             </Card>
-            <Button
-              onClick={() => navigate(createPageUrl('DirectionMissions'))}
-              className="w-full h-12 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-heading"
-            >
-              <CheckCircle className="w-5 h-5 mr-2" />
-              {lang === 'fr' ? 'Gérer toutes les missions' : 'Manage all missions'}
-            </Button>
           </TabsContent>
 
           {/* Tâches d'inventaire */}

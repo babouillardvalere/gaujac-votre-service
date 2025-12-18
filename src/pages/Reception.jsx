@@ -8,6 +8,7 @@ import ReceptionDeparts from '../components/reception/ReceptionDeparts';
 import JournalInterventions from '../components/reception/JournalInterventions';
 import CollaborateurNotificationBell from '../components/CollaborateurNotificationBell';
 import { runAutoArchiving } from '../components/reception/ArchivageService';
+import { base44 } from '@/api/base44Client';
 import { Home, LogIn, LogOut, Archive } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
