@@ -425,8 +425,6 @@ export default function Technique() {
           interventionsCount={incidents.filter(i => i.statut === 'en_attente').length}
           missionsCount={missionsDirection.filter(m => m.statut === 'A_FAIRE').length}
           lang={lang}
-          clientsTab={true}
-          missionsDirectionTab={true}
           interventionsContent={
             <>
               {/* Barre de recherche */}
@@ -637,12 +635,7 @@ export default function Technique() {
         )}
             </>
           }
-          clientsContent={
-            <div className="text-center py-12 bg-gray-50 rounded-xl">
-              <p className="text-gray-500">Interventions clients issues de l'inventaire</p>
-            </div>
-          }
-          missionsDirectionContent={
+          missionsContent={
             <MissionsDirectionService service="TECHNIQUE" />
           }
         />

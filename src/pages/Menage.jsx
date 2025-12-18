@@ -605,7 +605,9 @@ export default function Menage() {
         )}
             </>
           }
-          missionsContent={<MissionsDirectionTab service="MENAGE" lang={lang} />}
+          missionsContent={
+            <MissionsDirectionService service="MENAGE" />
+          }
         />
       </div>
 
