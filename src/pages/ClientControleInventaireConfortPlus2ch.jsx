@@ -62,11 +62,12 @@ const INVENTAIRE_CONFORT_PLUS_2CH = {
     { id: 'couvercle', emoji: '🔥', label: 'Couvercle', qty: 1, service: 'MENAGE' }
   ],
   appareils: [
+    { id: 'plaques_cuisson', emoji: '🔥', label: 'Plaques de cuisson', qty: 1, service: 'TECHNIQUE' },
     { id: 'cafetiere', emoji: '☕', label: 'Cafetière électrique', qty: 1, service: 'TECHNIQUE' },
     { id: 'micro_ondes', emoji: '📡', label: 'Micro-ondes', qty: 1, service: 'TECHNIQUE' },
-    { id: 'tv_telecommande', emoji: '📺', label: 'TV + télécommande', qty: 1, service: 'TECHNIQUE' },
-    { id: 'telecommande_clim', emoji: '❄️', label: 'Télécommande climatisation', qty: 1, service: 'TECHNIQUE' },
-    { id: 'refrigerateur', emoji: '🧊', label: 'Réfrigérateur', qty: 1, service: 'TECHNIQUE' }
+    { id: 'tv', emoji: '📺', label: 'TV + télécommande', qty: 1, service: 'TECHNIQUE' },
+    { id: 'refrigerateur', emoji: '🧊', label: 'Réfrigérateur-congélateur', qty: 1, service: 'TECHNIQUE' },
+    { id: 'telecommande_clim', emoji: '❄️', label: 'Télécommande climatisation', qty: 1, service: 'TECHNIQUE' }
   ],
   sanitaires: [
     { id: 'kit_brosse_wc', emoji: '🚽', label: 'Kit brosse WC', qty: 1, service: 'MENAGE' }
@@ -90,10 +91,11 @@ const INVENTAIRE_CONFORT_PLUS_2CH = {
     { id: 'cintres', emoji: '👗', label: 'Cintres', qty: 10, service: 'MENAGE' }
   ],
   exterieur: [
-    { id: 'cle_locative', emoji: '🗝️', label: 'Clé locatif', qty: 1, service: 'RECEPTION' },
-    { id: 'chaises_interieur', emoji: '🪑', label: 'Chaises intérieur', qty: 2, service: 'RECEPTION' },
-    { id: 'table_jardin', emoji: '🍽️', label: 'Table de jardin', qty: 1, service: 'RECEPTION' },
-    { id: 'chaises_jardin', emoji: '🪑', label: 'Chaises de jardin', qty: 4, service: 'RECEPTION' }
+    { id: 'cle_locative', emoji: '🗝️', label: 'Clé locatif', qty: 1, service: 'TECHNIQUE' },
+    { id: 'table_jardin', emoji: '🍽️', label: 'Table de jardin', qty: 1, service: 'TECHNIQUE' },
+    { id: 'chaises_jardin', emoji: '🪑', label: 'Chaises de jardin', qty: 4, service: 'TECHNIQUE' },
+    { id: 'terrasse_couverte', emoji: '🌤️', label: 'Terrasse semi-couverte', qty: 1, service: 'TECHNIQUE' },
+    { id: 'animaux_autorises', emoji: '🐾', label: 'Animaux autorisés', qty: 1, service: 'RECEPTION' }
   ]
 };
 
