@@ -22,20 +22,22 @@ const INVENTAIRE_CLASSIQUE_3CH = {
     { id: 'assiettes_creuses', emoji: '🍽️', label: 'Assiettes creuses', qty: 8, service: 'MENAGE' },
     { id: 'assiettes_dessert', emoji: '🍰', label: 'Assiettes à dessert', qty: 8, service: 'MENAGE' },
     { id: 'assiettes_plates', emoji: '🍽️', label: 'Assiettes plates', qty: 8, service: 'MENAGE' },
-    { id: 'bols', emoji: '🥣', label: 'Bols', qty: 8, service: 'MENAGE' },
-    { id: 'saladier', emoji: '🥗', label: 'Saladier', qty: 1, service: 'MENAGE' },
-    { id: 'tasses', emoji: '☕', label: 'Tasses', qty: 8, service: 'MENAGE' },
-    { id: 'verres_eau', emoji: '🥛', label: 'Verres à eau', qty: 8, service: 'MENAGE' },
-    { id: 'verres_vin', emoji: '🍷', label: 'Verres à vin', qty: 6, service: 'MENAGE' },
-    { id: 'pichet', emoji: '🍶', label: 'Pichet / carafe', qty: 1, service: 'MENAGE' },
     { id: 'plats', emoji: '🍲', label: 'Plats', qty: 2, service: 'MENAGE' },
-    { id: 'plat_four', emoji: '🍛', label: 'Plat à four', qty: 1, service: 'MENAGE' }
+    { id: 'bols', emoji: '🥣', label: 'Bols', qty: 6, service: 'MENAGE' },
+    { id: 'saladiers', emoji: '🥗', label: 'Saladiers', qty: 2, service: 'MENAGE' },
+    { id: 'tasses', emoji: '☕', label: 'Tasses', qty: 6, service: 'MENAGE' },
+    { id: 'verres_vin', emoji: '🍷', label: 'Verres à vin', qty: 6, service: 'MENAGE' },
+    { id: 'verres_eau', emoji: '🥛', label: 'Verres à eau', qty: 6, service: 'MENAGE' },
+    { id: 'pichet', emoji: '🍶', label: 'Pichet / Carafe', qty: 1, service: 'MENAGE' }
   ],
   couverts: [
     { id: 'fourchettes', emoji: '🍴', label: 'Fourchettes', qty: 8, service: 'MENAGE' },
     { id: 'cuilleres_soupe', emoji: '🥄', label: 'Cuillères à soupe', qty: 8, service: 'MENAGE' },
     { id: 'cuilleres_cafe', emoji: '🥄', label: 'Cuillères à café', qty: 8, service: 'MENAGE' },
     { id: 'couteaux', emoji: '🔪', label: 'Couteaux', qty: 8, service: 'MENAGE' },
+    { id: 'couteau_pain', emoji: '🔪', label: 'Couteau à pain', qty: 1, service: 'MENAGE' },
+    { id: 'couteau_office', emoji: '🔪', label: 'Couteau office', qty: 1, service: 'MENAGE' },
+    { id: 'couteau_decouper', emoji: '🔪', label: 'Couteau à découper', qty: 1, service: 'MENAGE' },
     { id: 'couverts_salade', emoji: '🥗', label: 'Couverts à salade', qty: 1, service: 'MENAGE' },
     { id: 'ciseaux', emoji: '✂️', label: 'Ciseaux', qty: 1, service: 'MENAGE' },
     { id: 'spatule_bois', emoji: '🥄', label: 'Spatule en bois', qty: 1, service: 'MENAGE' },
@@ -48,7 +50,10 @@ const INVENTAIRE_CLASSIQUE_3CH = {
     { id: 'essoreuse_salade', emoji: '🥬', label: 'Essoreuse à salade', qty: 1, service: 'MENAGE' },
     { id: 'tire_bouchon', emoji: '🍷', label: 'Tire-bouchon', qty: 1, service: 'MENAGE' },
     { id: 'ouvre_boite', emoji: '🥫', label: 'Ouvre-boîte', qty: 1, service: 'MENAGE' },
-    { id: 'range_couverts', emoji: '🍴', label: 'Range-couverts', qty: 1, service: 'MENAGE' }
+    { id: 'range_couverts', emoji: '🍴', label: 'Range-couverts', qty: 1, service: 'MENAGE' },
+    { id: 'plateau', emoji: '🍱', label: 'Plateau', qty: 1, service: 'MENAGE' },
+    { id: 'corbeille_pain', emoji: '🍞', label: 'Corbeille à pain', qty: 1, service: 'MENAGE' },
+    { id: 'plat_four_rond', emoji: '🍛', label: 'Plat à four rond', qty: 1, service: 'MENAGE' }
   ],
   batterie: [
     { id: 'casseroles', emoji: '🍲', label: 'Casseroles', qty: 3, service: 'MENAGE' },
@@ -91,7 +96,7 @@ const INVENTAIRE_CLASSIQUE_3CH = {
   exterieur: [
     { id: 'cle_locative', emoji: '🗝️', label: 'Clé locative', qty: 1, service: 'TECHNIQUE' },
     { id: 'carte_barriere', emoji: '🪪', label: 'Carte barrière', qty: 1, service: 'TECHNIQUE' },
-    { id: 'chaises_interieur', emoji: '🪑', label: 'Chaises intérieur', qty: 6, service: 'TECHNIQUE' },
+    { id: 'chaises_interieur', emoji: '🪑', label: 'Chaises intérieur', qty: 2, service: 'TECHNIQUE' },
     { id: 'table_jardin', emoji: '🍽️', label: 'Table de jardin', qty: 1, service: 'TECHNIQUE' },
     { id: 'chaises_jardin', emoji: '🪑', label: 'Chaises de jardin', qty: 6, service: 'TECHNIQUE' }
   ]
