@@ -247,7 +247,7 @@ ${allPhotos.length > 0 ? `📸 ${allPhotos.length} photo(s) jointe(s)` : ''}
         numero_logement: numero,
         categorie_logement: categorie,
         type_logement: "mobilhome",
-        inventaire_objets_manquants: [...menage, ...technique],
+        inventaire_objets_manquants: [...menage, ...technique, ...reception],
         evaluation_proprete: evaluationProprete,
         commentaire_proprete: commentaireProprete,
         signature_url: signature,
