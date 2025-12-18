@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,9 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Clock, User, CheckCircle, X, Camera, Loader2 } from 'lucide-react';
+import { Clock, User, CheckCircle, X, Camera, Loader2, AlertTriangle, Upload, Play } from 'lucide-react';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format, differenceInMinutes } from 'date-fns';
 
 export default function MissionsDirectionService({ service }) {
   const queryClient = useQueryClient();
@@ -19,6 +19,8 @@ export default function MissionsDirectionService({ service }) {
   const [prenomAgent, setPrenomAgent] = useState('');
   const [tachesEtat, setTachesEtat] = useState({});
   const [filterStatut, setFilterStatut] = useState('A_FAIRE');
+  const [tempsEcoule, setTempsEcoule] = useState(0);
+  const [uploadingPhoto, setUploadingPhoto] = useState(null);
 
   const { data: missions = [], isLoading } = useQuery({
     queryKey: ['interventions-direction', service],
@@ -26,45 +28,137 @@ export default function MissionsDirectionService({ service }) {
     refetchInterval: 30000
   });
 
+  // Timer temps réel
+  useEffect(() => {
+    if (selectedMission?.statut === 'EN_COURS' && selectedMission?.date_prise_en_charge) {
+      const interval = setInterval(() => {
+        const minutes = differenceInMinutes(new Date(), new Date(selectedMission.date_prise_en_charge));
+        setTempsEcoule(minutes);
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [selectedMission]);
+
   const priseEnChargeMutation = useMutation({
     mutationFn: async ({ id, prenom }) => {
       return await base44.entities.InterventionDirection.update(id, {
         statut: 'EN_COURS',
         pris_en_charge_par: prenom,
-        date_prise_en_charge: new Date().toISOString()
+        date_prise_en_charge: new Date().toISOString(),
+        temps_ecoule_minutes: 0
       });
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['interventions-direction', service] });
       setShowPriseEnCharge(false);
-      setPrenomAgent('');
-      toast.success('Mission prise en charge');
+      toast.success('Mission prise en charge - Timer démarré ⏱️');
+      // Ouvrir directement le traitement
+      const missionUpdated = { ...selectedMission, ...data };
+      setSelectedMission(missionUpdated);
+      const etat = {};
+      missionUpdated.taches.forEach(t => {
+        etat[t.numero] = {
+          faite: t.faite || false,
+          justification: t.justification || '',
+          photo_url: t.photo_url || ''
+        };
+      });
+      setTachesEtat(etat);
+      setShowTraitement(true);
     }
   });
 
   const finalisationMutation = useMutation({
-    mutationFn: async ({ id, taches, statut }) => {
+    mutationFn: async ({ id, taches, statut, motifAttente }) => {
       const now = new Date().toISOString();
       const missionActuelle = missions.find(m => m.id === id);
       const dureeMinutes = missionActuelle?.date_prise_en_charge 
         ? Math.floor((new Date() - new Date(missionActuelle.date_prise_en_charge)) / 60000)
         : 0;
 
-      return await base44.entities.InterventionDirection.update(id, {
+      const updateData = {
         taches,
         statut,
-        date_terminee: statut === 'TERMINEE' ? now : null,
-        temps_ecoule_minutes: (missionActuelle?.temps_ecoule_minutes || 0) + dureeMinutes
-      });
+        temps_ecoule_minutes: dureeMinutes
+      };
+
+      if (statut === 'TERMINEE') {
+        updateData.date_terminee = now;
+        
+        // Générer le PDF automatiquement
+        try {
+          const pdfContent = await genererPDFIntervention({
+            mission: { ...missionActuelle, taches },
+            service,
+            tempsTotal: dureeMinutes
+          });
+          
+          const pdfBlob = new Blob([pdfContent], { type: 'application/pdf' });
+          const pdfFile = new File([pdfBlob], `intervention_${id}.pdf`, { type: 'application/pdf' });
+          const { file_url } = await base44.integrations.Core.UploadFile({ file: pdfFile });
+          
+          updateData.pdf_url = file_url;
+          toast.success('PDF généré automatiquement ✅');
+        } catch (error) {
+          console.error('Erreur génération PDF:', error);
+          toast.error('Mission validée mais erreur PDF');
+        }
+      } else if (statut === 'EN_ATTENTE') {
+        updateData.description = motifAttente ? `${missionActuelle.description}\n\n⚠️ En attente: ${motifAttente}` : missionActuelle.description;
+      }
+
+      return await base44.entities.InterventionDirection.update(id, updateData);
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['interventions-direction', service] });
       setShowTraitement(false);
       setSelectedMission(null);
       setTachesEtat({});
-      toast.success('Mission finalisée');
+      
+      if (variables.statut === 'TERMINEE') {
+        toast.success('✅ Mission terminée - PDF généré');
+      } else if (variables.statut === 'EN_ATTENTE') {
+        toast.success('⏸️ Mission mise en attente - À reprendre ultérieurement');
+      }
     }
   });
+
+  const genererPDFIntervention = async ({ mission, service, tempsTotal }) => {
+    const prompt = `Génère un PDF professionnel d'intervention avec les données suivantes:
+    
+TYPE: ${mission.type_intervention}
+HÉBERGEMENT: ${mission.type_hebergement} ${mission.numero_hebergement}
+SERVICE: ${service}
+AGENT: ${mission.pris_en_charge_par}
+PRIORITÉ: ${mission.priorite}
+TEMPS TOTAL: ${tempsTotal} minutes
+DATE: ${format(new Date(), 'dd/MM/yyyy HH:mm')}
+
+DESCRIPTION:
+${mission.description}
+
+TÂCHES:
+${mission.taches.map(t => `
+${t.numero}. ${t.texte}
+   Statut: ${t.faite ? '✅ FAIT' : '❌ PAS FAIT'}
+   ${t.justification ? `Justification: ${t.justification}` : ''}
+   ${t.photo_url ? `Photo: Oui` : ''}
+`).join('\n')}
+
+Crée un document PDF formel avec logo camping, en-têtes, et signatures.`;
+
+    const response = await base44.integrations.Core.InvokeLLM({ 
+      prompt,
+      response_json_schema: {
+        type: "object",
+        properties: {
+          pdf_base64: { type: "string" }
+        }
+      }
+    });
+
+    return atob(response.pdf_base64);
+  };
 
   const handlePrendreEnCharge = (mission) => {
     setSelectedMission(mission);
@@ -73,11 +167,11 @@ export default function MissionsDirectionService({ service }) {
 
   const handleCommencerTraitement = (mission) => {
     setSelectedMission(mission);
-    // Initialiser l'état des tâches
+    // Initialiser l'état des tâches - NE PAS pré-remplir avec les anciennes valeurs
     const etat = {};
     mission.taches.forEach(t => {
       etat[t.numero] = {
-        faite: t.faite || false,
+        faite: t.faite !== undefined ? t.faite : undefined, // undefined = pas encore répondu
         justification: t.justification || '',
         photo_url: t.photo_url || ''
       };
@@ -94,17 +188,48 @@ export default function MissionsDirectionService({ service }) {
     priseEnChargeMutation.mutate({ id: selectedMission.id, prenom: prenomAgent.trim() });
   };
 
-  const handleToggleTache = (numero) => {
+  const handleToggleTache = (numero, newStatus) => {
     setTachesEtat({
       ...tachesEtat,
       [numero]: {
         ...tachesEtat[numero],
-        faite: !tachesEtat[numero].faite
+        faite: newStatus,
+        justification: newStatus ? '' : tachesEtat[numero]?.justification || ''
       }
     });
   };
 
+  const handlePhotoUpload = async (numero, file) => {
+    setUploadingPhoto(numero);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setTachesEtat({
+        ...tachesEtat,
+        [numero]: {
+          ...tachesEtat[numero],
+          photo_url: file_url
+        }
+      });
+      toast.success('Photo ajoutée ✅');
+    } catch (error) {
+      toast.error('Erreur upload photo');
+    } finally {
+      setUploadingPhoto(null);
+    }
+  };
+
   const handleValiderTraitement = () => {
+    // Vérifier que TOUTES les tâches ont un statut
+    const tachesNonRepondues = selectedMission.taches.filter(t => 
+      tachesEtat[t.numero] === undefined || 
+      (tachesEtat[t.numero].faite === undefined)
+    );
+
+    if (tachesNonRepondues.length > 0) {
+      toast.error(`⚠️ Veuillez traiter toutes les tâches (${tachesNonRepondues.length} restante(s))`);
+      return;
+    }
+
     const tachesUpdated = selectedMission.taches.map(t => ({
       ...t,
       faite: tachesEtat[t.numero].faite,
@@ -112,23 +237,39 @@ export default function MissionsDirectionService({ service }) {
       photo_url: tachesEtat[t.numero].photo_url
     }));
 
+    // Validation: si pas fait, justification OBLIGATOIRE
+    const tachesSansJustification = tachesUpdated.filter(t => !t.faite && !t.justification?.trim());
+    if (tachesSansJustification.length > 0) {
+      toast.error(`⚠️ Justification obligatoire pour les tâches non faites (${tachesSansJustification.map(t => t.numero).join(', ')})`);
+      return;
+    }
+
     const touteFait = tachesUpdated.every(t => t.faite);
     const auMoinsUnePasFaite = tachesUpdated.some(t => !t.faite);
 
-    // Validation: si pas fait, justification obligatoire
-    for (const t of tachesUpdated) {
-      if (!t.faite && !t.justification?.trim()) {
-        toast.error(`Justification obligatoire pour la tâche ${t.numero}`);
+    let nouveauStatut, motifAttente;
+
+    if (touteFait) {
+      nouveauStatut = 'TERMINEE';
+      motifAttente = null;
+    } else if (auMoinsUnePasFaite) {
+      // Demander un motif global
+      const motif = prompt('⚠️ Au moins une tâche non effectuée.\n\nMotif de mise en attente (obligatoire):');
+      if (!motif?.trim()) {
+        toast.error('Motif obligatoire pour mettre en attente');
         return;
       }
+      nouveauStatut = 'EN_ATTENTE';
+      motifAttente = motif.trim();
+    } else {
+      nouveauStatut = 'EN_COURS';
     }
-
-    const nouveauStatut = touteFait ? 'TERMINEE' : (auMoinsUnePasFaite ? 'EN_ATTENTE' : 'EN_COURS');
 
     finalisationMutation.mutate({
       id: selectedMission.id,
       taches: tachesUpdated,
-      statut: nouveauStatut
+      statut: nouveauStatut,
+      motifAttente
     });
   };
 
@@ -140,6 +281,7 @@ export default function MissionsDirectionService({ service }) {
   const counts = {
     A_FAIRE: missions.filter(m => m.statut === 'A_FAIRE').length,
     EN_COURS: missions.filter(m => m.statut === 'EN_COURS').length,
+    EN_ATTENTE: missions.filter(m => m.statut === 'EN_ATTENTE').length,
     TERMINEE: missions.filter(m => m.statut === 'TERMINEE').length
   };
 
@@ -255,26 +397,46 @@ export default function MissionsDirectionService({ service }) {
                 {mission.statut === 'A_FAIRE' && (
                   <Button 
                     onClick={() => handlePrendreEnCharge(mission)}
-                    className="w-full bg-purple-600"
+                    className="w-full bg-purple-600 hover:bg-purple-700 h-12"
                   >
-                    ▶️ Prendre en charge
+                    <Play className="w-4 h-4 mr-2" />
+                    Prendre en charge
                   </Button>
                 )}
                 {mission.statut === 'EN_COURS' && (
                   <Button 
                     onClick={() => handleCommencerTraitement(mission)}
-                    className="w-full bg-green-600"
+                    className="w-full bg-green-600 hover:bg-green-700 h-12"
                   >
-                    ✔️ Traiter les tâches
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Traiter les tâches
                   </Button>
                 )}
                 {mission.statut === 'EN_ATTENTE' && (
+                  <div className="space-y-2">
+                    {mission.description?.includes('⚠️ En attente:') && (
+                      <div className="bg-orange-50 rounded-lg p-2 border border-orange-200">
+                        <p className="text-xs text-orange-700">
+                          {mission.description.split('⚠️ En attente:')[1]?.trim()}
+                        </p>
+                      </div>
+                    )}
+                    <Button 
+                      onClick={() => handleCommencerTraitement(mission)}
+                      className="w-full bg-orange-500 hover:bg-orange-600 h-12"
+                    >
+                      🔄 Reprendre la mission
+                    </Button>
+                  </div>
+                )}
+                {mission.statut === 'TERMINEE' && mission.pdf_url && (
                   <Button 
-                    onClick={() => handleCommencerTraitement(mission)}
+                    onClick={() => window.open(mission.pdf_url, '_blank')}
                     variant="outline"
-                    className="w-full"
+                    className="w-full border-green-500 text-green-700 h-10"
+                    size="sm"
                   >
-                    🔄 Reprendre
+                    📄 Télécharger le PDF
                   </Button>
                 )}
               </CardContent>
@@ -285,94 +447,264 @@ export default function MissionsDirectionService({ service }) {
 
       {/* Dialog prise en charge */}
       <Dialog open={showPriseEnCharge} onOpenChange={setShowPriseEnCharge}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Prise en charge</DialogTitle>
+            <DialogTitle className="text-xl font-heading text-purple-700 flex items-center gap-2">
+              <Play className="w-6 h-6" />
+              Prise en charge
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              value={prenomAgent}
-              onChange={(e) => setPrenomAgent(e.target.value)}
-              placeholder="Votre prénom *"
-            />
-            <Button 
-              onClick={handleValiderPriseEnCharge}
-              disabled={priseEnChargeMutation.isPending}
-              className="w-full bg-purple-600"
-            >
-              {priseEnChargeMutation.isPending ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                '▶️ Valider'
-              )}
-            </Button>
-          </div>
+          
+          {selectedMission && (
+            <div className="space-y-4">
+              {/* Récap mission */}
+              <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Badge className={selectedMission.type_intervention === 'HIVERNAGE' ? 'bg-blue-500' : 'bg-yellow-500'}>
+                      {selectedMission.type_intervention === 'HIVERNAGE' ? '❄️ Hivernage' : '🌞 Déshivernage'}
+                    </Badge>
+                    {selectedMission.priorite === 'URGENTE' && (
+                      <Badge className="bg-red-500">⚠️ URGENT</Badge>
+                    )}
+                  </div>
+                  <p className="font-bold text-purple-700">
+                    {selectedMission.type_hebergement} - {selectedMission.numero_hebergement}
+                  </p>
+                  <p className="text-gray-600">{selectedMission.taches.length} tâche(s) à effectuer</p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-gray-700">Votre prénom *</label>
+                <Input
+                  value={prenomAgent}
+                  onChange={(e) => setPrenomAgent(e.target.value)}
+                  placeholder="Ex: Thomas"
+                  className="h-12"
+                  autoFocus
+                />
+              </div>
+
+              <div className="bg-blue-50 rounded-lg p-3 text-xs text-blue-700">
+                ℹ️ En validant, le timer démarre automatiquement et vous accéderez directement au traitement des tâches.
+              </div>
+
+              <Button 
+                onClick={handleValiderPriseEnCharge}
+                disabled={!prenomAgent.trim() || priseEnChargeMutation.isPending}
+                className="w-full bg-purple-600 hover:bg-purple-700 h-12"
+              >
+                {priseEnChargeMutation.isPending ? (
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                ) : (
+                  <Play className="w-5 h-5 mr-2" />
+                )}
+                Démarrer la mission
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
       {/* Dialog traitement tâches */}
       <Dialog open={showTraitement} onOpenChange={setShowTraitement}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Traitement des tâches</DialogTitle>
+            <DialogTitle className="text-xl font-heading text-purple-700">
+              ✅ Traitement des tâches
+            </DialogTitle>
           </DialogHeader>
 
           {selectedMission && (
             <div className="space-y-4">
-              {selectedMission.taches.map(tache => (
-                <Card key={tache.numero} className="p-4">
-                  <div className="flex items-start gap-3 mb-3">
-                    <span className="font-bold text-purple-600">{tache.numero}.</span>
-                    <p className="flex-1">{tache.texte}</p>
+              {/* En-tête mission */}
+              <div className="bg-purple-50 rounded-xl p-4 border-2 border-purple-200">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <span className="text-gray-600">Type:</span>
+                    <Badge className={mission.type_intervention === 'HIVERNAGE' ? 'bg-blue-500 ml-2' : 'bg-yellow-500 ml-2'}>
+                      {selectedMission.type_intervention === 'HIVERNAGE' ? '❄️ Hivernage' : '🌞 Déshivernage'}
+                    </Badge>
                   </div>
-
-                  <div className="space-y-3">
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => handleToggleTache(tache.numero)}
-                        variant={tachesEtat[tache.numero]?.faite ? 'default' : 'outline'}
-                        className={tachesEtat[tache.numero]?.faite ? 'bg-green-600' : ''}
-                      >
-                        ✔️ Fait
-                      </Button>
-                      <Button
-                        onClick={() => handleToggleTache(tache.numero)}
-                        variant={!tachesEtat[tache.numero]?.faite ? 'default' : 'outline'}
-                        className={!tachesEtat[tache.numero]?.faite ? 'bg-red-600' : ''}
-                      >
-                        ✖️ Pas fait
-                      </Button>
+                  <div>
+                    <span className="text-gray-600">Hébergement:</span>
+                    <span className="font-bold ml-2">{selectedMission.type_hebergement} - {selectedMission.numero_hebergement}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Service:</span>
+                    <Badge className={service === 'TECHNIQUE' ? 'bg-blue-100 text-blue-700 ml-2' : 'bg-yellow-100 text-yellow-700 ml-2'}>
+                      {service === 'TECHNIQUE' ? '🧰 Technique' : '🧽 Ménage'}
+                    </Badge>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Agent:</span>
+                    <span className="font-bold ml-2">{selectedMission.pris_en_charge_par}</span>
+                  </div>
+                  {selectedMission.priorite === 'URGENTE' && (
+                    <div className="col-span-2">
+                      <Badge className="bg-red-500">⚠️ URGENT</Badge>
                     </div>
-
-                    {!tachesEtat[tache.numero]?.faite && (
-                      <Textarea
-                        value={tachesEtat[tache.numero]?.justification || ''}
-                        onChange={(e) => setTachesEtat({
-                          ...tachesEtat,
-                          [tache.numero]: {
-                            ...tachesEtat[tache.numero],
-                            justification: e.target.value
-                          }
-                        })}
-                        placeholder="Justification obligatoire *"
-                        rows={2}
-                      />
-                    )}
+                  )}
+                </div>
+                
+                {/* Timer en temps réel */}
+                {selectedMission.date_prise_en_charge && (
+                  <div className="mt-3 pt-3 border-t border-purple-200 flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Temps écoulé:</span>
+                    <div className="flex items-center gap-2 text-purple-700 font-bold">
+                      <Clock className="w-4 h-4" />
+                      {Math.floor(tempsEcoule / 60)}h {tempsEcoule % 60}min
+                    </div>
                   </div>
-                </Card>
-              ))}
-
-              <Button 
-                onClick={handleValiderTraitement}
-                disabled={finalisationMutation.isPending}
-                className="w-full bg-purple-600"
-              >
-                {finalisationMutation.isPending ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  '✔️ Valider'
                 )}
-              </Button>
+              </div>
+
+              {/* Description */}
+              {selectedMission.description && (
+                <div className="bg-gray-50 rounded-xl p-3">
+                  <p className="text-sm text-gray-700 italic">{selectedMission.description}</p>
+                </div>
+              )}
+
+              {/* Liste des tâches */}
+              <div className="space-y-3">
+                <h3 className="font-heading text-purple-700 flex items-center gap-2">
+                  📋 Tâches à traiter ({selectedMission.taches.filter(t => tachesEtat[t.numero]?.faite !== undefined).length}/{selectedMission.taches.length})
+                </h3>
+                
+                {selectedMission.taches.map(tache => {
+                  const etat = tachesEtat[tache.numero];
+                  const estRepondu = etat?.faite !== undefined;
+                  const estFait = etat?.faite === true;
+                  const estPasFait = etat?.faite === false;
+
+                  return (
+                    <Card key={tache.numero} className={`p-4 border-2 ${
+                      estRepondu ? (estFait ? 'border-green-300 bg-green-50' : 'border-orange-300 bg-orange-50') : 'border-gray-300'
+                    }`}>
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+                          estRepondu ? (estFait ? 'bg-green-600 text-white' : 'bg-orange-600 text-white') : 'bg-gray-300 text-gray-600'
+                        }`}>
+                          {tache.numero}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900">{tache.texte}</p>
+                          {!estRepondu && (
+                            <p className="text-xs text-red-500 mt-1">⚠️ À traiter</p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="space-y-3 ml-11">
+                        {/* Boutons Fait / Pas fait */}
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => handleToggleTache(tache.numero, true)}
+                            variant={estFait ? 'default' : 'outline'}
+                            className={estFait ? 'bg-green-600 hover:bg-green-700' : 'border-green-600 text-green-600'}
+                            size="sm"
+                          >
+                            ✔️ Fait
+                          </Button>
+                          <Button
+                            onClick={() => handleToggleTache(tache.numero, false)}
+                            variant={estPasFait ? 'default' : 'outline'}
+                            className={estPasFait ? 'bg-red-600 hover:bg-red-700' : 'border-red-600 text-red-600'}
+                            size="sm"
+                          >
+                            ✖️ Pas fait
+                          </Button>
+                        </div>
+
+                        {/* Justification si pas fait */}
+                        {estPasFait && (
+                          <div className="bg-orange-50 rounded-lg p-3 border border-orange-200">
+                            <label className="text-xs font-bold text-orange-700 mb-1 block">
+                              Justification obligatoire *
+                            </label>
+                            <Textarea
+                              value={etat?.justification || ''}
+                              onChange={(e) => setTachesEtat({
+                                ...tachesEtat,
+                                [tache.numero]: {
+                                  ...tachesEtat[tache.numero],
+                                  justification: e.target.value
+                                }
+                              })}
+                              placeholder="Pourquoi cette tâche n'a pas été effectuée..."
+                              rows={2}
+                              className="bg-white"
+                            />
+                          </div>
+                        )}
+
+                        {/* Photo facultative */}
+                        <div className="flex items-center gap-2">
+                          <label className="cursor-pointer">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handlePhotoUpload(tache.numero, file);
+                              }}
+                              disabled={uploadingPhoto === tache.numero}
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-xs"
+                              disabled={uploadingPhoto === tache.numero}
+                              type="button"
+                              onClick={(e) => e.currentTarget.previousSibling.click()}
+                            >
+                              {uploadingPhoto === tache.numero ? (
+                                <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                              ) : (
+                                <Camera className="w-3 h-3 mr-1" />
+                              )}
+                              Photo (facultatif)
+                            </Button>
+                          </label>
+                          {etat?.photo_url && (
+                            <div className="flex items-center gap-1 text-xs text-green-600">
+                              <CheckCircle className="w-3 h-3" />
+                              Photo ajoutée
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Aperçu photo */}
+                        {etat?.photo_url && (
+                          <img src={etat.photo_url} alt={`Tâche ${tache.numero}`} className="w-32 h-32 object-cover rounded-lg border-2" />
+                        )}
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+
+              {/* Bouton validation */}
+              <div className="pt-4 border-t">
+                <Button 
+                  onClick={handleValiderTraitement}
+                  disabled={finalisationMutation.isPending}
+                  className="w-full bg-purple-600 hover:bg-purple-700 h-14 text-lg"
+                >
+                  {finalisationMutation.isPending ? (
+                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                  ) : (
+                    <CheckCircle className="w-5 h-5 mr-2" />
+                  )}
+                  Valider la mission
+                </Button>
+                <p className="text-xs text-gray-500 text-center mt-2">
+                  ⚠️ Toutes les tâches doivent être traitées
+                </p>
+              </div>
             </div>
           )}
         </DialogContent>
