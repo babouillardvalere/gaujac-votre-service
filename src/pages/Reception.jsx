@@ -7,18 +7,26 @@ import ReceptionArrivees from '../components/reception/ReceptionArrivees';
 import ReceptionDeparts from '../components/reception/ReceptionDeparts';
 import JournalInterventions from '../components/reception/JournalInterventions';
 import CollaborateurNotificationBell from '../components/CollaborateurNotificationBell';
-import ServiceMissionDashboard from '../components/direction/ServiceMissionDashboard';
+import MissionsDirectionTab from '../components/missions/MissionsDirectionTab';
 import { runAutoArchiving } from '../components/reception/ArchivageService';
 import { Home, LogIn, LogOut, Archive } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { Badge } from '@/components/ui/badge';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 
 export default function Reception() {
   const { t, lang } = useTranslation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('arrivees');
   const [isArchiving, setIsArchiving] = useState(false);
+
+  const { data: missions = [] } = useQuery({
+    queryKey: ['missions-internes', 'RECEPTION'],
+    queryFn: () => base44.entities.MissionInterne.filter({ service: 'RECEPTION' }, '-date_debut', 100),
+    refetchInterval: 60000
+  });
 
   // Lancer l'archivage automatique au chargement de la page
   useEffect(() => {
@@ -153,7 +161,7 @@ export default function Reception() {
               </TabsContent>
 
               <TabsContent value="missions" className="mt-0">
-                <ServiceMissionDashboard service="ACCUEIL" serviceLabel="Réception" />
+                <MissionsDirectionTab service="RECEPTION" lang={lang} />
               </TabsContent>
             </div>
           </Tabs>
