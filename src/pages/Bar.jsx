@@ -1,58 +1,49 @@
 import React from 'react';
 import { useTranslation } from '../components/translations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Coffee, ArrowLeft } from 'lucide-react';
+import { Coffee, ArrowLeft, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '../utils';
-import ServiceMissionDashboard from '../components/direction/ServiceMissionDashboard';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ServiceTabs from '../components/missions/ServiceTabs';
+import MissionsDirectionTab from '../components/missions/MissionsDirectionTab';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 
 export default function Bar() {
   const { t, lang } = useTranslation();
   const navigate = useNavigate();
 
+  const { data: missions = [] } = useQuery({
+    queryKey: ['missions-internes', 'BAR'],
+    queryFn: () => base44.entities.MissionInterne.filter({ service: 'BAR' }, '-date_debut', 100),
+    refetchInterval: 60000
+  });
+
   return (
-    <div className="min-h-screen p-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-6">
-          <button
-            onClick={() => navigate(createPageUrl('MenuCollaborateur'))}
-            className="flex items-center gap-2 text-[#0077A8] hover:text-[#00AEEF] mb-4"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="font-heading">{t('retour')}</span>
-          </button>
-
-          <div className="flex items-center gap-3 mb-2">
-            <Coffee className="w-8 h-8 text-[#ec4899]" />
-            <h1 className="font-handwritten text-4xl text-[#00AEEF]">
-              Bar & Snack
-            </h1>
+    <div className="min-h-screen">
+      <div className="bg-[#ec4899] text-white px-4 py-4 sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <h1 className="font-heading text-xl">☕ Bar & Snack</h1>
+          <div className="flex items-center gap-2">
+            <button onClick={() => navigate(createPageUrl('MenuCollaborateur'))} className="p-2 hover:bg-white/20 rounded-lg">
+              <Home className="w-6 h-6" />
+            </button>
+            <Coffee className="w-8 h-8" />
           </div>
-          <p className="text-gray-600 font-body">
-            {lang === 'fr' ? 'Gestion du bar et du snack' : 'Bar and snack management'}
-          </p>
         </div>
+      </div>
 
-        <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="dashboard">
-              {lang === 'fr' ? 'Missions Direction' : 'Direction Missions'}
-            </TabsTrigger>
-            <TabsTrigger value="gestion">
-              {lang === 'fr' ? 'Gestion Bar' : 'Bar Management'}
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="dashboard">
-            <ServiceMissionDashboard service="BAR" serviceLabel="Bar" />
-          </TabsContent>
-
-          <TabsContent value="gestion">
-            <Card className="border-2 border-[#00AEEF]/30 rounded-xl">
+      <div className="max-w-4xl mx-auto px-4 py-6">
+        <ServiceTabs
+          service="BAR"
+          interventionsCount={0}
+          missionsCount={missions.filter(m => m.statut === 'A_FAIRE').length}
+          lang={lang}
+          interventionsContent={
+            <Card className="border-2 border-[#ec4899]/30 rounded-xl">
               <CardHeader>
                 <CardTitle className="font-heading text-[#0077A8]">
-                  {lang === 'fr' ? 'Module en construction' : 'Module under construction'}
+                  {lang === 'fr' ? 'Gestion Bar & Snack' : 'Bar & Snack Management'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -64,12 +55,12 @@ export default function Bar() {
                   <li>• {lang === 'fr' ? 'Gestion des stocks snack' : 'Snack stock management'}</li>
                   <li>• {lang === 'fr' ? 'Commandes fournisseurs' : 'Supplier orders'}</li>
                   <li>• {lang === 'fr' ? 'Inventaire quotidien' : 'Daily inventory'}</li>
-                  <li>• {lang === 'fr' ? 'Horaires d\'ouverture' : 'Opening hours'}</li>
                 </ul>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+          }
+          missionsContent={<MissionsDirectionTab service="BAR" lang={lang} />}
+        />
       </div>
     </div>
   );
