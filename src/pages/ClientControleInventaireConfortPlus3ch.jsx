@@ -74,10 +74,8 @@ const INVENTAIRE_CONFORT_PLUS_3CH = {
     { id: 'telecommande_clim', emoji: '❄️', label: 'Télécommande climatisation', qty: 1, service: 'TECHNIQUE' },
     { id: 'lave_vaisselle', emoji: '🍽️', label: 'Lave-vaisselle', qty: 1, service: 'TECHNIQUE' }
   ],
-  sanitaires: [
-    { id: 'kit_brosse_wc', emoji: '🚽', label: 'Kit brosse WC', qty: 1, service: 'MENAGE' }
-  ],
   menage: [
+    { id: 'kit_brosse_wc', emoji: '🚽', label: 'Kit brosse WC', qty: 1, service: 'MENAGE' },
     { id: 'seau', emoji: '🪣', label: 'Seau', qty: 1, service: 'MENAGE' },
     { id: 'bassine', emoji: '🧴', label: 'Bassine', qty: 1, service: 'MENAGE' },
     { id: 'balai', emoji: '🧹', label: 'Balai', qty: 1, service: 'MENAGE' },
@@ -96,6 +94,8 @@ const INVENTAIRE_CONFORT_PLUS_3CH = {
     { id: 'cintres', emoji: '👗', label: 'Cintres', qty: 10, service: 'MENAGE' }
   ],
   exterieur: [
+    { id: 'cle_locative', emoji: '🗝️', label: 'Clé locative', qty: 1, service: 'TECHNIQUE' },
+    { id: 'carte_barriere', emoji: '🪪', label: 'Carte barrière', qty: 1, service: 'TECHNIQUE' },
     { id: 'table_jardin', emoji: '🍽️', label: 'Table de jardin', qty: 1, service: 'TECHNIQUE' },
     { id: 'chaises_jardin', emoji: '🪑', label: 'Chaises de jardin', qty: 6, service: 'TECHNIQUE' },
     { id: 'terrasse_couverte', emoji: '🌤️', label: 'Terrasse semi-couverte', qty: 1, service: 'TECHNIQUE' }
@@ -136,7 +136,6 @@ export default function ClientControleInventaireConfortPlus3ch() {
       ...INVENTAIRE_CONFORT_PLUS_3CH.couverts,
       ...INVENTAIRE_CONFORT_PLUS_3CH.batterie,
       ...INVENTAIRE_CONFORT_PLUS_3CH.appareils,
-      ...INVENTAIRE_CONFORT_PLUS_3CH.sanitaires,
       ...INVENTAIRE_CONFORT_PLUS_3CH.menage,
       ...INVENTAIRE_CONFORT_PLUS_3CH.literie,
       ...INVENTAIRE_CONFORT_PLUS_3CH.exterieur
