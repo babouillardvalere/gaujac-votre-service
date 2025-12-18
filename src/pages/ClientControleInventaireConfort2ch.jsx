@@ -66,10 +66,8 @@ const INVENTAIRE_CONFORT_2CH = {
     { id: 'telecommande_clim', emoji: '❄️', label: 'Télécommande climatisation', qty: 1, service: 'TECHNIQUE' },
     { id: 'lave_vaisselle', emoji: '🍽️', label: 'Lave-vaisselle', qty: 1, service: 'TECHNIQUE' }
   ],
-  sanitaires: [
-    { id: 'kit_brosse_wc', emoji: '🚽', label: 'Kit brosse WC', qty: 1, service: 'MENAGE' }
-  ],
   menage: [
+    { id: 'kit_brosse_wc', emoji: '🚽', label: 'Kit brosse WC', qty: 1, service: 'MENAGE' },
     { id: 'seau', emoji: '🪣', label: 'Seau', qty: 1, service: 'MENAGE' },
     { id: 'bassine', emoji: '🧴', label: 'Bassine', qty: 1, service: 'MENAGE' },
     { id: 'balai', emoji: '🧹', label: 'Balai', qty: 1, service: 'MENAGE' },
@@ -89,7 +87,7 @@ const INVENTAIRE_CONFORT_2CH = {
   ],
   exterieur: [
     { id: 'cle_locative', emoji: '🗝️', label: 'Clé locative', qty: 1, service: 'TECHNIQUE' },
-    { id: 'badge', emoji: '🪪', label: 'Badge', qty: 1, service: 'TECHNIQUE' },
+    { id: 'carte_barriere', emoji: '🪪', label: 'Carte barrière', qty: 1, service: 'TECHNIQUE' },
     { id: 'chaises_interieur', emoji: '🪑', label: 'Chaises intérieur', qty: 4, service: 'TECHNIQUE' },
     { id: 'table_jardin', emoji: '🍽️', label: 'Table de jardin', qty: 1, service: 'TECHNIQUE' },
     { id: 'chaises_jardin', emoji: '🪑', label: 'Chaises de jardin', qty: 4, service: 'TECHNIQUE' }
@@ -128,7 +126,6 @@ export default function ClientControleInventaireConfort2ch() {
       ...INVENTAIRE_CONFORT_2CH.couverts,
       ...INVENTAIRE_CONFORT_2CH.batterie,
       ...INVENTAIRE_CONFORT_2CH.appareils,
-      ...INVENTAIRE_CONFORT_2CH.sanitaires,
       ...INVENTAIRE_CONFORT_2CH.menage,
       ...INVENTAIRE_CONFORT_2CH.literie,
       ...INVENTAIRE_CONFORT_2CH.exterieur

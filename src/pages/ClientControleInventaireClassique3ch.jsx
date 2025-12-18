@@ -71,10 +71,8 @@ const INVENTAIRE_CLASSIQUE_3CH = {
     { id: 'extincteur', emoji: '🧯', label: 'Extincteur', qty: 1, service: 'TECHNIQUE' },
     { id: 'detecteur_fumee', emoji: '🚨', label: 'Détecteur de fumée', qty: 1, service: 'TECHNIQUE' }
   ],
-  sanitaires: [
-    { id: 'kit_brosse_wc', emoji: '🚽', label: 'Kit brosse WC', qty: 1, service: 'MENAGE' }
-  ],
   menage: [
+    { id: 'kit_brosse_wc', emoji: '🚽', label: 'Kit brosse WC', qty: 1, service: 'MENAGE' },
     { id: 'seau', emoji: '🪣', label: 'Seau', qty: 1, service: 'MENAGE' },
     { id: 'bassine', emoji: '🧴', label: 'Bassine', qty: 1, service: 'MENAGE' },
     { id: 'balai', emoji: '🧹', label: 'Balai', qty: 1, service: 'MENAGE' },
@@ -132,7 +130,6 @@ export default function ClientControleInventaireClassique3ch() {
       ...INVENTAIRE_CLASSIQUE_3CH.couverts,
       ...INVENTAIRE_CLASSIQUE_3CH.batterie,
       ...INVENTAIRE_CLASSIQUE_3CH.appareils,
-      ...INVENTAIRE_CLASSIQUE_3CH.sanitaires,
       ...INVENTAIRE_CLASSIQUE_3CH.menage,
       ...INVENTAIRE_CLASSIQUE_3CH.literie,
       ...INVENTAIRE_CLASSIQUE_3CH.exterieur

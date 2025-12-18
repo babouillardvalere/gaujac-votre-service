@@ -132,7 +132,6 @@ export default function ClientControleInventaireClassique2ch() {
       ...INVENTAIRE_CLASSIQUE_2CH.couverts,
       ...INVENTAIRE_CLASSIQUE_2CH.batterie,
       ...INVENTAIRE_CLASSIQUE_2CH.appareils,
-      ...INVENTAIRE_CLASSIQUE_2CH.sanitaires,
       ...INVENTAIRE_CLASSIQUE_2CH.menage,
       ...INVENTAIRE_CLASSIQUE_2CH.literie,
       ...INVENTAIRE_CLASSIQUE_2CH.exterieur
