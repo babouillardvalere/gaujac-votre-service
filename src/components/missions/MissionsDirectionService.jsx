@@ -48,16 +48,21 @@ export default function MissionsDirectionService({ service }) {
     refetchInterval: 30000
   });
 
-  // Timer temps réel
+  // Timer temps réel - recalcule à chaque ouverture du dialog
   useEffect(() => {
-    if (selectedMission?.statut === 'EN_COURS' && selectedMission?.date_prise_en_charge) {
-      const interval = setInterval(() => {
+    if (showTraitement && selectedMission?.date_prise_en_charge) {
+      // Calcul initial immédiat
+      const calculerTemps = () => {
         const minutes = differenceInMinutes(new Date(), new Date(selectedMission.date_prise_en_charge));
         setTempsEcoule(minutes);
-      }, 1000);
+      };
+      
+      calculerTemps(); // Calcul immédiat
+      
+      const interval = setInterval(calculerTemps, 10000); // Mise à jour toutes les 10 secondes
       return () => clearInterval(interval);
     }
-  }, [selectedMission]);
+  }, [selectedMission, showTraitement]);
 
   const priseEnChargeMutation = useMutation({
     mutationFn: async ({ id, prenom }) => {
@@ -618,9 +623,9 @@ Crée un document PDF formel avec logo camping, en-têtes, et signatures.`;
                 {/* Timer en temps réel */}
                 {selectedMission.date_prise_en_charge && (
                   <div className="mt-3 pt-3 border-t border-purple-200 flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Temps écoulé:</span>
-                    <div className="flex items-center gap-2 text-purple-700 font-bold">
-                      <Clock className="w-4 h-4" />
+                    <span className="text-sm text-gray-600">⏱️ Temps écoulé:</span>
+                    <div className="flex items-center gap-2 text-purple-700 font-bold text-lg">
+                      <Clock className="w-5 h-5 animate-pulse" />
                       {Math.floor(tempsEcoule / 60)}h {tempsEcoule % 60}min
                     </div>
                   </div>
