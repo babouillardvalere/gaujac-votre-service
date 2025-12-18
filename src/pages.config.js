@@ -57,9 +57,6 @@ import ClientDepartRecap from './pages/ClientDepartRecap';
 import ClientDepartConditions from './pages/ClientDepartConditions';
 import RapportsInterventions from './pages/RapportsInterventions';
 import ClientResume from './pages/ClientResume';
-import DirectionDeshivernage from './pages/DirectionDeshivernage';
-import DirectionHivernage from './pages/DirectionHivernage';
-import DirectionSaison from './pages/DirectionSaison';
 import DirectionMenu from './pages/DirectionMenu';
 import Bar from './pages/Bar';
 import Animations from './pages/Animations';
@@ -84,7 +81,6 @@ import ClientControleInventaireClassique3ch from './pages/ClientControleInventai
 import ClientControleInventaireClassique2ch from './pages/ClientControleInventaireClassique2ch';
 import ClientControleInventaireChaletEco1ch from './pages/ClientControleInventaireChaletEco1ch';
 import ClientControleInventaireChaletClassique1ch from './pages/ClientControleInventaireChaletClassique1ch';
-import DirectionMissions from './pages/DirectionMissions';
 import DirectionInterventions from './pages/DirectionInterventions';
 import DirectionChoixHebergement from './pages/DirectionChoixHebergement';
 import DirectionChoixNumero from './pages/DirectionChoixNumero';
@@ -155,9 +151,6 @@ export const PAGES = {
     "ClientDepartConditions": ClientDepartConditions,
     "RapportsInterventions": RapportsInterventions,
     "ClientResume": ClientResume,
-    "DirectionDeshivernage": DirectionDeshivernage,
-    "DirectionHivernage": DirectionHivernage,
-    "DirectionSaison": DirectionSaison,
     "DirectionMenu": DirectionMenu,
     "Bar": Bar,
     "Animations": Animations,
@@ -182,7 +175,6 @@ export const PAGES = {
     "ClientControleInventaireClassique2ch": ClientControleInventaireClassique2ch,
     "ClientControleInventaireChaletEco1ch": ClientControleInventaireChaletEco1ch,
     "ClientControleInventaireChaletClassique1ch": ClientControleInventaireChaletClassique1ch,
-    "DirectionMissions": DirectionMissions,
     "DirectionInterventions": DirectionInterventions,
     "DirectionChoixHebergement": DirectionChoixHebergement,
     "DirectionChoixNumero": DirectionChoixNumero,
