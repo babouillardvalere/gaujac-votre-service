@@ -80,16 +80,47 @@ export default function CreerMissionDialog({ open, onOpenChange, onSuccess, lang
 
       await Promise.all(promises);
 
-      // 3. Créer une notification pour chaque service
-      const notifPromises = formData.services.map(service =>
-        base44.entities.Notification.create({
-          type: 'NOUVELLE_MISSION',
-          titre: `📋 Nouvelle mission Direction : ${formData.titre}`,
-          message: `Type: ${formData.type_mission} | Période: ${formData.date_debut} → ${formData.date_fin}`,
-          destinataire_role: service,
-          statut: 'non_lu'
-        })
-      );
+      // 3. Récupérer les préférences de notification de tous les utilisateurs
+      const allPrefs = await base44.entities.NotificationPreference.list();
+      
+      // 4. Créer une notification pour chaque service selon les préférences
+      const notifPromises = [];
+      
+      for (const service of formData.services) {
+        // Notification système pour le service
+        notifPromises.push(
+          base44.entities.Notification.create({
+            type: 'NOUVELLE_MISSION',
+            titre: `📋 Nouvelle mission Direction : ${formData.titre}`,
+            message: `${formData.type_mission} | ${formData.date_debut} → ${formData.date_fin} | Priorité: ${formData.priorite}`,
+            destinataire_role: service,
+            statut: 'non_lu',
+            metadata: {
+              mission_id: missionMere.id,
+              type_mission: formData.type_mission,
+              priorite: formData.priorite
+            }
+          })
+        );
+        
+        // Notifications email individuelles si activées
+        const servicePrefs = allPrefs.filter(p => 
+          p.missions_creation && 
+          (p.missions_priority_high ? formData.priorite === 'HAUTE' || formData.priorite === 'CRITIQUE' : true)
+        );
+        
+        for (const pref of servicePrefs) {
+          if (pref.email_notifications) {
+            notifPromises.push(
+              base44.integrations.Core.SendEmail({
+                to: pref.user_email,
+                subject: `📋 Nouvelle mission Direction : ${formData.titre}`,
+                body: `Une nouvelle mission vous a été assignée.\n\nTitre: ${formData.titre}\nType: ${formData.type_mission}\nPériodt: ${formData.date_debut} → ${formData.date_fin}\nPriorité: ${formData.priorite}\n\nDescription:\n${formData.description}`
+              })
+            );
+          }
+        }
+      }
 
       await Promise.all(notifPromises);
 

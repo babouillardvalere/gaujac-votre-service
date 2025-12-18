@@ -1,177 +1,240 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 import { useTranslation } from '../components/translations';
-import Logo from '../components/Logo';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { ArrowLeft, Bell, Save } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { ArrowLeft, Bell, Mail, Target, AlertTriangle, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { getNotificationPreferences, saveNotificationPreferences, ROLES } from '../components/notificationService';
+import { motion } from 'framer-motion';
 
 export default function NotificationPreferences() {
   const { t, lang } = useTranslation();
   const navigate = useNavigate();
-  
-  // Déterminer le rôle depuis sessionStorage
-  const [role, setRole] = useState('reception');
-  const [preferences, setPreferences] = useState(getNotificationPreferences('reception'));
+  const queryClient = useQueryClient();
+  const [userEmail, setUserEmail] = useState('');
 
   useEffect(() => {
-    // Déterminer le rôle actuel de l'utilisateur
-    const isCollaborateur = sessionStorage.getItem('collaborateur_authenticated');
-    if (isCollaborateur) {
-      setRole('reception'); // Par défaut, les collaborateurs sont "reception"
-      setPreferences(getNotificationPreferences('reception'));
-    }
+    const loadUser = async () => {
+      try {
+        const user = await base44.auth.me();
+        setUserEmail(user.email);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    loadUser();
   }, []);
 
+  const { data: preferences, isLoading } = useQuery({
+    queryKey: ['notification-preferences', userEmail],
+    queryFn: async () => {
+      const prefs = await base44.entities.NotificationPreference.filter({ user_email: userEmail });
+      return prefs.length > 0 ? prefs[0] : null;
+    },
+    enabled: !!userEmail
+  });
+
+  const [localPrefs, setLocalPrefs] = useState({
+    missions_creation: true,
+    missions_update: true,
+    missions_complete: true,
+    missions_priority_high: false,
+    interventions_assigned: true,
+    email_notifications: false
+  });
+
+  useEffect(() => {
+    if (preferences) {
+      setLocalPrefs({
+        missions_creation: preferences.missions_creation ?? true,
+        missions_update: preferences.missions_update ?? true,
+        missions_complete: preferences.missions_complete ?? true,
+        missions_priority_high: preferences.missions_priority_high ?? false,
+        interventions_assigned: preferences.interventions_assigned ?? true,
+        email_notifications: preferences.email_notifications ?? false
+      });
+    }
+  }, [preferences]);
+
+  const saveMutation = useMutation({
+    mutationFn: async (data) => {
+      if (preferences) {
+        return base44.entities.NotificationPreference.update(preferences.id, data);
+      } else {
+        return base44.entities.NotificationPreference.create({
+          user_email: userEmail,
+          ...data
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notification-preferences'] });
+      toast.success(lang === 'fr' ? 'Préférences enregistrées ✅' : 'Preferences saved ✅');
+    }
+  });
+
   const handleToggle = (key) => {
-    setPreferences(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
+    setLocalPrefs(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
   const handleSave = () => {
-    saveNotificationPreferences(role, preferences);
-    toast.success(lang === 'fr' ? 'Préférences enregistrées' : 'Preferences saved');
+    saveMutation.mutate(localPrefs);
   };
 
-  const notificationOptions = [
-    {
-      key: 'inventaire_soumis',
-      icon: '📋',
-      label_fr: 'Nouveau contrôle inventaire soumis',
-      label_en: 'New inventory check submitted',
-      desc_fr: 'Recevoir une notification quand un client soumet un contrôle d\'inventaire',
-      desc_en: 'Get notified when a client submits an inventory check'
-    },
-    {
-      key: 'intervention_creee',
-      icon: '🔔',
-      label_fr: 'Nouvelle intervention créée',
-      label_en: 'New intervention created',
-      desc_fr: 'Recevoir une notification pour chaque nouvelle intervention',
-      desc_en: 'Get notified for each new intervention'
-    },
-    {
-      key: 'dossier_finalise',
-      icon: '✅',
-      label_fr: 'Dossier d\'arrivée finalisé',
-      label_en: 'Arrival file finalized',
-      desc_fr: 'Recevoir une notification quand un dossier d\'arrivée est complété',
-      desc_en: 'Get notified when an arrival file is completed'
-    },
-    {
-      key: 'intervention_prise_en_charge',
-      icon: '👤',
-      label_fr: 'Intervention prise en charge',
-      label_en: 'Intervention taken over',
-      desc_fr: 'Recevoir une notification quand une intervention est prise en charge',
-      desc_en: 'Get notified when an intervention is taken over'
-    },
-    {
-      key: 'intervention_resolue',
-      icon: '✔️',
-      label_fr: 'Intervention résolue',
-      label_en: 'Intervention resolved',
-      desc_fr: 'Recevoir une notification quand une intervention est résolue',
-      desc_en: 'Get notified when an intervention is resolved'
-    }
-  ];
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen px-6 py-8">
+    <div className="min-h-screen px-4 py-6">
       <div className="max-w-2xl mx-auto">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-[#0077A8] hover:text-[#00AEEF]"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span className="font-heading">{t('retour')}</span>
-            </button>
+          <button
+            onClick={() => navigate(createPageUrl('MenuCollaborateur'))}
+            className="flex items-center gap-2 text-[#0077A8] hover:text-[#00AEEF] mb-4"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span className="font-heading">{t('retour')}</span>
+          </button>
+
+          <div className="flex items-center gap-3 mb-6">
+            <Bell className="w-8 h-8 text-purple-600" />
+            <div>
+              <h1 className="font-handwritten text-3xl text-purple-600">
+                {lang === 'fr' ? 'Préférences de notification' : 'Notification preferences'}
+              </h1>
+              <p className="text-gray-600 text-sm">
+                {userEmail}
+              </p>
+            </div>
           </div>
 
-          <Logo className="h-16 mb-4" />
-          
-          <h1 className="font-handwritten text-3xl text-[#00AEEF] text-center mb-6">
-            <Bell className="w-8 h-8 inline mr-2" />
-            {lang === 'fr' ? 'Préférences Notifications' : 'Notification Preferences'}
-          </h1>
-
-          <Card className="border-2 border-[#00AEEF]/30 rounded-xl mb-6">
-            <CardHeader>
-              <CardTitle className="font-heading text-xl text-[#0077A8]">
-                {lang === 'fr' ? 'Configurer vos notifications' : 'Configure your notifications'}
+          <Card className="border-2 border-purple-200 rounded-xl mb-6">
+            <CardHeader className="bg-purple-50">
+              <CardTitle className="font-heading text-lg text-purple-700 flex items-center gap-2">
+                <Target className="w-5 h-5" />
+                {lang === 'fr' ? 'Missions Direction' : 'Management Missions'}
               </CardTitle>
-              <p className="text-sm text-gray-600">
-                {lang === 'fr' 
-                  ? 'Choisissez les événements pour lesquels vous souhaitez être notifié'
-                  : 'Choose which events you want to be notified about'}
-              </p>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {notificationOptions.map(option => (
-                <div 
-                  key={option.key}
-                  className="flex items-start justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-2xl">{option.icon}</span>
-                      <Label 
-                        htmlFor={option.key}
-                        className="font-heading text-[#0077A8] cursor-pointer"
-                      >
-                        {lang === 'fr' ? option.label_fr : option.label_en}
-                      </Label>
-                    </div>
-                    <p className="text-sm text-gray-600 ml-10">
-                      {lang === 'fr' ? option.desc_fr : option.desc_en}
-                    </p>
-                  </div>
-                  <Switch
-                    id={option.key}
-                    checked={preferences[option.key]}
-                    onCheckedChange={() => handleToggle(option.key)}
-                    className="mt-2"
-                  />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 border-gray-300 rounded-xl mb-6">
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between">
+            <CardContent className="space-y-4 pt-6">
+              <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-2xl">📧</span>
-                    <Label 
-                      htmlFor="email_enabled"
-                      className="font-heading text-[#0077A8] cursor-pointer"
-                    >
-                      {lang === 'fr' ? 'Notifications par email' : 'Email notifications'}
-                    </Label>
-                  </div>
-                  <p className="text-sm text-gray-600 ml-10">
-                    {lang === 'fr' 
-                      ? 'Recevoir également les notifications par email (prochainement)'
-                      : 'Also receive notifications by email (coming soon)'}
+                  <Label className="font-body text-gray-700">
+                    {lang === 'fr' ? 'Création de mission' : 'Mission creation'}
+                  </Label>
+                  <p className="text-xs text-gray-500">
+                    {lang === 'fr' ? 'Notification lors de nouvelles missions' : 'Notify on new missions'}
                   </p>
                 </div>
                 <Switch
-                  id="email_enabled"
-                  checked={preferences.email_enabled || false}
-                  onCheckedChange={() => handleToggle('email_enabled')}
-                  disabled
-                  className="mt-2"
+                  checked={localPrefs.missions_creation}
+                  onCheckedChange={() => handleToggle('missions_creation')}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <Label className="font-body text-gray-700">
+                    {lang === 'fr' ? 'Mise à jour de mission' : 'Mission update'}
+                  </Label>
+                  <p className="text-xs text-gray-500">
+                    {lang === 'fr' ? 'Notification lors des modifications' : 'Notify on updates'}
+                  </p>
+                </div>
+                <Switch
+                  checked={localPrefs.missions_update}
+                  onCheckedChange={() => handleToggle('missions_update')}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <Label className="font-body text-gray-700 flex items-center gap-1">
+                    <CheckCircle className="w-4 h-4" />
+                    {lang === 'fr' ? 'Clôture de mission' : 'Mission completion'}
+                  </Label>
+                  <p className="text-xs text-gray-500">
+                    {lang === 'fr' ? 'Notification lors de la clôture' : 'Notify on completion'}
+                  </p>
+                </div>
+                <Switch
+                  checked={localPrefs.missions_complete}
+                  onCheckedChange={() => handleToggle('missions_complete')}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <Label className="font-body text-gray-700 flex items-center gap-1">
+                    <AlertTriangle className="w-4 h-4 text-orange-500" />
+                    {lang === 'fr' ? 'Uniquement missions prioritaires' : 'Only high priority'}
+                  </Label>
+                  <p className="text-xs text-gray-500">
+                    {lang === 'fr' ? 'Ne recevoir que les missions haute priorité' : 'Only high priority missions'}
+                  </p>
+                </div>
+                <Switch
+                  checked={localPrefs.missions_priority_high}
+                  onCheckedChange={() => handleToggle('missions_priority_high')}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 border-blue-200 rounded-xl mb-6">
+            <CardHeader className="bg-blue-50">
+              <CardTitle className="font-heading text-lg text-blue-700 flex items-center gap-2">
+                <Bell className="w-5 h-5" />
+                {lang === 'fr' ? 'Interventions' : 'Interventions'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <Label className="font-body text-gray-700">
+                    {lang === 'fr' ? 'Interventions assignées' : 'Assigned interventions'}
+                  </Label>
+                  <p className="text-xs text-gray-500">
+                    {lang === 'fr' ? 'Notification lors d\'assignation' : 'Notify on assignment'}
+                  </p>
+                </div>
+                <Switch
+                  checked={localPrefs.interventions_assigned}
+                  onCheckedChange={() => handleToggle('interventions_assigned')}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 border-green-200 rounded-xl mb-6">
+            <CardHeader className="bg-green-50">
+              <CardTitle className="font-heading text-lg text-green-700 flex items-center gap-2">
+                <Mail className="w-5 h-5" />
+                {lang === 'fr' ? 'Notifications email' : 'Email notifications'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <Label className="font-body text-gray-700">
+                    {lang === 'fr' ? 'Recevoir des emails' : 'Receive emails'}
+                  </Label>
+                  <p className="text-xs text-gray-500">
+                    {lang === 'fr' ? 'Recevoir également par email' : 'Also receive by email'}
+                  </p>
+                </div>
+                <Switch
+                  checked={localPrefs.email_notifications}
+                  onCheckedChange={() => handleToggle('email_notifications')}
                 />
               </div>
             </CardContent>
@@ -179,10 +242,14 @@ export default function NotificationPreferences() {
 
           <Button
             onClick={handleSave}
-            className="w-full h-12 bg-[#00AEEF] hover:bg-[#0077A8] text-white rounded-xl font-heading"
+            disabled={saveMutation.isPending}
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white h-12 rounded-xl"
           >
-            <Save className="w-5 h-5 mr-2" />
-            {lang === 'fr' ? 'Enregistrer les préférences' : 'Save preferences'}
+            {saveMutation.isPending ? (
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+            ) : (
+              lang === 'fr' ? 'Enregistrer les préférences' : 'Save preferences'
+            )}
           </Button>
         </motion.div>
       </div>
