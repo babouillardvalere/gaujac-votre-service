@@ -10,6 +10,8 @@ import { Card, CardContent } from "../components/ui/card";
 import { Textarea } from "../components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import { Checkbox } from "../components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { Send, Loader2, Smile, Meh, Frown, Download, Home, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -116,6 +118,8 @@ export default function ClientControleInventaireConfortPlus3ch() {
 
   const [quantities, setQuantities] = useState({});
   const [urgencies, setUrgencies] = useState({});
+  const [autorisationAcces, setAutorisationAcces] = useState("");
+  const [plagesHoraires, setPlagesHoraires] = useState([]);
   const [noteGlobale, setNoteGlobale] = useState("");
   const [commentaireGlobal, setCommentaireGlobal] = useState("");
   const [signature, setSignature] = useState("");
@@ -183,6 +187,16 @@ export default function ClientControleInventaireConfortPlus3ch() {
   const handlePrepareSubmit = () => {
     if (!noteGlobale) {
       toast.error(lang === "fr" ? "Veuillez donner votre ressenti global" : "Please rate your overall impression");
+      return;
+    }
+
+    if (!autorisationAcces) {
+      toast.error(lang === "fr" ? "Veuillez indiquer l'autorisation d'accès" : "Please indicate access authorization");
+      return;
+    }
+
+    if (autorisationAcces === "non" && plagesHoraires.length === 0) {
+      toast.error(lang === "fr" ? "Veuillez sélectionner au moins une plage horaire" : "Please select at least one time slot");
       return;
     }
 
@@ -254,15 +268,18 @@ export default function ClientControleInventaireConfortPlus3ch() {
         })),
         evaluation_proprete: noteGlobale,
         commentaire_proprete: commentaireGlobal,
-        signature_url: signature
+        signature_url: signature,
+        autorisation_acces: autorisationAcces,
+        plage_horaire_client: autorisationAcces === 'non' ? plagesHoraires.join(', ') : null
       });
 
       await createInterventionConfortPlus({ service: "MENAGE", items: menage, ficheId: fiche.id });
       await createInterventionConfortPlus({ service: "TECHNIQUE", items: technique, ficheId: fiche.id });
 
-      toast.success(lang === "fr" ? "Inventaire envoyé avec succès" : "Inventory sent successfully");
+      sessionStorage.setItem('fiche_arrivee_id', fiche.id);
+      toast.success(lang === "fr" ? "Inventaire validé ✅" : "Inventory validated ✅");
       setShowRecap(false);
-      setShowSuccess(true);
+      navigate(createPageUrl('ClientResume'));
     } catch (e) {
       console.error(e);
       toast.error(lang === "fr" ? "Erreur lors de l'envoi" : "Error while sending");
@@ -271,33 +288,7 @@ export default function ClientControleInventaireConfortPlus3ch() {
     }
   };
 
-  if (showSuccess) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="text-center max-w-md space-y-6">
-          <CheckCircle className="w-20 h-20 text-green-500 mx-auto" />
-          <h2 className="text-2xl font-bold text-[#0077A8]">
-            {lang === "fr" 
-              ? `Nous vous remercions du retour de votre hébergement et vous souhaitons un excellent séjour chez nous ${nom} ${prenom}.`
-              : `Thank you for your feedback and we wish you an excellent stay ${nom} ${prenom}.`
-            }
-          </h2>
-          <div className="space-y-3">
-            <Button onClick={() => navigate(createPageUrl("ClientMenu"))} className="w-full bg-[#00AEEF]">
-              <Home className="mr-2" />
-              {lang === "fr" ? "Retour menu principal" : "Back to menu"}
-            </Button>
-            {pdfUrl && (
-              <Button variant="outline" onClick={() => window.open(pdfUrl, '_blank')} className="w-full">
-                <Download className="mr-2" />
-                {lang === "fr" ? "Télécharger le contrôle inventaire (PDF)" : "Download inventory check (PDF)"}
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
+
 
   const ItemRow = ({ item }) => {
     const declared = quantities[item.id];
@@ -437,6 +428,79 @@ export default function ClientControleInventaireConfortPlus3ch() {
         </CardContent>
       </Card>
 
+      {/* Autorisation d'accès */}
+      <Card className="mb-6 border-2 border-[#FFA500]">
+        <CardContent className="p-6">
+          <h3 className="font-semibold text-[#0077A8] mb-3 flex items-center gap-2">
+            🔐 {lang === "fr" ? "Autorisation d'accès *" : "Access authorization *"}
+          </h3>
+          <p className="text-sm text-gray-600 mb-4">
+            {lang === "fr" 
+              ? "Autorisez-vous notre intervenant à entrer dans votre hébergement en votre absence ?"
+              : "Do you authorize our staff to enter your accommodation in your absence?"}
+          </p>
+          <div className="space-y-3">
+            <label className={`flex items-center space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${autorisationAcces === 'oui' ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:border-green-300'}`}>
+              <input
+                type="radio"
+                name="autorisation"
+                value="oui"
+                checked={autorisationAcces === 'oui'}
+                onChange={(e) => {
+                  setAutorisationAcces(e.target.value);
+                  setPlagesHoraires([]);
+                }}
+                className="w-5 h-5"
+              />
+              <span className="font-medium">✔ {lang === "fr" ? "Oui" : "Yes"}</span>
+            </label>
+            <label className={`flex items-center space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${autorisationAcces === 'non' ? 'border-orange-500 bg-orange-50' : 'border-gray-300 hover:border-orange-300'}`}>
+              <input
+                type="radio"
+                name="autorisation"
+                value="non"
+                checked={autorisationAcces === 'non'}
+                onChange={(e) => setAutorisationAcces(e.target.value)}
+                className="w-5 h-5"
+              />
+              <span className="font-medium">✖ {lang === "fr" ? "Non" : "No"}</span>
+            </label>
+          </div>
+
+          {autorisationAcces === "non" && (
+            <div className="mt-4 p-4 bg-orange-50 rounded-lg border-2 border-orange-300">
+              <h4 className="font-semibold text-orange-800 mb-3">
+                ⏰ {lang === "fr" ? "Merci de sélectionner une ou plusieurs plages horaires possibles:" : "Please select one or more available time slots:"}
+              </h4>
+              <div className="space-y-2">
+                {['09h - 12h', '14h - 16h', '17h - 19h'].map(plage => (
+                  <label key={plage} className="flex items-center space-x-3 p-2 hover:bg-orange-100 rounded cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={plagesHoraires.includes(plage)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setPlagesHoraires([...plagesHoraires, plage]);
+                        } else {
+                          setPlagesHoraires(plagesHoraires.filter(p => p !== plage));
+                        }
+                      }}
+                      className="w-5 h-5"
+                    />
+                    <span className="text-sm font-medium">{plage}</span>
+                  </label>
+                ))}
+              </div>
+              {plagesHoraires.length === 0 && (
+                <p className="text-xs text-red-600 mt-2">
+                  {lang === "fr" ? "⚠️ Au moins une plage horaire est obligatoire" : "⚠️ At least one time slot is required"}
+                </p>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <SignaturePad onSave={setSignature} disabled={submitting} />
 
       <Button onClick={handlePrepareSubmit} className="w-full h-14 bg-[#00AEEF] mt-6" disabled={submitting}>
@@ -491,6 +555,26 @@ export default function ClientControleInventaireConfortPlus3ch() {
                 </>
               );
             })()}
+
+            <div className="bg-orange-50 p-4 rounded-lg border-2 border-orange-400">
+              <p className="font-bold text-orange-800">
+                🔐 {lang === "fr" ? "Autorisation d'accès" : "Access authorization"}: {autorisationAcces === 'oui' ? '✅ Oui' : '❌ Non'}
+              </p>
+              {autorisationAcces === 'non' && plagesHoraires.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-xs text-orange-700 font-semibold mb-1">
+                    {lang === "fr" ? "Plages horaires demandées:" : "Requested time slots:"}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {plagesHoraires.map(plage => (
+                      <span key={plage} className="px-2 py-1 bg-orange-200 text-orange-900 text-xs rounded">
+                        {plage}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div className="bg-gray-50 p-4 rounded-lg">
               <p><strong>{lang === "fr" ? "Note globale" : "Overall rating"}:</strong> {

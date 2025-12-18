@@ -10,6 +10,8 @@ import { Card, CardContent } from "../components/ui/card";
 import { Textarea } from "../components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import { Checkbox } from "../components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { Send, Loader2, Smile, Meh, Frown, Download, Home, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -22,20 +24,22 @@ const INVENTAIRE_CONFORT_PLUS_2CH = {
     { id: 'assiettes_creuses', emoji: '🍽️', label: 'Assiettes creuses', qty: 6, service: 'MENAGE' },
     { id: 'assiettes_dessert', emoji: '🍰', label: 'Assiettes à dessert', qty: 6, service: 'MENAGE' },
     { id: 'assiettes_plates', emoji: '🍽️', label: 'Assiettes plates', qty: 6, service: 'MENAGE' },
+    { id: 'plat', emoji: '🍲', label: 'Plats', qty: 1, service: 'MENAGE' },
     { id: 'bols', emoji: '🥣', label: 'Bols', qty: 6, service: 'MENAGE' },
-    { id: 'saladier', emoji: '🥗', label: 'Saladier', qty: 1, service: 'MENAGE' },
+    { id: 'saladiers', emoji: '🥗', label: 'Saladiers', qty: 1, service: 'MENAGE' },
     { id: 'tasses', emoji: '☕', label: 'Tasses', qty: 6, service: 'MENAGE' },
     { id: 'verres_eau', emoji: '🥛', label: 'Verres à eau', qty: 6, service: 'MENAGE' },
-    { id: 'pichet', emoji: '🍶', label: 'Pichet / carafe', qty: 1, service: 'MENAGE' },
-    { id: 'plat', emoji: '🍲', label: 'Plat', qty: 1, service: 'MENAGE' },
-    { id: 'plat_four', emoji: '🍛', label: 'Plat à four', qty: 1, service: 'MENAGE' }
+    { id: 'pichet', emoji: '🍶', label: 'Pichet / carafe', qty: 1, service: 'MENAGE' }
   ],
   couverts: [
     { id: 'fourchettes', emoji: '🍴', label: 'Fourchettes', qty: 6, service: 'MENAGE' },
     { id: 'cuilleres_soupe', emoji: '🥄', label: 'Cuillères à soupe', qty: 6, service: 'MENAGE' },
     { id: 'cuilleres_cafe', emoji: '🥄', label: 'Cuillères à café', qty: 6, service: 'MENAGE' },
+    { id: 'couteau_pain', emoji: '🔪', label: 'Couteau à pain', qty: 1, service: 'MENAGE' },
+    { id: 'couteau_office', emoji: '🔪', label: 'Couteau office', qty: 1, service: 'MENAGE' },
     { id: 'couteaux', emoji: '🔪', label: 'Couteaux', qty: 6, service: 'MENAGE' },
-    { id: 'couverts_salade', emoji: '🥗', label: 'Couverts à salade', qty: 1, service: 'MENAGE' },
+    { id: 'cendrier', emoji: '🚬', label: 'Cendrier', qty: 1, service: 'MENAGE' },
+    { id: 'couverts_salade', emoji: '🥗', label: 'Couvert à salade', qty: 1, service: 'MENAGE' },
     { id: 'spatule_bois', emoji: '🥄', label: 'Spatule en bois', qty: 1, service: 'MENAGE' },
     { id: 'eplucheur', emoji: '🥕', label: 'Éplucheur', qty: 1, service: 'MENAGE' },
     { id: 'louche', emoji: '🍜', label: 'Louche', qty: 1, service: 'MENAGE' },
@@ -46,29 +50,26 @@ const INVENTAIRE_CONFORT_PLUS_2CH = {
     { id: 'essoreuse_salade', emoji: '🥬', label: 'Essoreuse à salade', qty: 1, service: 'MENAGE' },
     { id: 'tire_bouchon', emoji: '🍷', label: 'Tire-bouchon', qty: 1, service: 'MENAGE' },
     { id: 'ouvre_boite', emoji: '🥫', label: 'Ouvre-boîte', qty: 1, service: 'MENAGE' },
-    { id: 'range_couverts', emoji: '🍴', label: 'Range-couverts', qty: 1, service: 'MENAGE' }
+    { id: 'range_couverts', emoji: '🍴', label: 'Range couverts', qty: 1, service: 'MENAGE' },
+    { id: 'plat_four', emoji: '🍛', label: 'Plat à four rond', qty: 1, service: 'MENAGE' }
   ],
   batterie: [
-    { id: 'casseroles', emoji: '🍲', label: 'Casseroles', qty: 3, service: 'MENAGE' },
-    { id: 'poeles', emoji: '🍳', label: 'Poêles', qty: 2, service: 'MENAGE' },
-    { id: 'faitout', emoji: '🍲', label: 'Faitout + couvercle', qty: 1, service: 'MENAGE' },
-    { id: 'couvercle', emoji: '🔥', label: 'Couvercle', qty: 1, service: 'MENAGE' },
     { id: 'cloche_micro_ondes', emoji: '🥤', label: 'Cloche micro-ondes', qty: 1, service: 'MENAGE' },
-    { id: 'bac_glacons', emoji: '🧊', label: 'Bac à glaçons', qty: 1, service: 'MENAGE' }
+    { id: 'bac_glacons', emoji: '🧊', label: 'Bac à glaçons', qty: 1, service: 'MENAGE' },
+    { id: 'casseroles', emoji: '🍲', label: 'Casseroles', qty: 3, service: 'MENAGE' },
+    { id: 'poeles', emoji: '🍳', label: 'Poêle', qty: 2, service: 'MENAGE' },
+    { id: 'faitout', emoji: '🍲', label: 'Faitout + couvercle', qty: 1, service: 'MENAGE' },
+    { id: 'couvercle', emoji: '🔥', label: 'Couvercle', qty: 1, service: 'MENAGE' }
   ],
   appareils: [
-    { id: 'plaques_cuisson', emoji: '🔥', label: 'Plaques de cuisson', qty: 1, service: 'TECHNIQUE' },
-    { id: 'micro_ondes', emoji: '📡', label: 'Micro-ondes', qty: 1, service: 'TECHNIQUE' },
-    { id: 'refrigerateur', emoji: '🧊', label: 'Réfrigérateur', qty: 1, service: 'TECHNIQUE' },
     { id: 'cafetiere', emoji: '☕', label: 'Cafetière électrique', qty: 1, service: 'TECHNIQUE' },
-    { id: 'tv', emoji: '📺', label: 'TV', qty: 1, service: 'TECHNIQUE' },
-    { id: 'telecommande_tv', emoji: '🎛️', label: 'Télécommande TV', qty: 1, service: 'TECHNIQUE' },
-    { id: 'telecommande_clim', emoji: '❄️', label: 'Télécommande climatisation', qty: 1, service: 'TECHNIQUE' }
+    { id: 'micro_ondes', emoji: '📡', label: 'Micro-ondes', qty: 1, service: 'TECHNIQUE' },
+    { id: 'tv', emoji: '📺', label: 'TV + télécommande', qty: 1, service: 'TECHNIQUE' },
+    { id: 'telecommande_clim', emoji: '❄️', label: 'Télécommande climatisation', qty: 1, service: 'TECHNIQUE' },
+    { id: 'refrigerateur', emoji: '🧊', label: 'Réfrigérateur', qty: 1, service: 'TECHNIQUE' }
   ],
   sanitaires: [
-    { id: 'wc', emoji: '🚽', label: 'WC', qty: 1, service: 'TECHNIQUE' },
-    { id: 'lavabo', emoji: '🚰', label: 'Lavabo', qty: 1, service: 'TECHNIQUE' },
-    { id: 'douche', emoji: '🚿', label: 'Douche', qty: 1, service: 'TECHNIQUE' }
+    { id: 'kit_brosse_wc', emoji: '🚽', label: 'Kit brosse WC', qty: 1, service: 'MENAGE' }
   ],
   menage: [
     { id: 'seau', emoji: '🪣', label: 'Seau', qty: 1, service: 'MENAGE' },
@@ -79,20 +80,20 @@ const INVENTAIRE_CONFORT_PLUS_2CH = {
     { id: 'serpilliere', emoji: '🪣', label: 'Serpillière', qty: 1, service: 'MENAGE' },
     { id: 'sechoir_linge', emoji: '👕', label: 'Séchoir à linge', qty: 1, service: 'MENAGE' },
     { id: 'pinces_linge', emoji: '🧷', label: 'Pinces à linge', qty: 8, service: 'MENAGE' },
-    { id: 'poubelles', emoji: '🗑️', label: 'Poubelles', qty: 2, service: 'MENAGE' },
+    { id: 'poubelles', emoji: '🗑️', label: 'Poubelle', qty: 2, service: 'MENAGE' },
     { id: 'detecteur_fumee', emoji: '🚨', label: 'Détecteur de fumée', qty: 1, service: 'MENAGE' }
   ],
   literie: [
     { id: 'couette_double', emoji: '🛏️', label: 'Couette double', qty: 1, service: 'MENAGE' },
-    { id: 'couettes_simples', emoji: '🛏️', label: 'Couettes simples', qty: 2, service: 'MENAGE' },
+    { id: 'couettes_simples', emoji: '🛏️', label: 'Couette simple', qty: 2, service: 'MENAGE' },
     { id: 'oreillers', emoji: '🛏️', label: 'Oreillers', qty: 4, service: 'MENAGE' },
     { id: 'cintres', emoji: '👗', label: 'Cintres', qty: 10, service: 'MENAGE' }
   ],
   exterieur: [
-    { id: 'cle_locative', emoji: '🗝️', label: 'Clé locative', qty: 1, service: 'TECHNIQUE' },
-    { id: 'chaises_interieur', emoji: '🪑', label: 'Chaises intérieur', qty: 4, service: 'TECHNIQUE' },
-    { id: 'table_jardin', emoji: '🍽️', label: 'Table de jardin', qty: 1, service: 'TECHNIQUE' },
-    { id: 'chaises_jardin', emoji: '🪑', label: 'Chaises de jardin', qty: 4, service: 'TECHNIQUE' }
+    { id: 'cle_locative', emoji: '🗝️', label: 'Clé locatif', qty: 1, service: 'RECEPTION' },
+    { id: 'chaises_interieur', emoji: '🪑', label: 'Chaises intérieur', qty: 2, service: 'RECEPTION' },
+    { id: 'table_jardin', emoji: '🍽️', label: 'Table de jardin', qty: 1, service: 'RECEPTION' },
+    { id: 'chaises_jardin', emoji: '🪑', label: 'Chaises de jardin', qty: 4, service: 'RECEPTION' }
   ]
 };
 
@@ -108,6 +109,8 @@ export default function ClientControleInventaireConfortPlus2ch() {
 
   const [quantities, setQuantities] = useState({});
   const [urgencies, setUrgencies] = useState({});
+  const [autorisationAcces, setAutorisationAcces] = useState("");
+  const [plagesHoraires, setPlagesHoraires] = useState([]);
   const [noteGlobale, setNoteGlobale] = useState("");
   const [commentaireGlobal, setCommentaireGlobal] = useState("");
   const [signature, setSignature] = useState("");
@@ -175,6 +178,16 @@ export default function ClientControleInventaireConfortPlus2ch() {
   const handlePrepareSubmit = () => {
     if (!noteGlobale) {
       toast.error(lang === "fr" ? "Veuillez donner votre ressenti global" : "Please rate your overall impression");
+      return;
+    }
+
+    if (!autorisationAcces) {
+      toast.error(lang === "fr" ? "Veuillez indiquer l'autorisation d'accès" : "Please indicate access authorization");
+      return;
+    }
+
+    if (autorisationAcces === "non" && plagesHoraires.length === 0) {
+      toast.error(lang === "fr" ? "Veuillez sélectionner au moins une plage horaire" : "Please select at least one time slot");
       return;
     }
 
@@ -246,15 +259,18 @@ export default function ClientControleInventaireConfortPlus2ch() {
         })),
         evaluation_proprete: noteGlobale,
         commentaire_proprete: commentaireGlobal,
-        signature_url: signature
+        signature_url: signature,
+        autorisation_acces: autorisationAcces,
+        plage_horaire_client: autorisationAcces === 'non' ? plagesHoraires.join(', ') : null
       });
 
       await createInterventionConfortPlus2ch({ service: "MENAGE", items: menage, ficheId: fiche.id });
       await createInterventionConfortPlus2ch({ service: "TECHNIQUE", items: technique, ficheId: fiche.id });
 
-      toast.success(lang === "fr" ? "Inventaire envoyé avec succès" : "Inventory sent successfully");
+      sessionStorage.setItem('fiche_arrivee_id', fiche.id);
+      toast.success(lang === "fr" ? "Inventaire validé ✅" : "Inventory validated ✅");
       setShowRecap(false);
-      setShowSuccess(true);
+      navigate(createPageUrl('ClientResume'));
     } catch (e) {
       console.error(e);
       toast.error(lang === "fr" ? "Erreur lors de l'envoi" : "Error while sending");
@@ -263,33 +279,7 @@ export default function ClientControleInventaireConfortPlus2ch() {
     }
   };
 
-  if (showSuccess) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="text-center max-w-md space-y-6">
-          <CheckCircle className="w-20 h-20 text-green-500 mx-auto" />
-          <h2 className="text-2xl font-bold text-[#0077A8]">
-            {lang === "fr" 
-              ? `Nous vous remercions pour le retour concernant votre hébergement. Nous vous souhaitons un excellent séjour parmi nous ${nom} ${prenom}.`
-              : `Thank you for your feedback. We wish you an excellent stay with us ${nom} ${prenom}.`
-            }
-          </h2>
-          <div className="space-y-3">
-            <Button onClick={() => navigate(createPageUrl("ClientMenu"))} className="w-full bg-[#00AEEF]">
-              <Home className="mr-2" />
-              {lang === "fr" ? "Retour menu principal" : "Back to menu"}
-            </Button>
-            {pdfUrl && (
-              <Button variant="outline" onClick={() => window.open(pdfUrl, '_blank')} className="w-full">
-                <Download className="mr-2" />
-                {lang === "fr" ? "Télécharger le contrôle inventaire (PDF)" : "Download inventory check (PDF)"}
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
+
 
   const ItemRow = ({ item }) => {
     const declared = quantities[item.id];
@@ -429,6 +419,79 @@ export default function ClientControleInventaireConfortPlus2ch() {
         </CardContent>
       </Card>
 
+      {/* Autorisation d'accès */}
+      <Card className="mb-6 border-2 border-[#FFA500]">
+        <CardContent className="p-6">
+          <h3 className="font-semibold text-[#0077A8] mb-3 flex items-center gap-2">
+            🔐 {lang === "fr" ? "Autorisation d'accès *" : "Access authorization *"}
+          </h3>
+          <p className="text-sm text-gray-600 mb-4">
+            {lang === "fr" 
+              ? "Autorisez-vous notre intervenant à entrer dans votre hébergement en votre absence ?"
+              : "Do you authorize our staff to enter your accommodation in your absence?"}
+          </p>
+          <div className="space-y-3">
+            <label className={`flex items-center space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${autorisationAcces === 'oui' ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:border-green-300'}`}>
+              <input
+                type="radio"
+                name="autorisation"
+                value="oui"
+                checked={autorisationAcces === 'oui'}
+                onChange={(e) => {
+                  setAutorisationAcces(e.target.value);
+                  setPlagesHoraires([]);
+                }}
+                className="w-5 h-5"
+              />
+              <span className="font-medium">✔ {lang === "fr" ? "Oui" : "Yes"}</span>
+            </label>
+            <label className={`flex items-center space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${autorisationAcces === 'non' ? 'border-orange-500 bg-orange-50' : 'border-gray-300 hover:border-orange-300'}`}>
+              <input
+                type="radio"
+                name="autorisation"
+                value="non"
+                checked={autorisationAcces === 'non'}
+                onChange={(e) => setAutorisationAcces(e.target.value)}
+                className="w-5 h-5"
+              />
+              <span className="font-medium">✖ {lang === "fr" ? "Non" : "No"}</span>
+            </label>
+          </div>
+
+          {autorisationAcces === "non" && (
+            <div className="mt-4 p-4 bg-orange-50 rounded-lg border-2 border-orange-300">
+              <h4 className="font-semibold text-orange-800 mb-3">
+                ⏰ {lang === "fr" ? "Merci de sélectionner une ou plusieurs plages horaires possibles:" : "Please select one or more available time slots:"}
+              </h4>
+              <div className="space-y-2">
+                {['09h - 12h', '14h - 16h', '17h - 19h'].map(plage => (
+                  <label key={plage} className="flex items-center space-x-3 p-2 hover:bg-orange-100 rounded cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={plagesHoraires.includes(plage)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setPlagesHoraires([...plagesHoraires, plage]);
+                        } else {
+                          setPlagesHoraires(plagesHoraires.filter(p => p !== plage));
+                        }
+                      }}
+                      className="w-5 h-5"
+                    />
+                    <span className="text-sm font-medium">{plage}</span>
+                  </label>
+                ))}
+              </div>
+              {plagesHoraires.length === 0 && (
+                <p className="text-xs text-red-600 mt-2">
+                  {lang === "fr" ? "⚠️ Au moins une plage horaire est obligatoire" : "⚠️ At least one time slot is required"}
+                </p>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <SignaturePad onSave={setSignature} disabled={submitting} />
 
       <Button onClick={handlePrepareSubmit} className="w-full h-14 bg-[#00AEEF] mt-6" disabled={submitting}>
@@ -483,6 +546,26 @@ export default function ClientControleInventaireConfortPlus2ch() {
                 </>
               );
             })()}
+
+            <div className="bg-orange-50 p-4 rounded-lg border-2 border-orange-400">
+              <p className="font-bold text-orange-800">
+                🔐 {lang === "fr" ? "Autorisation d'accès" : "Access authorization"}: {autorisationAcces === 'oui' ? '✅ Oui' : '❌ Non'}
+              </p>
+              {autorisationAcces === 'non' && plagesHoraires.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-xs text-orange-700 font-semibold mb-1">
+                    {lang === "fr" ? "Plages horaires demandées:" : "Requested time slots:"}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {plagesHoraires.map(plage => (
+                      <span key={plage} className="px-2 py-1 bg-orange-200 text-orange-900 text-xs rounded">
+                        {plage}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div className="bg-gray-50 p-4 rounded-lg">
               <p><strong>{lang === "fr" ? "Note globale" : "Overall rating"}:</strong> {
