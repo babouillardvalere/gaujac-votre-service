@@ -151,6 +151,16 @@ export default function Bureau() {
     queryFn: () => base44.entities.Tache.filter({}, '-created_date', 200)
   });
 
+  const { data: missionsDirection = [] } = useQuery({
+    queryKey: ['bureau-missions-direction'],
+    queryFn: () => base44.entities.MissionInterne.filter({ service: 'TOUS' }, '-date_debut', 200)
+  });
+
+  const { data: sousMissions = [] } = useQuery({
+    queryKey: ['bureau-sous-missions'],
+    queryFn: () => base44.entities.MissionInterne.filter({}, '-date_debut', 500)
+  });
+
   // Mutations pour actions de groupe
   const updateIncidentMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Incident.update(id, data),
@@ -158,6 +168,14 @@ export default function Bureau() {
 
   const deleteIncidentMutation = useMutation({
     mutationFn: (id) => base44.entities.Incident.delete(id),
+  });
+
+  const deleteMissionMutation = useMutation({
+    mutationFn: (id) => base44.entities.MissionInterne.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bureau-missions-direction'] });
+      queryClient.invalidateQueries({ queryKey: ['bureau-sous-missions'] });
+    }
   });
 
   // Sélection
@@ -488,6 +506,9 @@ export default function Bureau() {
             <TabsTrigger value="taches" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               ✅ {lang === 'fr' ? 'Tâches' : 'Tasks'} ({taches.filter(t => t.statut !== 'terminee').length})
             </TabsTrigger>
+            <TabsTrigger value="missions-direction" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
+              🎯 {lang === 'fr' ? 'Missions Direction' : 'Management Missions'} ({missionsDirection.filter(m => m.statut !== 'TERMINE').length})
+            </TabsTrigger>
             <TabsTrigger value="suivis" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               📦 {lang === 'fr' ? 'Suivis inventaires' : 'Inventory tracking'}
             </TabsTrigger>
@@ -513,6 +534,128 @@ export default function Bureau() {
               👷 {lang === 'fr' ? 'Collaborateurs' : 'Staff'}
             </TabsTrigger>
           </TabsList>
+
+          {/* Missions Direction */}
+          <TabsContent value="missions-direction" className="space-y-4">
+            <Card className="border-2 border-purple-300 rounded-xl">
+              <CardHeader>
+                <CardTitle className="font-heading text-purple-700">
+                  🎯 {lang === 'fr' ? 'Missions Direction' : 'Management Missions'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {missionsDirection.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <CheckCircle className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                    <p>{lang === 'fr' ? 'Aucune mission Direction' : 'No management missions'}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {missionsDirection.map(mission => {
+                      const ssMissions = sousMissions.filter(sm => sm.mission_mere_id === mission.id);
+                      const completees = ssMissions.filter(sm => sm.statut === 'TERMINE').length;
+                      const total = ssMissions.length;
+                      const progress = total > 0 ? Math.round((completees / total) * 100) : 0;
+                      
+                      return (
+                        <Card key={mission.id} className="border rounded-xl">
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <h3 className="font-heading text-purple-700">{mission.titre}</h3>
+                                  <Badge className={
+                                    mission.statut === 'TERMINE' ? 'bg-green-500 text-white' :
+                                    mission.statut === 'EN_COURS' ? 'bg-blue-500 text-white' :
+                                    'bg-orange-500 text-white'
+                                  }>
+                                    {mission.statut === 'A_FAIRE' ? (lang === 'fr' ? 'À faire' : 'To do') :
+                                     mission.statut === 'EN_COURS' ? (lang === 'fr' ? 'En cours' : 'In progress') :
+                                     mission.statut === 'TERMINE' ? (lang === 'fr' ? 'Terminée' : 'Completed') :
+                                     mission.statut}
+                                  </Badge>
+                                  <Badge className={
+                                    mission.priorite === 'CRITIQUE' ? 'bg-red-500 text-white' :
+                                    mission.priorite === 'HAUTE' ? 'bg-orange-500 text-white' :
+                                    mission.priorite === 'NORMALE' ? 'bg-blue-100 text-blue-700' :
+                                    'bg-gray-100 text-gray-700'
+                                  }>
+                                    {mission.priorite}
+                                  </Badge>
+                                </div>
+                                
+                                {mission.description && (
+                                  <p className="text-sm text-gray-600 mt-2 whitespace-pre-line">{mission.description}</p>
+                                )}
+                                
+                                <div className="flex flex-wrap gap-2 mt-3">
+                                  <Badge variant="outline">
+                                    📅 {mission.date_debut} → {mission.date_fin}
+                                  </Badge>
+                                  <Badge className="bg-purple-100 text-purple-700">
+                                    {mission.type_mission === 'DESHIVERNAGE' ? '🌞 Déshivernage' :
+                                     mission.type_mission === 'HIVERNAGE' ? '❄️ Hivernage' :
+                                     mission.type_mission === 'SAISON' ? '🏖️ Saison' :
+                                     '📢 Directive'}
+                                  </Badge>
+                                  {mission.hebergement_concerne && (
+                                    <Badge variant="outline">🏠 {mission.hebergement_concerne}</Badge>
+                                  )}
+                                </div>
+
+                                {/* Progression */}
+                                {total > 0 && (
+                                  <div className="mt-3">
+                                    <div className="flex items-center justify-between mb-1">
+                                      <span className="text-xs text-gray-600">
+                                        {lang === 'fr' ? 'Progression' : 'Progress'}: {completees}/{total}
+                                      </span>
+                                      <span className="text-xs font-bold text-purple-600">{progress}%</span>
+                                    </div>
+                                    <div className="w-full bg-gray-200 rounded-full h-2">
+                                      <div 
+                                        className="bg-purple-600 h-2 rounded-full transition-all"
+                                        style={{ width: `${progress}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={async () => {
+                                  if (confirm(lang === 'fr' 
+                                    ? `Supprimer la mission "${mission.titre}" et toutes ses sous-missions ?`
+                                    : `Delete mission "${mission.titre}" and all its sub-missions?`)) {
+                                    // Supprimer les sous-missions d'abord
+                                    await Promise.all(ssMissions.map(sm => deleteMissionMutation.mutateAsync(sm.id)));
+                                    // Puis la mission mère
+                                    await deleteMissionMutation.mutateAsync(mission.id);
+                                  }
+                                }}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            <Button
+              onClick={() => navigate(createPageUrl('DirectionMissions'))}
+              className="w-full h-12 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-heading"
+            >
+              <CheckCircle className="w-5 h-5 mr-2" />
+              {lang === 'fr' ? 'Gérer toutes les missions' : 'Manage all missions'}
+            </Button>
+          </TabsContent>
 
           {/* Tâches d'inventaire */}
           <TabsContent value="taches" className="space-y-4">
