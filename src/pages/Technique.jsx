@@ -11,6 +11,8 @@ import CollaborateurNotificationBell from '../components/CollaborateurNotificati
 import MettreEnAttenteDialog from '../components/MettreEnAttenteDialog';
 import PhotoInterventionCapture from '../components/PhotoInterventionCapture';
 import InterventionTimer from '../components/InterventionTimer';
+import ServiceTabs from '../components/missions/ServiceTabs';
+import MissionsDirectionTab from '../components/missions/MissionsDirectionTab';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -78,6 +80,12 @@ export default function Technique() {
     queryKey: ['incidents-technique'],
     queryFn: () => base44.entities.Incident.filter({ type: 'technique' }, '-date_saisie', 200),
     refetchInterval: 30000
+  });
+
+  const { data: missions = [] } = useQuery({
+    queryKey: ['missions-internes', 'TECHNIQUE'],
+    queryFn: () => base44.entities.MissionInterne.filter({ service: 'TECHNIQUE' }, '-date_debut', 100),
+    refetchInterval: 60000
   });
 
   const updateMutation = useMutation({
@@ -412,8 +420,15 @@ export default function Technique() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6">
-        {/* Barre de recherche */}
-        <div className="mb-4">
+        <ServiceTabs
+          service="TECHNIQUE"
+          interventionsCount={incidents.filter(i => i.statut === 'en_attente').length}
+          missionsCount={missions.filter(m => m.statut === 'A_FAIRE').length}
+          lang={lang}
+          interventionsContent={
+            <>
+              {/* Barre de recherche */}
+              <div className="mb-4">
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -618,6 +633,10 @@ export default function Technique() {
             })}
           </div>
         )}
+            </>
+          }
+          missionsContent={<MissionsDirectionTab service="TECHNIQUE" lang={lang} />}
+        />
       </div>
 
       <Dialog open={!!selectedIncident} onOpenChange={() => setSelectedIncident(null)}>
