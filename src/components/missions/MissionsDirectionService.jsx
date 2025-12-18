@@ -368,9 +368,32 @@ Crée un document PDF formel avec logo camping, en-têtes, et signatures.`;
       </div>
 
       {/* Liste missions */}
-      {filteredMissions.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-xl">
-          <p className="text-gray-500">Aucune mission Direction</p>
+      {missions.length === 0 ? (
+        <div className="text-center py-16 bg-purple-50 rounded-xl border-2 border-purple-200">
+          <div className="max-w-md mx-auto space-y-4">
+            <div className="text-6xl">📭</div>
+            <h3 className="font-heading text-2xl text-purple-700">Aucune mission direction</h3>
+            <p className="text-gray-600">
+              Aucune mission n'a été créée par la Direction pour le service <strong>{service}</strong>.
+            </p>
+            <p className="text-xs text-gray-500">
+              Les missions apparaîtront ici une fois créées depuis l'espace Direction.
+            </p>
+          </div>
+        </div>
+      ) : filteredMissions.length === 0 ? (
+        <div className="text-center py-12 bg-yellow-50 rounded-xl border-2 border-yellow-200">
+          <p className="text-yellow-700">
+            Aucune mission avec le filtre <strong>"{filterStatut}"</strong>
+          </p>
+          <Button 
+            onClick={() => setFilterStatut('tous')}
+            variant="outline"
+            className="mt-4"
+            size="sm"
+          >
+            Voir toutes les missions
+          </Button>
         </div>
       ) : (
         <div className="space-y-3">
