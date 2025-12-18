@@ -19,25 +19,25 @@ import { toast } from "sonner";
 
 const INVENTAIRE_PREMIUM_TWINS = {
   vaisselle: [
-    { id: 'assiettes_creuses', emoji: '🍽️', label: 'Assiettes creuses', qty: 6, service: 'MENAGE' },
-    { id: 'assiettes_dessert', emoji: '🍰', label: 'Assiettes dessert', qty: 6, service: 'MENAGE' },
-    { id: 'assiettes_plates', emoji: '🍽️', label: 'Assiettes plates', qty: 6, service: 'MENAGE' },
+    { id: 'assiettes_creuses', emoji: '🍽️', label: 'Assiettes creuses', qty: 8, service: 'MENAGE' },
+    { id: 'assiettes_dessert', emoji: '🍰', label: 'Assiettes dessert', qty: 8, service: 'MENAGE' },
+    { id: 'assiettes_plates', emoji: '🍽️', label: 'Assiettes plates', qty: 8, service: 'MENAGE' },
     { id: 'plat', emoji: '🍲', label: 'Plat', qty: 1, service: 'MENAGE' },
-    { id: 'bols', emoji: '🥣', label: 'Bols', qty: 6, service: 'MENAGE' },
-    { id: 'saladier', emoji: '🥗', label: 'Saladier', qty: 1, service: 'MENAGE' },
-    { id: 'tasses', emoji: '☕', label: 'Tasses', qty: 6, service: 'MENAGE' },
-    { id: 'verres_vin', emoji: '🍷', label: 'Verres à vin', qty: 6, service: 'MENAGE' },
-    { id: 'verres_eau', emoji: '🥛', label: 'Verres à eau', qty: 6, service: 'MENAGE' },
+    { id: 'bols', emoji: '🥣', label: 'Bols', qty: 8, service: 'MENAGE' },
+    { id: 'saladiers', emoji: '🥗', label: 'Saladiers', qty: 2, service: 'MENAGE' },
+    { id: 'tasses', emoji: '☕', label: 'Tasses', qty: 8, service: 'MENAGE' },
+    { id: 'verres_vin', emoji: '🍷', label: 'Verres à vin', qty: 8, service: 'MENAGE' },
+    { id: 'verres_eau', emoji: '🥛', label: 'Verres à eau', qty: 8, service: 'MENAGE' },
     { id: 'pichet', emoji: '🍶', label: 'Pichet / carafe', qty: 1, service: 'MENAGE' }
   ],
   couverts: [
-    { id: 'fourchettes', emoji: '🍴', label: 'Fourchettes', qty: 6, service: 'MENAGE' },
-    { id: 'cuilleres_soupe', emoji: '🥄', label: 'Cuillères soupe', qty: 6, service: 'MENAGE' },
-    { id: 'cuilleres_cafe', emoji: '🥄', label: 'Cuillères café', qty: 6, service: 'MENAGE' },
+    { id: 'fourchettes', emoji: '🍴', label: 'Fourchettes', qty: 8, service: 'MENAGE' },
+    { id: 'cuilleres_soupe', emoji: '🥄', label: 'Cuillères soupe', qty: 8, service: 'MENAGE' },
+    { id: 'cuilleres_cafe', emoji: '🥄', label: 'Cuillères café', qty: 8, service: 'MENAGE' },
     { id: 'couteau_decouper', emoji: '🔪', label: 'Couteau à découper', qty: 1, service: 'MENAGE' },
     { id: 'couteau_pain', emoji: '🔪', label: 'Couteau à pain', qty: 1, service: 'MENAGE' },
     { id: 'couteau_office', emoji: '🔪', label: 'Couteau office', qty: 1, service: 'MENAGE' },
-    { id: 'couteaux', emoji: '🔪', label: 'Couteaux', qty: 6, service: 'MENAGE' },
+    { id: 'couteaux', emoji: '🔪', label: 'Couteaux', qty: 8, service: 'MENAGE' },
     { id: 'cendrier', emoji: '🚬', label: 'Cendrier', qty: 1, service: 'MENAGE' },
     { id: 'couverts_salade', emoji: '🥗', label: 'Couverts à salade', qty: 1, service: 'MENAGE' },
     { id: 'spatule_bois', emoji: '🥄', label: 'Spatule bois', qty: 1, service: 'MENAGE' },
@@ -64,14 +64,17 @@ const INVENTAIRE_PREMIUM_TWINS = {
     { id: 'couvercle', emoji: '🔥', label: 'Couvercle', qty: 1, service: 'MENAGE' }
   ],
   appareils: [
+    { id: 'plaques_cuisson', emoji: '🔥', label: 'Plaques de cuisson', qty: 1, service: 'TECHNIQUE' },
     { id: 'cafetiere', emoji: '☕', label: 'Cafetière électrique', qty: 1, service: 'TECHNIQUE' },
     { id: 'micro_ondes', emoji: '📡', label: 'Micro-ondes', qty: 1, service: 'TECHNIQUE' },
+    { id: 'tv_salon', emoji: '📺', label: 'TV salon + télécommande', qty: 1, service: 'TECHNIQUE' },
+    { id: 'tv_chambre', emoji: '📺', label: 'TV chambre + télécommande', qty: 1, service: 'TECHNIQUE' },
     { id: 'refrigerateur', emoji: '🧊', label: 'Réfrigérateur-congélateur', qty: 1, service: 'TECHNIQUE' },
-    { id: 'tv_salon', emoji: '📺', label: 'TV salon', qty: 1, service: 'TECHNIQUE' },
-    { id: 'tv_chambre', emoji: '📺', label: 'TV chambre', qty: 1, service: 'TECHNIQUE' },
     { id: 'telecommande_clim', emoji: '❄️', label: 'Télécommande climatisation', qty: 1, service: 'TECHNIQUE' },
-    { id: 'lave_vaisselle', emoji: '🍽️', label: 'Lave-vaisselle', qty: 1, service: 'TECHNIQUE' },
-    { id: 'plaques_cuisson', emoji: '🔥', label: 'Plaques / plancha de cuisson', qty: 1, service: 'TECHNIQUE' }
+    { id: 'lave_vaisselle', emoji: '🍽️', label: 'Lave-vaisselle', qty: 1, service: 'TECHNIQUE' }
+  ],
+  sanitaires: [
+    { id: 'kit_brosse_wc', emoji: '🚽', label: 'Kit brosse WC', qty: 1, service: 'MENAGE' }
   ],
   menage: [
     { id: 'seau', emoji: '🪣', label: 'Seau', qty: 1, service: 'MENAGE' },
@@ -87,8 +90,8 @@ const INVENTAIRE_PREMIUM_TWINS = {
   ],
   literie: [
     { id: 'couette_double', emoji: '🛏️', label: 'Couette double', qty: 1, service: 'MENAGE' },
-    { id: 'couettes_simples', emoji: '🛏️', label: 'Couettes simples', qty: 2, service: 'MENAGE' },
-    { id: 'oreillers', emoji: '🛏️', label: 'Oreillers', qty: 4, service: 'MENAGE' },
+    { id: 'couettes_simples', emoji: '🛏️', label: 'Couettes simples', qty: 4, service: 'MENAGE' },
+    { id: 'oreillers', emoji: '🛏️', label: 'Oreillers', qty: 8, service: 'MENAGE' },
     { id: 'cintres', emoji: '👗', label: 'Cintres', qty: 10, service: 'MENAGE' }
   ],
   exterieur: [
@@ -133,6 +136,7 @@ export default function ClientControleInventairePremiumTwins() {
       ...INVENTAIRE_PREMIUM_TWINS.couverts,
       ...INVENTAIRE_PREMIUM_TWINS.batterie,
       ...INVENTAIRE_PREMIUM_TWINS.appareils,
+      ...INVENTAIRE_PREMIUM_TWINS.sanitaires,
       ...INVENTAIRE_PREMIUM_TWINS.menage,
       ...INVENTAIRE_PREMIUM_TWINS.literie,
       ...INVENTAIRE_PREMIUM_TWINS.exterieur

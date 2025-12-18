@@ -64,14 +64,13 @@ const INVENTAIRE_PREMIUM_2CH = {
     { id: 'couvercle', emoji: '🔥', label: 'Couvercle', qty: 1, service: 'MENAGE' }
   ],
   appareils: [
+    { id: 'plaques_cuisson', emoji: '🔥', label: 'Plaques de cuisson', qty: 1, service: 'TECHNIQUE' },
     { id: 'cafetiere', emoji: '☕', label: 'Cafetière électrique', qty: 1, service: 'TECHNIQUE' },
     { id: 'micro_ondes', emoji: '📡', label: 'Micro-ondes', qty: 1, service: 'TECHNIQUE' },
+    { id: 'tv', emoji: '📺', label: 'TV + télécommande', qty: 1, service: 'TECHNIQUE' },
     { id: 'refrigerateur', emoji: '🧊', label: 'Réfrigérateur-congélateur', qty: 1, service: 'TECHNIQUE' },
-    { id: 'lave_vaisselle', emoji: '🍽️', label: 'Lave-vaisselle', qty: 1, service: 'TECHNIQUE' },
-    { id: 'tv', emoji: '📺', label: 'TV', qty: 1, service: 'TECHNIQUE' },
-    { id: 'telecommande_tv', emoji: '🎛️', label: 'Télécommande TV', qty: 1, service: 'TECHNIQUE' },
     { id: 'telecommande_clim', emoji: '❄️', label: 'Télécommande climatisation', qty: 1, service: 'TECHNIQUE' },
-    { id: 'plaques_cuisson', emoji: '🔥', label: 'Plaques de cuisson', qty: 1, service: 'TECHNIQUE' }
+    { id: 'lave_vaisselle', emoji: '🍽️', label: 'Lave-vaisselle', qty: 1, service: 'TECHNIQUE' }
   ],
   sanitaires: [
     { id: 'lavabo', emoji: '🚰', label: 'Lavabo', qty: 1, service: 'TECHNIQUE' },

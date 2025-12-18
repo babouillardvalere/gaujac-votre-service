@@ -20,25 +20,25 @@ import { toast } from "sonner";
 
 const INVENTAIRE_COTTAGE = {
   vaisselle: [
-    { id: 'assiettes_creuses', emoji: '🍽️', label: 'Assiettes creuses', qty: 8, service: 'MENAGE' },
-    { id: 'assiettes_dessert', emoji: '🍰', label: 'Assiettes dessert', qty: 8, service: 'MENAGE' },
-    { id: 'assiettes_plates', emoji: '🍽️', label: 'Assiettes plates', qty: 8, service: 'MENAGE' },
+    { id: 'assiettes_creuses', emoji: '🍽️', label: 'Assiettes creuses', qty: 4, service: 'MENAGE' },
+    { id: 'assiettes_dessert', emoji: '🍰', label: 'Assiettes dessert', qty: 4, service: 'MENAGE' },
+    { id: 'assiettes_plates', emoji: '🍽️', label: 'Assiettes plates', qty: 4, service: 'MENAGE' },
     { id: 'plat', emoji: '🍲', label: 'Plat', qty: 1, service: 'MENAGE' },
-    { id: 'bols', emoji: '🥣', label: 'Bols', qty: 8, service: 'MENAGE' },
-    { id: 'saladiers', emoji: '🥗', label: 'Saladiers', qty: 2, service: 'MENAGE' },
-    { id: 'tasses', emoji: '☕', label: 'Tasses', qty: 8, service: 'MENAGE' },
-    { id: 'verres_vin', emoji: '🍷', label: 'Verres à vin', qty: 8, service: 'MENAGE' },
-    { id: 'verres_eau', emoji: '🥛', label: 'Verres à eau', qty: 8, service: 'MENAGE' },
+    { id: 'bols', emoji: '🥣', label: 'Bols', qty: 4, service: 'MENAGE' },
+    { id: 'saladier', emoji: '🥗', label: 'Saladier', qty: 1, service: 'MENAGE' },
+    { id: 'tasses', emoji: '☕', label: 'Tasses', qty: 4, service: 'MENAGE' },
+    { id: 'verres_vin', emoji: '🍷', label: 'Verres à vin', qty: 4, service: 'MENAGE' },
+    { id: 'verres_eau', emoji: '🥛', label: 'Verres à eau', qty: 4, service: 'MENAGE' },
     { id: 'pichet', emoji: '🍶', label: 'Pichet / carafe', qty: 1, service: 'MENAGE' }
   ],
   couverts: [
-    { id: 'fourchettes', emoji: '🍴', label: 'Fourchettes', qty: 8, service: 'MENAGE' },
-    { id: 'cuilleres_soupe', emoji: '🥄', label: 'Cuillères à soupe', qty: 8, service: 'MENAGE' },
-    { id: 'cuilleres_cafe', emoji: '🥄', label: 'Cuillères à café', qty: 8, service: 'MENAGE' },
+    { id: 'fourchettes', emoji: '🍴', label: 'Fourchettes', qty: 4, service: 'MENAGE' },
+    { id: 'cuilleres_soupe', emoji: '🥄', label: 'Cuillères à soupe', qty: 4, service: 'MENAGE' },
+    { id: 'cuilleres_cafe', emoji: '🥄', label: 'Cuillères à café', qty: 4, service: 'MENAGE' },
     { id: 'couteau_decouper', emoji: '🔪', label: 'Couteau à découper', qty: 1, service: 'MENAGE' },
     { id: 'couteau_pain', emoji: '🔪', label: 'Couteau à pain', qty: 1, service: 'MENAGE' },
     { id: 'couteau_office', emoji: '🔪', label: 'Couteau office', qty: 1, service: 'MENAGE' },
-    { id: 'couteaux', emoji: '🔪', label: 'Couteaux', qty: 8, service: 'MENAGE' },
+    { id: 'couteaux', emoji: '🔪', label: 'Couteaux', qty: 4, service: 'MENAGE' },
     { id: 'cendrier', emoji: '🚬', label: 'Cendrier', qty: 1, service: 'MENAGE' },
     { id: 'couverts_salade', emoji: '🥗', label: 'Couverts à salade', qty: 1, service: 'MENAGE' },
     { id: 'spatule_bois', emoji: '🥄', label: 'Spatule bois', qty: 1, service: 'MENAGE' },
@@ -65,21 +65,18 @@ const INVENTAIRE_COTTAGE = {
     { id: 'couvercle', emoji: '🔥', label: 'Couvercle', qty: 1, service: 'MENAGE' }
   ],
   appareils: [
+    { id: 'plaques_cuisson', emoji: '🔥', label: 'Plaques de cuisson', qty: 1, service: 'TECHNIQUE' },
     { id: 'cafetiere', emoji: '☕', label: 'Cafetière électrique', qty: 1, service: 'TECHNIQUE' },
     { id: 'micro_ondes', emoji: '📡', label: 'Micro-ondes', qty: 1, service: 'TECHNIQUE' },
+    { id: 'tv', emoji: '📺', label: 'TV + télécommande', qty: 1, service: 'TECHNIQUE' },
+    { id: 'refrigerateur', emoji: '🧊', label: 'Réfrigérateur-congélateur', qty: 1, service: 'TECHNIQUE' },
+    { id: 'telecommande_clim', emoji: '❄️', label: 'Télécommande climatisation', qty: 1, service: 'TECHNIQUE' },
     { id: 'lave_vaisselle', emoji: '🍽️', label: 'Lave-vaisselle', qty: 1, service: 'TECHNIQUE' },
     { id: 'lave_linge', emoji: '🧺', label: 'Lave-linge', qty: 1, service: 'TECHNIQUE' },
-    { id: 'seche_linge', emoji: '🌀', label: 'Sèche-linge', qty: 1, service: 'TECHNIQUE' },
-    { id: 'tv', emoji: '📺', label: 'TV salon', qty: 1, service: 'TECHNIQUE' },
-    { id: 'telecommande_tv', emoji: '🎛️', label: 'Télécommande TV', qty: 1, service: 'TECHNIQUE' },
-    { id: 'telecommande_clim', emoji: '❄️', label: 'Télécommande climatisation', qty: 1, service: 'TECHNIQUE' },
-    { id: 'refrigerateur', emoji: '🧊', label: 'Réfrigérateur-congélateur', qty: 1, service: 'TECHNIQUE' },
-    { id: 'plaques_cuisson', emoji: '🔥', label: 'Plaques de cuisson', qty: 1, service: 'TECHNIQUE' }
+    { id: 'seche_linge', emoji: '🌀', label: 'Sèche-linge', qty: 1, service: 'TECHNIQUE' }
   ],
   sanitaires: [
-    { id: 'lavabo', emoji: '🚰', label: 'Lavabo', qty: 1, service: 'TECHNIQUE' },
-    { id: 'wc', emoji: '🚽', label: 'WC', qty: 1, service: 'TECHNIQUE' },
-    { id: 'douche', emoji: '🚿', label: 'Douche', qty: 1, service: 'TECHNIQUE' }
+    { id: 'kit_brosse_wc', emoji: '🚽', label: 'Kit brosse WC', qty: 1, service: 'MENAGE' }
   ],
   menage: [
     { id: 'seau', emoji: '🪣', label: 'Seau', qty: 1, service: 'MENAGE' },
@@ -100,12 +97,9 @@ const INVENTAIRE_COTTAGE = {
     { id: 'cintres', emoji: '👗', label: 'Cintres', qty: 10, service: 'MENAGE' }
   ],
   exterieur: [
-    { id: 'cle_locative', emoji: '🗝️', label: 'Clé locative', qty: 1, service: 'TECHNIQUE' },
-    { id: 'carte_barriere', emoji: '🪪', label: 'Carte barrière', qty: 1, service: 'TECHNIQUE' },
     { id: 'table_jardin', emoji: '🍽️', label: 'Table de jardin', qty: 1, service: 'TECHNIQUE' },
-    { id: 'chaises_jardin', emoji: '🪑', label: 'Chaises de jardin', qty: 6, service: 'TECHNIQUE' },
-    { id: 'bancs_bois', emoji: '🌳', label: 'Bancs en bois', qty: 2, service: 'TECHNIQUE' },
-    { id: 'transats', emoji: '🌞', label: 'Transats', qty: 2, service: 'TECHNIQUE' }
+    { id: 'chaises_jardin', emoji: '🪑', label: 'Chaises de jardin', qty: 4, service: 'TECHNIQUE' },
+    { id: 'salon_jardin', emoji: '🌳', label: 'Salon de jardin', qty: 1, service: 'TECHNIQUE' }
   ]
 };
 
@@ -185,9 +179,22 @@ export default function ClientControleInventaireCottage() {
     return { menage, technique };
   };
 
+  const [autorisationAcces, setAutorisationAcces] = useState("");
+  const [plagesHoraires, setPlagesHoraires] = useState([]);
+
   const handlePrepareSubmit = () => {
     if (!noteGlobale) {
       toast.error(lang === "fr" ? "Veuillez donner votre ressenti global" : "Please rate your overall impression");
+      return;
+    }
+
+    if (!autorisationAcces) {
+      toast.error(lang === "fr" ? "Veuillez indiquer l'autorisation d'accès" : "Please indicate access authorization");
+      return;
+    }
+
+    if (autorisationAcces === "non" && plagesHoraires.length === 0) {
+      toast.error(lang === "fr" ? "Veuillez sélectionner au moins une plage horaire" : "Please select at least one time slot");
       return;
     }
 
@@ -260,7 +267,9 @@ export default function ClientControleInventaireCottage() {
         })),
         evaluation_proprete: noteGlobale,
         commentaire_proprete: commentaireGlobal,
-        signature_url: signature
+        signature_url: signature,
+        autorisation_acces: autorisationAcces,
+        plage_horaire_client: autorisationAcces === 'non' ? plagesHoraires.join(', ') : null
       });
 
       await createInterventionCottage({ service: "MENAGE", items: menage, ficheId: fiche.id });
@@ -400,6 +409,79 @@ export default function ClientControleInventaireCottage() {
         </Card>
       ))}
 
+      {/* Autorisation d'accès */}
+      <Card className="mb-6 border-2 border-[#FFA500]">
+        <CardContent className="p-6">
+          <h3 className="font-semibold text-[#0077A8] mb-3 flex items-center gap-2">
+            🔐 {lang === "fr" ? "Autorisation d'accès *" : "Access authorization *"}
+          </h3>
+          <p className="text-sm text-gray-600 mb-4">
+            {lang === "fr" 
+              ? "Autorisez-vous notre intervenant à entrer dans votre hébergement en votre absence ?"
+              : "Do you authorize our staff to enter your accommodation in your absence?"}
+          </p>
+          <div className="space-y-3">
+            <label className={`flex items-center space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${autorisationAcces === 'oui' ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:border-green-300'}`}>
+              <input
+                type="radio"
+                name="autorisation"
+                value="oui"
+                checked={autorisationAcces === 'oui'}
+                onChange={(e) => {
+                  setAutorisationAcces(e.target.value);
+                  setPlagesHoraires([]);
+                }}
+                className="w-5 h-5"
+              />
+              <span className="font-medium">✔ {lang === "fr" ? "Oui" : "Yes"}</span>
+            </label>
+            <label className={`flex items-center space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${autorisationAcces === 'non' ? 'border-orange-500 bg-orange-50' : 'border-gray-300 hover:border-orange-300'}`}>
+              <input
+                type="radio"
+                name="autorisation"
+                value="non"
+                checked={autorisationAcces === 'non'}
+                onChange={(e) => setAutorisationAcces(e.target.value)}
+                className="w-5 h-5"
+              />
+              <span className="font-medium">✖ {lang === "fr" ? "Non" : "No"}</span>
+            </label>
+          </div>
+
+          {autorisationAcces === "non" && (
+            <div className="mt-4 p-4 bg-orange-50 rounded-lg border-2 border-orange-300">
+              <h4 className="font-semibold text-orange-800 mb-3">
+                ⏰ {lang === "fr" ? "Merci de sélectionner une ou plusieurs plages horaires possibles:" : "Please select one or more available time slots:"}
+              </h4>
+              <div className="space-y-2">
+                {['09h - 12h', '14h - 16h', '17h - 19h'].map(plage => (
+                  <label key={plage} className="flex items-center space-x-3 p-2 hover:bg-orange-100 rounded cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={plagesHoraires.includes(plage)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setPlagesHoraires([...plagesHoraires, plage]);
+                        } else {
+                          setPlagesHoraires(plagesHoraires.filter(p => p !== plage));
+                        }
+                      }}
+                      className="w-5 h-5"
+                    />
+                    <span className="text-sm font-medium">{plage}</span>
+                  </label>
+                ))}
+              </div>
+              {plagesHoraires.length === 0 && (
+                <p className="text-xs text-red-600 mt-2">
+                  {lang === "fr" ? "⚠️ Au moins une plage horaire est obligatoire" : "⚠️ At least one time slot is required"}
+                </p>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <Card className="mb-6">
         <CardContent className="p-4">
           <h3 className="font-semibold text-[#0077A8] mb-3">
@@ -497,6 +579,26 @@ export default function ClientControleInventaireCottage() {
                 </>
               );
             })()}
+
+            <div className="bg-orange-50 p-4 rounded-lg border-2 border-orange-400">
+              <p className="font-bold text-orange-800">
+                🔐 {lang === "fr" ? "Autorisation d'accès" : "Access authorization"}: {autorisationAcces === 'oui' ? '✅ Oui' : '❌ Non'}
+              </p>
+              {autorisationAcces === 'non' && plagesHoraires.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-xs text-orange-700 font-semibold mb-1">
+                    {lang === "fr" ? "Plages horaires demandées:" : "Requested time slots:"}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {plagesHoraires.map(plage => (
+                      <span key={plage} className="px-2 py-1 bg-orange-200 text-orange-900 text-xs rounded">
+                        {plage}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div className="bg-gray-50 p-4 rounded-lg">
               <p><strong>{lang === "fr" ? "Note globale" : "Overall rating"}:</strong> {
