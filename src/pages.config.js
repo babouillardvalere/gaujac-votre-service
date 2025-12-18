@@ -66,6 +66,8 @@ import Animations from './pages/Animations';
 import ClientSuiviInventaire from './pages/ClientSuiviInventaire';
 import ClientSuiviSearch from './pages/ClientSuiviSearch';
 import ClientSuiviDetail from './pages/ClientSuiviDetail';
+import Technique from './pages/Technique';
+import Menage from './pages/Menage';
 import __Layout from './Layout.jsx';
 
 
@@ -138,6 +140,8 @@ export const PAGES = {
     "ClientSuiviInventaire": ClientSuiviInventaire,
     "ClientSuiviSearch": ClientSuiviSearch,
     "ClientSuiviDetail": ClientSuiviDetail,
+    "Technique": Technique,
+    "Menage": Menage,
 }
 
 export const pagesConfig = {
