@@ -70,33 +70,6 @@ export default function MenuCollaborateur() {
       badgeCount: 0
     },
     {
-      title: '☕ Bar',
-      icon: Coffee,
-      href: 'Bar',
-      color: 'bg-[#ec4899]',
-      textColor: 'text-white',
-      description: lang === 'fr' ? 'Gestion bar & snack' : 'Bar & snack management',
-      badgeCount: 0
-    },
-    {
-      title: '🎵 Animations',
-      icon: Music,
-      href: 'Animations',
-      color: 'bg-[#a855f7]',
-      textColor: 'text-white',
-      description: lang === 'fr' ? 'Événements et activités' : 'Events and activities',
-      badgeCount: 0
-    },
-    {
-      title: '🏊 BNSSA',
-      icon: Waves,
-      href: 'Piscine',
-      color: 'bg-[#3b82f6]',
-      textColor: 'text-white',
-      description: lang === 'fr' ? 'Surveillance et gestion piscine' : 'Pool monitoring & management',
-      badgeCount: 0
-    },
-    {
       title: t('menu_materiel'),
       icon: Package,
       href: 'Materiel',
@@ -104,15 +77,6 @@ export default function MenuCollaborateur() {
       textColor: 'text-white',
       description: t('desc_materiel'),
       badgeCount: counts.materiel
-    },
-    {
-      title: '✅ Tâches',
-      icon: ClipboardList,
-      href: 'Taches',
-      color: 'bg-[#10b981]',
-      textColor: 'text-white',
-      description: lang === 'fr' ? 'Gestion des tâches' : 'Task management',
-      badgeCount: 0
     },
     {
       title: '🏢 Direction',
