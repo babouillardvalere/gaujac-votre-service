@@ -584,6 +584,36 @@ export default function ClientResume() {
             </CardContent>
           </Card>
 
+          {/* Autorisation d'accès */}
+          <Card className="border-2 border-orange-400 rounded-xl">
+            <CardContent className="p-6">
+              <h2 className="font-heading text-xl text-[#0077A8] mb-4 flex items-center gap-2">
+                <span>🔐</span>
+                {lang === 'fr' ? "Autorisation d'accès" : 'Access authorization'}
+              </h2>
+              
+              <div className={`p-4 rounded-lg ${fiche.autorisation_acces === 'oui' ? 'bg-green-100' : 'bg-orange-100'}`}>
+                <p className="font-heading text-lg">
+                  {fiche.autorisation_acces === 'oui' ? '✅ Oui' : '❌ Non'}
+                </p>
+                {fiche.autorisation_acces === 'non' && fiche.plage_horaire_client && (
+                  <div className="mt-3 pt-3 border-t border-orange-300">
+                    <p className="text-sm font-semibold text-orange-800 mb-2">
+                      ⏰ {lang === 'fr' ? 'Plages horaires demandées:' : 'Requested time slots:'}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {fiche.plage_horaire_client.split(',').map((plage, idx) => (
+                        <span key={idx} className="px-3 py-1 bg-orange-200 text-orange-900 rounded-lg text-sm">
+                          {plage.trim()}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Propreté */}
           <Card className="border-2 border-[#FFA500]/30 rounded-xl">
             <CardContent className="p-6">
