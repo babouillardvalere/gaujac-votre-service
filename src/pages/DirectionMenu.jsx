@@ -14,14 +14,14 @@ export default function DirectionMenu() {
 
   const menuItems = [
     {
-      title: '🌞 Déshivernage',
-      titleEn: '🌞 Spring Opening',
+      title: '🔧 Interventions',
+      titleEn: '🔧 Interventions',
       icon: Sun,
-      href: 'DirectionDeshivernage',
-      color: 'bg-[#FFD700]',
-      textColor: 'text-[#0077A8]',
-      description: 'Remise en état pour l\'ouverture',
-      descriptionEn: 'Preparation for opening'
+      href: 'DirectionInterventions',
+      color: 'bg-[#9333ea]',
+      textColor: 'text-white',
+      description: 'Créer des interventions manuelles',
+      descriptionEn: 'Create manual interventions'
     },
     {
       title: '❄️ Hivernage',
@@ -30,18 +30,18 @@ export default function DirectionMenu() {
       href: 'DirectionHivernage',
       color: 'bg-[#00AEEF]',
       textColor: 'text-white',
-      description: 'Fermeture et sécurisation',
-      descriptionEn: 'Closing and securing'
+      description: 'Suivi Hivernage',
+      descriptionEn: 'Winter Closing tracking'
     },
     {
-      title: '📆 Saison',
-      titleEn: '📆 Season',
-      icon: Calendar,
-      href: 'DirectionSaison',
-      color: 'bg-[#FFA500]',
-      textColor: 'text-white',
-      description: 'Supervision et planification',
-      descriptionEn: 'Supervision and planning'
+      title: '🌞 Déshivernage',
+      titleEn: '🌞 Spring Opening',
+      icon: Sun,
+      href: 'DirectionDeshivernage',
+      color: 'bg-[#FFD700]',
+      textColor: 'text-[#0077A8]',
+      description: 'Suivi Déshivernage',
+      descriptionEn: 'Spring Opening tracking'
     }
   ];
 

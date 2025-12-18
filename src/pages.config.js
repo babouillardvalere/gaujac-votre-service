@@ -85,6 +85,11 @@ import ClientControleInventaireClassique2ch from './pages/ClientControleInventai
 import ClientControleInventaireChaletEco1ch from './pages/ClientControleInventaireChaletEco1ch';
 import ClientControleInventaireChaletClassique1ch from './pages/ClientControleInventaireChaletClassique1ch';
 import DirectionMissions from './pages/DirectionMissions';
+import DirectionInterventions from './pages/DirectionInterventions';
+import DirectionChoixHebergement from './pages/DirectionChoixHebergement';
+import DirectionChoixNumero from './pages/DirectionChoixNumero';
+import DirectionCreerIntervention from './pages/DirectionCreerIntervention';
+import DirectionRecapIntervention from './pages/DirectionRecapIntervention';
 import __Layout from './Layout.jsx';
 
 
@@ -176,6 +181,11 @@ export const PAGES = {
     "ClientControleInventaireChaletEco1ch": ClientControleInventaireChaletEco1ch,
     "ClientControleInventaireChaletClassique1ch": ClientControleInventaireChaletClassique1ch,
     "DirectionMissions": DirectionMissions,
+    "DirectionInterventions": DirectionInterventions,
+    "DirectionChoixHebergement": DirectionChoixHebergement,
+    "DirectionChoixNumero": DirectionChoixNumero,
+    "DirectionCreerIntervention": DirectionCreerIntervention,
+    "DirectionRecapIntervention": DirectionRecapIntervention,
 }
 
 export const pagesConfig = {
