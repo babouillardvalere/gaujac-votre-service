@@ -112,16 +112,15 @@ export default function MissionsDirectionService({ service }) {
         
         // Générer le PDF automatiquement
         try {
-          const pdfContent = await genererPDFIntervention({
+          const pdfBlob = await genererPDFIntervention({
             mission: { ...missionActuelle, taches },
             service,
             tempsTotal: dureeMinutes
           });
-          
-          const pdfBlob = new Blob([pdfContent], { type: 'application/pdf' });
+
           const pdfFile = new File([pdfBlob], `intervention_${id}.pdf`, { type: 'application/pdf' });
           const { file_url } = await base44.integrations.Core.UploadFile({ file: pdfFile });
-          
+
           updateData.pdf_url = file_url;
           toast.success('PDF généré automatiquement ✅');
         } catch (error) {
@@ -149,40 +148,97 @@ export default function MissionsDirectionService({ service }) {
   });
 
   const genererPDFIntervention = async ({ mission, service, tempsTotal }) => {
-    const prompt = `Génère un PDF professionnel d'intervention avec les données suivantes:
-    
-TYPE: ${mission.type_intervention}
-HÉBERGEMENT: ${mission.type_hebergement} ${mission.numero_hebergement}
-SERVICE: ${service}
-AGENT: ${mission.pris_en_charge_par}
-PRIORITÉ: ${mission.priorite}
-TEMPS TOTAL: ${tempsTotal} minutes
-DATE: ${format(new Date(), 'dd/MM/yyyy HH:mm')}
+    // Importer jsPDF dynamiquement
+    const { default: jsPDF } = await import('jspdf');
+    await import('jspdf-autotable');
 
-DESCRIPTION:
-${mission.description}
+    const doc = new jsPDF();
 
-TÂCHES:
-${mission.taches.map(t => `
-${t.numero}. ${t.texte}
-   Statut: ${t.faite ? '✅ FAIT' : '❌ PAS FAIT'}
-   ${t.justification ? `Justification: ${t.justification}` : ''}
-   ${t.photo_url ? `Photo: Oui` : ''}
-`).join('\n')}
+    // Ajouter le logo en haut
+    const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/user_6930cc5060a27d8dfd0bf5fd/aa24decb4_logo.png';
 
-Crée un document PDF formel avec logo camping, en-têtes, et signatures.`;
+    try {
+      // Charger l'image en base64
+      const response = await fetch(logoUrl);
+      const blob = await response.blob();
+      const reader = new FileReader();
+      const logoBase64 = await new Promise((resolve) => {
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
 
-    const response = await base44.integrations.Core.InvokeLLM({ 
-      prompt,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          pdf_base64: { type: "string" }
-        }
-      }
+      // Ajouter le logo (centré, en haut)
+      doc.addImage(logoBase64, 'PNG', 70, 10, 70, 25);
+    } catch (error) {
+      console.error('Erreur chargement logo:', error);
+    }
+
+    // En-tête
+    doc.setFontSize(20);
+    doc.setTextColor(0, 119, 168);
+    doc.text('FICHE INTERVENTION DIRECTION', 105, 45, { align: 'center' });
+
+    // Informations générales
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    let y = 60;
+
+    doc.setFont(undefined, 'bold');
+    doc.text(`TYPE: ${mission.type_intervention === 'HIVERNAGE' ? '❄️ HIVERNAGE' : '🌞 DÉSHIVERNAGE'}`, 20, y);
+    y += 8;
+    doc.text(`HÉBERGEMENT: ${mission.type_hebergement} - ${mission.numero_hebergement}`, 20, y);
+    y += 8;
+    doc.text(`SERVICE: ${service === 'TECHNIQUE' ? '🧰 Technique' : '🧽 Ménage'}`, 20, y);
+    y += 8;
+    doc.text(`AGENT: ${mission.pris_en_charge_par}`, 20, y);
+    y += 8;
+    doc.text(`PRIORITÉ: ${mission.priorite}`, 20, y);
+    y += 8;
+    doc.text(`TEMPS TOTAL: ${Math.floor(tempsTotal / 60)}h ${tempsTotal % 60}min`, 20, y);
+    y += 8;
+    doc.text(`DATE: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 20, y);
+    y += 12;
+
+    // Description
+    if (mission.description) {
+      doc.setFont(undefined, 'bold');
+      doc.text('DESCRIPTION:', 20, y);
+      y += 6;
+      doc.setFont(undefined, 'normal');
+      const descLines = doc.splitTextToSize(mission.description, 170);
+      doc.text(descLines, 20, y);
+      y += descLines.length * 6 + 10;
+    }
+
+    // Tâches
+    doc.setFont(undefined, 'bold');
+    doc.text('TÂCHES RÉALISÉES:', 20, y);
+    y += 8;
+
+    const tachesData = mission.taches.map(t => [
+      t.numero.toString(),
+      t.texte,
+      t.faite ? '✅ FAIT' : '❌ PAS FAIT',
+      t.justification || '-'
+    ]);
+
+    doc.autoTable({
+      startY: y,
+      head: [['N°', 'Tâche', 'Statut', 'Justification']],
+      body: tachesData,
+      theme: 'grid',
+      headStyles: { fillColor: [0, 174, 239], textColor: 255 },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      margin: { left: 20, right: 20 }
     });
 
-    return atob(response.pdf_base64);
+    // Signature
+    const finalY = doc.lastAutoTable.finalY + 20;
+    doc.setFont(undefined, 'italic');
+    doc.setFontSize(10);
+    doc.text('Camping Paradis - Le Domaine de Gaujac', 105, finalY, { align: 'center' });
+
+    return doc.output('blob');
   };
 
   const handlePrendreEnCharge = (mission) => {
