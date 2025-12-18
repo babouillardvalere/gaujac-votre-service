@@ -73,10 +73,8 @@ const INVENTAIRE_PREMIUM_TWINS = {
     { id: 'telecommande_clim', emoji: '❄️', label: 'Télécommande climatisation', qty: 1, service: 'TECHNIQUE' },
     { id: 'lave_vaisselle', emoji: '🍽️', label: 'Lave-vaisselle', qty: 1, service: 'TECHNIQUE' }
   ],
-  sanitaires: [
-    { id: 'kit_brosse_wc', emoji: '🚽', label: 'Kit brosse WC', qty: 1, service: 'MENAGE' }
-  ],
   menage: [
+    { id: 'kit_brosse_wc', emoji: '🚽', label: 'Kit brosse WC', qty: 1, service: 'MENAGE' },
     { id: 'seau', emoji: '🪣', label: 'Seau', qty: 1, service: 'MENAGE' },
     { id: 'bassine', emoji: '🧴', label: 'Bassine', qty: 1, service: 'MENAGE' },
     { id: 'balai', emoji: '🧹', label: 'Balai', qty: 1, service: 'MENAGE' },
@@ -136,7 +134,6 @@ export default function ClientControleInventairePremiumTwins() {
       ...INVENTAIRE_PREMIUM_TWINS.couverts,
       ...INVENTAIRE_PREMIUM_TWINS.batterie,
       ...INVENTAIRE_PREMIUM_TWINS.appareils,
-      ...INVENTAIRE_PREMIUM_TWINS.sanitaires,
       ...INVENTAIRE_PREMIUM_TWINS.menage,
       ...INVENTAIRE_PREMIUM_TWINS.literie,
       ...INVENTAIRE_PREMIUM_TWINS.exterieur

@@ -72,10 +72,8 @@ const INVENTAIRE_PREMIUM_3CH = {
     { id: 'lave_vaisselle', emoji: '🍽️', label: 'Lave-vaisselle', qty: 1, service: 'TECHNIQUE' },
     { id: 'plaques_cuisson', emoji: '🔥', label: 'Plaques de cuisson', qty: 1, service: 'TECHNIQUE' }
   ],
-  sanitaires: [
-    { id: 'kit_brosse_wc', emoji: '🚽', label: 'Kit brosse WC', qty: 1, service: 'MENAGE' }
-  ],
   menage: [
+    { id: 'kit_brosse_wc', emoji: '🚽', label: 'Kit brosse WC', qty: 1, service: 'MENAGE' },
     { id: 'seau', emoji: '🪣', label: 'Seau', qty: 1, service: 'MENAGE' },
     { id: 'bassine', emoji: '🧴', label: 'Bassine', qty: 1, service: 'MENAGE' },
     { id: 'balai', emoji: '🧹', label: 'Balai', qty: 1, service: 'MENAGE' },
@@ -135,7 +133,6 @@ export default function ClientControleInventairePremium3ch() {
       ...INVENTAIRE_PREMIUM_3CH.couverts,
       ...INVENTAIRE_PREMIUM_3CH.batterie,
       ...INVENTAIRE_PREMIUM_3CH.appareils,
-      ...INVENTAIRE_PREMIUM_3CH.sanitaires,
       ...INVENTAIRE_PREMIUM_3CH.menage,
       ...INVENTAIRE_PREMIUM_3CH.literie,
       ...INVENTAIRE_PREMIUM_3CH.exterieur
