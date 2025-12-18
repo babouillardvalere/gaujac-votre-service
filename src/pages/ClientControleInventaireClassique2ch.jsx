@@ -68,9 +68,6 @@ const INVENTAIRE_CLASSIQUE_2CH = {
     { id: 'congelateur', emoji: '🧊', label: 'Congélateur', qty: 1, service: 'TECHNIQUE' },
     { id: 'plaques_cuisson', emoji: '🔥', label: 'Plaques de cuisson', qty: 1, service: 'TECHNIQUE' }
   ],
-  sanitaires: [
-    { id: 'kit_brosse_wc', emoji: '🚽', label: 'Kit brosse WC', qty: 1, service: 'MENAGE' }
-  ],
   menage: [
     { id: 'kit_brosse_wc', emoji: '🚽', label: 'Kit brosse WC', qty: 1, service: 'MENAGE' },
     { id: 'seau', emoji: '🪣', label: 'Seau', qty: 1, service: 'MENAGE' },
