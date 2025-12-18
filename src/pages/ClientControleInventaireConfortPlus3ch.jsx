@@ -66,18 +66,16 @@ const INVENTAIRE_CONFORT_PLUS_3CH = {
     { id: 'couvercle', emoji: '🔥', label: 'Couvercle', qty: 1, service: 'MENAGE' }
   ],
   appareils: [
+    { id: 'plaques_cuisson', emoji: '🔥', label: 'Plaques de cuisson', qty: 1, service: 'TECHNIQUE' },
     { id: 'cafetiere', emoji: '☕', label: 'Cafetière électrique', qty: 1, service: 'TECHNIQUE' },
     { id: 'micro_ondes', emoji: '📡', label: 'Micro-ondes', qty: 1, service: 'TECHNIQUE' },
-    { id: 'tv', emoji: '📺', label: 'TV', qty: 1, service: 'TECHNIQUE' },
-    { id: 'telecommande_tv', emoji: '🎛️', label: 'Télécommande TV', qty: 1, service: 'TECHNIQUE' },
+    { id: 'tv', emoji: '📺', label: 'TV + télécommande', qty: 1, service: 'TECHNIQUE' },
+    { id: 'refrigerateur', emoji: '🧊', label: 'Réfrigérateur-congélateur', qty: 1, service: 'TECHNIQUE' },
     { id: 'telecommande_clim', emoji: '❄️', label: 'Télécommande climatisation', qty: 1, service: 'TECHNIQUE' },
-    { id: 'refrigerateur', emoji: '🧊', label: 'Réfrigérateur', qty: 1, service: 'TECHNIQUE' },
-    { id: 'plaques_cuisson', emoji: '🔥', label: 'Plaques de cuisson', qty: 1, service: 'TECHNIQUE' }
+    { id: 'lave_vaisselle', emoji: '🍽️', label: 'Lave-vaisselle', qty: 1, service: 'TECHNIQUE' }
   ],
   sanitaires: [
-    { id: 'lavabo', emoji: '🚰', label: 'Lavabo', qty: 1, service: 'TECHNIQUE' },
-    { id: 'wc', emoji: '🚽', label: 'WC', qty: 1, service: 'TECHNIQUE' },
-    { id: 'douche', emoji: '🚿', label: 'Douche', qty: 1, service: 'TECHNIQUE' }
+    { id: 'kit_brosse_wc', emoji: '🚽', label: 'Kit brosse WC', qty: 1, service: 'MENAGE' }
   ],
   menage: [
     { id: 'seau', emoji: '🪣', label: 'Seau', qty: 1, service: 'MENAGE' },
@@ -98,11 +96,9 @@ const INVENTAIRE_CONFORT_PLUS_3CH = {
     { id: 'cintres', emoji: '👗', label: 'Cintres', qty: 10, service: 'MENAGE' }
   ],
   exterieur: [
-    { id: 'cle_locative', emoji: '🗝️', label: 'Clé locative', qty: 1, service: 'TECHNIQUE' },
-    { id: 'carte_barriere', emoji: '🪪', label: 'Carte barrière', qty: 1, service: 'TECHNIQUE' },
-    { id: 'chaises_interieur', emoji: '🪑', label: 'Chaises intérieur', qty: 4, service: 'TECHNIQUE' },
     { id: 'table_jardin', emoji: '🍽️', label: 'Table de jardin', qty: 1, service: 'TECHNIQUE' },
-    { id: 'chaises_jardin', emoji: '🪑', label: 'Chaises de jardin', qty: 6, service: 'TECHNIQUE' }
+    { id: 'chaises_jardin', emoji: '🪑', label: 'Chaises de jardin', qty: 6, service: 'TECHNIQUE' },
+    { id: 'terrasse_couverte', emoji: '🌤️', label: 'Terrasse semi-couverte', qty: 1, service: 'TECHNIQUE' }
   ]
 };
 
