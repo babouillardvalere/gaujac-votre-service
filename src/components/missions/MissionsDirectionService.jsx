@@ -22,15 +22,28 @@ export default function MissionsDirectionService({ service }) {
   const [tempsEcoule, setTempsEcoule] = useState(0);
   const [uploadingPhoto, setUploadingPhoto] = useState(null);
 
-  const { data: missions = [], isLoading } = useQuery({
+  const { data: missions = [], isLoading, error } = useQuery({
     queryKey: ['interventions-direction', service],
     queryFn: async () => {
-      const allMissions = await base44.entities.InterventionDirection.list('-created_date', 200);
-      console.log('🔍 Toutes les missions:', allMissions);
-      console.log('🎯 Service recherché:', service);
-      const filtered = allMissions.filter(m => m.service === service);
-      console.log('✅ Missions filtrées pour', service, ':', filtered);
-      return filtered;
+      console.log('🚀 Début fetch missions pour service:', service);
+      try {
+        const allMissions = await base44.entities.InterventionDirection.list('-created_date', 200);
+        console.log('🔍 TOUTES les missions reçues:', allMissions);
+        console.log('📊 Nombre total:', allMissions.length);
+        console.log('🎯 Service recherché:', service);
+        
+        const filtered = allMissions.filter(m => {
+          console.log('Mission:', m.id, '- Service:', m.service, '- Match:', m.service === service);
+          return m.service === service;
+        });
+        
+        console.log('✅ Missions filtrées pour', service, ':', filtered);
+        console.log('📈 Nombre filtré:', filtered.length);
+        return filtered;
+      } catch (err) {
+        console.error('❌ ERREUR fetch missions:', err);
+        throw err;
+      }
     },
     refetchInterval: 30000
   });
@@ -294,8 +307,20 @@ Crée un document PDF formel avec logo camping, en-têtes, et signatures.`;
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-12">
+      <div className="flex flex-col items-center justify-center py-12 space-y-3">
         <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+        <p className="text-sm text-gray-500">Chargement missions {service}...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 rounded-lg p-6 text-center">
+        <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-3" />
+        <h3 className="font-bold text-red-700 mb-2">Erreur de chargement</h3>
+        <p className="text-sm text-red-600">{error.message}</p>
+        <p className="text-xs text-gray-500 mt-2">Console: Voir les détails</p>
       </div>
     );
   }
@@ -303,11 +328,15 @@ Crée un document PDF formel avec logo camping, en-têtes, et signatures.`;
   return (
     <div className="space-y-4">
       {/* Debug info */}
-      <div className="bg-blue-50 rounded-lg p-3 text-xs">
-        <p>📊 Total missions: {missions.length}</p>
-        <p>🎯 Service: {service}</p>
-        <p>📋 Filtre: {filterStatut}</p>
-        <p>✅ Missions filtrées: {filteredMissions.length}</p>
+      <div className="bg-blue-50 rounded-lg p-4 text-xs space-y-1 border-2 border-blue-300">
+        <p className="font-bold text-blue-900 mb-2">🔍 DEBUG MISSIONS DIRECTION</p>
+        <p>📊 Total missions chargées: <strong>{missions.length}</strong></p>
+        <p>🎯 Service actuel: <strong>{service}</strong></p>
+        <p>📋 Filtre appliqué: <strong>{filterStatut}</strong></p>
+        <p>✅ Missions affichées: <strong>{filteredMissions.length}</strong></p>
+        <p className="text-blue-700 pt-2 border-t border-blue-200">
+          👉 Ouvrez la console (F12) pour voir les logs détaillés
+        </p>
       </div>
 
       {/* Filtres */}
