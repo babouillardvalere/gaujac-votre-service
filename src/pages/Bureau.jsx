@@ -158,7 +158,18 @@ export default function Bureau() {
 
   const { data: sousMissions = [] } = useQuery({
     queryKey: ['bureau-sous-missions'],
-    queryFn: () => base44.entities.MissionInterne.filter({}, '-date_debut', 500)
+    queryFn: async () => {
+      try {
+        const allMissions = await base44.entities.MissionInterne.filter({}, '-date_debut', 500);
+        // Filtrer uniquement les sous-missions valides (dont la mission mère existe)
+        const missionMereIds = missionsDirection.map(m => m.id);
+        return allMissions.filter(m => m.mission_mere_id && missionMereIds.includes(m.mission_mere_id));
+      } catch (error) {
+        console.error('Erreur chargement sous-missions:', error);
+        return [];
+      }
+    },
+    enabled: missionsDirection.length > 0
   });
 
   // Mutations pour actions de groupe
