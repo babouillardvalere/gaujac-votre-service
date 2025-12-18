@@ -540,19 +540,25 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
               ? "Autorisez-vous notre intervenant à entrer dans votre hébergement en votre absence ?"
               : "Do you authorize our staff to enter your accommodation in your absence?"}
           </p>
-          <RadioGroup value={autorisationAcces} onValueChange={(val) => {
-            setAutorisationAcces(val);
-            if (val === 'oui') setPlagesHoraires([]);
-          }}>
-            <div className="flex items-center space-x-2 p-3 border rounded-lg">
+          <RadioGroup 
+            value={autorisationAcces} 
+            onValueChange={(val) => {
+              console.log('🔐 Autorisation changée:', val);
+              setAutorisationAcces(val);
+              if (val === 'oui') {
+                setPlagesHoraires([]);
+              }
+            }}
+          >
+            <div className={`flex items-center space-x-2 p-3 border-2 rounded-lg transition-all ${autorisationAcces === 'oui' ? 'border-green-500 bg-green-50' : 'border-gray-300'}`}>
               <RadioGroupItem value="oui" id="acces-oui" />
-              <Label htmlFor="acces-oui" className="cursor-pointer flex-1">
+              <Label htmlFor="acces-oui" className="cursor-pointer flex-1 font-medium">
                 ✔ {lang === "fr" ? "Oui" : "Yes"}
               </Label>
             </div>
-            <div className="flex items-center space-x-2 p-3 border rounded-lg">
+            <div className={`flex items-center space-x-2 p-3 border-2 rounded-lg transition-all ${autorisationAcces === 'non' ? 'border-orange-500 bg-orange-50' : 'border-gray-300'}`}>
               <RadioGroupItem value="non" id="acces-non" />
-              <Label htmlFor="acces-non" className="cursor-pointer flex-1">
+              <Label htmlFor="acces-non" className="cursor-pointer flex-1 font-medium">
                 ✖ {lang === "fr" ? "Non" : "No"}
               </Label>
             </div>
