@@ -61,6 +61,7 @@ const INVENTAIRE_CONFORT_3CH = {
     { id: 'cafetiere', emoji: '☕', label: 'Cafetière électrique', qty: 1, service: 'TECHNIQUE' },
     { id: 'micro_ondes', emoji: '📡', label: 'Micro-ondes', qty: 1, service: 'TECHNIQUE' },
     { id: 'refrigerateur', emoji: '🧊', label: 'Réfrigérateur', qty: 1, service: 'TECHNIQUE' },
+    { id: 'tv_telecommande', emoji: '📺', label: 'TV + télécommande', qty: 1, service: 'TECHNIQUE' },
     { id: 'telecommande_clim', emoji: '❄️', label: 'Télécommande climatisation', qty: 1, service: 'TECHNIQUE' },
     { id: 'plaques_cuisson', emoji: '🔥', label: 'Plaques de cuisson', qty: 1, service: 'TECHNIQUE' }
   ],

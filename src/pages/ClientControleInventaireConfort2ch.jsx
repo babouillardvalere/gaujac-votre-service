@@ -62,6 +62,7 @@ const INVENTAIRE_CONFORT_2CH = {
     { id: 'micro_ondes', emoji: '📡', label: 'Micro-ondes', qty: 1, service: 'TECHNIQUE' },
     { id: 'refrigerateur', emoji: '🧊', label: 'Réfrigérateur', qty: 1, service: 'TECHNIQUE' },
     { id: 'cafetiere', emoji: '☕', label: 'Cafetière électrique', qty: 1, service: 'TECHNIQUE' },
+    { id: 'tv_telecommande', emoji: '📺', label: 'TV + télécommande', qty: 1, service: 'TECHNIQUE' },
     { id: 'telecommande_clim', emoji: '❄️', label: 'Télécommande climatisation', qty: 1, service: 'TECHNIQUE' }
   ],
   sanitaires: [

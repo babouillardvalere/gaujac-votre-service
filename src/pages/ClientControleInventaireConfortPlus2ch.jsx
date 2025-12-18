@@ -64,7 +64,7 @@ const INVENTAIRE_CONFORT_PLUS_2CH = {
   appareils: [
     { id: 'cafetiere', emoji: '☕', label: 'Cafetière électrique', qty: 1, service: 'TECHNIQUE' },
     { id: 'micro_ondes', emoji: '📡', label: 'Micro-ondes', qty: 1, service: 'TECHNIQUE' },
-    { id: 'tv', emoji: '📺', label: 'TV + télécommande', qty: 1, service: 'TECHNIQUE' },
+    { id: 'tv_telecommande', emoji: '📺', label: 'TV + télécommande', qty: 1, service: 'TECHNIQUE' },
     { id: 'telecommande_clim', emoji: '❄️', label: 'Télécommande climatisation', qty: 1, service: 'TECHNIQUE' },
     { id: 'refrigerateur', emoji: '🧊', label: 'Réfrigérateur', qty: 1, service: 'TECHNIQUE' }
   ],
