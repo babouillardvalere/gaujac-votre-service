@@ -636,6 +636,7 @@ export default function Technique() {
           </div>
         )}
             </>
+          }
           clientsContent={
             <div className="text-center py-12 bg-gray-50 rounded-xl">
               <p className="text-gray-500">Interventions clients issues de l'inventaire</p>

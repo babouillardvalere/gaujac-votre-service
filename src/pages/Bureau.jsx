@@ -17,7 +17,7 @@ import {
   ArrowLeft, Clock, Star, AlertTriangle, TrendingUp, Loader2, 
   Users, Home as HomeIcon, Search, Building2, Filter, Calendar, CalendarDays,
   ChevronDown, ChevronUp, Eye, AlertCircle, MoreVertical, LogOut,
-  Trash2, ArrowUp, ArrowDown, CheckSquare, Square, Home, ListTodo, CheckCircle
+  Trash2, ArrowUp, ArrowDown, CheckSquare, Square, Home, ListTodo, CheckCircle, User
 } from 'lucide-react';
 import SuiviInventaireStaff from '../components/staff/SuiviInventaireStaff';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
