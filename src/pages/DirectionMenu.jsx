@@ -72,6 +72,43 @@ export default function DirectionMenu() {
         </motion.div>
 
         <div className="space-y-4">
+          {/* NOUVEAU : Pilotage Missions globales */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Link 
+              to={createPageUrl('DirectionMissions')} 
+              className="block group focus:ring-4 focus:ring-purple-500 rounded-xl"
+            >
+              <Card className="border-2 border-purple-500 hover:border-purple-600 hover:shadow-lg transition-all rounded-xl overflow-hidden bg-gradient-to-br from-purple-50 to-white">
+                <CardContent className="p-0">
+                  <div className="flex items-center p-5 min-h-[80px]">
+                    <div className="w-14 h-14 rounded-xl bg-purple-600 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                      <span className="text-3xl">🎯</span>
+                    </div>
+                    <div className="ml-5 flex-1">
+                      <h2 className="font-heading text-lg text-purple-700 group-hover:text-purple-800 transition-colors">
+                        {lang === 'fr' ? '🎯 Missions Direction' : '🎯 Management Missions'}
+                      </h2>
+                      <p className="font-body text-sm text-gray-600">
+                        {lang === 'fr' 
+                          ? 'Créer et distribuer des missions globales'
+                          : 'Create and distribute global missions'}
+                      </p>
+                    </div>
+                    <div className="text-purple-600 group-hover:translate-x-1 transition-all">
+                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          </motion.div>
+
           {menuItems.map((item, index) => (
             <motion.div
               key={item.href}
