@@ -1,24 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 
-export default function InterventionTimer({ startTime, isActive = true }) {
+export default function InterventionTimer({ startTime, endTime, isActive = true }) {
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
-    if (!startTime || !isActive) return;
+    if (!startTime) return;
 
     const start = new Date(startTime).getTime();
     
     const updateElapsed = () => {
-      const now = Date.now();
-      setElapsed(Math.floor((now - start) / 1000));
+      const end = endTime ? new Date(endTime).getTime() : Date.now();
+      setElapsed(Math.floor((end - start) / 1000));
     };
 
     updateElapsed();
-    const interval = setInterval(updateElapsed, 1000);
-
-    return () => clearInterval(interval);
-  }, [startTime, isActive]);
+    
+    if (isActive) {
+      const interval = setInterval(updateElapsed, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [startTime, endTime, isActive]);
 
   const formatTime = (seconds) => {
     const h = Math.floor(seconds / 3600);
