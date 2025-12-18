@@ -590,7 +590,7 @@ Crée un document PDF formel avec logo camping, en-têtes, et signatures.`;
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
                     <span className="text-gray-600">Type:</span>
-                    <Badge className={mission.type_intervention === 'HIVERNAGE' ? 'bg-blue-500 ml-2' : 'bg-yellow-500 ml-2'}>
+                    <Badge className={selectedMission.type_intervention === 'HIVERNAGE' ? 'bg-blue-500 ml-2' : 'bg-yellow-500 ml-2'}>
                       {selectedMission.type_intervention === 'HIVERNAGE' ? '❄️ Hivernage' : '🌞 Déshivernage'}
                     </Badge>
                   </div>
