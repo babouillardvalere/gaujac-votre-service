@@ -68,6 +68,7 @@ import ClientSuiviSearch from './pages/ClientSuiviSearch';
 import ClientSuiviDetail from './pages/ClientSuiviDetail';
 import Technique from './pages/Technique';
 import Menage from './pages/Menage';
+import ClientControleInventaireEmplacement from './pages/ClientControleInventaireEmplacement';
 import __Layout from './Layout.jsx';
 
 
@@ -142,6 +143,7 @@ export const PAGES = {
     "ClientSuiviDetail": ClientSuiviDetail,
     "Technique": Technique,
     "Menage": Menage,
+    "ClientControleInventaireEmplacement": ClientControleInventaireEmplacement,
 }
 
 export const pagesConfig = {

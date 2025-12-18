@@ -51,6 +51,7 @@ export default function ClientControleInventaire() {
   const [submitting, setSubmitting] = useState(false);
   const [showRecap, setShowRecap] = useState(false);
   const [interventionsPreview, setInterventionsPreview] = useState({ menage: [], technique: [] });
+  const [urgentDeclaration, setUrgentDeclaration] = useState(false);
 
   /* =======================
      OBJETS CRITIQUES
@@ -151,22 +152,34 @@ export default function ClientControleInventaire() {
 
     const intervention = await base44.entities.Intervention.create({
       type,
-      statut: "PRISE_EN_CHARGE",
+      statut: "OUVERTE",
       logement: numero,
       client_nom: nom,
       client_prenom: prenom,
       fiche_arrivee_id: ficheId,
       origine: "ARRIVEE",
-      source: "INVENTAIRE_ARRIVEE"
+      source: "INVENTAIRE_ARRIVEE",
+      urgent: urgentDeclaration,
+      description: `Intervention ${type} - Inventaire arrivée`
     });
 
     await base44.entities.InterventionEvent.create({
       intervention_id: intervention.id,
       fiche_arrivee_id: ficheId,
-      type: "PRISE_EN_CHARGE",
+      type: "DEMANDE_RECUE",
       message_client: "Votre demande a bien été enregistrée et transmise à nos équipes.",
       visible_client: true,
-      at: new Date().toISOString()
+      at: new Date().toISOString(),
+      auteur: "Système"
+    });
+
+    // Notification bureau
+    await base44.entities.Notification.create({
+      type: urgentDeclaration ? 'INCIDENT_URGENT' : 'NOUVEAU_INCIDENT',
+      titre: `${urgentDeclaration ? '🔴 URGENT - ' : ''}Intervention ${type} - ${nom} ${prenom}`,
+      message: `Arrivée inventaire - ${numero} - ${items.length} élément(s)`,
+      destinataire_role: 'RECEPTION',
+      statut: 'non_lu'
     });
   };
 
@@ -249,6 +262,29 @@ export default function ClientControleInventaire() {
           </CardContent>
         </Card>
       </LazyInventaire>
+
+      {/* Bouton Urgence */}
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-semibold text-gray-700 mb-1">
+                {lang === "fr" ? "Ce problème empêche-t-il votre installation immédiate ?" : "Does this prevent your immediate installation?"}
+              </p>
+              <p className="text-xs text-gray-500">
+                {lang === "fr" ? "À cocher uniquement si l'hébergement n'est pas utilisable" : "Check only if accommodation is not usable"}
+              </p>
+            </div>
+            <Button
+              variant={urgentDeclaration ? "default" : "outline"}
+              className={urgentDeclaration ? "bg-red-500 hover:bg-red-600" : ""}
+              onClick={() => setUrgentDeclaration(!urgentDeclaration)}
+            >
+              {urgentDeclaration ? "🔴 URGENT" : "⚪ Non"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <SignaturePad onSave={setSignature} disabled={submitting} />
 

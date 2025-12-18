@@ -208,6 +208,15 @@ export default function Signalement() {
         origine: 'signalement'
       });
 
+      // Notification bureau
+      await base44.entities.Notification.create({
+        type: urgent ? 'INCIDENT_URGENT' : 'NOUVEAU_INCIDENT',
+        titre: `${urgent ? '🔴 URGENT - ' : ''}Signalement ${isTechnique ? 'technique' : 'ménage'} - ${userData.nom}`,
+        message: `Séjour - ${userData.hebergementNumero} - ${selectedProblems[0]}`,
+        destinataire_role: 'RECEPTION',
+        statut: 'non_lu'
+      });
+
       // Créer un log de création
       await base44.entities.InterventionLog.create({
         incident_id: newIncident.id,

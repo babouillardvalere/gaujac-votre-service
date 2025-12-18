@@ -130,7 +130,7 @@ export default function Menage() {
       message: "L'équipe ménage est en cours d'intervention."
     });
 
-    await notifyBureau(`Intervention ménage prise en charge par ${collaborateurNom}`);
+    await notifyBureau(`Intervention ménage prise en charge par ${collaborateurNom} - ${incident.logement || incident.emplacement}`);
   };
 
   const handleTerminer = async (incident) => {

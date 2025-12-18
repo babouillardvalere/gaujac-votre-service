@@ -150,7 +150,7 @@ export default function Technique() {
       message: "L'intervention technique a commencé."
     });
 
-    await notifyBureau(`Intervention prise en charge par ${collaborateurNom}`);
+    await notifyBureau(`Intervention technique prise en charge par ${collaborateurNom} - ${incident.logement || incident.emplacement}`);
   };
 
   const handlePhotoAvantUploaded = async (photoData) => {
