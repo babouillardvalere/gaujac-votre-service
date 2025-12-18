@@ -74,6 +74,7 @@ import ClientControleInventairePremiumTwins from './pages/ClientControleInventai
 import ClientControleInventairePremium3ch from './pages/ClientControleInventairePremium3ch';
 import ClientControleInventairePremium2ch from './pages/ClientControleInventairePremium2ch';
 import ClientControleInventaireConfortPlus3ch from './pages/ClientControleInventaireConfortPlus3ch';
+import ClientControleInventaireEcoClim from './pages/ClientControleInventaireEcoClim';
 import __Layout from './Layout.jsx';
 
 
@@ -154,6 +155,7 @@ export const PAGES = {
     "ClientControleInventairePremium3ch": ClientControleInventairePremium3ch,
     "ClientControleInventairePremium2ch": ClientControleInventairePremium2ch,
     "ClientControleInventaireConfortPlus3ch": ClientControleInventaireConfortPlus3ch,
+    "ClientControleInventaireEcoClim": ClientControleInventaireEcoClim,
 }
 
 export const pagesConfig = {
