@@ -30,7 +30,9 @@ export default function ClientControleInventaire() {
 
   const [quantities, setQuantities] = useState({});
   const [photos, setPhotos] = useState({});
+  const [remarques, setRemarques] = useState({});
   const [urgencies, setUrgencies] = useState({});
+  const [problemesTechniques, setProblemesTechniques] = useState({});
   const [autorisationAcces, setAutorisationAcces] = useState("");
   const [evaluationProprete, setEvaluationProprete] = useState("");
   const [commentaireProprete, setCommentaireProprete] = useState("");
@@ -56,17 +58,41 @@ export default function ClientControleInventaire() {
     setPhotos(prev => ({ ...prev, [id]: photoArray }));
   };
 
+  const handleRemarqueChange = (id, text) => {
+    setRemarques(prev => ({ ...prev, [id]: text }));
+  };
+
   const handleUrgencyChange = (id, value) => {
     setUrgencies(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleProblemeTechnique = (id, value) => {
+    setProblemesTechniques(prev => ({ ...prev, [id]: value }));
   };
 
   const analyzeAnomalies = () => {
     const menage = [];
     const technique = [];
+    const reception = [];
+
+    const ARTICLES_TECHNIQUES = [
+      'tv', 'refrigerateur', 'micro_ondes', 'chauffage', 'plaques_cuisson', 'plaque_cuisson',
+      'chauffe_eau', 'wc', 'douche', 'lavabo', 'feux_gaz', 'telecommande_clim', 'climatisation',
+      'lave_vaisselle', 'congelateur', 'evier', 'cafetiere', 'hotte', 'cumulus', 'chauffe_eau_gaz',
+      'seche_serviette', 'seche_cheveux', 'extincteur', 'detecteur_fumee'
+    ];
+
+    const ARTICLES_RECEPTION = [
+      'cle_locatif', 'cle_locative', 'carte_barriere', 'badge', 'table_jardin', 'chaises_jardin',
+      'salon_jardin', 'bancs_jardin', 'table_interieur', 'chaises_interieur'
+    ];
 
     items.forEach(item => {
       const declared = quantities[item.id] !== undefined ? quantities[item.id] : item.quantity;
-      if (declared < item.quantity) {
+      const hasProblemeTechnique = problemesTechniques[item.id] || false;
+      const hasAnomaly = declared < item.quantity || hasProblemeTechnique;
+
+      if (hasAnomaly) {
         const obj = {
           id: item.id,
           label: item.label,
@@ -74,19 +100,24 @@ export default function ClientControleInventaire() {
           qtyAttendue: item.quantity,
           qtyDeclaree: declared,
           qtyManquante: item.quantity - declared,
+          problemeTechnique: hasProblemeTechnique,
           urgent: urgencies[item.id] || false,
-          photos: photos[item.id] || []
+          photos: photos[item.id] || [],
+          remarque: remarques[item.id] || ''
         };
 
-        const isTechnique = ['tv', 'refrigerateur', 'micro_ondes', 'chauffage', 'plaques_cuisson', 
-                             'chauffe_eau', 'wc', 'douche', 'lavabo', 'feux_gaz', 'telecommande_clim',
-                             'lave_vaisselle', 'congelateur', 'evier', 'cafetiere'].includes(item.id);
-        
-        (isTechnique ? technique : menage).push(obj);
+        // Logique d'orientation automatique
+        if (ARTICLES_TECHNIQUES.includes(item.id)) {
+          technique.push(obj);
+        } else if (ARTICLES_RECEPTION.includes(item.id)) {
+          reception.push(obj);
+        } else {
+          menage.push(obj);
+        }
       }
     });
 
-    return { menage, technique };
+    return { menage, technique, reception };
   };
 
   const handlePrepareSubmit = () => {
@@ -100,8 +131,8 @@ export default function ClientControleInventaire() {
       return;
     }
 
-    const { menage, technique } = analyzeAnomalies();
-    const hasAnomalies = menage.length > 0 || technique.length > 0 || evaluationProprete === "pas_satisfaisant";
+    const { menage, technique, reception } = analyzeAnomalies();
+    const hasAnomalies = menage.length > 0 || technique.length > 0 || reception.length > 0 || evaluationProprete === "pas_satisfaisant";
 
     if (hasAnomalies && !signature) {
       toast.error(lang === "fr" ? "Signature obligatoire en cas d'anomalie" : "Signature required");
@@ -117,15 +148,27 @@ export default function ClientControleInventaire() {
     const hasUrgent = items.some(i => i.urgent);
     const allPhotos = items.flatMap(i => i.photos);
 
-    // Description détaillée pour l'intervention
-    const descriptionComplete = items.map(i => 
-      `${i.emoji} ${i.label}: ${i.qtyManquante} manquant(s)${i.urgent ? ' 🔴 URGENT' : ''}`
-    ).join('\n');
+    // Description détaillée pour l'intervention avec remarques
+    const descriptionComplete = items.map(i => {
+      let desc = `${i.emoji} ${i.label}`;
+      if (i.problemeTechnique) {
+        desc += `: Défectueux / Ne fonctionne pas`;
+      } else if (i.qtyManquante > 0) {
+        desc += `: ${i.qtyManquante} manquant(s)`;
+      }
+      if (i.remarque) {
+        desc += `\n  💬 ${i.remarque}`;
+      }
+      if (i.urgent) {
+        desc += ' 🔴 URGENT';
+      }
+      return desc;
+    }).join('\n\n');
 
     const incident = await base44.entities.Incident.create({
       stay_id: `ARR-${numero}-${dateArrivee.replace(/-/g, '')}-${Math.random().toString(36).substring(2, 8)}`,
       type: service === "MENAGE" ? "menage" : "technique",
-      categorie: service === "MENAGE" ? "nettoyage" : "divers_technique",
+      categorie: service === "MENAGE" ? "nettoyage" : service === "RECEPTION" ? "autre" : "divers_technique",
       description: descriptionComplete,
       urgent: hasUrgent,
       autorisation_acces: autorisationAcces,
@@ -141,23 +184,41 @@ export default function ClientControleInventaire() {
     });
 
     // Notification unique regroupée par service
-    const detailsItems = items.map(i => 
-      `• ${i.emoji} ${i.label}: ${i.qtyManquante} manquant(s)${i.urgent ? ' 🔴' : ''}`
-    ).join('\n');
+    const detailsItems = items.map(i => {
+      let line = `• ${i.emoji} ${i.label}`;
+      if (i.problemeTechnique) {
+        line += `: ⚠️ Défectueux`;
+      } else if (i.qtyManquante > 0) {
+        line += `: ${i.qtyManquante} manquant(s)`;
+      }
+      if (i.remarque) {
+        line += `\n  💬 ${i.remarque}`;
+      }
+      if (i.urgent) {
+        line += ' 🔴';
+      }
+      return line;
+    }).join('\n');
+
+    const serviceLabel = service === 'MENAGE' ? '🧹 Ménage' : 
+                         service === 'TECHNIQUE' ? '🔧 Technique' : 
+                         '🏠 Réception';
 
     const messageNotif = `📍 Hébergement: ${categorie} ${numero}
 👤 Client: ${prenom} ${nom}
 📅 Séjour: ${dateArrivee} → ${dateDepart}
 🔐 Accès: ${autorisationAcces === 'oui' ? '✅ Autorisé en absence' : '❌ Présence client requise'}
 
-📋 Anomalies détectées (${items.length}):
+📋 ${items.length} anomalie(s) ${service}:
 ${detailsItems}
 
-${allPhotos.length > 0 ? `📸 ${allPhotos.length} photo(s) jointe(s)` : ''}`;
+${allPhotos.length > 0 ? `📸 ${allPhotos.length} photo(s) jointe(s)` : ''}
+
+📄 Voir la fiche complète pour le PDF du contrôle inventaire`;
 
     await base44.entities.Notification.create({
       type: hasUrgent ? 'INCIDENT_URGENT' : 'NOUVEAU_INCIDENT',
-      titre: `${hasUrgent ? '🔴 URGENT - ' : ''}${service === 'MENAGE' ? '🧹 Ménage' : '🔧 Technique'} - ${numero}`,
+      titre: `${hasUrgent ? '🔴 URGENT - ' : ''}${serviceLabel} - ${numero}`,
       message: messageNotif,
       destinataire_role: 'RECEPTION',
       statut: 'non_lu'
@@ -169,7 +230,7 @@ ${allPhotos.length > 0 ? `📸 ${allPhotos.length} photo(s) jointe(s)` : ''}`;
   const handleFinalSubmit = async () => {
     setSubmitting(true);
     try {
-      const { menage, technique } = analyzeAnomalies();
+      const { menage, technique, reception } = analyzeAnomalies();
 
       const allPhotos = {};
       Object.keys(photos).forEach(key => {
@@ -198,15 +259,16 @@ ${allPhotos.length > 0 ? `📸 ${allPhotos.length} photo(s) jointe(s)` : ''}`;
       const interventionMenage = await createIntervention({ service: "MENAGE", items: menage, ficheId: fiche.id });
       const interventionTechnique = await createIntervention({ service: "TECHNIQUE", items: technique, ficheId: fiche.id });
 
-      // Notification globale RÉCEPTION (vision consolidée)
-      if (menage.length > 0 || technique.length > 0) {
-        const totalAnomalies = menage.length + technique.length;
-        const totalUrgent = [...menage, ...technique].filter(i => i.urgent).length;
-        const totalPhotos = [...menage, ...technique].flatMap(i => i.photos).length;
+      // Notification globale RÉCEPTION (vision consolidée multi-services)
+      if (menage.length > 0 || technique.length > 0 || reception.length > 0) {
+        const totalAnomalies = menage.length + technique.length + reception.length;
+        const totalUrgent = [...menage, ...technique, ...reception].filter(i => i.urgent).length;
+        const totalPhotos = [...menage, ...technique, ...reception].flatMap(i => i.photos).length;
 
         const resumeServices = [];
         if (technique.length > 0) resumeServices.push(`🔧 ${technique.length} technique`);
         if (menage.length > 0) resumeServices.push(`🧹 ${menage.length} ménage`);
+        if (reception.length > 0) resumeServices.push(`🏠 ${reception.length} réception`);
 
         const messageReception = `📋 CONTRÔLE INVENTAIRE VALIDÉ
 
@@ -300,10 +362,14 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
               item={{ ...item, emoji: item.icon, qty: item.quantity }}
               quantity={quantities[item.id]}
               photos={photos[item.id] || []}
+              remarque={remarques[item.id] || ''}
               onQuantityChange={handleQuantityChange}
               onPhotosChange={handlePhotosChange}
+              onRemarqueChange={handleRemarqueChange}
               onUrgencyChange={handleUrgencyChange}
+              onProblemeTechnique={handleProblemeTechnique}
               urgent={urgencies[item.id]}
+              problemeTechniqueSignale={problemesTechniques[item.id]}
               lang={lang}
             />
           ))}
@@ -404,50 +470,60 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
             </div>
 
             {(() => {
-              const { menage, technique } = analyzeAnomalies();
+              const { menage, technique, reception } = analyzeAnomalies();
+              const renderItems = (items, bgColor) => items.map(m => (
+                <div key={m.id} className={`text-sm p-3 ${bgColor} rounded mb-2 border`}>
+                  <p className="font-semibold">
+                    {m.emoji} {m.label}
+                    {m.urgent && <span className="ml-2 text-red-600 font-bold">🔴 URGENT</span>}
+                  </p>
+                  {m.problemeTechnique && (
+                    <p className="text-xs text-orange-600 mt-1">⚠️ {lang === "fr" ? "Équipement défectueux" : "Defective equipment"}</p>
+                  )}
+                  {m.qtyManquante > 0 && (
+                    <p className="text-xs text-red-600 mt-1">
+                      {lang === "fr" ? "Manquant" : "Missing"}: {m.qtyManquante}
+                    </p>
+                  )}
+                  {m.remarque && (
+                    <p className="text-xs text-gray-700 mt-2 italic bg-white/50 p-2 rounded">
+                      💬 {m.remarque}
+                    </p>
+                  )}
+                  {m.photos?.length > 0 && (
+                    <div className="flex gap-2 mt-2">
+                      {m.photos.map((p, idx) => (
+                        <img key={idx} src={p} alt={`Photo ${idx + 1}`} className="w-16 h-16 object-cover rounded border-2 border-white" />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ));
+
               return (
                 <>
-                  {menage.length > 0 && (
-                    <div>
-                      <h3 className="font-semibold mb-2">🧹 {lang === "fr" ? "Interventions Ménage" : "Housekeeping"}</h3>
-                      {menage.map(m => (
-                        <div key={m.id} className="text-sm p-3 bg-yellow-50 rounded mb-2">
-                          <p>{m.emoji} {m.label}: {m.qtyManquante} {lang === "fr" ? "manquant(s)" : "missing"}
-                            {m.urgent && <span className="ml-2 text-red-600 font-bold">🔴 URGENT</span>}
-                          </p>
-                          {m.photos?.length > 0 && (
-                            <div className="flex gap-2 mt-2">
-                              {m.photos.map((p, idx) => (
-                                <img key={idx} src={p} alt={`Photo ${idx + 1}`} className="w-16 h-16 object-cover rounded border" />
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
                   {technique.length > 0 && (
                     <div>
-                      <h3 className="font-semibold mb-2">🔧 {lang === "fr" ? "Interventions Technique" : "Technical"}</h3>
-                      {technique.map(t => (
-                        <div key={t.id} className="text-sm p-3 bg-blue-50 rounded mb-2">
-                          <p>{t.emoji} {t.label}: {t.qtyManquante} {lang === "fr" ? "manquant(s)" : "missing"}
-                            {t.urgent && <span className="ml-2 text-red-600 font-bold">🔴 URGENT</span>}
-                          </p>
-                          {t.photos?.length > 0 && (
-                            <div className="flex gap-2 mt-2">
-                              {t.photos.map((p, idx) => (
-                                <img key={idx} src={p} alt={`Photo ${idx + 1}`} className="w-16 h-16 object-cover rounded border" />
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                      <h3 className="font-semibold mb-2 text-blue-700">🔧 {lang === "fr" ? "Interventions Technique" : "Technical"} ({technique.length})</h3>
+                      {renderItems(technique, 'bg-blue-50')}
                     </div>
                   )}
 
-                  {menage.length === 0 && technique.length === 0 && (
+                  {menage.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold mb-2 text-yellow-700">🧹 {lang === "fr" ? "Interventions Ménage" : "Housekeeping"} ({menage.length})</h3>
+                      {renderItems(menage, 'bg-yellow-50')}
+                    </div>
+                  )}
+
+                  {reception.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold mb-2 text-green-700">🏠 {lang === "fr" ? "Réception / Logistique" : "Reception / Logistics"} ({reception.length})</h3>
+                      {renderItems(reception, 'bg-green-50')}
+                    </div>
+                  )}
+
+                  {menage.length === 0 && technique.length === 0 && reception.length === 0 && (
                     <p className="text-center text-green-600">✅ {lang === "fr" ? "Aucune anomalie signalée" : "No anomalies reported"}</p>
                   )}
                 </>
