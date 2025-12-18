@@ -69,9 +69,7 @@ const INVENTAIRE_CLASSIQUE_2CH = {
     { id: 'plaques_cuisson', emoji: '🔥', label: 'Plaques de cuisson', qty: 1, service: 'TECHNIQUE' }
   ],
   sanitaires: [
-    { id: 'wc', emoji: '🚽', label: 'WC', qty: 1, service: 'TECHNIQUE' },
-    { id: 'lavabo', emoji: '🚰', label: 'Lavabo', qty: 1, service: 'TECHNIQUE' },
-    { id: 'douche', emoji: '🚿', label: 'Douche', qty: 1, service: 'TECHNIQUE' }
+    { id: 'kit_brosse_wc', emoji: '🚽', label: 'Kit brosse WC', qty: 1, service: 'MENAGE' }
   ],
   menage: [
     { id: 'kit_brosse_wc', emoji: '🚽', label: 'Kit brosse WC', qty: 1, service: 'MENAGE' },
@@ -178,9 +176,22 @@ export default function ClientControleInventaireClassique2ch() {
     return { menage, technique };
   };
 
+  const [autorisationAcces, setAutorisationAcces] = useState("");
+  const [plagesHoraires, setPlagesHoraires] = useState([]);
+
   const handlePrepareSubmit = () => {
     if (!noteGlobale) {
       toast.error(lang === "fr" ? "Veuillez donner votre ressenti global" : "Please rate your overall impression");
+      return;
+    }
+
+    if (!autorisationAcces) {
+      toast.error(lang === "fr" ? "Veuillez indiquer l'autorisation d'accès" : "Please indicate access authorization");
+      return;
+    }
+
+    if (autorisationAcces === "non" && plagesHoraires.length === 0) {
+      toast.error(lang === "fr" ? "Veuillez sélectionner au moins une plage horaire" : "Please select at least one time slot");
       return;
     }
 
@@ -252,7 +263,9 @@ export default function ClientControleInventaireClassique2ch() {
         })),
         evaluation_proprete: noteGlobale,
         commentaire_proprete: commentaireGlobal,
-        signature_url: signature
+        signature_url: signature,
+        autorisation_acces: autorisationAcces,
+        plage_horaire_client: autorisationAcces === 'non' ? plagesHoraires.join(', ') : null
       });
 
       await createInterventionClassique2ch({ service: "MENAGE", items: menage, ficheId: fiche.id });
@@ -392,6 +405,73 @@ export default function ClientControleInventaireClassique2ch() {
         </Card>
       ))}
 
+      <Card className="mb-6 border-2 border-[#FFA500]">
+        <CardContent className="p-6">
+          <h3 className="font-semibold text-[#0077A8] mb-3 flex items-center gap-2">
+            🔐 {lang === "fr" ? "Autorisation d'accès *" : "Access authorization *"}
+          </h3>
+          <p className="text-sm text-gray-600 mb-4">
+            {lang === "fr" 
+              ? "Autorisez-vous notre intervenant à entrer dans votre hébergement en votre absence ?"
+              : "Do you authorize our staff to enter your accommodation in your absence?"}
+          </p>
+          <div className="space-y-3">
+            <label className={`flex items-center space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${autorisationAcces === 'oui' ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:border-green-300'}`}>
+              <input
+                type="radio"
+                name="autorisation"
+                value="oui"
+                checked={autorisationAcces === 'oui'}
+                onChange={(e) => {
+                  setAutorisationAcces(e.target.value);
+                  setPlagesHoraires([]);
+                }}
+                className="w-5 h-5"
+              />
+              <span className="font-medium">✔ {lang === "fr" ? "Oui" : "Yes"}</span>
+            </label>
+            <label className={`flex items-center space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${autorisationAcces === 'non' ? 'border-orange-500 bg-orange-50' : 'border-gray-300 hover:border-orange-300'}`}>
+              <input
+                type="radio"
+                name="autorisation"
+                value="non"
+                checked={autorisationAcces === 'non'}
+                onChange={(e) => setAutorisationAcces(e.target.value)}
+                className="w-5 h-5"
+              />
+              <span className="font-medium">✖ {lang === "fr" ? "Non" : "No"}</span>
+            </label>
+          </div>
+
+          {autorisationAcces === "non" && (
+            <div className="mt-4 p-4 bg-orange-50 rounded-lg border-2 border-orange-300">
+              <h4 className="font-semibold text-orange-800 mb-3">
+                ⏰ {lang === "fr" ? "Plages horaires possibles:" : "Available time slots:"}
+              </h4>
+              <div className="space-y-2">
+                {['09h - 12h', '14h - 16h', '17h - 19h'].map(plage => (
+                  <label key={plage} className="flex items-center space-x-3 p-2 hover:bg-orange-100 rounded cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={plagesHoraires.includes(plage)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setPlagesHoraires([...plagesHoraires, plage]);
+                        } else {
+                          setPlagesHoraires(plagesHoraires.filter(p => p !== plage));
+                        }
+                      }}
+                      className="w-5 h-5"
+                    />
+                    <span className="text-sm font-medium">{plage}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <Card className="mb-6">
         <CardContent className="p-4">
           <h3 className="font-semibold text-[#0077A8] mb-3">
@@ -453,6 +533,26 @@ export default function ClientControleInventaireClassique2ch() {
               <p><strong>Mobil-home:</strong> {mh}</p>
               <p><strong>{lang === "fr" ? "Client" : "Guest"}:</strong> {prenom} {nom}</p>
               <p><strong>{lang === "fr" ? "Arrivée" : "Arrival"}:</strong> {dateArrivee} → {dateDepart}</p>
+            </div>
+
+            <div className="bg-orange-50 p-4 rounded-lg border-2 border-orange-400">
+              <p className="font-bold text-orange-800">
+                🔐 {lang === "fr" ? "Autorisation d'accès" : "Access authorization"}: {autorisationAcces === 'oui' ? '✅ Oui' : '❌ Non'}
+              </p>
+              {autorisationAcces === 'non' && plagesHoraires.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-xs text-orange-700 font-semibold mb-1">
+                    {lang === "fr" ? "Plages horaires:" : "Time slots:"}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {plagesHoraires.map(plage => (
+                      <span key={plage} className="px-2 py-1 bg-orange-200 text-orange-900 text-xs rounded">
+                        {plage}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {(() => {
