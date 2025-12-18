@@ -77,13 +77,27 @@ export default function ClientResume() {
     
     try {
       const doc = new jsPDF('p', 'mm', 'a4');
-      let yPos = 20;
+      let yPos = 10;
 
-      // Header avec logo (texte)
-      doc.setFontSize(18);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Camping Paradis - Le Domaine de Gaujac', 105, yPos, { align: 'center' });
-      yPos += 8;
+      // Logo du camping
+      const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/user_6930cc5060a27d8dfd0bf5fd/aa24decb4_logo.png';
+      try {
+        const response = await fetch(logoUrl);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        const logoBase64 = await new Promise((resolve) => {
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(blob);
+        });
+        doc.addImage(logoBase64, 'PNG', 70, yPos, 70, 25);
+        yPos += 30;
+      } catch (error) {
+        console.error('Erreur logo:', error);
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Camping Paradis - Le Domaine de Gaujac', 105, yPos, { align: 'center' });
+        yPos += 8;
+      }
       
       doc.setFontSize(14);
       doc.setFont('helvetica', 'normal');
