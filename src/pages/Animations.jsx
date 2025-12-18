@@ -4,20 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Music, ArrowLeft, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '../utils';
-import ServiceTabs from '../components/missions/ServiceTabs';
-import MissionsDirectionTab from '../components/missions/MissionsDirectionTab';
-import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
 export default function Animations() {
   const { t, lang } = useTranslation();
   const navigate = useNavigate();
-
-  const { data: missions = [] } = useQuery({
-    queryKey: ['missions-internes', 'ANIMATIONS'],
-    queryFn: () => base44.entities.MissionInterne.filter({ service: 'ANIMATIONS' }, '-date_debut', 100),
-    refetchInterval: 60000
-  });
 
   return (
     <div className="min-h-screen">
@@ -34,13 +25,7 @@ export default function Animations() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6">
-        <ServiceTabs
-          service="ANIMATIONS"
-          interventionsCount={0}
-          missionsCount={missions.filter(m => m.statut === 'A_FAIRE').length}
-          lang={lang}
-          interventionsContent={
-            <Card className="border-2 border-[#a855f7]/30 rounded-xl">
+        <Card className="border-2 border-[#a855f7]/30 rounded-xl">
               <CardHeader>
                 <CardTitle className="font-heading text-[#0077A8]">
                   {lang === 'fr' ? 'Gestion Animations' : 'Events Management'}
@@ -58,9 +43,6 @@ export default function Animations() {
                 </ul>
               </CardContent>
             </Card>
-          }
-          missionsContent={<MissionsDirectionTab service="ANIMATIONS" lang={lang} />}
-        />
       </div>
     </div>
   );

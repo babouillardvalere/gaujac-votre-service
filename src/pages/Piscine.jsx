@@ -16,8 +16,6 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import ServiceTabs from '../components/missions/ServiceTabs';
-import MissionsDirectionTab from '../components/missions/MissionsDirectionTab';
 import { createPageUrl } from '../utils';
 
 const PASSWORD = '2024TECH';
@@ -51,12 +49,7 @@ export default function Piscine() {
     enabled: isAuthenticated
   });
 
-  const { data: missions = [] } = useQuery({
-    queryKey: ['missions-internes', 'BNSSA'],
-    queryFn: () => base44.entities.MissionInterne.filter({ service: 'BNSSA' }, '-date_debut', 100),
-    enabled: isAuthenticated,
-    refetchInterval: 60000
-  });
+
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Piscine.create(data),
@@ -159,14 +152,7 @@ export default function Piscine() {
       </div>
 
       <div className="max-w-4xl mx-auto">
-        <ServiceTabs
-          service="BNSSA"
-          interventionsCount={0}
-          missionsCount={missions.filter(m => m.statut === 'A_FAIRE').length}
-          lang="fr"
-          interventionsContent={
-            <>
-              <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6">
                 <h2 className="font-heading text-lg">Mesures quotidiennes</h2>
                 <Button
                   onClick={() => setShowForm(!showForm)}
@@ -362,10 +348,6 @@ export default function Piscine() {
             )}
           </CardContent>
         </Card>
-            </>
-          }
-          missionsContent={<MissionsDirectionTab service="BNSSA" lang="fr" />}
-        />
       </div>
     </div>
   );

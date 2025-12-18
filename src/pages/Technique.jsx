@@ -12,7 +12,6 @@ import MettreEnAttenteDialog from '../components/MettreEnAttenteDialog';
 import PhotoInterventionCapture from '../components/PhotoInterventionCapture';
 import InterventionTimer from '../components/InterventionTimer';
 import ServiceTabs from '../components/missions/ServiceTabs';
-import MissionsDirectionTab from '../components/missions/MissionsDirectionTab';
 import MissionsDirectionService from '../components/missions/MissionsDirectionService';
 
 import { Button } from '@/components/ui/button';
@@ -83,9 +82,9 @@ export default function Technique() {
     refetchInterval: 30000
   });
 
-  const { data: missions = [] } = useQuery({
-    queryKey: ['missions-internes', 'TECHNIQUE'],
-    queryFn: () => base44.entities.MissionInterne.filter({ service: 'TECHNIQUE' }, '-date_debut', 100),
+  const { data: missionsDirection = [] } = useQuery({
+    queryKey: ['interventions-direction', 'TECHNIQUE'],
+    queryFn: () => base44.entities.InterventionDirection.filter({ service: 'TECHNIQUE' }, '-created_date', 100),
     refetchInterval: 60000
   });
 
@@ -424,8 +423,10 @@ export default function Technique() {
         <ServiceTabs
           service="TECHNIQUE"
           interventionsCount={incidents.filter(i => i.statut === 'en_attente').length}
-          missionsCount={missions.filter(m => m.statut === 'A_FAIRE').length}
+          missionsCount={missionsDirection.filter(m => m.statut === 'A_FAIRE').length}
           lang={lang}
+          clientsTab={true}
+          missionsDirectionTab={true}
           interventionsContent={
             <>
               {/* Barre de recherche */}
@@ -636,7 +637,6 @@ export default function Technique() {
         )}
             </>
           }
-          missionsContent={<MissionsDirectionTab service="TECHNIQUE" lang={lang} />}
         />
       </div>
 

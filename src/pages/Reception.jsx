@@ -7,7 +7,6 @@ import ReceptionArrivees from '../components/reception/ReceptionArrivees';
 import ReceptionDeparts from '../components/reception/ReceptionDeparts';
 import JournalInterventions from '../components/reception/JournalInterventions';
 import CollaborateurNotificationBell from '../components/CollaborateurNotificationBell';
-import MissionsDirectionTab from '../components/missions/MissionsDirectionTab';
 import { runAutoArchiving } from '../components/reception/ArchivageService';
 import { Home, LogIn, LogOut, Archive } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -21,12 +20,6 @@ export default function Reception() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('arrivees');
   const [isArchiving, setIsArchiving] = useState(false);
-
-  const { data: missions = [] } = useQuery({
-    queryKey: ['missions-internes', 'RECEPTION'],
-    queryFn: () => base44.entities.MissionInterne.filter({ service: 'RECEPTION' }, '-date_debut', 100),
-    refetchInterval: 60000
-  });
 
   // Lancer l'archivage automatique au chargement de la page
   useEffect(() => {
@@ -77,7 +70,7 @@ export default function Reception() {
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-4 gap-3 mb-8 bg-transparent p-0 h-auto">
+            <TabsList className="grid w-full grid-cols-3 gap-3 mb-8 bg-transparent p-0 h-auto">
               <TabsTrigger 
                 value="arrivees" 
                 className="flex flex-col items-center gap-3 p-6 rounded-2xl border-2 bg-white data-[state=active]:border-green-500 data-[state=active]:bg-green-50 data-[state=active]:shadow-lg transition-all h-auto"
@@ -128,23 +121,6 @@ export default function Reception() {
                   </p>
                 </div>
               </TabsTrigger>
-
-              <TabsTrigger 
-                value="missions" 
-                className="flex flex-col items-center gap-3 p-6 rounded-2xl border-2 bg-white data-[state=active]:border-purple-500 data-[state=active]:bg-purple-50 data-[state=active]:shadow-lg transition-all h-auto"
-              >
-                <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center">
-                  <span className="text-3xl">🎯</span>
-                </div>
-                <div className="text-center">
-                  <p className="font-heading text-lg text-gray-900">
-                    {lang === 'fr' ? 'Missions' : 'Missions'}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {lang === 'fr' ? 'Direction' : 'Direction'}
-                  </p>
-                </div>
-              </TabsTrigger>
             </TabsList>
 
             <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-200 p-6">
@@ -158,10 +134,6 @@ export default function Reception() {
 
               <TabsContent value="journal" className="mt-0">
                 <JournalInterventions lang={lang} />
-              </TabsContent>
-
-              <TabsContent value="missions" className="mt-0">
-                <MissionsDirectionTab service="RECEPTION" lang={lang} />
               </TabsContent>
             </div>
           </Tabs>
