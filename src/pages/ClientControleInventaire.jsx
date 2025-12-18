@@ -112,16 +112,21 @@ export default function ClientControleInventaire() {
   };
 
   const createIntervention = async ({ service, items, ficheId }) => {
-    if (!items || items.length === 0) return;
+    if (!items || items.length === 0) return null;
 
     const hasUrgent = items.some(i => i.urgent);
     const allPhotos = items.flatMap(i => i.photos);
+
+    // Description détaillée pour l'intervention
+    const descriptionComplete = items.map(i => 
+      `${i.emoji} ${i.label}: ${i.qtyManquante} manquant(s)${i.urgent ? ' 🔴 URGENT' : ''}`
+    ).join('\n');
 
     const incident = await base44.entities.Incident.create({
       stay_id: `ARR-${numero}-${dateArrivee.replace(/-/g, '')}-${Math.random().toString(36).substring(2, 8)}`,
       type: service === "MENAGE" ? "menage" : "technique",
       categorie: service === "MENAGE" ? "nettoyage" : "divers_technique",
-      description: `Inventaire arrivée - ${items.map(i => `${i.emoji} ${i.label}: -${i.qtyManquante}`).join(', ')}`,
+      description: descriptionComplete,
       urgent: hasUrgent,
       autorisation_acces: autorisationAcces,
       client_nom: nom,
@@ -135,13 +140,30 @@ export default function ClientControleInventaire() {
       fiche_arrivee_id: ficheId
     });
 
+    // Notification unique regroupée par service
+    const detailsItems = items.map(i => 
+      `• ${i.emoji} ${i.label}: ${i.qtyManquante} manquant(s)${i.urgent ? ' 🔴' : ''}`
+    ).join('\n');
+
+    const messageNotif = `📍 Hébergement: ${categorie} ${numero}
+👤 Client: ${prenom} ${nom}
+📅 Séjour: ${dateArrivee} → ${dateDepart}
+🔐 Accès: ${autorisationAcces === 'oui' ? '✅ Autorisé en absence' : '❌ Présence client requise'}
+
+📋 Anomalies détectées (${items.length}):
+${detailsItems}
+
+${allPhotos.length > 0 ? `📸 ${allPhotos.length} photo(s) jointe(s)` : ''}`;
+
     await base44.entities.Notification.create({
       type: hasUrgent ? 'INCIDENT_URGENT' : 'NOUVEAU_INCIDENT',
-      titre: `${hasUrgent ? '🔴 URGENT - ' : ''}Intervention ${service} - ${numero}`,
-      message: `Arrivée inventaire - ${nom} ${prenom} - ${items.length} anomalie(s) - Accès: ${autorisationAcces === 'oui' ? '✅ Autorisé' : '❌ Présence requise'}`,
+      titre: `${hasUrgent ? '🔴 URGENT - ' : ''}${service === 'MENAGE' ? '🧹 Ménage' : '🔧 Technique'} - ${numero}`,
+      message: messageNotif,
       destinataire_role: 'RECEPTION',
       statut: 'non_lu'
     });
+
+    return incident;
   };
 
   const handleFinalSubmit = async () => {
@@ -172,8 +194,43 @@ export default function ClientControleInventaire() {
         date_validation: new Date().toISOString()
       });
 
-      await createIntervention({ service: "MENAGE", items: menage, ficheId: fiche.id });
-      await createIntervention({ service: "TECHNIQUE", items: technique, ficheId: fiche.id });
+      // Créer les interventions regroupées
+      const interventionMenage = await createIntervention({ service: "MENAGE", items: menage, ficheId: fiche.id });
+      const interventionTechnique = await createIntervention({ service: "TECHNIQUE", items: technique, ficheId: fiche.id });
+
+      // Notification globale RÉCEPTION (vision consolidée)
+      if (menage.length > 0 || technique.length > 0) {
+        const totalAnomalies = menage.length + technique.length;
+        const totalUrgent = [...menage, ...technique].filter(i => i.urgent).length;
+        const totalPhotos = [...menage, ...technique].flatMap(i => i.photos).length;
+
+        const resumeServices = [];
+        if (technique.length > 0) resumeServices.push(`🔧 ${technique.length} technique`);
+        if (menage.length > 0) resumeServices.push(`🧹 ${menage.length} ménage`);
+
+        const messageReception = `📋 CONTRÔLE INVENTAIRE VALIDÉ
+
+📍 Hébergement: ${categorie} ${numero}
+👤 Client: ${prenom} ${nom}
+📅 Séjour: ${dateArrivee} → ${dateDepart}
+
+⚠️ ${totalAnomalies} anomalie(s) détectée(s):
+${resumeServices.join(' • ')}
+${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}
+
+🔐 Accès: ${autorisationAcces === 'oui' ? '✅ Autorisé en absence client' : '❌ Présence client REQUISE'}
+${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
+
+📄 PDF complet disponible dans la fiche d'arrivée`;
+
+        await base44.entities.Notification.create({
+          type: totalUrgent > 0 ? 'INCIDENT_URGENT' : 'NOUVEAU_INCIDENT',
+          titre: `${totalUrgent > 0 ? '🔴 ' : ''}📋 Contrôle Inventaire - ${numero}`,
+          message: messageReception,
+          destinataire_role: 'RECEPTION',
+          statut: 'non_lu'
+        });
+      }
 
       const dossierId = sessionStorage.getItem('arrivee_dossier_id');
       if (dossierId) {
