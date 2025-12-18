@@ -18,7 +18,7 @@ export default function MissionsDirectionService({ service }) {
   const [showTraitement, setShowTraitement] = useState(false);
   const [prenomAgent, setPrenomAgent] = useState('');
   const [tachesEtat, setTachesEtat] = useState({});
-  const [filterStatut, setFilterStatut] = useState('A_FAIRE');
+  const [filterStatut, setFilterStatut] = useState('tous');
   const [tempsEcoule, setTempsEcoule] = useState(0);
   const [uploadingPhoto, setUploadingPhoto] = useState(null);
 
@@ -26,7 +26,11 @@ export default function MissionsDirectionService({ service }) {
     queryKey: ['interventions-direction', service],
     queryFn: async () => {
       const allMissions = await base44.entities.InterventionDirection.list('-created_date', 200);
-      return allMissions.filter(m => m.service === service);
+      console.log('🔍 Toutes les missions:', allMissions);
+      console.log('🎯 Service recherché:', service);
+      const filtered = allMissions.filter(m => m.service === service);
+      console.log('✅ Missions filtrées pour', service, ':', filtered);
+      return filtered;
     },
     refetchInterval: 30000
   });
@@ -298,9 +302,25 @@ Crée un document PDF formel avec logo camping, en-têtes, et signatures.`;
 
   return (
     <div className="space-y-4">
+      {/* Debug info */}
+      <div className="bg-blue-50 rounded-lg p-3 text-xs">
+        <p>📊 Total missions: {missions.length}</p>
+        <p>🎯 Service: {service}</p>
+        <p>📋 Filtre: {filterStatut}</p>
+        <p>✅ Missions filtrées: {filteredMissions.length}</p>
+      </div>
+
       {/* Filtres */}
       <div className="flex gap-2 flex-wrap">
-        {['A_FAIRE', 'EN_COURS', 'TERMINEE', 'EN_ATTENTE'].map(statut => (
+        <Button
+          onClick={() => setFilterStatut('tous')}
+          variant={filterStatut === 'tous' ? 'default' : 'outline'}
+          className={filterStatut === 'tous' ? 'bg-purple-600' : ''}
+          size="sm"
+        >
+          Toutes ({missions.length})
+        </Button>
+        {['A_FAIRE', 'EN_COURS', 'EN_ATTENTE', 'TERMINEE'].map(statut => (
           <Button
             key={statut}
             onClick={() => setFilterStatut(statut)}
@@ -316,14 +336,6 @@ Crée un document PDF formel avec logo camping, en-têtes, et signatures.`;
             )}
           </Button>
         ))}
-        <Button
-          onClick={() => setFilterStatut('tous')}
-          variant={filterStatut === 'tous' ? 'default' : 'outline'}
-          className={filterStatut === 'tous' ? 'bg-purple-600' : ''}
-          size="sm"
-        >
-          Toutes
-        </Button>
       </div>
 
       {/* Liste missions */}
