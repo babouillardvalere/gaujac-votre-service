@@ -8,7 +8,7 @@ import { useNotifications } from '../components/useNotifications';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Wrench, Sparkles, Building2, LogOut, Package, Lock, ClipboardList, Briefcase, Music, Coffee } from 'lucide-react';
+import { Wrench, Sparkles, Building2, LogOut, Package, Lock, ClipboardList, Briefcase, Music, Coffee, Waves } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 
@@ -85,6 +85,15 @@ export default function MenuCollaborateur() {
       color: 'bg-[#a855f7]',
       textColor: 'text-white',
       description: lang === 'fr' ? 'Événements et activités' : 'Events and activities',
+      badgeCount: 0
+    },
+    {
+      title: '🏊 BNSSA',
+      icon: Waves,
+      href: 'Piscine',
+      color: 'bg-[#3b82f6]',
+      textColor: 'text-white',
+      description: lang === 'fr' ? 'Surveillance et gestion piscine' : 'Pool monitoring & management',
       badgeCount: 0
     },
     {
