@@ -13,6 +13,7 @@ import PhotoInterventionCapture from '../components/PhotoInterventionCapture';
 import InterventionTimer from '../components/InterventionTimer';
 import ServiceTabs from '../components/missions/ServiceTabs';
 import MissionsDirectionTab from '../components/missions/MissionsDirectionTab';
+import MissionsDirectionService from '../components/missions/MissionsDirectionService';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';

@@ -90,6 +90,8 @@ import DirectionChoixHebergement from './pages/DirectionChoixHebergement';
 import DirectionChoixNumero from './pages/DirectionChoixNumero';
 import DirectionCreerIntervention from './pages/DirectionCreerIntervention';
 import DirectionRecapIntervention from './pages/DirectionRecapIntervention';
+import DirectionSuiviHivernage from './pages/DirectionSuiviHivernage';
+import DirectionSuiviDeshivernage from './pages/DirectionSuiviDeshivernage';
 import __Layout from './Layout.jsx';
 
 
@@ -186,6 +188,8 @@ export const PAGES = {
     "DirectionChoixNumero": DirectionChoixNumero,
     "DirectionCreerIntervention": DirectionCreerIntervention,
     "DirectionRecapIntervention": DirectionRecapIntervention,
+    "DirectionSuiviHivernage": DirectionSuiviHivernage,
+    "DirectionSuiviDeshivernage": DirectionSuiviDeshivernage,
 }
 
 export const pagesConfig = {
