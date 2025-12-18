@@ -70,6 +70,7 @@ import Technique from './pages/Technique';
 import Menage from './pages/Menage';
 import ClientControleInventaireEmplacement from './pages/ClientControleInventaireEmplacement';
 import ClientControleInventaireCottage from './pages/ClientControleInventaireCottage';
+import ClientControleInventairePremiumTwins from './pages/ClientControleInventairePremiumTwins';
 import __Layout from './Layout.jsx';
 
 
@@ -146,6 +147,7 @@ export const PAGES = {
     "Menage": Menage,
     "ClientControleInventaireEmplacement": ClientControleInventaireEmplacement,
     "ClientControleInventaireCottage": ClientControleInventaireCottage,
+    "ClientControleInventairePremiumTwins": ClientControleInventairePremiumTwins,
 }
 
 export const pagesConfig = {
