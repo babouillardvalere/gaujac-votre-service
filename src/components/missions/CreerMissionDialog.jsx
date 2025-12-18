@@ -49,6 +49,8 @@ export default function CreerMissionDialog({ open, onOpenChange, onSuccess, lang
     setIsSubmitting(true);
 
     try {
+      console.log('🎯 Création mission - formData:', formData);
+      
       // 1. Créer la mission mère
       const missionMere = await base44.entities.MissionInterne.create({
         titre: formData.titre,
@@ -62,8 +64,10 @@ export default function CreerMissionDialog({ open, onOpenChange, onSuccess, lang
         statut: 'A_FAIRE'
       });
 
+      console.log('✅ Mission mère créée:', missionMere.id);
+
       // 2. Créer automatiquement une sous-mission par service sélectionné
-      const promises = formData.services.map(service =>
+      const sousMissionsPromises = formData.services.map(service =>
         base44.entities.MissionInterne.create({
           mission_mere_id: missionMere.id,
           titre: formData.titre,
@@ -78,51 +82,26 @@ export default function CreerMissionDialog({ open, onOpenChange, onSuccess, lang
         })
       );
 
-      await Promise.all(promises);
+      await Promise.all(sousMissionsPromises);
+      console.log('✅ Sous-missions créées pour:', formData.services);
 
-      // 3. Récupérer les préférences de notification de tous les utilisateurs
-      const allPrefs = await base44.entities.NotificationPreference.list();
-      
-      // 4. Créer une notification pour chaque service selon les préférences
-      const notifPromises = [];
-      
-      for (const service of formData.services) {
-        // Notification système pour le service
-        notifPromises.push(
+      // 3. Créer notifications (sans bloquer si erreur)
+      try {
+        const notifPromises = formData.services.map(service =>
           base44.entities.Notification.create({
             type: 'NOUVELLE_MISSION',
             titre: `📋 Nouvelle mission Direction : ${formData.titre}`,
             message: `${formData.type_mission} | ${formData.date_debut} → ${formData.date_fin} | Priorité: ${formData.priorite}`,
             destinataire_role: service,
-            statut: 'non_lu',
-            metadata: {
-              mission_id: missionMere.id,
-              type_mission: formData.type_mission,
-              priorite: formData.priorite
-            }
+            statut: 'non_lu'
           })
         );
         
-        // Notifications email individuelles si activées
-        const servicePrefs = allPrefs.filter(p => 
-          p.missions_creation && 
-          (p.missions_priority_high ? formData.priorite === 'HAUTE' || formData.priorite === 'CRITIQUE' : true)
-        );
-        
-        for (const pref of servicePrefs) {
-          if (pref.email_notifications) {
-            notifPromises.push(
-              base44.integrations.Core.SendEmail({
-                to: pref.user_email,
-                subject: `📋 Nouvelle mission Direction : ${formData.titre}`,
-                body: `Une nouvelle mission vous a été assignée.\n\nTitre: ${formData.titre}\nType: ${formData.type_mission}\nPériodt: ${formData.date_debut} → ${formData.date_fin}\nPriorité: ${formData.priorite}\n\nDescription:\n${formData.description}`
-              })
-            );
-          }
-        }
+        await Promise.all(notifPromises);
+        console.log('✅ Notifications envoyées');
+      } catch (notifError) {
+        console.warn('⚠️ Erreur notifications (non bloquante):', notifError);
       }
-
-      await Promise.all(notifPromises);
 
       toast.success(lang === 'fr' 
         ? `Mission créée et distribuée à ${formData.services.length} service(s) ✅`
