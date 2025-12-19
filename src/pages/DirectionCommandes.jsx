@@ -40,8 +40,55 @@ export default function DirectionCommandes() {
       }
       return await base44.entities.CommandeDirection.update(id, updateData);
     },
-    onSuccess: () => {
+    onSuccess: async (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['commandes-direction'] });
+      
+      // Si commande marquée comme reçue, vérifier si on peut réactiver la mission
+      if (variables.statut === 'RECUE') {
+        try {
+          const commande = commandes.find(c => c.id === variables.id);
+          if (commande) {
+            // Récupérer toutes les commandes de cette mission
+            const commandesMission = commandes.filter(c => c.mission_id === commande.mission_id);
+            
+            // Vérifier si toutes sont reçues (y compris celle qu'on vient de mettre à jour)
+            const toutesRecues = commandesMission.every(c => 
+              c.id === variables.id ? true : c.statut === 'RECUE'
+            );
+            
+            if (toutesRecues) {
+              // Réactiver automatiquement la mission
+              const mission = await base44.entities.InterventionDirection.list();
+              const missionConcernee = mission.find(m => m.id === commande.mission_id);
+              
+              if (missionConcernee && missionConcernee.statut === 'EN_ATTENTE') {
+                await base44.entities.InterventionDirection.update(commande.mission_id, {
+                  statut: 'A_FAIRE'
+                });
+                
+                // Créer une notification pour le service
+                await base44.entities.Notification.create({
+                  service: commande.service_demandeur,
+                  titre: '🔁 Mission réactivée',
+                  message: `La mission ${commande.type_hebergement} - ${commande.hebergement} a été réactivée. Le matériel commandé est arrivé.`,
+                  type: 'mission_reactivee',
+                  lu: false,
+                  priorite: 'normale',
+                  mission_id: commande.mission_id
+                });
+                
+                queryClient.invalidateQueries({ queryKey: ['interventions-direction'] });
+                
+                toast.success('🔁 Mission automatiquement réactivée et service notifié !');
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Erreur réactivation mission:', error);
+          // Ne pas bloquer si erreur - la commande est quand même reçue
+        }
+      }
+      
       setShowDetails(false);
       setSelectedCommande(null);
       toast.success('Commande mise à jour ✅');
