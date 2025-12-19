@@ -48,11 +48,6 @@ export default function DirectionCreerIntervention() {
       return;
     }
 
-    if (!description.trim()) {
-      toast.error('La description est obligatoire');
-      return;
-    }
-
     const intervention = {
       typeIntervention,
       typeHebergement,
@@ -146,11 +141,11 @@ export default function DirectionCreerIntervention() {
 
           {/* Description */}
           <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-purple-200">
-            <h2 className="font-heading text-lg text-purple-700 mb-4">Description détaillée *</h2>
+            <h2 className="font-heading text-lg text-purple-700 mb-4">Description détaillée</h2>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Décrivez l'intervention..."
+              placeholder="Décrivez l'intervention... (facultatif)"
               className="min-h-[100px]"
             />
           </div>
