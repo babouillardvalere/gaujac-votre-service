@@ -21,6 +21,7 @@ export default function MissionsDirectionService({ service }) {
   const [filterStatut, setFilterStatut] = useState('tous');
   const [tempsEcoule, setTempsEcoule] = useState(0);
   const [uploadingPhoto, setUploadingPhoto] = useState(null);
+  const [commandesArticles, setCommandesArticles] = useState({});
 
   const { data: missions = [], isLoading, error } = useQuery({
     queryKey: ['interventions-direction', service],
@@ -275,8 +276,53 @@ export default function MissionsDirectionService({ service }) {
       [numero]: {
         ...tachesEtat[numero],
         faite: newStatus,
-        justification: newStatus ? '' : tachesEtat[numero]?.justification || ''
+        justification: newStatus ? '' : tachesEtat[numero]?.justification || '',
+        commandeNecessaire: newStatus ? undefined : tachesEtat[numero]?.commandeNecessaire
       }
+    });
+    
+    // Réinitialiser les articles si on repasse à "fait"
+    if (newStatus && commandesArticles[numero]) {
+      const newCommandes = { ...commandesArticles };
+      delete newCommandes[numero];
+      setCommandesArticles(newCommandes);
+    }
+  };
+
+  const handleToggleCommande = (numero, necessaire) => {
+    setTachesEtat({
+      ...tachesEtat,
+      [numero]: {
+        ...tachesEtat[numero],
+        commandeNecessaire: necessaire
+      }
+    });
+
+    // Réinitialiser les articles si on passe à "non"
+    if (!necessaire && commandesArticles[numero]) {
+      const newCommandes = { ...commandesArticles };
+      delete newCommandes[numero];
+      setCommandesArticles(newCommandes);
+    }
+  };
+
+  const handleAjouterArticle = (numero) => {
+    const article = prompt('Nom de l\'article à commander:');
+    if (!article?.trim()) return;
+
+    const articles = commandesArticles[numero] || [];
+    setCommandesArticles({
+      ...commandesArticles,
+      [numero]: [...articles, article.trim()]
+    });
+  };
+
+  const handleSupprimerArticle = (numero, index) => {
+    const articles = [...(commandesArticles[numero] || [])];
+    articles.splice(index, 1);
+    setCommandesArticles({
+      ...commandesArticles,
+      [numero]: articles
     });
   };
 
@@ -299,7 +345,7 @@ export default function MissionsDirectionService({ service }) {
     }
   };
 
-  const handleValiderTraitement = () => {
+  const handleValiderTraitement = async () => {
     // Vérifier que TOUTES les tâches ont un statut
     const tachesNonRepondues = selectedMission.taches.filter(t => 
       tachesEtat[t.numero] === undefined || 
@@ -325,6 +371,28 @@ export default function MissionsDirectionService({ service }) {
       return;
     }
 
+    // Validation: si pas fait + commande nécessaire, vérifier qu'au moins un article est saisi
+    const tachesSansArticles = selectedMission.taches.filter(t => {
+      const etat = tachesEtat[t.numero];
+      return !etat?.faite && etat?.commandeNecessaire === true && (!commandesArticles[t.numero] || commandesArticles[t.numero].length === 0);
+    });
+
+    if (tachesSansArticles.length > 0) {
+      toast.error(`⚠️ Ajoutez au moins un article pour les commandes nécessaires (tâche(s) ${tachesSansArticles.map(t => t.numero).join(', ')})`);
+      return;
+    }
+
+    // Validation: si pas fait, la question "commande nécessaire" doit être répondue
+    const tachesSansReponseCommande = selectedMission.taches.filter(t => {
+      const etat = tachesEtat[t.numero];
+      return !etat?.faite && etat?.commandeNecessaire === undefined;
+    });
+
+    if (tachesSansReponseCommande.length > 0) {
+      toast.error(`⚠️ Indiquez si une commande est nécessaire pour les tâches non faites (${tachesSansReponseCommande.map(t => t.numero).join(', ')})`);
+      return;
+    }
+
     const touteFait = tachesUpdated.every(t => t.faite);
     const auMoinsUnePasFaite = tachesUpdated.some(t => !t.faite);
 
@@ -344,6 +412,36 @@ export default function MissionsDirectionService({ service }) {
       motifAttente = motif.trim();
     } else {
       nouveauStatut = 'EN_COURS';
+    }
+
+    // Créer les commandes nécessaires
+    try {
+      const commandesACreer = selectedMission.taches
+        .filter(t => {
+          const etat = tachesEtat[t.numero];
+          return !etat?.faite && etat?.commandeNecessaire === true && commandesArticles[t.numero]?.length > 0;
+        })
+        .map(t => ({
+          mission_id: selectedMission.id,
+          type_intervention: selectedMission.type_intervention,
+          hebergement: selectedMission.numero_hebergement,
+          type_hebergement: selectedMission.type_hebergement,
+          service_demandeur: service,
+          agent: selectedMission.pris_en_charge_par,
+          tache_numero: t.numero,
+          tache_texte: t.texte,
+          articles: commandesArticles[t.numero],
+          statut: 'A_COMMANDER'
+        }));
+
+      if (commandesACreer.length > 0) {
+        await base44.entities.CommandeDirection.bulkCreate(commandesACreer);
+        toast.success(`📦 ${commandesACreer.length} commande(s) créée(s)`);
+      }
+    } catch (error) {
+      console.error('Erreur création commandes:', error);
+      toast.error('Erreur lors de la création des commandes');
+      return;
     }
 
     finalisationMutation.mutate({
@@ -748,24 +846,79 @@ export default function MissionsDirectionService({ service }) {
 
                         {/* Justification si pas fait */}
                         {estPasFait && (
-                          <div className="bg-orange-50 rounded-lg p-3 border border-orange-200">
-                            <label className="text-xs font-bold text-orange-700 mb-1 block">
-                              Justification obligatoire *
-                            </label>
-                            <Textarea
-                              value={etat?.justification || ''}
-                              onChange={(e) => setTachesEtat({
-                                ...tachesEtat,
-                                [tache.numero]: {
-                                  ...tachesEtat[tache.numero],
-                                  justification: e.target.value
-                                }
-                              })}
-                              placeholder="Pourquoi cette tâche n'a pas été effectuée..."
-                              rows={2}
-                              className="bg-white"
-                            />
-                          </div>
+                          <>
+                            <div className="bg-orange-50 rounded-lg p-3 border border-orange-200">
+                              <label className="text-xs font-bold text-orange-700 mb-1 block">
+                                Justification obligatoire *
+                              </label>
+                              <Textarea
+                                value={etat?.justification || ''}
+                                onChange={(e) => setTachesEtat({
+                                  ...tachesEtat,
+                                  [tache.numero]: {
+                                    ...tachesEtat[tache.numero],
+                                    justification: e.target.value
+                                  }
+                                })}
+                                placeholder="Pourquoi cette tâche n'a pas été effectuée..."
+                                rows={2}
+                                className="bg-white"
+                              />
+                            </div>
+
+                            {/* Section Commande nécessaire */}
+                            <div className="bg-purple-50 rounded-lg p-3 border-2 border-purple-300">
+                              <label className="text-xs font-bold text-purple-700 mb-2 block">
+                                🛒 Une commande est-elle nécessaire pour réaliser cette tâche ? *
+                              </label>
+                              <div className="flex gap-2 mb-3">
+                                <Button
+                                  onClick={() => handleToggleCommande(tache.numero, false)}
+                                  variant={etat?.commandeNecessaire === false ? 'default' : 'outline'}
+                                  className={etat?.commandeNecessaire === false ? 'bg-gray-600' : 'border-gray-600 text-gray-600'}
+                                  size="sm"
+                                >
+                                  ⭕ Non
+                                </Button>
+                                <Button
+                                  onClick={() => handleToggleCommande(tache.numero, true)}
+                                  variant={etat?.commandeNecessaire === true ? 'default' : 'outline'}
+                                  className={etat?.commandeNecessaire === true ? 'bg-green-600' : 'border-green-600 text-green-600'}
+                                  size="sm"
+                                >
+                                  ⭕ Oui
+                                </Button>
+                              </div>
+
+                              {/* Liste articles si commande nécessaire */}
+                              {etat?.commandeNecessaire === true && (
+                                <div className="space-y-2">
+                                  <label className="text-xs font-bold text-purple-700">Articles à commander:</label>
+                                  
+                                  {commandesArticles[tache.numero]?.map((article, idx) => (
+                                    <div key={idx} className="flex items-center gap-2 bg-white rounded-lg p-2 border">
+                                      <span className="flex-1 text-sm">{article}</span>
+                                      <button
+                                        onClick={() => handleSupprimerArticle(tache.numero, idx)}
+                                        className="text-red-500 hover:text-red-700"
+                                      >
+                                        <X className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                  ))}
+
+                                  <Button
+                                    onClick={() => handleAjouterArticle(tache.numero)}
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full border-purple-600 text-purple-600"
+                                  >
+                                    ➕ Ajouter un article
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </>
                         )}
 
                         {/* Photo facultative */}

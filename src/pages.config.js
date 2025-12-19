@@ -88,6 +88,7 @@ import DirectionCreerIntervention from './pages/DirectionCreerIntervention';
 import DirectionRecapIntervention from './pages/DirectionRecapIntervention';
 import DirectionSuiviHivernage from './pages/DirectionSuiviHivernage';
 import DirectionSuiviDeshivernage from './pages/DirectionSuiviDeshivernage';
+import DirectionCommandes from './pages/DirectionCommandes';
 import __Layout from './Layout.jsx';
 
 
@@ -182,6 +183,7 @@ export const PAGES = {
     "DirectionRecapIntervention": DirectionRecapIntervention,
     "DirectionSuiviHivernage": DirectionSuiviHivernage,
     "DirectionSuiviDeshivernage": DirectionSuiviDeshivernage,
+    "DirectionCommandes": DirectionCommandes,
 }
 
 export const pagesConfig = {
