@@ -26,25 +26,8 @@ export default function MissionsDirectionService({ service }) {
   const { data: missions = [], isLoading, error } = useQuery({
     queryKey: ['interventions-direction', service],
     queryFn: async () => {
-      console.log('🚀 Début fetch missions pour service:', service);
-      try {
-        const allMissions = await base44.entities.InterventionDirection.list('-created_date', 200);
-        console.log('🔍 TOUTES les missions reçues:', allMissions);
-        console.log('📊 Nombre total:', allMissions.length);
-        console.log('🎯 Service recherché:', service);
-        
-        const filtered = allMissions.filter(m => {
-          console.log('Mission:', m.id, '- Service:', m.service, '- Match:', m.service === service);
-          return m.service === service;
-        });
-        
-        console.log('✅ Missions filtrées pour', service, ':', filtered);
-        console.log('📈 Nombre filtré:', filtered.length);
-        return filtered;
-      } catch (err) {
-        console.error('❌ ERREUR fetch missions:', err);
-        throw err;
-      }
+      const allMissions = await base44.entities.InterventionDirection.list('-created_date', 200);
+      return allMissions.filter(m => m.service === service);
     },
     refetchInterval: 30000
   });
@@ -352,17 +335,11 @@ export default function MissionsDirectionService({ service }) {
   };
 
   const handleValiderTraitement = async () => {
-    console.log('🔍 VALIDATION - Début');
-    console.log('📊 tachesEtat:', tachesEtat);
-    console.log('📦 commandesArticles:', commandesArticles);
-    
-    // Vérifier que TOUTES les tâches ont un statut
     const tachesNonRepondues = selectedMission.taches.filter(t => 
       tachesEtat[t.numero] === undefined || 
       (tachesEtat[t.numero].faite === undefined)
     );
 
-    console.log('❓ Tâches non répondues:', tachesNonRepondues);
     if (tachesNonRepondues.length > 0) {
       toast.error(`⚠️ Veuillez traiter toutes les tâches (${tachesNonRepondues.length} restante(s))`);
       return;
@@ -375,37 +352,27 @@ export default function MissionsDirectionService({ service }) {
       photo_url: tachesEtat[t.numero].photo_url
     }));
 
-    // Validation: si pas fait, justification OBLIGATOIRE
     const tachesSansJustification = tachesUpdated.filter(t => !t.faite && !t.justification?.trim());
-    console.log('📝 Tâches sans justification:', tachesSansJustification);
     if (tachesSansJustification.length > 0) {
       toast.error(`⚠️ Justification obligatoire pour les tâches non faites (${tachesSansJustification.map(t => t.numero).join(', ')})`);
       return;
     }
 
-    // Validation: si pas fait + commande nécessaire, vérifier qu'au moins un article est saisi
     const tachesSansArticles = selectedMission.taches.filter(t => {
       const etat = tachesEtat[t.numero];
-      const result = !etat?.faite && etat?.commandeNecessaire === true && (!commandesArticles[t.numero] || commandesArticles[t.numero].length === 0);
-      console.log(`🛒 Tâche ${t.numero}: faite=${etat?.faite}, commandeNecessaire=${etat?.commandeNecessaire}, articles=`, commandesArticles[t.numero], 'manque=', result);
-      return result;
+      return !etat?.faite && etat?.commandeNecessaire === true && (!commandesArticles[t.numero] || commandesArticles[t.numero].length === 0);
     });
 
-    console.log('📦 Tâches sans articles:', tachesSansArticles);
     if (tachesSansArticles.length > 0) {
       toast.error(`⚠️ Ajoutez au moins un article pour les commandes nécessaires (tâche(s) ${tachesSansArticles.map(t => t.numero).join(', ')})`);
       return;
     }
 
-    // Validation: si pas fait, la question "commande nécessaire" doit être répondue
     const tachesSansReponseCommande = selectedMission.taches.filter(t => {
       const etat = tachesEtat[t.numero];
-      const result = !etat?.faite && etat?.commandeNecessaire === undefined;
-      console.log(`❓ Tâche ${t.numero}: faite=${etat?.faite}, commandeNecessaire=${etat?.commandeNecessaire}, manque réponse=`, result);
-      return result;
+      return !etat?.faite && etat?.commandeNecessaire === undefined;
     });
 
-    console.log('❓ Tâches sans réponse commande:', tachesSansReponseCommande);
     if (tachesSansReponseCommande.length > 0) {
       toast.error(`⚠️ Indiquez si une commande est nécessaire pour les tâches non faites (${tachesSansReponseCommande.map(t => t.numero).join(', ')})`);
       return;
@@ -414,16 +381,12 @@ export default function MissionsDirectionService({ service }) {
     const touteFait = tachesUpdated.every(t => t.faite);
     const auMoinsUnePasFaite = tachesUpdated.some(t => !t.faite);
 
-    console.log('✅ Tout fait?', touteFait);
-    console.log('❌ Au moins une pas faite?', auMoinsUnePasFaite);
-
     let nouveauStatut, motifAttente;
 
     if (touteFait) {
       nouveauStatut = 'TERMINEE';
       motifAttente = null;
     } else if (auMoinsUnePasFaite) {
-      // Agrégation automatique des justifications
       const tachesNonFaites = tachesUpdated.filter(t => !t.faite);
       const justifications = tachesNonFaites.map(t => `Tâche ${t.numero}: ${t.justification}`).join('\n');
       nouveauStatut = 'EN_ATTENTE';
@@ -432,10 +395,6 @@ export default function MissionsDirectionService({ service }) {
       nouveauStatut = 'EN_COURS';
     }
 
-    console.log('🎯 Nouveau statut:', nouveauStatut);
-    console.log('📋 Motif attente:', motifAttente);
-
-    // Créer les commandes nécessaires
     try {
       const commandesACreer = selectedMission.taches
         .filter(t => {
@@ -455,27 +414,22 @@ export default function MissionsDirectionService({ service }) {
           statut: 'A_COMMANDER'
         }));
 
-      console.log('📦 Commandes à créer:', commandesACreer);
-
       if (commandesACreer.length > 0) {
-        console.log('🚀 Création des commandes...');
         await base44.entities.CommandeDirection.bulkCreate(commandesACreer);
         toast.success(`📦 ${commandesACreer.length} commande(s) créée(s)`);
       }
     } catch (error) {
-      console.error('❌ Erreur création commandes:', error);
+      console.error('Erreur création commandes:', error);
       toast.error('Erreur lors de la création des commandes');
       return;
     }
 
-    console.log('🚀 Appel mutation finalisation...');
     finalisationMutation.mutate({
       id: selectedMission.id,
       taches: tachesUpdated,
       statut: nouveauStatut,
       motifAttente
     });
-    console.log('✅ Mutation appelée');
   };
 
   const filteredMissions = missions.filter(m => m.statut === filterStatut);
