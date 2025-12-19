@@ -185,15 +185,15 @@ export default function MissionsDirectionService({ service }) {
     let y = 60;
 
     doc.setFont(undefined, 'bold');
-    doc.text(`TYPE: ${mission.type_intervention === 'HIVERNAGE' ? '❄️ HIVERNAGE' : '🌞 DÉSHIVERNAGE'}`, 20, y);
+    doc.text(`TYPE: ${mission.type_intervention === 'HIVERNAGE' ? 'HIVERNAGE' : 'DESHIVERNAGE'}`, 20, y);
     y += 8;
-    doc.text(`HÉBERGEMENT: ${mission.type_hebergement} - ${mission.numero_hebergement}`, 20, y);
+    doc.text(`HEBERGEMENT: ${mission.type_hebergement} - ${mission.numero_hebergement}`, 20, y);
     y += 8;
-    doc.text(`SERVICE: ${service === 'TECHNIQUE' ? '🧰 Technique' : '🧽 Ménage'}`, 20, y);
+    doc.text(`SERVICE: ${service === 'TECHNIQUE' ? 'Technique' : 'Menage'}`, 20, y);
     y += 8;
     doc.text(`AGENT: ${mission.pris_en_charge_par}`, 20, y);
     y += 8;
-    doc.text(`PRIORITÉ: ${mission.priorite}`, 20, y);
+    doc.text(`PRIORITE: ${mission.priorite}`, 20, y);
     y += 8;
     doc.text(`TEMPS TOTAL: ${Math.floor(tempsTotal / 60)}h ${tempsTotal % 60}min`, 20, y);
     y += 8;
@@ -213,19 +213,19 @@ export default function MissionsDirectionService({ service }) {
 
     // Tâches
     doc.setFont(undefined, 'bold');
-    doc.text('TÂCHES RÉALISÉES:', 20, y);
+    doc.text('TACHES REALISEES:', 20, y);
     y += 8;
 
     const tachesData = mission.taches.map(t => [
       t.numero.toString(),
       t.texte,
-      t.faite ? '✅ FAIT' : '❌ PAS FAIT',
+      t.faite ? 'FAIT' : 'PAS FAIT',
       t.justification || '-'
     ]);
 
     doc.autoTable({
       startY: y,
-      head: [['N°', 'Tâche', 'Statut', 'Justification']],
+      head: [['N°', 'Tache', 'Statut', 'Justification']],
       body: tachesData,
       theme: 'grid',
       headStyles: { fillColor: [0, 174, 239], textColor: 255 },
