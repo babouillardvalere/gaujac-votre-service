@@ -408,14 +408,11 @@ export default function MissionsDirectionService({ service }) {
       nouveauStatut = 'TERMINEE';
       motifAttente = null;
     } else if (auMoinsUnePasFaite) {
-      // Demander un motif global
-      const motif = prompt('⚠️ Au moins une tâche non effectuée.\n\nMotif de mise en attente (obligatoire):');
-      if (!motif?.trim()) {
-        toast.error('Motif obligatoire pour mettre en attente');
-        return;
-      }
+      // Agrégation automatique des justifications
+      const tachesNonFaites = tachesUpdated.filter(t => !t.faite);
+      const justifications = tachesNonFaites.map(t => `Tâche ${t.numero}: ${t.justification}`).join('\n');
       nouveauStatut = 'EN_ATTENTE';
-      motifAttente = motif.trim();
+      motifAttente = justifications;
     } else {
       nouveauStatut = 'EN_COURS';
     }
