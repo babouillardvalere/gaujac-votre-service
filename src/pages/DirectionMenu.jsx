@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from '../components/translations';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Sun, Snowflake, Wrench, ArrowLeft } from 'lucide-react';
+import { Sun, Snowflake, Wrench, ArrowLeft, ShoppingCart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import Logo from '../components/Logo';
@@ -22,6 +22,16 @@ export default function DirectionMenu() {
       textColor: 'text-white',
       description: 'Créer des interventions opérationnelles',
       descriptionEn: 'Create operational interventions'
+    },
+    {
+      title: '📦 Commandes',
+      titleEn: '📦 Orders',
+      icon: ShoppingCart,
+      href: 'DirectionCommandes',
+      color: 'bg-[#22c55e]',
+      textColor: 'text-white',
+      description: 'Gestion des commandes',
+      descriptionEn: 'Order management'
     },
     {
       title: '🌞 Déshivernage',
