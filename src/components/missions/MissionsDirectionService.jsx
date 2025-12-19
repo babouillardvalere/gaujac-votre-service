@@ -14,14 +14,14 @@ import { format, differenceInMinutes } from 'date-fns';
 export default function MissionsDirectionService({ service }) {
   const queryClient = useQueryClient();
   const [selectedMission, setSelectedMission] = useState(null);
-  const [showPriseEnCharge, setShowPriseEnCharge] = useState(false);
-  const [showTraitement, setShowTraitement] = useState(false);
+  const [modeTraitement, setModeTraitement] = useState(false); // true = en traitement
   const [prenomAgent, setPrenomAgent] = useState('');
   const [tachesEtat, setTachesEtat] = useState({});
   const [filterStatut, setFilterStatut] = useState('tous');
   const [tempsEcoule, setTempsEcoule] = useState(0);
   const [uploadingPhoto, setUploadingPhoto] = useState(null);
   const [commandesArticles, setCommandesArticles] = useState({});
+  const [nouvelArticle, setNouvelArticle] = useState({});
 
   const { data: missions = [], isLoading, error } = useQuery({
     queryKey: ['interventions-direction', service],
@@ -49,21 +49,19 @@ export default function MissionsDirectionService({ service }) {
     refetchInterval: 30000
   });
 
-  // Timer temps réel - recalcule à chaque ouverture du dialog
+  // Timer temps réel
   useEffect(() => {
-    if (showTraitement && selectedMission?.date_prise_en_charge) {
-      // Calcul initial immédiat
+    if (modeTraitement && selectedMission?.date_prise_en_charge) {
       const calculerTemps = () => {
         const minutes = differenceInMinutes(new Date(), new Date(selectedMission.date_prise_en_charge));
         setTempsEcoule(minutes);
       };
       
-      calculerTemps(); // Calcul immédiat
-      
-      const interval = setInterval(calculerTemps, 10000); // Mise à jour toutes les 10 secondes
+      calculerTemps();
+      const interval = setInterval(calculerTemps, 10000);
       return () => clearInterval(interval);
     }
-  }, [selectedMission, showTraitement]);
+  }, [selectedMission, modeTraitement]);
 
   const priseEnChargeMutation = useMutation({
     mutationFn: async ({ id, prenom }) => {
@@ -76,21 +74,20 @@ export default function MissionsDirectionService({ service }) {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['interventions-direction', service] });
-      setShowPriseEnCharge(false);
-      toast.success('Mission prise en charge - Timer démarré ⏱️');
-      // Ouvrir directement le traitement
+      toast.success('Mission prise en charge ⏱️');
       const missionUpdated = { ...selectedMission, ...data };
       setSelectedMission(missionUpdated);
       const etat = {};
       missionUpdated.taches.forEach(t => {
         etat[t.numero] = {
-          faite: t.faite || false,
+          faite: t.faite !== undefined ? t.faite : undefined,
           justification: t.justification || '',
           photo_url: t.photo_url || ''
         };
       });
       setTachesEtat(etat);
-      setShowTraitement(true);
+      setModeTraitement(true);
+      setPrenomAgent('');
     }
   });
 
@@ -136,14 +133,16 @@ export default function MissionsDirectionService({ service }) {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['interventions-direction', service] });
-      setShowTraitement(false);
+      setModeTraitement(false);
       setSelectedMission(null);
       setTachesEtat({});
+      setCommandesArticles({});
+      setNouvelArticle({});
       
       if (variables.statut === 'TERMINEE') {
         toast.success('✅ Mission terminée - PDF généré');
       } else if (variables.statut === 'EN_ATTENTE') {
-        toast.success('⏸️ Mission mise en attente - À reprendre ultérieurement');
+        toast.success('⏸️ Mission mise en attente');
       }
     }
   });
@@ -244,25 +243,28 @@ export default function MissionsDirectionService({ service }) {
 
   const handlePrendreEnCharge = (mission) => {
     setSelectedMission(mission);
-    setShowPriseEnCharge(true);
-  };
-
-  const handleCommencerTraitement = (mission) => {
-    setSelectedMission(mission);
-    // Initialiser l'état des tâches - NE PAS pré-remplir avec les anciennes valeurs
     const etat = {};
     mission.taches.forEach(t => {
       etat[t.numero] = {
-        faite: t.faite !== undefined ? t.faite : undefined, // undefined = pas encore répondu
+        faite: t.faite !== undefined ? t.faite : undefined,
         justification: t.justification || '',
         photo_url: t.photo_url || ''
       };
     });
     setTachesEtat(etat);
-    setShowTraitement(true);
+    setModeTraitement(true);
   };
 
-  const handleValiderPriseEnCharge = () => {
+  const handleRetourListe = () => {
+    setModeTraitement(false);
+    setSelectedMission(null);
+    setTachesEtat({});
+    setCommandesArticles({});
+    setNouvelArticle({});
+    setPrenomAgent('');
+  };
+
+  const handleDemarrerMission = () => {
     if (!prenomAgent.trim()) {
       toast.error('Prénom obligatoire');
       return;
@@ -307,14 +309,18 @@ export default function MissionsDirectionService({ service }) {
   };
 
   const handleAjouterArticle = (numero) => {
-    const article = prompt('Nom de l\'article à commander:');
-    if (!article?.trim()) return;
+    const article = nouvelArticle[numero]?.trim();
+    if (!article) {
+      toast.error('Nom d\'article requis');
+      return;
+    }
 
     const articles = commandesArticles[numero] || [];
     setCommandesArticles({
       ...commandesArticles,
-      [numero]: [...articles, article.trim()]
+      [numero]: [...articles, article]
     });
+    setNouvelArticle({ ...nouvelArticle, [numero]: '' });
   };
 
   const handleSupprimerArticle = (numero, index) => {
@@ -484,6 +490,318 @@ export default function MissionsDirectionService({ service }) {
     );
   }
 
+  // Mode traitement - afficher UNIQUEMENT la page de traitement
+  if (modeTraitement && selectedMission) {
+    const tachesRepondues = selectedMission.taches.filter(t => tachesEtat[t.numero]?.faite !== undefined).length;
+
+    return (
+      <div className="space-y-4">
+        {/* Header avec retour */}
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={handleRetourListe}
+            variant="outline"
+            size="sm"
+          >
+            ← Retour
+          </Button>
+          <h2 className="font-heading text-xl text-purple-700">
+            Traitement de la mission
+          </h2>
+        </div>
+
+        {/* En-tête mission */}
+        <Card className="border-2 border-purple-300 bg-purple-50">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Badge className={selectedMission.type_intervention === 'HIVERNAGE' ? 'bg-blue-500' : 'bg-yellow-500'}>
+                    {selectedMission.type_intervention === 'HIVERNAGE' ? '❄️ Hivernage' : '🌞 Déshivernage'}
+                  </Badge>
+                  {selectedMission.priorite === 'URGENTE' && (
+                    <Badge className="bg-red-500">⚠️ URGENT</Badge>
+                  )}
+                </div>
+                <h3 className="font-heading text-lg text-purple-900">
+                  {selectedMission.type_hebergement} - {selectedMission.numero_hebergement}
+                </h3>
+              </div>
+              
+              {selectedMission.date_prise_en_charge && (
+                <div className="text-right">
+                  <div className="flex items-center gap-2 text-purple-700 font-bold text-lg">
+                    <Clock className="w-5 h-5 animate-pulse" />
+                    {Math.floor(tempsEcoule / 60)}h {tempsEcoule % 60}min
+                  </div>
+                  <p className="text-xs text-purple-600">Temps écoulé</p>
+                </div>
+              )}
+            </div>
+
+            {selectedMission.description && (
+              <p className="text-sm text-purple-700 italic border-t border-purple-200 pt-2">
+                {selectedMission.description}
+              </p>
+            )}
+
+            {selectedMission.pris_en_charge_par && (
+              <div className="flex items-center gap-2 text-sm border-t border-purple-200 pt-2">
+                <User className="w-4 h-4 text-purple-600" />
+                <span className="font-bold text-purple-900">{selectedMission.pris_en_charge_par}</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Prise en charge si pas encore fait */}
+        {!selectedMission.pris_en_charge_par && (
+          <Card className="border-2 border-yellow-400 bg-yellow-50">
+            <CardContent className="p-4 space-y-3">
+              <h3 className="font-heading text-lg text-yellow-900">
+                📝 Identification requise
+              </h3>
+              <Input
+                value={prenomAgent}
+                onChange={(e) => setPrenomAgent(e.target.value)}
+                placeholder="Votre prénom *"
+                className="h-12 bg-white"
+                autoFocus
+              />
+              <Button
+                onClick={handleDemarrerMission}
+                disabled={!prenomAgent.trim() || priseEnChargeMutation.isPending}
+                className="w-full bg-purple-600 hover:bg-purple-700 h-12"
+              >
+                {priseEnChargeMutation.isPending ? (
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                ) : (
+                  <Play className="w-5 h-5 mr-2" />
+                )}
+                Démarrer la mission
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Progression */}
+        <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+          <p className="text-sm font-bold text-blue-900">
+            📋 Progression: {tachesRepondues}/{selectedMission.taches.length} tâches traitées
+          </p>
+        </div>
+
+        {/* Liste des tâches */}
+        <div className="space-y-4">
+          {selectedMission.taches.map(tache => {
+            const etat = tachesEtat[tache.numero];
+            const estRepondu = etat?.faite !== undefined;
+            const estFait = etat?.faite === true;
+            const estPasFait = etat?.faite === false;
+
+            return (
+              <Card key={tache.numero} className={`border-2 ${
+                estRepondu ? (estFait ? 'border-green-400 bg-green-50' : 'border-orange-400 bg-orange-50') : 'border-gray-300 bg-white'
+              }`}>
+                <CardContent className="p-4 space-y-3">
+                  {/* En-tête tâche */}
+                  <div className="flex items-start gap-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${
+                      estRepondu ? (estFait ? 'bg-green-600 text-white' : 'bg-orange-600 text-white') : 'bg-gray-300 text-gray-700'
+                    }`}>
+                      {tache.numero}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900 text-lg">{tache.texte}</p>
+                      {!estRepondu && (
+                        <p className="text-sm text-red-600 font-bold mt-1">⚠️ À traiter</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Boutons Fait / Pas fait */}
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={() => handleToggleTache(tache.numero, true)}
+                      variant={estFait ? 'default' : 'outline'}
+                      className={`flex-1 h-12 text-base ${estFait ? 'bg-green-600 hover:bg-green-700' : 'border-2 border-green-600 text-green-600 hover:bg-green-50'}`}
+                    >
+                      ✔️ Fait
+                    </Button>
+                    <Button
+                      onClick={() => handleToggleTache(tache.numero, false)}
+                      variant={estPasFait ? 'default' : 'outline'}
+                      className={`flex-1 h-12 text-base ${estPasFait ? 'bg-red-600 hover:bg-red-700' : 'border-2 border-red-600 text-red-600 hover:bg-red-50'}`}
+                    >
+                      ✖️ Pas fait
+                    </Button>
+                  </div>
+
+                  {/* Section "Pas fait" */}
+                  {estPasFait && (
+                    <div className="space-y-3 pl-2 border-l-4 border-orange-400">
+                      {/* Justification */}
+                      <div className="pl-3">
+                        <label className="text-sm font-bold text-orange-700 mb-1 block">
+                          ✍️ Justification obligatoire *
+                        </label>
+                        <Textarea
+                          value={etat?.justification || ''}
+                          onChange={(e) => setTachesEtat({
+                            ...tachesEtat,
+                            [tache.numero]: {
+                              ...tachesEtat[tache.numero],
+                              justification: e.target.value
+                            }
+                          })}
+                          placeholder="Pourquoi cette tâche n'a pas été effectuée..."
+                          rows={2}
+                          className="bg-white border-2 border-orange-300"
+                        />
+                      </div>
+
+                      {/* Commande nécessaire */}
+                      <div className="pl-3 bg-purple-50 rounded-lg p-3 border-2 border-purple-300">
+                        <label className="text-sm font-bold text-purple-800 mb-2 block">
+                          🛒 Une commande est-elle nécessaire ? *
+                        </label>
+                        <div className="flex gap-2 mb-3">
+                          <Button
+                            onClick={() => handleToggleCommande(tache.numero, false)}
+                            variant={etat?.commandeNecessaire === false ? 'default' : 'outline'}
+                            className={etat?.commandeNecessaire === false ? 'bg-gray-700 flex-1' : 'border-2 border-gray-600 text-gray-600 flex-1'}
+                            size="sm"
+                          >
+                            Non
+                          </Button>
+                          <Button
+                            onClick={() => handleToggleCommande(tache.numero, true)}
+                            variant={etat?.commandeNecessaire === true ? 'default' : 'outline'}
+                            className={etat?.commandeNecessaire === true ? 'bg-green-600 flex-1' : 'border-2 border-green-600 text-green-600 flex-1'}
+                            size="sm"
+                          >
+                            Oui
+                          </Button>
+                        </div>
+
+                        {/* Ajout articles */}
+                        {etat?.commandeNecessaire === true && (
+                          <div className="space-y-2">
+                            {commandesArticles[tache.numero]?.map((article, idx) => (
+                              <div key={idx} className="flex items-center gap-2 bg-white rounded-lg p-2 border-2 border-purple-200">
+                                <span className="flex-1 text-sm font-medium">{article}</span>
+                                <button
+                                  onClick={() => handleSupprimerArticle(tache.numero, idx)}
+                                  className="text-red-500 hover:text-red-700 p-1"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ))}
+
+                            <div className="flex gap-2">
+                              <Input
+                                value={nouvelArticle[tache.numero] || ''}
+                                onChange={(e) => setNouvelArticle({ ...nouvelArticle, [tache.numero]: e.target.value })}
+                                placeholder="Nom de l'article..."
+                                className="flex-1 bg-white"
+                                onKeyPress={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleAjouterArticle(tache.numero);
+                                  }
+                                }}
+                              />
+                              <Button
+                                onClick={() => handleAjouterArticle(tache.numero)}
+                                size="sm"
+                                className="bg-purple-600"
+                              >
+                                ➕
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Photo */}
+                  <div className="flex items-center gap-3">
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handlePhotoUpload(tache.numero, file);
+                        }}
+                        disabled={uploadingPhoto === tache.numero}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={uploadingPhoto === tache.numero}
+                        type="button"
+                        asChild
+                      >
+                        <span>
+                          {uploadingPhoto === tache.numero ? (
+                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                          ) : (
+                            <Camera className="w-4 h-4 mr-2" />
+                          )}
+                          Photo (facultatif)
+                        </span>
+                      </Button>
+                    </label>
+                    {etat?.photo_url && (
+                      <span className="text-xs text-green-600 flex items-center gap-1">
+                        <CheckCircle className="w-4 h-4" />
+                        Ajoutée
+                      </span>
+                    )}
+                  </div>
+
+                  {etat?.photo_url && (
+                    <img src={etat.photo_url} alt={`Tâche ${tache.numero}`} className="w-40 h-40 object-cover rounded-lg border-2 border-gray-300" />
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Bouton validation final */}
+        <Card className="border-2 border-purple-400 bg-purple-50 sticky bottom-4">
+          <CardContent className="p-4">
+            <Button 
+              onClick={handleValiderTraitement}
+              disabled={finalisationMutation.isPending || !selectedMission.pris_en_charge_par}
+              className="w-full bg-purple-600 hover:bg-purple-700 h-14 text-lg font-bold"
+            >
+              {finalisationMutation.isPending ? (
+                <Loader2 className="w-6 h-6 animate-spin mr-2" />
+              ) : (
+                <CheckCircle className="w-6 h-6 mr-2" />
+              )}
+              Valider la mission
+            </Button>
+            <p className="text-xs text-purple-700 text-center mt-2">
+              {tachesRepondues < selectedMission.taches.length ? (
+                `⚠️ ${selectedMission.taches.length - tachesRepondues} tâche(s) restante(s)`
+              ) : (
+                '✅ Toutes les tâches traitées'
+              )}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Mode liste - afficher la liste des missions
   return (
     <div className="space-y-4">
       {/* Debug info */}
@@ -626,12 +944,12 @@ export default function MissionsDirectionService({ service }) {
                     className="w-full bg-purple-600 hover:bg-purple-700 h-12"
                   >
                     <Play className="w-4 h-4 mr-2" />
-                    Prendre en charge
+                    Commencer
                   </Button>
                 )}
                 {mission.statut === 'EN_COURS' && (
                   <Button 
-                    onClick={() => handleCommencerTraitement(mission)}
+                    onClick={() => handlePrendreEnCharge(mission)}
                     className="w-full bg-green-600 hover:bg-green-700 h-12"
                   >
                     <CheckCircle className="w-4 h-4 mr-2" />
@@ -648,10 +966,10 @@ export default function MissionsDirectionService({ service }) {
                       </div>
                     )}
                     <Button 
-                      onClick={() => handleCommencerTraitement(mission)}
+                      onClick={() => handlePrendreEnCharge(mission)}
                       className="w-full bg-orange-500 hover:bg-orange-600 h-12"
                     >
-                      🔄 Reprendre la mission
+                      🔄 Reprendre
                     </Button>
                   </div>
                 )}
@@ -662,7 +980,7 @@ export default function MissionsDirectionService({ service }) {
                     className="w-full border-green-500 text-green-700 h-10"
                     size="sm"
                   >
-                    📄 Télécharger le PDF
+                    📄 PDF
                   </Button>
                 )}
               </CardContent>
@@ -671,325 +989,7 @@ export default function MissionsDirectionService({ service }) {
         </div>
       )}
 
-      {/* Dialog prise en charge */}
-      <Dialog open={showPriseEnCharge} onOpenChange={setShowPriseEnCharge}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-heading text-purple-700 flex items-center gap-2">
-              <Play className="w-6 h-6" />
-              Prise en charge
-            </DialogTitle>
-          </DialogHeader>
-          
-          {selectedMission && (
-            <div className="space-y-4">
-              {/* Récap mission */}
-              <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Badge className={selectedMission.type_intervention === 'HIVERNAGE' ? 'bg-blue-500' : 'bg-yellow-500'}>
-                      {selectedMission.type_intervention === 'HIVERNAGE' ? '❄️ Hivernage' : '🌞 Déshivernage'}
-                    </Badge>
-                    {selectedMission.priorite === 'URGENTE' && (
-                      <Badge className="bg-red-500">⚠️ URGENT</Badge>
-                    )}
-                  </div>
-                  <p className="font-bold text-purple-700">
-                    {selectedMission.type_hebergement} - {selectedMission.numero_hebergement}
-                  </p>
-                  <p className="text-gray-600">{selectedMission.taches.length} tâche(s) à effectuer</p>
-                </div>
-              </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700">Votre prénom *</label>
-                <Input
-                  value={prenomAgent}
-                  onChange={(e) => setPrenomAgent(e.target.value)}
-                  placeholder="Ex: Thomas"
-                  className="h-12"
-                  autoFocus
-                />
-              </div>
-
-              <div className="bg-blue-50 rounded-lg p-3 text-xs text-blue-700">
-                ℹ️ En validant, le timer démarre automatiquement et vous accéderez directement au traitement des tâches.
-              </div>
-
-              <Button 
-                onClick={handleValiderPriseEnCharge}
-                disabled={!prenomAgent.trim() || priseEnChargeMutation.isPending}
-                className="w-full bg-purple-600 hover:bg-purple-700 h-12"
-              >
-                {priseEnChargeMutation.isPending ? (
-                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                ) : (
-                  <Play className="w-5 h-5 mr-2" />
-                )}
-                Démarrer la mission
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog traitement tâches */}
-      <Dialog open={showTraitement} onOpenChange={setShowTraitement}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-heading text-purple-700">
-              ✅ Traitement des tâches
-            </DialogTitle>
-          </DialogHeader>
-
-          {selectedMission && (
-            <div className="space-y-4">
-              {/* En-tête mission */}
-              <div className="bg-purple-50 rounded-xl p-4 border-2 border-purple-200">
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <span className="text-gray-600">Type:</span>
-                    <Badge className={selectedMission.type_intervention === 'HIVERNAGE' ? 'bg-blue-500 ml-2' : 'bg-yellow-500 ml-2'}>
-                      {selectedMission.type_intervention === 'HIVERNAGE' ? '❄️ Hivernage' : '🌞 Déshivernage'}
-                    </Badge>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Hébergement:</span>
-                    <span className="font-bold ml-2">{selectedMission.type_hebergement} - {selectedMission.numero_hebergement}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Service:</span>
-                    <Badge className={service === 'TECHNIQUE' ? 'bg-blue-100 text-blue-700 ml-2' : 'bg-yellow-100 text-yellow-700 ml-2'}>
-                      {service === 'TECHNIQUE' ? '🧰 Technique' : '🧽 Ménage'}
-                    </Badge>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Agent:</span>
-                    <span className="font-bold ml-2">{selectedMission.pris_en_charge_par}</span>
-                  </div>
-                  {selectedMission.priorite === 'URGENTE' && (
-                    <div className="col-span-2">
-                      <Badge className="bg-red-500">⚠️ URGENT</Badge>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Timer en temps réel */}
-                {selectedMission.date_prise_en_charge && (
-                  <div className="mt-3 pt-3 border-t border-purple-200 flex items-center justify-between">
-                    <span className="text-sm text-gray-600">⏱️ Temps écoulé:</span>
-                    <div className="flex items-center gap-2 text-purple-700 font-bold text-lg">
-                      <Clock className="w-5 h-5 animate-pulse" />
-                      {Math.floor(tempsEcoule / 60)}h {tempsEcoule % 60}min
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Description */}
-              {selectedMission.description && (
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-sm text-gray-700 italic">{selectedMission.description}</p>
-                </div>
-              )}
-
-              {/* Liste des tâches */}
-              <div className="space-y-3">
-                <h3 className="font-heading text-purple-700 flex items-center gap-2">
-                  📋 Tâches à traiter ({selectedMission.taches.filter(t => tachesEtat[t.numero]?.faite !== undefined).length}/{selectedMission.taches.length})
-                </h3>
-                
-                {selectedMission.taches.map(tache => {
-                  const etat = tachesEtat[tache.numero];
-                  const estRepondu = etat?.faite !== undefined;
-                  const estFait = etat?.faite === true;
-                  const estPasFait = etat?.faite === false;
-
-                  return (
-                    <Card key={tache.numero} className={`p-4 border-2 ${
-                      estRepondu ? (estFait ? 'border-green-300 bg-green-50' : 'border-orange-300 bg-orange-50') : 'border-gray-300'
-                    }`}>
-                      <div className="flex items-start gap-3 mb-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                          estRepondu ? (estFait ? 'bg-green-600 text-white' : 'bg-orange-600 text-white') : 'bg-gray-300 text-gray-600'
-                        }`}>
-                          {tache.numero}
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-medium text-gray-900">{tache.texte}</p>
-                          {!estRepondu && (
-                            <p className="text-xs text-red-500 mt-1">⚠️ À traiter</p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="space-y-3 ml-11">
-                        {/* Boutons Fait / Pas fait */}
-                        <div className="flex gap-2">
-                          <Button
-                            onClick={() => handleToggleTache(tache.numero, true)}
-                            variant={estFait ? 'default' : 'outline'}
-                            className={estFait ? 'bg-green-600 hover:bg-green-700' : 'border-green-600 text-green-600'}
-                            size="sm"
-                          >
-                            ✔️ Fait
-                          </Button>
-                          <Button
-                            onClick={() => handleToggleTache(tache.numero, false)}
-                            variant={estPasFait ? 'default' : 'outline'}
-                            className={estPasFait ? 'bg-red-600 hover:bg-red-700' : 'border-red-600 text-red-600'}
-                            size="sm"
-                          >
-                            ✖️ Pas fait
-                          </Button>
-                        </div>
-
-                        {/* Justification si pas fait */}
-                        {estPasFait && (
-                          <>
-                            <div className="bg-orange-50 rounded-lg p-3 border border-orange-200">
-                              <label className="text-xs font-bold text-orange-700 mb-1 block">
-                                Justification obligatoire *
-                              </label>
-                              <Textarea
-                                value={etat?.justification || ''}
-                                onChange={(e) => setTachesEtat({
-                                  ...tachesEtat,
-                                  [tache.numero]: {
-                                    ...tachesEtat[tache.numero],
-                                    justification: e.target.value
-                                  }
-                                })}
-                                placeholder="Pourquoi cette tâche n'a pas été effectuée..."
-                                rows={2}
-                                className="bg-white"
-                              />
-                            </div>
-
-                            {/* Section Commande nécessaire */}
-                            <div className="bg-purple-50 rounded-lg p-3 border-2 border-purple-300">
-                              <label className="text-xs font-bold text-purple-700 mb-2 block">
-                                🛒 Une commande est-elle nécessaire pour réaliser cette tâche ? *
-                              </label>
-                              <div className="flex gap-2 mb-3">
-                                <Button
-                                  onClick={() => handleToggleCommande(tache.numero, false)}
-                                  variant={etat?.commandeNecessaire === false ? 'default' : 'outline'}
-                                  className={etat?.commandeNecessaire === false ? 'bg-gray-600' : 'border-gray-600 text-gray-600'}
-                                  size="sm"
-                                >
-                                  ⭕ Non
-                                </Button>
-                                <Button
-                                  onClick={() => handleToggleCommande(tache.numero, true)}
-                                  variant={etat?.commandeNecessaire === true ? 'default' : 'outline'}
-                                  className={etat?.commandeNecessaire === true ? 'bg-green-600' : 'border-green-600 text-green-600'}
-                                  size="sm"
-                                >
-                                  ⭕ Oui
-                                </Button>
-                              </div>
-
-                              {/* Liste articles si commande nécessaire */}
-                              {etat?.commandeNecessaire === true && (
-                                <div className="space-y-2">
-                                  <label className="text-xs font-bold text-purple-700">Articles à commander:</label>
-                                  
-                                  {commandesArticles[tache.numero]?.map((article, idx) => (
-                                    <div key={idx} className="flex items-center gap-2 bg-white rounded-lg p-2 border">
-                                      <span className="flex-1 text-sm">{article}</span>
-                                      <button
-                                        onClick={() => handleSupprimerArticle(tache.numero, idx)}
-                                        className="text-red-500 hover:text-red-700"
-                                      >
-                                        <X className="w-4 h-4" />
-                                      </button>
-                                    </div>
-                                  ))}
-
-                                  <Button
-                                    onClick={() => handleAjouterArticle(tache.numero)}
-                                    variant="outline"
-                                    size="sm"
-                                    className="w-full border-purple-600 text-purple-600"
-                                  >
-                                    ➕ Ajouter un article
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          </>
-                        )}
-
-                        {/* Photo facultative */}
-                        <div className="flex items-center gap-2">
-                          <label className="cursor-pointer">
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) handlePhotoUpload(tache.numero, file);
-                              }}
-                              disabled={uploadingPhoto === tache.numero}
-                            />
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-xs"
-                              disabled={uploadingPhoto === tache.numero}
-                              type="button"
-                              onClick={(e) => e.currentTarget.previousSibling.click()}
-                            >
-                              {uploadingPhoto === tache.numero ? (
-                                <Loader2 className="w-3 h-3 animate-spin mr-1" />
-                              ) : (
-                                <Camera className="w-3 h-3 mr-1" />
-                              )}
-                              Photo (facultatif)
-                            </Button>
-                          </label>
-                          {etat?.photo_url && (
-                            <div className="flex items-center gap-1 text-xs text-green-600">
-                              <CheckCircle className="w-3 h-3" />
-                              Photo ajoutée
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Aperçu photo */}
-                        {etat?.photo_url && (
-                          <img src={etat.photo_url} alt={`Tâche ${tache.numero}`} className="w-32 h-32 object-cover rounded-lg border-2" />
-                        )}
-                      </div>
-                    </Card>
-                  );
-                })}
-              </div>
-
-              {/* Bouton validation */}
-              <div className="pt-4 border-t">
-                <Button 
-                  onClick={handleValiderTraitement}
-                  disabled={finalisationMutation.isPending}
-                  className="w-full bg-purple-600 hover:bg-purple-700 h-14 text-lg"
-                >
-                  {finalisationMutation.isPending ? (
-                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                  ) : (
-                    <CheckCircle className="w-5 h-5 mr-2" />
-                  )}
-                  Valider la mission
-                </Button>
-                <p className="text-xs text-gray-500 text-center mt-2">
-                  ⚠️ Toutes les tâches doivent être traitées
-                </p>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
