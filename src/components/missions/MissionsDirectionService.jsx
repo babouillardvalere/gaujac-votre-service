@@ -17,7 +17,7 @@ export default function MissionsDirectionService({ service }) {
   const [modeTraitement, setModeTraitement] = useState(false); // true = en traitement
   const [prenomAgent, setPrenomAgent] = useState('');
   const [tachesEtat, setTachesEtat] = useState({});
-  const [filterStatut, setFilterStatut] = useState('tous');
+  const [filterStatut, setFilterStatut] = useState('A_FAIRE');
   const [tempsEcoule, setTempsEcoule] = useState(0);
   const [uploadingPhoto, setUploadingPhoto] = useState(null);
   const [commandesArticles, setCommandesArticles] = useState({});
@@ -458,10 +458,7 @@ export default function MissionsDirectionService({ service }) {
     });
   };
 
-  const filteredMissions = missions.filter(m => {
-    if (filterStatut === 'tous') return true;
-    return m.statut === filterStatut;
-  });
+  const filteredMissions = missions.filter(m => m.statut === filterStatut);
 
   const counts = {
     A_FAIRE: missions.filter(m => m.statut === 'A_FAIRE').length,
@@ -804,28 +801,8 @@ export default function MissionsDirectionService({ service }) {
   // Mode liste - afficher la liste des missions
   return (
     <div className="space-y-4">
-      {/* Debug info */}
-      <div className="bg-blue-50 rounded-lg p-4 text-xs space-y-1 border-2 border-blue-300">
-        <p className="font-bold text-blue-900 mb-2">🔍 DEBUG MISSIONS DIRECTION</p>
-        <p>📊 Total missions chargées: <strong>{missions.length}</strong></p>
-        <p>🎯 Service actuel: <strong>{service}</strong></p>
-        <p>📋 Filtre appliqué: <strong>{filterStatut}</strong></p>
-        <p>✅ Missions affichées: <strong>{filteredMissions.length}</strong></p>
-        <p className="text-blue-700 pt-2 border-t border-blue-200">
-          👉 Ouvrez la console (F12) pour voir les logs détaillés
-        </p>
-      </div>
-
-      {/* Filtres */}
+      {/* Onglets de filtrage */}
       <div className="flex gap-2 flex-wrap">
-        <Button
-          onClick={() => setFilterStatut('tous')}
-          variant={filterStatut === 'tous' ? 'default' : 'outline'}
-          className={filterStatut === 'tous' ? 'bg-purple-600' : ''}
-          size="sm"
-        >
-          Toutes ({missions.length})
-        </Button>
         {['A_FAIRE', 'EN_COURS', 'EN_ATTENTE', 'TERMINEE'].map(statut => (
           <Button
             key={statut}
@@ -845,32 +822,23 @@ export default function MissionsDirectionService({ service }) {
       </div>
 
       {/* Liste missions */}
-      {missions.length === 0 ? (
+      {filteredMissions.length === 0 ? (
         <div className="text-center py-16 bg-purple-50 rounded-xl border-2 border-purple-200">
           <div className="max-w-md mx-auto space-y-4">
             <div className="text-6xl">📭</div>
-            <h3 className="font-heading text-2xl text-purple-700">Aucune mission direction</h3>
-            <p className="text-gray-600">
-              Aucune mission n'a été créée par la Direction pour le service <strong>{service}</strong>.
-            </p>
-            <p className="text-xs text-gray-500">
-              Les missions apparaîtront ici une fois créées depuis l'espace Direction.
+            <h3 className="font-heading text-2xl text-purple-700">
+              {filterStatut === 'A_FAIRE' && 'Aucune mission à faire'}
+              {filterStatut === 'EN_COURS' && 'Aucune mission en cours'}
+              {filterStatut === 'EN_ATTENTE' && 'Aucune mission en attente'}
+              {filterStatut === 'TERMINEE' && 'Aucune mission terminée'}
+            </h3>
+            <p className="text-gray-600 font-body">
+              {filterStatut === 'A_FAIRE' && 'Les nouvelles missions apparaîtront ici.'}
+              {filterStatut === 'EN_COURS' && 'Prenez en charge une mission pour la voir ici.'}
+              {filterStatut === 'EN_ATTENTE' && 'Les missions bloquées apparaîtront ici.'}
+              {filterStatut === 'TERMINEE' && 'Vos missions terminées apparaîtront ici.'}
             </p>
           </div>
-        </div>
-      ) : filteredMissions.length === 0 ? (
-        <div className="text-center py-12 bg-yellow-50 rounded-xl border-2 border-yellow-200">
-          <p className="text-yellow-700">
-            Aucune mission avec le filtre <strong>"{filterStatut}"</strong>
-          </p>
-          <Button 
-            onClick={() => setFilterStatut('tous')}
-            variant="outline"
-            className="mt-4"
-            size="sm"
-          >
-            Voir toutes les missions
-          </Button>
         </div>
       ) : (
         <div className="space-y-3">
