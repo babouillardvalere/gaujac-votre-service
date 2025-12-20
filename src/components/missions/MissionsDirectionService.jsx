@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,8 +8,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Clock, User, CheckCircle, X, Camera, Loader2, AlertTriangle, Upload, Play } from 'lucide-react';
-import { format, differenceInMinutes } from 'date-fns';
+import { format, differenceInMinutes, parseISO, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns';
 import { toast } from 'sonner';
+import MissionFilters from './MissionFilters';
+import MissionCalendarView from './MissionCalendarView';
+import MissionListView from './MissionListView';
 
 export default function MissionsDirectionService({ service }) {
   const queryClient = useQueryClient();
@@ -22,6 +25,10 @@ export default function MissionsDirectionService({ service }) {
   const [uploadingPhoto, setUploadingPhoto] = useState(null);
   const [commandesArticles, setCommandesArticles] = useState({});
   const [nouvelArticle, setNouvelArticle] = useState({});
+  const [filterDateDebut, setFilterDateDebut] = useState('');
+  const [filterDateFin, setFilterDateFin] = useState('');
+  const [filterAgent, setFilterAgent] = useState('');
+  const [viewMode, setViewMode] = useState('list');
 
   const { data: missions = [], isLoading, error } = useQuery({
     queryKey: ['interventions-direction', service],
@@ -432,14 +439,44 @@ export default function MissionsDirectionService({ service }) {
     });
   };
 
-  const filteredMissions = missions.filter(m => m.statut === filterStatut);
+  const agents = useMemo(() => {
+    const agentSet = new Set();
+    missions.forEach(m => {
+      if (m.pris_en_charge_par) {
+        agentSet.add(m.pris_en_charge_par);
+      }
+    });
+    return Array.from(agentSet).sort();
+  }, [missions]);
 
-  const counts = {
+  const filteredMissions = useMemo(() => {
+    return missions.filter(m => {
+      if (m.statut !== filterStatut) return false;
+
+      if (filterDateDebut && m.created_date) {
+        const missionDate = startOfDay(parseISO(m.created_date));
+        const filterDate = startOfDay(new Date(filterDateDebut));
+        if (isBefore(missionDate, filterDate)) return false;
+      }
+
+      if (filterDateFin && m.created_date) {
+        const missionDate = endOfDay(parseISO(m.created_date));
+        const filterDate = endOfDay(new Date(filterDateFin));
+        if (isAfter(missionDate, filterDate)) return false;
+      }
+
+      if (filterAgent && m.pris_en_charge_par !== filterAgent) return false;
+
+      return true;
+    });
+  }, [missions, filterStatut, filterDateDebut, filterDateFin, filterAgent]);
+
+  const counts = useMemo(() => ({
     A_FAIRE: missions.filter(m => m.statut === 'A_FAIRE').length,
     EN_COURS: missions.filter(m => m.statut === 'EN_COURS').length,
     EN_ATTENTE: missions.filter(m => m.statut === 'EN_ATTENTE').length,
     TERMINEE: missions.filter(m => m.statut === 'TERMINEE').length
-  };
+  }), [missions]);
 
   if (isLoading) {
     return (
@@ -772,166 +809,37 @@ export default function MissionsDirectionService({ service }) {
     );
   }
 
-  // Mode liste - afficher la liste des missions
+  // Mode liste - afficher la liste ou le calendrier
   return (
     <div className="space-y-4">
-      {/* Onglets de filtrage */}
-      <div className="flex gap-2 flex-wrap">
-        {['A_FAIRE', 'EN_COURS', 'EN_ATTENTE', 'TERMINEE'].map(statut => (
-          <Button
-            key={statut}
-            onClick={() => setFilterStatut(statut)}
-            variant={filterStatut === statut ? 'default' : 'outline'}
-            className={filterStatut === statut ? 'bg-purple-600' : ''}
-            size="sm"
-          >
-            {statut === 'A_FAIRE' ? 'À faire' : 
-             statut === 'EN_COURS' ? 'En cours' :
-             statut === 'EN_ATTENTE' ? 'En attente' : 'Terminées'}
-            {counts[statut] > 0 && (
-              <Badge className="ml-2 bg-white/20">{counts[statut]}</Badge>
-            )}
-          </Button>
-        ))}
-      </div>
+      <MissionFilters
+        filterStatut={filterStatut}
+        setFilterStatut={setFilterStatut}
+        filterDateDebut={filterDateDebut}
+        setFilterDateDebut={setFilterDateDebut}
+        filterDateFin={filterDateFin}
+        setFilterDateFin={setFilterDateFin}
+        filterAgent={filterAgent}
+        setFilterAgent={setFilterAgent}
+        agents={agents}
+        counts={counts}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+      />
 
-      {/* Liste missions */}
-      {filteredMissions.length === 0 ? (
-        <div className="text-center py-16 bg-purple-50 rounded-xl border-2 border-purple-200">
-          <div className="max-w-md mx-auto space-y-4">
-            <div className="text-6xl">📭</div>
-            <h3 className="font-heading text-2xl text-purple-700">
-              {filterStatut === 'A_FAIRE' && 'Aucune mission à faire'}
-              {filterStatut === 'EN_COURS' && 'Aucune mission en cours'}
-              {filterStatut === 'EN_ATTENTE' && 'Aucune mission en attente'}
-              {filterStatut === 'TERMINEE' && 'Aucune mission terminée'}
-            </h3>
-            <p className="text-gray-600 font-body">
-              {filterStatut === 'A_FAIRE' && 'Les nouvelles missions apparaîtront ici.'}
-              {filterStatut === 'EN_COURS' && 'Prenez en charge une mission pour la voir ici.'}
-              {filterStatut === 'EN_ATTENTE' && 'Les missions bloquées apparaîtront ici.'}
-              {filterStatut === 'TERMINEE' && 'Vos missions terminées apparaîtront ici.'}
-            </p>
-          </div>
-        </div>
+      {viewMode === 'calendar' ? (
+        <MissionCalendarView
+          missions={filteredMissions}
+          onMissionClick={handlePrendreEnCharge}
+        />
       ) : (
-        <div className="space-y-3">
-          {filteredMissions.map(mission => (
-            <Card key={mission.id} className="border-2 border-purple-200">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge className={
-                        mission.type_intervention === 'HIVERNAGE' ? 'bg-blue-500' : 'bg-yellow-500'
-                      }>
-                        {mission.type_intervention === 'HIVERNAGE' ? '❄️ Hivernage' : '🌞 Déshivernage'}
-                      </Badge>
-                      {mission.priorite === 'URGENTE' && (
-                        <Badge className="bg-red-500">⚠️ Urgent</Badge>
-                      )}
-                    </div>
-                    <h3 className="font-heading text-lg text-purple-700">
-                      {mission.type_hebergement} - {mission.numero_hebergement}
-                    </h3>
-                    <p className="text-sm text-gray-600">{mission.description}</p>
-                  </div>
-                  
-                  <Badge variant={
-                    mission.statut === 'TERMINEE' ? 'default' :
-                    mission.statut === 'EN_COURS' ? 'secondary' : 'outline'
-                  }>
-                    {mission.statut === 'A_FAIRE' ? 'À faire' :
-                     mission.statut === 'EN_COURS' ? 'En cours' :
-                     mission.statut === 'EN_ATTENTE' ? 'En attente' : 'Terminée'}
-                  </Badge>
-                </div>
-
-                {/* Tâches */}
-                <div className="space-y-1 mb-3">
-                  {mission.taches?.map(t => (
-                    <div key={t.numero} className="flex items-center gap-2 text-sm">
-                      {t.faite ? (
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                      ) : (
-                        <div className="w-4 h-4 rounded-full border-2 border-gray-300" />
-                      )}
-                      <span className={t.faite ? 'line-through text-gray-400' : ''}>
-                        {t.numero}. {t.texte}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Infos agent */}
-                {mission.pris_en_charge_par && (
-                  <div className="flex items-center gap-3 text-sm text-gray-600 mb-3">
-                    <div className="flex items-center gap-1">
-                      <User className="w-4 h-4" />
-                      {mission.pris_en_charge_par}
-                    </div>
-                    {mission.temps_ecoule_minutes > 0 && (
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        {mission.temps_ecoule_minutes} min
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Actions */}
-                {mission.statut === 'A_FAIRE' && (
-                  <Button 
-                    onClick={() => handlePrendreEnCharge(mission)}
-                    className="w-full bg-purple-600 hover:bg-purple-700 h-12"
-                  >
-                    <Play className="w-4 h-4 mr-2" />
-                    Commencer
-                  </Button>
-                )}
-                {mission.statut === 'EN_COURS' && (
-                  <Button 
-                    onClick={() => handlePrendreEnCharge(mission)}
-                    className="w-full bg-green-600 hover:bg-green-700 h-12"
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Traiter les tâches
-                  </Button>
-                )}
-                {mission.statut === 'EN_ATTENTE' && (
-                  <div className="space-y-2">
-                    {mission.description?.includes('⚠️ En attente:') && (
-                      <div className="bg-orange-50 rounded-lg p-2 border border-orange-200">
-                        <p className="text-xs text-orange-700">
-                          {mission.description.split('⚠️ En attente:')[1]?.trim()}
-                        </p>
-                      </div>
-                    )}
-                    <Button 
-                      onClick={() => handlePrendreEnCharge(mission)}
-                      className="w-full bg-orange-500 hover:bg-orange-600 h-12"
-                    >
-                      🔄 Reprendre
-                    </Button>
-                  </div>
-                )}
-                {mission.statut === 'TERMINEE' && mission.pdf_url && (
-                  <Button 
-                    onClick={() => window.open(mission.pdf_url, '_blank')}
-                    variant="outline"
-                    className="w-full border-green-500 text-green-700 h-10"
-                    size="sm"
-                  >
-                    📄 PDF
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <MissionListView
+          missions={filteredMissions}
+          onPrendreEnCharge={handlePrendreEnCharge}
+          onContinuer={handlePrendreEnCharge}
+          loading={false}
+        />
       )}
-
-
     </div>
   );
 }
