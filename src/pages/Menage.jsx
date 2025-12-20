@@ -72,7 +72,7 @@ export default function Menage() {
       const query = filter === 'resolu' 
         ? { type: 'menage', statut: 'resolu' }
         : { type: 'menage' };
-      return await base44.entities.Incident.filter(query, '-date_saisie', 100);
+      return await base44.entities.Incident.filter(query, '-date_saisie', 250);
     },
     refetchInterval: filter === 'resolu' ? 120000 : 45000,
     staleTime: 30000
@@ -80,7 +80,7 @@ export default function Menage() {
 
   const { data: missions = [] } = useQuery({
     queryKey: ['missions-internes', 'MENAGE'],
-    queryFn: () => base44.entities.MissionInterne.filter({ service: 'MENAGE' }, '-date_debut', 50),
+    queryFn: () => base44.entities.MissionInterne.filter({ service: 'MENAGE' }, '-date_debut', 250),
     refetchInterval: 60000,
     staleTime: 45000
   });

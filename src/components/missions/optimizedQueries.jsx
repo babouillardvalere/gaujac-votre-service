@@ -1,9 +1,9 @@
 // Optimisations des requêtes pour éviter les ralentissements
 
 export const QUERY_LIMITS = {
-  INCIDENTS_ACTIFS: 50,  // Seulement les incidents actifs
-  MISSIONS_ACTIVES: 30,
-  ARCHIVES: 20
+  INCIDENTS_ACTIFS: 250,  // Maximum 250 incidents
+  MISSIONS_ACTIVES: 250,
+  ARCHIVES: 250
 };
 
 export const REFETCH_INTERVALS = {

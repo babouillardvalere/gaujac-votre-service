@@ -37,7 +37,7 @@ export default function MissionsDirectionService({ service }) {
       if (filterStatut !== 'TERMINEE') {
         query.statut = { $in: ['A_FAIRE', 'EN_COURS', 'EN_ATTENTE'] };
       }
-      const allMissions = await base44.entities.InterventionDirection.filter(query, '-created_date', 50);
+      const allMissions = await base44.entities.InterventionDirection.filter(query, '-created_date', 250);
       return allMissions;
     },
     refetchInterval: filterStatut === 'TERMINEE' ? 120000 : 45000,
