@@ -34,6 +34,7 @@ export default function ClientArriveeIdentite() {
   });
 
   const [dossierId, setDossierId] = useState(sessionStorage.getItem('arrivee_dossier_id'));
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const existingDossierId = sessionStorage.getItem('arrivee_dossier_id');
@@ -63,8 +64,23 @@ export default function ClientArriveeIdentite() {
   };
 
   const validateForm = () => {
-    if (!formData.nom || !formData.prenom || !formData.date_arrivee || !formData.date_depart) {
-      toast.error(t('champs_obligatoires'));
+    if (!formData.nom.trim()) {
+      toast.error(lang === 'fr' ? 'Le nom est obligatoire' : 'Last name is required');
+      return false;
+    }
+
+    if (!formData.prenom.trim()) {
+      toast.error(lang === 'fr' ? 'Le prénom est obligatoire' : 'First name is required');
+      return false;
+    }
+
+    if (!formData.date_arrivee) {
+      toast.error(lang === 'fr' ? 'La date d\'arrivée est obligatoire' : 'Arrival date is required');
+      return false;
+    }
+
+    if (!formData.date_depart) {
+      toast.error(lang === 'fr' ? 'La date de départ est obligatoire' : 'Departure date is required');
       return false;
     }
 
@@ -90,6 +106,8 @@ export default function ClientArriveeIdentite() {
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
+    setSubmitting(true);
+    
     try {
       // Persister en session
       sessionStorage.setItem('arrivee_nom', formData.nom);
@@ -149,10 +167,13 @@ export default function ClientArriveeIdentite() {
         });
       }
 
+      toast.success(lang === 'fr' ? 'Informations enregistrées ✅' : 'Information saved ✅');
       navigate(createPageUrl('ClientArriveeHebergement'));
     } catch (error) {
-      console.error(error);
-      toast.error(lang === 'fr' ? 'Erreur lors de l\'enregistrement' : 'Error saving data');
+      console.error('Erreur sauvegarde:', error);
+      toast.error(lang === 'fr' ? 'Erreur lors de l\'enregistrement. Veuillez réessayer.' : 'Error saving data. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -437,10 +458,20 @@ export default function ClientArriveeIdentite() {
 
           <Button
             onClick={handleSubmit}
-            className="w-full h-12 bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl font-heading"
+            disabled={submitting}
+            className="w-full h-12 bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl font-heading disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {lang === 'fr' ? 'Continuer' : 'Continue'}
-            <ArrowRight className="w-5 h-5 ml-2" />
+            {submitting ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                {lang === 'fr' ? 'Enregistrement...' : 'Saving...'}
+              </>
+            ) : (
+              <>
+                {lang === 'fr' ? 'Continuer' : 'Continue'}
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </>
+            )}
           </Button>
         </motion.div>
       </div>
