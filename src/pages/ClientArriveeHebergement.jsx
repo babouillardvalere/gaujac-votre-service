@@ -90,6 +90,10 @@ export default function ClientArriveeHebergement() {
       });
 
       toast.success(lang === 'fr' ? 'Hébergement sélectionné ✅' : 'Accommodation selected ✅');
+      
+      // Attendre que sessionStorage soit bien persisté
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       navigate(createPageUrl('ClientControleInventaire'));
     } catch (error) {
       console.error(error);

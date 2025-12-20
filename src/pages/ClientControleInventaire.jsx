@@ -481,6 +481,10 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
       sessionStorage.setItem('fiche_arrivee_id', fiche.id);
       toast.success(lang === "fr" ? "Inventaire validé ✅" : "Inventory validated ✅");
       setShowRecap(false);
+      
+      // Attendre que sessionStorage soit bien persisté
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       navigate(createPageUrl('ClientResume'));
     } catch (e) {
       console.error(e);

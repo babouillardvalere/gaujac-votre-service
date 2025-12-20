@@ -31,6 +31,7 @@ import BureauFichesPDF from '../components/bureau/BureauFichesPDF';
 
 import Statistiques from './Statistiques';
 import { format, differenceInHours, differenceInMinutes, isToday, parseISO } from 'date-fns';
+import { useMemo } from 'react';
 import { fr } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { createPageUrl } from '../utils';
@@ -137,24 +138,28 @@ export default function Bureau() {
 
   const { data: incidents = [], isLoading } = useQuery({
     queryKey: ['bureau-incidents'],
-    queryFn: () => base44.entities.Incident.filter({}, '-date_saisie', 1000),
-    refetchInterval: 30000
+    queryFn: () => base44.entities.Incident.filter({}, '-date_saisie', 250),
+    refetchInterval: 60000,
+    staleTime: 45000
   });
 
   const { data: avis = [] } = useQuery({
     queryKey: ['bureau-avis'],
-    queryFn: () => base44.entities.Avis.filter({}, '-created_date', 500)
+    queryFn: () => base44.entities.Avis.filter({}, '-created_date', 250),
+    staleTime: 120000
   });
 
   const { data: taches = [] } = useQuery({
     queryKey: ['bureau-taches'],
-    queryFn: () => base44.entities.Tache.filter({}, '-created_date', 200)
+    queryFn: () => base44.entities.Tache.filter({}, '-created_date', 250),
+    staleTime: 60000
   });
 
   const { data: missionsDirection = [] } = useQuery({
     queryKey: ['bureau-interventions-direction'],
-    queryFn: () => base44.entities.InterventionDirection.filter({}, '-created_date', 200),
-    refetchInterval: 60000
+    queryFn: () => base44.entities.InterventionDirection.filter({}, '-created_date', 250),
+    refetchInterval: 120000,
+    staleTime: 60000
   });
 
   // Mutations pour actions de groupe
@@ -270,8 +275,8 @@ export default function Bureau() {
     return null;
   };
 
-  // Filtrage avancé
-  const filteredIncidents = incidents.filter(i => {
+  // Filtrage avancé - OPTIMISÉ avec useMemo
+  const filteredIncidents = useMemo(() => incidents.filter(i => {
     // Vue spéciale
     if (activeView === 'today') {
       if (!isToday(new Date(i.date_saisie))) return false;
@@ -306,14 +311,10 @@ export default function Bureau() {
       if (filters.heure === 'soir' && (hour < 18 || hour >= 22)) return false;
     }
     return true;
-  });
+  }), [incidents, activeView, filters]);
 
-  // Tri par priorité:
-  // 1. priorite_ordre manuel (si défini par Bureau)
-  // 2. Urgents en premier (triés par date chronologique ancienne → récente)
-  // 3. Non-urgents par date chronologique (ancienne → récente)
-  // 4. Résolus en dernier
-  const sortedIncidents = [...filteredIncidents].sort((a, b) => {
+  // Tri par priorité - OPTIMISÉ avec useMemo
+  const sortedIncidents = useMemo(() => [...filteredIncidents].sort((a, b) => {
     // Les résolus toujours à la fin
     if (a.statut === 'resolu' && b.statut !== 'resolu') return 1;
     if (b.statut === 'resolu' && a.statut !== 'resolu') return -1;
@@ -334,7 +335,7 @@ export default function Bureau() {
     
     // Dans chaque groupe (urgents ou non-urgents), tri chronologique (ancien → récent)
     return new Date(a.date_saisie) - new Date(b.date_saisie);
-  });
+  }), [filteredIncidents]);
 
   // Stats
   const resolus = incidents.filter(i => i.statut === 'resolu' && i.date_resolution && i.date_saisie);

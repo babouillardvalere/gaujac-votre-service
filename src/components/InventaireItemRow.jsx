@@ -58,18 +58,32 @@ export default function InventaireItemRow({
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
+    if (files.length > 3) {
+      toast.error(lang === 'fr' ? 'Maximum 3 photos par item' : 'Maximum 3 photos per item');
+      return;
+    }
+
     setUploading(true);
     try {
       const uploadedPhotos = [];
       for (const file of files) {
+        // Validation taille (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          toast.error(lang === 'fr' ? `Photo trop volumineuse: ${file.name}` : `File too large: ${file.name}`);
+          continue;
+        }
+        
         const { file_url } = await base44.integrations.Core.UploadFile({ file });
         uploadedPhotos.push(file_url);
       }
-      onPhotosChange(item.id, [...photos, ...uploadedPhotos]);
-      toast.success(lang === 'fr' ? 'Photo(s) ajoutée(s)' : 'Photo(s) added');
+      
+      if (uploadedPhotos.length > 0) {
+        onPhotosChange(item.id, [...photos, ...uploadedPhotos]);
+        toast.success(lang === 'fr' ? `${uploadedPhotos.length} photo(s) ajoutée(s)` : `${uploadedPhotos.length} photo(s) added`);
+      }
     } catch (error) {
-      console.error(error);
-      toast.error(lang === 'fr' ? 'Erreur upload' : 'Upload error');
+      console.error('Upload error:', error);
+      toast.error(lang === 'fr' ? 'Erreur lors de l\'upload. Réessayez.' : 'Upload error. Please retry.');
     } finally {
       setUploading(false);
     }

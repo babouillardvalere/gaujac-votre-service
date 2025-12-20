@@ -23,16 +23,26 @@ export default function Reception() {
 
   // Lancer l'archivage automatique au chargement de la page
   useEffect(() => {
+    let isActive = true;
+    
     const runArchiving = async () => {
+      if (!isActive) return;
       setIsArchiving(true);
-      await runAutoArchiving({ showToast: true });
-      setIsArchiving(false);
+      try {
+        await runAutoArchiving({ showToast: true });
+      } catch (error) {
+        console.error('Erreur archivage:', error);
+      } finally {
+        if (isActive) setIsArchiving(false);
+      }
     };
     
-    // Archiver après 2 secondes (laisser le temps à la page de charger)
     const timer = setTimeout(runArchiving, 2000);
     
-    return () => clearTimeout(timer);
+    return () => {
+      isActive = false;
+      clearTimeout(timer);
+    };
   }, []);
 
   return (

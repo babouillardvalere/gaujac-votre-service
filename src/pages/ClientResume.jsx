@@ -37,7 +37,9 @@ export default function ClientResume() {
       const fiches = await base44.entities.FicheArrivee.list();
       return fiches.find(f => f.id === ficheId);
     },
-    enabled: !!ficheId
+    enabled: !!ficheId,
+    staleTime: 300000,
+    retry: 2
   });
 
   useEffect(() => {
@@ -74,7 +76,7 @@ export default function ClientResume() {
 
   const handleDownload = async () => {
     // Si un PDF existe déjà, le télécharger directement
-    if (fiche.pdf_url) {
+    if (fiche?.pdf_url) {
       toast.info(lang === 'fr' ? 'Téléchargement du PDF...' : 'Downloading PDF...');
       try {
         const link = document.createElement('a');
@@ -85,8 +87,13 @@ export default function ClientResume() {
         return;
       } catch (error) {
         console.error('Erreur téléchargement:', error);
-        toast.error(lang === 'fr' ? 'Erreur téléchargement' : 'Download error');
+        toast.error(lang === 'fr' ? 'Erreur téléchargement. Vérifiez votre connexion.' : 'Download error. Check your connection.');
+        return;
       }
+    }
+    
+    if (!fiche) {
+      toast.error(lang === 'fr' ? 'Aucune fiche à télécharger' : 'No form to download');
       return;
     }
     
