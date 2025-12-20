@@ -371,7 +371,9 @@ ${allPhotos.length > 0 ? `📸 ${allPhotos.length} photo(s) jointe(s)` : ''}
   };
 
   const handleFinalSubmit = async () => {
+    if (submitting) return;
     setSubmitting(true);
+    
     try {
       const { menage, technique, reception } = analyzeAnomalies();
 

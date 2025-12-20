@@ -77,15 +77,22 @@ export default function Technique() {
   }, [navigate]);
 
   const { data: incidents = [], isLoading } = useQuery({
-    queryKey: ['incidents-technique'],
-    queryFn: () => base44.entities.Incident.filter({ type: 'technique' }, '-date_saisie', 200),
-    refetchInterval: 30000
+    queryKey: ['incidents-technique', filter],
+    queryFn: async () => {
+      const query = filter === 'resolu' 
+        ? { type: 'technique', statut: 'resolu' }
+        : { type: 'technique' };
+      return await base44.entities.Incident.filter(query, '-date_saisie', 100);
+    },
+    refetchInterval: filter === 'resolu' ? 120000 : 45000,
+    staleTime: 30000
   });
 
   const { data: missionsDirection = [] } = useQuery({
     queryKey: ['interventions-direction', 'TECHNIQUE'],
-    queryFn: () => base44.entities.InterventionDirection.filter({ service: 'TECHNIQUE' }, '-created_date', 100),
-    refetchInterval: 60000
+    queryFn: () => base44.entities.InterventionDirection.filter({ service: 'TECHNIQUE' }, '-created_date', 50),
+    refetchInterval: 60000,
+    staleTime: 45000
   });
 
   const updateMutation = useMutation({

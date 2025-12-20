@@ -67,15 +67,22 @@ export default function Menage() {
   }, [navigate]);
 
   const { data: incidents = [], isLoading } = useQuery({
-    queryKey: ['incidents-menage'],
-    queryFn: () => base44.entities.Incident.filter({ type: 'menage' }, '-date_saisie', 200),
-    refetchInterval: 30000
+    queryKey: ['incidents-menage', filter],
+    queryFn: async () => {
+      const query = filter === 'resolu' 
+        ? { type: 'menage', statut: 'resolu' }
+        : { type: 'menage' };
+      return await base44.entities.Incident.filter(query, '-date_saisie', 100);
+    },
+    refetchInterval: filter === 'resolu' ? 120000 : 45000,
+    staleTime: 30000
   });
 
   const { data: missions = [] } = useQuery({
     queryKey: ['missions-internes', 'MENAGE'],
-    queryFn: () => base44.entities.MissionInterne.filter({ service: 'MENAGE' }, '-date_debut', 100),
-    refetchInterval: 60000
+    queryFn: () => base44.entities.MissionInterne.filter({ service: 'MENAGE' }, '-date_debut', 50),
+    refetchInterval: 60000,
+    staleTime: 45000
   });
 
   const updateMutation = useMutation({

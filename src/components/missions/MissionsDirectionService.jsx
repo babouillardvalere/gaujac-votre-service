@@ -31,12 +31,17 @@ export default function MissionsDirectionService({ service }) {
   const [viewMode, setViewMode] = useState('list');
 
   const { data: missions = [], isLoading, error } = useQuery({
-    queryKey: ['interventions-direction', service],
+    queryKey: ['interventions-direction', service, filterStatut],
     queryFn: async () => {
-      const allMissions = await base44.entities.InterventionDirection.list('-created_date', 200);
-      return allMissions.filter(m => m.service === service);
+      const query = { service };
+      if (filterStatut !== 'TERMINEE') {
+        query.statut = { $in: ['A_FAIRE', 'EN_COURS', 'EN_ATTENTE'] };
+      }
+      const allMissions = await base44.entities.InterventionDirection.filter(query, '-created_date', 50);
+      return allMissions;
     },
-    refetchInterval: 30000
+    refetchInterval: filterStatut === 'TERMINEE' ? 120000 : 45000,
+    staleTime: 30000
   });
 
   // Timer temps réel

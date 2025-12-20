@@ -6,7 +6,7 @@ import Logo from '../components/Logo';
 import ArriveeProgressBar from '../components/ArriveeProgressBar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, ArrowRight, Tent, Building } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Tent, Building, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
@@ -56,6 +56,8 @@ export default function ClientArriveeHebergement() {
     setEtapeSelection(2);
   };
 
+  const [submitting, setSubmitting] = useState(false);
+
   const handleSubmit = async () => {
     if (!selectedType || !selectedNumero) {
       toast.error(lang === 'fr' 
@@ -63,6 +65,9 @@ export default function ClientArriveeHebergement() {
         : 'Please select accommodation');
       return;
     }
+
+    if (submitting) return;
+    setSubmitting(true);
 
     try {
       sessionStorage.setItem('arrivee_type_logement', selectedType);
@@ -84,10 +89,13 @@ export default function ClientArriveeHebergement() {
         etape_actuelle: 4
       });
 
+      toast.success(lang === 'fr' ? 'Hébergement sélectionné ✅' : 'Accommodation selected ✅');
       navigate(createPageUrl('ClientControleInventaire'));
     } catch (error) {
       console.error(error);
       toast.error(lang === 'fr' ? 'Erreur' : 'Error');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -246,10 +254,20 @@ export default function ClientArriveeHebergement() {
                   {selectedNumero && (
                     <Button
                       onClick={handleSubmit}
-                      className="w-full h-12 bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl font-heading mt-6"
+                      disabled={submitting}
+                      className="w-full h-12 bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl font-heading mt-6 disabled:opacity-50"
                     >
-                      {lang === 'fr' ? 'Continuer vers inventaire' : 'Continue to inventory'}
-                      <ArrowRight className="w-5 h-5 ml-2" />
+                      {submitting ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          {lang === 'fr' ? 'Chargement...' : 'Loading...'}
+                        </>
+                      ) : (
+                        <>
+                          {lang === 'fr' ? 'Continuer vers inventaire' : 'Continue to inventory'}
+                          <ArrowRight className="w-5 h-5 ml-2" />
+                        </>
+                      )}
                     </Button>
                   )}
                 </div>
