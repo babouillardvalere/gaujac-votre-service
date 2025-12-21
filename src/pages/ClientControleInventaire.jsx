@@ -193,6 +193,8 @@ export default function ClientControleInventaire() {
       return desc;
     }).join(' • ');
 
+    console.log(`🔧 CRÉATION INTERVENTION CLIENT - Service: ${service}, Tâches: ${taches.length}`);
+    
     const interventionClient = await base44.entities.InterventionClient.create({
       type_intervention: "INVENTAIRE_ARRIVEE",
       type_hebergement: categorie,
@@ -210,6 +212,8 @@ export default function ClientControleInventaire() {
       plages_horaires: autorisationAcces === 'non' ? plagesHoraires : [],
       fiche_arrivee_id: ficheId
     });
+
+    console.log(`✅ INTERVENTION CLIENT CRÉÉE - ID: ${interventionClient.id}, Service: ${interventionClient.service}, Statut: ${interventionClient.statut}`);
 
     // Notification pour le service
     const detailsItems = items.map(i => {
