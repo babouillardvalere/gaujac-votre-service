@@ -338,7 +338,8 @@ export default function Technique() {
         photo_apres_url: photoData.url,
         photo_apres_timestamp: photoData.timestamp,
         photo_apres_hash: photoData.hash
-      }
+      },
+      isInterventionClient: incidentForPhoto.isInterventionClient
     });
 
     await pushClientEvent({
