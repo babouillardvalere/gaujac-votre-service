@@ -221,7 +221,8 @@ export default function Menage() {
         photo_avant_url: photoData.url,
         photo_avant_timestamp: photoData.timestamp,
         photo_avant_hash: photoData.hash
-      }
+      },
+      isInterventionClient: incidentForPhoto.isInterventionClient
     });
 
     await pushClientEvent({
