@@ -41,7 +41,9 @@ export default function ClientControleInventaire() {
   const [signature, setSignature] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showRecap, setShowRecap] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [pdfUrl, setPdfUrl] = useState("");
+  const [interventionsSummary, setInterventionsSummary] = useState({ technique: 0, menage: 0, reception: 0 });
 
   const inventaire = useMemo(() => getInventaireParCategorie(categorie, lang), [categorie, lang]);
   const items = inventaire?.objets || [];
