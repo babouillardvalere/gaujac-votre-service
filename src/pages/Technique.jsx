@@ -212,7 +212,8 @@ export default function Technique() {
         date_debut: now.toISOString(),
         statut: 'en_cours',
         temps_prise_en_charge: tempsPriseEnCharge
-      }
+      },
+      isInterventionClient: incident.isInterventionClient
     });
 
     await pushClientEvent({
