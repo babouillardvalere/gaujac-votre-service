@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ArrowLeft, Package, CheckCircle, Clock, User, ShoppingCart, Loader2 } from 'lucide-react';
+import { ArrowLeft, Package, CheckCircle, Clock, User, ShoppingCart, Loader2, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import Logo from '../components/Logo';
@@ -17,7 +17,7 @@ import { format } from 'date-fns';
 export default function DirectionCommandes() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [filterStatut, setFilterStatut] = useState('tous');
+  const [filterStatut, setFilterStatut] = useState('A_COMMANDER');
   const [selectedCommande, setSelectedCommande] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
   const [notes, setNotes] = useState('');
@@ -27,6 +27,16 @@ export default function DirectionCommandes() {
     queryFn: async () => {
       const all = await base44.entities.CommandeDirection.list('-created_date', 200);
       return all;
+    }
+  });
+
+  const deleteCommandeMutation = useMutation({
+    mutationFn: (id) => base44.entities.CommandeDirection.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['commandes-direction'] });
+      setShowDetails(false);
+      setSelectedCommande(null);
+      toast.success('Commande supprimée ✅');
     }
   });
 
@@ -120,6 +130,14 @@ export default function DirectionCommandes() {
     });
   };
 
+  const handleDeleteCommande = () => {
+    if (!selectedCommande) return;
+    
+    if (confirm('Supprimer cette commande ?')) {
+      deleteCommandeMutation.mutate(selectedCommande.id);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -156,14 +174,6 @@ export default function DirectionCommandes() {
 
         {/* Filtres */}
         <div className="flex gap-2 flex-wrap mb-6">
-          <Button
-            onClick={() => setFilterStatut('tous')}
-            variant={filterStatut === 'tous' ? 'default' : 'outline'}
-            className={filterStatut === 'tous' ? 'bg-purple-600' : ''}
-            size="sm"
-          >
-            Toutes ({commandes.length})
-          </Button>
           <Button
             onClick={() => setFilterStatut('A_COMMANDER')}
             variant={filterStatut === 'A_COMMANDER' ? 'default' : 'outline'}
@@ -388,15 +398,31 @@ export default function DirectionCommandes() {
                   )}
 
                   {selectedCommande.statut === 'RECUE' && (
-                    <div className="bg-green-50 rounded-lg p-4 border border-green-200 text-center">
-                      <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                      <p className="text-sm font-bold text-green-700">Commande reçue ✅</p>
-                      {selectedCommande.date_reception && (
-                        <p className="text-xs text-gray-600 mt-1">
-                          Reçue le {format(new Date(selectedCommande.date_reception), 'dd/MM/yyyy à HH:mm')}
-                        </p>
-                      )}
-                    </div>
+                    <>
+                      <div className="bg-green-50 rounded-lg p-4 border border-green-200 text-center">
+                        <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                        <p className="text-sm font-bold text-green-700">Commande reçue ✅</p>
+                        {selectedCommande.date_reception && (
+                          <p className="text-xs text-gray-600 mt-1">
+                            Reçue le {format(new Date(selectedCommande.date_reception), 'dd/MM/yyyy à HH:mm')}
+                          </p>
+                        )}
+                      </div>
+                      
+                      <Button
+                        onClick={handleDeleteCommande}
+                        disabled={deleteCommandeMutation.isPending}
+                        variant="outline"
+                        className="w-full border-red-500 text-red-500 hover:bg-red-50"
+                      >
+                        {deleteCommandeMutation.isPending ? (
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        ) : (
+                          <Trash2 className="w-4 h-4 mr-2" />
+                        )}
+                        Supprimer la commande
+                      </Button>
+                    </>
                   )}
 
                   {/* Bouton enregistrer notes (toujours disponible) */}
