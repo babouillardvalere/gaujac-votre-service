@@ -43,6 +43,7 @@ export default function ClientControleInventaire() {
   const [showRecap, setShowRecap] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [pdfUrl, setPdfUrl] = useState("");
+  const [pdfUrlForModal, setPdfUrlForModal] = useState("");
   const [interventionsSummary, setInterventionsSummary] = useState({ technique: 0, menage: 0, reception: 0 });
 
   const inventaire = useMemo(() => getInventaireParCategorie(categorie, lang), [categorie, lang]);
@@ -523,11 +524,13 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
       });
       
       if (pdfGenere) {
-        console.log('✅ PDF GÉNÉRÉ:', pdfGenere);
+        console.log('✅ PDF GÉNÉRÉ AVEC SUCCÈS:', pdfGenere);
         await base44.entities.FicheArrivee.update(fiche.id, { pdf_url: pdfGenere });
         setPdfUrl(pdfGenere);
+        setPdfUrlForModal(pdfGenere); // État dédié pour la modale
       } else {
-        console.error('❌ ÉCHEC GÉNÉRATION PDF');
+        console.error('❌ ÉCHEC GÉNÉRATION PDF - URL NULL');
+        setPdfUrlForModal(""); // S'assurer que c'est vide
       }
 
       const dossierId = sessionStorage.getItem('arrivee_dossier_id');
@@ -542,25 +545,21 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
 
       sessionStorage.setItem('fiche_arrivee_id', fiche.id);
       
-      console.log('📊 RÉSUMÉ FINAL:');
-      console.log('- Fiche:', fiche.id);
-      console.log('- PDF:', pdfGenere || 'Non généré');
-      console.log('- Interventions Ménage:', interventionMenage?.id || 'Aucune');
-      console.log('- Interventions Technique:', interventionTechnique?.id || 'Aucune');
-      console.log('- Interventions Réception:', interventionReception?.id || 'Aucune');
-      console.log('🎯 OUVERTURE MODALE DE SUCCÈS avec pdfUrl:', pdfGenere);
+      console.log('📊 RÉSUMÉ FINAL COMPLET:');
+      console.log('- Fiche ID:', fiche.id);
+      console.log('- PDF URL:', pdfGenere || 'NON GÉNÉRÉ');
+      console.log('- Intervention Ménage ID:', interventionMenage?.id || 'Aucune');
+      console.log('- Intervention Technique ID:', interventionTechnique?.id || 'Aucune');
+      console.log('- Intervention Réception ID:', interventionReception?.id || 'Aucune');
       
       toast.dismiss('submit');
+      toast.success(lang === "fr" ? "✅ Contrôle inventaire validé" : "✅ Inventory check validated");
+      
+      // Fermer le récap et ouvrir la modale de succès
       setShowRecap(false);
-      
-      // IMPORTANT: On attend un instant pour que React ait le temps de mettre à jour pdfUrl
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Afficher la modale de succès
       setShowSuccessModal(true);
       
-      console.log('✅ État showSuccessModal défini à TRUE');
-      console.log('📄 pdfUrl state:', pdfGenere);
+      console.log('🎯 MODALE DE SUCCÈS OUVERTE - pdfUrlForModal:', pdfGenere);
     } catch (e) {
       console.error('Erreur soumission:', e);
       toast.dismiss('submit');
@@ -793,23 +792,23 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
           </div>
 
           <div className="space-y-2">
-            <Button 
-              onClick={() => {
-                console.log('🔽 TENTATIVE TÉLÉCHARGEMENT PDF, URL:', pdfUrl);
-                if (pdfUrl) {
-                  window.open(pdfUrl, '_blank');
-                } else {
-                  toast.error(lang === "fr" ? "PDF en cours de génération..." : "PDF is being generated...");
-                }
-              }} 
-              className="w-full bg-[#00AEEF] hover:bg-[#0077A8]"
-              disabled={!pdfUrl}
-            >
-              <Download className="mr-2" />
-              {pdfUrl 
-                ? (lang === "fr" ? "📄 Télécharger le récapitulatif (PDF)" : "📄 Download summary (PDF)")
-                : (lang === "fr" ? "⏳ Génération PDF..." : "⏳ Generating PDF...")}
-            </Button>
+            {pdfUrlForModal ? (
+              <Button 
+                onClick={() => {
+                  console.log('🔽 TÉLÉCHARGEMENT PDF, URL:', pdfUrlForModal);
+                  window.open(pdfUrlForModal, '_blank');
+                }} 
+                className="w-full bg-[#00AEEF] hover:bg-[#0077A8] h-14 text-base font-semibold"
+              >
+                <Download className="mr-2 w-5 h-5" />
+                {lang === "fr" ? "📄 Télécharger le récapitulatif (PDF)" : "📄 Download summary (PDF)"}
+              </Button>
+            ) : (
+              <div className="w-full h-14 bg-gray-100 border-2 border-gray-300 rounded-lg flex items-center justify-center text-gray-500">
+                <Loader2 className="mr-2 w-5 h-5 animate-spin" />
+                {lang === "fr" ? "Génération du PDF en cours..." : "Generating PDF..."}
+              </div>
+            )}
             
             <Button 
               onClick={() => {
@@ -817,7 +816,7 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
                 navigate(createPageUrl('ClientMenu'));
               }} 
               variant="outline"
-              className="w-full border-2"
+              className="w-full border-2 h-12"
             >
               <Home className="mr-2" />
               {lang === "fr" ? "🏠 Retour à l'accueil" : "🏠 Back to home"}
