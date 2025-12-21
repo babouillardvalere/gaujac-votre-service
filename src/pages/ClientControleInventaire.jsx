@@ -446,6 +446,13 @@ ${detailsItems}
       const interventionTechnique = await createIntervention({ service: "TECHNIQUE", items: technique, ficheId: fiche.id });
       const interventionReception = await createIntervention({ service: "RECEPTION", items: reception, ficheId: fiche.id });
 
+      // Stocker le résumé des interventions
+      setInterventionsSummary({
+        technique: technique.length,
+        menage: menage.length,
+        reception: reception.length
+      });
+
       // Notification globale RÉCEPTION (vision consolidée multi-services)
       if (menage.length > 0 || technique.length > 0 || reception.length > 0) {
         const totalAnomalies = menage.length + technique.length + reception.length;
