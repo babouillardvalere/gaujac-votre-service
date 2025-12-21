@@ -45,16 +45,16 @@ const STATUS = {
   }
 };
 
-/* Motifs d’attente */
+/* Motifs d'attente */
 const WAITING_REASON = {
   MATERIEL: "Attente de matériel",
   FOURNISSEUR: "Attente du fournisseur",
   CLIENT_ABSENT: "Client absent",
-  PIECE_SPECIFIQUE: "Besoin d’une pièce spécifique",
-  SECOND_TECHNICIEN: "Besoin d’un second technicien"
+  PIECE_SPECIFIQUE: "Besoin d'une pièce spécifique",
+  SECOND_TECHNICIEN: "Besoin d'un second technicien"
 };
 
-/* Mapping “statut_*” (SuiviInventaire) → affichage */
+/* Mapping "statut_*" (SuiviInventaire) → affichage */
 const SUIVI_STATUT_LABEL = {
   en_attente: "En attente",
   en_cours: "En cours",
@@ -84,11 +84,13 @@ export default function ClientSuiviDetail() {
   const { data, isLoading } = useQuery({
     queryKey: ["client-suivi-detail", type, ficheId],
     enabled: type === "ARRIVEE" && !!ficheId,
+    staleTime: 30000,
+    refetchInterval: 60000,
     queryFn: async () => {
       // 1) fiche arrivée
       const fiche = await base44.entities.FicheArrivee.get(ficheId);
 
-      // 2) suivi inventaire (celui créé lors de l’envoi)
+      // 2) suivi inventaire
       const suivis = await base44.entities.SuiviInventaire.filter(
         { fiche_arrivee_id: ficheId },
         "-created_at",
@@ -96,8 +98,7 @@ export default function ClientSuiviDetail() {
       );
       const suivi = suivis?.[0] || null;
 
-      // 3) interventions rattachées à cette fiche d’arrivée
-      // IMPORTANT : c’est cette relation qui permet ensuite de récupérer les events via intervention_id
+      // 3) interventions rattachées
       const interventions = await base44.entities.Intervention.filter(
         { fiche_arrivee_id: ficheId },
         "-created_at",
@@ -106,18 +107,23 @@ export default function ClientSuiviDetail() {
 
       const interventionIds = interventions.map((i) => i.id);
 
-      // 4) events visibles client
-      // Base44 ne gère pas toujours les requêtes "IN", donc on liste et on filtre en JS
-      // (on limite la taille à 500 pour rester performant)
-      const allClientEvents = await base44.entities.InterventionEvent.list(
-        "-at",
-        500
-      );
-
-      const events = (allClientEvents || [])
-        .filter((e) => e.visible_client === true)
-        .filter((e) => interventionIds.includes(e.intervention_id))
-        .sort((a, b) => new Date(a.at) - new Date(b.at)); // ordre chronologique
+      // 4) events visibles client - OPTIMISÉ pour éviter 500 events
+      const events = [];
+      
+      for (const interventionId of interventionIds.slice(0, 10)) {
+        try {
+          const eventsForIntervention = await base44.entities.InterventionEvent.filter(
+            { intervention_id: interventionId, visible_client: true },
+            "-at",
+            50
+          );
+          events.push(...eventsForIntervention);
+        } catch (error) {
+          console.error('Erreur chargement events:', error);
+        }
+      }
+      
+      events.sort((a, b) => new Date(a.at) - new Date(b.at));
 
       return { fiche, suivi, interventions, events };
     }
@@ -181,7 +187,7 @@ export default function ClientSuiviDetail() {
 
   const { fiche, suivi, events } = data;
 
-  const statutMenage = suivi?.statut_menage || null; // ex: en_attente / en_cours / non_requis
+  const statutMenage = suivi?.statut_menage || null;
   const statutTech = suivi?.statut_technique || null;
 
   const badgeMenage = statutMenage ? (SUIVI_STATUT_BADGE[statutMenage] || "bg-gray-100 text-gray-700") : null;
