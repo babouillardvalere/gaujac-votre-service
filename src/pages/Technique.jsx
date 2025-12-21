@@ -91,17 +91,15 @@ export default function Technique() {
   const { data: interventionsClients = [] } = useQuery({
     queryKey: ['interventions-clients-technique', filter],
     queryFn: async () => {
-      const statuts = {
-        'en_attente': 'A_FAIRE',
-        'en_cours': 'EN_COURS',
-        'en_attente_materiel': 'EN_ATTENTE',
-        'resolu': 'TERMINEE'
-      };
-      const statutClient = statuts[filter] || 'A_FAIRE';
-      return await base44.entities.InterventionClient.filter({ 
-        service: 'TECHNIQUE',
-        statut: filter === 'resolu' ? 'TERMINEE' : undefined 
+      console.log('🔍 FETCH InterventionClient TECHNIQUE, filtre:', filter);
+      const result = await base44.entities.InterventionClient.filter({ 
+        service: 'TECHNIQUE'
       }, '-created_date', 250);
+      console.log('✅ InterventionClient TECHNIQUE récupérées:', result.length, 'intervention(s)');
+      result.forEach(ic => {
+        console.log(`  - ID: ${ic.id}, Statut: ${ic.statut}, Description: ${ic.description?.substring(0, 50)}`);
+      });
+      return result;
     },
     refetchInterval: 30000,
     staleTime: 15000
@@ -435,8 +433,14 @@ export default function Technique() {
       };
       const mappedStatut = statutMapping[ic.statut] || 'en_attente';
       
+      console.log(`🔄 Conversion IC ${ic.id}: ${ic.statut} → ${mappedStatut}, filtre actif: ${filter}`);
+      
       // Filtrer par statut si nécessaire
-      if (filter !== 'tous' && mappedStatut !== filter) return false;
+      if (filter !== 'tous' && mappedStatut !== filter) {
+        console.log(`  ❌ Exclu (statut ne correspond pas)`);
+        return false;
+      }
+      console.log(`  ✅ Inclus`);
       return true;
     })
     .map(ic => ({

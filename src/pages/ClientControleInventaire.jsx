@@ -411,6 +411,9 @@ ${detailsItems}
         }
       });
 
+      console.log('🔧 DÉBUT CRÉATION FICHE ET INTERVENTIONS');
+      console.log('Anomalies détectées:', { technique: technique.length, menage: menage.length, reception: reception.length });
+
       const fiche = await base44.entities.FicheArrivee.create({
         client_nom: nom,
         client_prenom: prenom,
@@ -429,6 +432,8 @@ ${detailsItems}
         plage_horaire_client: autorisationAcces === 'non' ? plagesHoraires.join(', ') : null
       });
 
+      console.log('✅ FICHE CRÉÉE - ID:', fiche.id);
+
       // Ajouter autorisation + plages dans les interventions
       const createInterventionWithAccess = async ({ service, items, ficheId }) => {
         if (!items || items.length === 0) return null;
@@ -446,9 +451,27 @@ ${detailsItems}
         return incident;
       };
       
-      const interventionMenage = await createIntervention({ service: "MENAGE", items: menage, ficheId: fiche.id });
-      const interventionTechnique = await createIntervention({ service: "TECHNIQUE", items: technique, ficheId: fiche.id });
-      const interventionReception = await createIntervention({ service: "RECEPTION", items: reception, ficheId: fiche.id });
+      let interventionMenage = null;
+      let interventionTechnique = null;
+      let interventionReception = null;
+
+      if (menage.length > 0) {
+        console.log('🧹 CRÉATION INTERVENTION MÉNAGE...');
+        interventionMenage = await createIntervention({ service: "MENAGE", items: menage, ficheId: fiche.id });
+        console.log('✅ INTERVENTION MÉNAGE CRÉÉE:', interventionMenage?.id);
+      }
+
+      if (technique.length > 0) {
+        console.log('🔧 CRÉATION INTERVENTION TECHNIQUE...');
+        interventionTechnique = await createIntervention({ service: "TECHNIQUE", items: technique, ficheId: fiche.id });
+        console.log('✅ INTERVENTION TECHNIQUE CRÉÉE:', interventionTechnique?.id);
+      }
+
+      if (reception.length > 0) {
+        console.log('🏠 CRÉATION INTERVENTION RÉCEPTION...');
+        interventionReception = await createIntervention({ service: "RECEPTION", items: reception, ficheId: fiche.id });
+        console.log('✅ INTERVENTION RÉCEPTION CRÉÉE:', interventionReception?.id);
+      }
 
       // Stocker le résumé des interventions
       setInterventionsSummary({
@@ -493,14 +516,18 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
       }
 
       // Générer PDF
+      console.log('📄 GÉNÉRATION PDF...');
       const pdfGenere = await genererPDF({ 
         ficheId: fiche.id, 
         interventions: { menage, technique, reception } 
       });
       
       if (pdfGenere) {
+        console.log('✅ PDF GÉNÉRÉ:', pdfGenere);
         await base44.entities.FicheArrivee.update(fiche.id, { pdf_url: pdfGenere });
         setPdfUrl(pdfGenere);
+      } else {
+        console.error('❌ ÉCHEC GÉNÉRATION PDF');
       }
 
       const dossierId = sessionStorage.getItem('arrivee_dossier_id');
@@ -514,6 +541,14 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
       }
 
       sessionStorage.setItem('fiche_arrivee_id', fiche.id);
+      
+      console.log('📊 RÉSUMÉ FINAL:');
+      console.log('- Fiche:', fiche.id);
+      console.log('- PDF:', pdfGenere || 'Non généré');
+      console.log('- Interventions Ménage:', interventionMenage?.id || 'Aucune');
+      console.log('- Interventions Technique:', interventionTechnique?.id || 'Aucune');
+      console.log('- Interventions Réception:', interventionReception?.id || 'Aucune');
+      
       toast.dismiss('submit');
       setShowRecap(false);
       
