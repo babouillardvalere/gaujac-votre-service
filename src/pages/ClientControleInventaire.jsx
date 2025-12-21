@@ -153,44 +153,63 @@ export default function ClientControleInventaire() {
     if (!items || items.length === 0) return null;
 
     const hasUrgent = items.some(i => i.urgent);
-    const allPhotos = items.flatMap(i => i.photos);
 
-    // Description détaillée pour l'intervention avec remarques
+    // Créer les tâches avec détails précis
+    const taches = items.map((item, index) => {
+      let texte = `${item.emoji} ${item.label}`;
+      if (item.problemeTechnique) {
+        texte += ` - Équipement défectueux / Ne fonctionne pas`;
+      } else if (item.qtyManquante > 0) {
+        texte += ` - ${item.qtyManquante} manquant(s)`;
+      }
+      if (item.remarque) {
+        texte += `\n💬 ${item.remarque}`;
+      }
+      
+      return {
+        numero: index + 1,
+        texte,
+        objet_id: item.id,
+        faite: false,
+        justification: '',
+        photo_url: item.photos?.[0] || '',
+        commande_requise: false
+      };
+    });
+
+    // Description résumée pour la vue liste
     const descriptionComplete = items.map(i => {
       let desc = `${i.emoji} ${i.label}`;
       if (i.problemeTechnique) {
-        desc += `: Défectueux / Ne fonctionne pas`;
+        desc += `: Défectueux`;
       } else if (i.qtyManquante > 0) {
         desc += `: ${i.qtyManquante} manquant(s)`;
       }
-      if (i.remarque) {
-        desc += `\n  💬 ${i.remarque}`;
-      }
       if (i.urgent) {
-        desc += ' 🔴 URGENT';
+        desc += ' 🔴';
       }
       return desc;
-    }).join('\n\n');
+    }).join(' • ');
 
-    const incident = await base44.entities.Incident.create({
-      stay_id: `ARR-${numero}-${dateArrivee.replace(/-/g, '')}-${Math.random().toString(36).substring(2, 8)}`,
-      type: service === "MENAGE" ? "menage" : "technique",
-      categorie: service === "MENAGE" ? "nettoyage" : service === "RECEPTION" ? "autre" : "divers_technique",
-      description: descriptionComplete,
-      urgent: hasUrgent,
-      autorisation_acces: autorisationAcces,
+    const interventionClient = await base44.entities.InterventionClient.create({
+      type_intervention: "INVENTAIRE_ARRIVEE",
+      type_hebergement: categorie,
+      numero_hebergement: numero,
       client_nom: nom,
       client_prenom: prenom,
       date_arrivee: dateArrivee,
       date_depart: dateDepart,
-      logement: numero,
-      photo_url: allPhotos[0] || null,
-      statut: "en_attente",
-      origine: "arrivee",
+      service,
+      priorite: hasUrgent ? "URGENTE" : "NORMALE",
+      description: descriptionComplete,
+      taches,
+      statut: "A_FAIRE",
+      autorisation_acces: autorisationAcces,
+      plages_horaires: autorisationAcces === 'non' ? plagesHoraires : [],
       fiche_arrivee_id: ficheId
     });
 
-    // Notification unique regroupée par service
+    // Notification pour le service
     const detailsItems = items.map(i => {
       let line = `• ${i.emoji} ${i.label}`;
       if (i.problemeTechnique) {
@@ -215,13 +234,12 @@ export default function ClientControleInventaire() {
 👤 Client: ${prenom} ${nom}
 📅 Séjour: ${dateArrivee} → ${dateDepart}
 🔐 Accès: ${autorisationAcces === 'oui' ? '✅ Autorisé en absence' : '❌ Présence client requise'}
+${autorisationAcces === 'non' && plagesHoraires.length > 0 ? `⏰ Plages: ${plagesHoraires.join(', ')}` : ''}
 
-📋 ${items.length} anomalie(s) ${service}:
+📋 ${items.length} tâche(s) à traiter:
 ${detailsItems}
 
-${allPhotos.length > 0 ? `📸 ${allPhotos.length} photo(s) jointe(s)` : ''}
-
-📄 Voir la fiche complète pour le PDF du contrôle inventaire`;
+📄 Contrôle inventaire arrivée - ${items.length} intervention(s) ${service}`;
 
     await base44.entities.Notification.create({
       type: hasUrgent ? 'INCIDENT_URGENT' : 'NOUVEAU_INCIDENT',
@@ -231,7 +249,7 @@ ${allPhotos.length > 0 ? `📸 ${allPhotos.length} photo(s) jointe(s)` : ''}
       statut: 'non_lu'
     });
 
-    return incident;
+    return interventionClient;
   };
 
   const genererPDF = async ({ ficheId, interventions }) => {
@@ -422,8 +440,9 @@ ${allPhotos.length > 0 ? `📸 ${allPhotos.length} photo(s) jointe(s)` : ''}
         return incident;
       };
       
-      const interventionMenage = await createInterventionWithAccess({ service: "MENAGE", items: menage, ficheId: fiche.id });
-      const interventionTechnique = await createInterventionWithAccess({ service: "TECHNIQUE", items: technique, ficheId: fiche.id });
+      const interventionMenage = await createIntervention({ service: "MENAGE", items: menage, ficheId: fiche.id });
+      const interventionTechnique = await createIntervention({ service: "TECHNIQUE", items: technique, ficheId: fiche.id });
+      const interventionReception = await createIntervention({ service: "RECEPTION", items: reception, ficheId: fiche.id });
 
       // Notification globale RÉCEPTION (vision consolidée multi-services)
       if (menage.length > 0 || technique.length > 0 || reception.length > 0) {
