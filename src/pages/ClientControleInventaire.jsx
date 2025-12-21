@@ -511,14 +511,10 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
 
       sessionStorage.setItem('fiche_arrivee_id', fiche.id);
       toast.dismiss('submit');
-      toast.success(lang === "fr" ? "Inventaire validé ✅" : "Inventory validated ✅");
       setShowRecap(false);
       
-      // Attendre que sessionStorage soit bien persisté
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Navigation vers la page de résumé
-      navigate(createPageUrl('ClientResume'), { replace: true });
+      // Afficher la modale de succès
+      setShowSuccessModal(true);
     } catch (e) {
       console.error('Erreur soumission:', e);
       toast.dismiss('submit');
