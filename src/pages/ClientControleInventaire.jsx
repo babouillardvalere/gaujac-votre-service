@@ -553,24 +553,21 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
       console.log('- Intervention Réception ID:', interventionReception?.id || 'Aucune');
       
       toast.dismiss('submit');
-      toast.success(lang === "fr" ? "✅ Contrôle inventaire validé" : "✅ Inventory check validated");
       
-      console.log('🎯 MODALE DE SUCCÈS OUVERTE - pdfUrlForModal:', pdfGenere);
+      // Fermer récap AVANT d'ouvrir la modale
+      setShowRecap(false);
+      setSubmitting(false);
+      
+      // Ouvrir modale immédiatement
+      setShowSuccessModal(true);
+      
+      console.log('✅ SUCCÈS COMPLET - Modale ouverte');
     } catch (e) {
       console.error('❌ ERREUR SOUMISSION:', e);
       toast.dismiss('submit');
       toast.error(lang === "fr" ? "Erreur lors de l'envoi. Réessayez." : "Error while sending. Please retry.");
-    } finally {
-      setSubmitting(false);
-      
-      // IMPORTANT: Fermer récap et ouvrir modale DANS LE FINALLY pour garantir l'exécution
       setShowRecap(false);
-      
-      // Attendre un tick pour que React traite la fermeture du récap
-      setTimeout(() => {
-        console.log('🚀 OUVERTURE FORCÉE MODALE SUCCÈS');
-        setShowSuccessModal(true);
-      }, 100);
+      setSubmitting(false);
     }
   };
 
@@ -736,10 +733,7 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
       </Button>
 
       {/* Dialog Succès */}
-      <Dialog open={showSuccessModal} onOpenChange={(open) => {
-        console.log('🔄 Changement état modale succès:', open);
-        setShowSuccessModal(open);
-      }}>
+      <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-center text-2xl">
@@ -816,7 +810,8 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
             
             <Button 
               onClick={() => {
-                console.log('🏠 RETOUR MENU CLIENT');
+                console.log('🏠 NAVIGATION VERS MENU CLIENT');
+                setShowSuccessModal(false);
                 navigate(createPageUrl('ClientMenu'));
               }} 
               variant="outline"
