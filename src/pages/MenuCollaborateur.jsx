@@ -8,7 +8,7 @@ import { useNotifications } from '../components/useNotifications';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Wrench, Sparkles, Building2, LogOut, Package, Lock, ClipboardList, Briefcase, Music, Coffee, Waves } from 'lucide-react';
+import { Wrench, Sparkles, Building2, LogOut, Package, Lock, ClipboardList, Briefcase, Music, Coffee, Waves, Bell } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 
@@ -97,6 +97,15 @@ export default function MenuCollaborateur() {
       locked: true,
       onClick: handleBureauClick,
       badgeCount: counts.bureau
+    },
+    {
+      title: lang === 'fr' ? 'Notifications' : 'Notifications',
+      icon: Bell,
+      href: 'PreferencesNotifications',
+      color: 'bg-pink-500',
+      textColor: 'text-white',
+      description: lang === 'fr' ? 'Préférences notifications' : 'Notification preferences',
+      badgeCount: 0
     }
   ];
 
