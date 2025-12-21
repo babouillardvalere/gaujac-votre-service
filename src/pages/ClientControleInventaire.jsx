@@ -508,11 +508,13 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
       // Attendre que sessionStorage soit bien persisté
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      navigate(createPageUrl('ClientResume'));
+      // Navigation vers la page de résumé
+      navigate(createPageUrl('ClientResume'), { replace: true });
     } catch (e) {
-      console.error(e);
+      console.error('Erreur soumission:', e);
       toast.dismiss('submit');
       toast.error(lang === "fr" ? "Erreur lors de l'envoi. Réessayez." : "Error while sending. Please retry.");
+      setShowRecap(false);
     } finally {
       setSubmitting(false);
     }
