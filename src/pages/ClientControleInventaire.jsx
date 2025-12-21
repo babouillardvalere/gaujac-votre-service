@@ -399,6 +399,7 @@ ${detailsItems}
   const handleFinalSubmit = async () => {
     if (submitting) return;
     setSubmitting(true);
+    setShowRecap(false); // Fermer immédiatement le récap
     
     toast.loading(lang === "fr" ? 'Envoi en cours...' : 'Sending...', { id: 'submit' });
     
@@ -516,27 +517,24 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
         });
       }
 
-      // Générer PDF AVANT d'ouvrir la modale
+      // Générer PDF
       console.log('📄 GÉNÉRATION PDF...');
-      let pdfGenere = null;
+      let urlPDF = "";
       try {
-        pdfGenere = await genererPDF({ 
+        const pdfGenere = await genererPDF({ 
           ficheId: fiche.id, 
           interventions: { menage, technique, reception } 
         });
         
         if (pdfGenere) {
-          console.log('✅ PDF GÉNÉRÉ AVEC SUCCÈS:', pdfGenere);
+          console.log('✅ PDF GÉNÉRÉ:', pdfGenere);
           await base44.entities.FicheArrivee.update(fiche.id, { pdf_url: pdfGenere });
-          setPdfUrl(pdfGenere);
-          setPdfUrlForModal(pdfGenere);
+          urlPDF = pdfGenere;
         } else {
-          console.error('❌ ÉCHEC GÉNÉRATION PDF - URL NULL');
-          setPdfUrlForModal("");
+          console.error('❌ PDF NULL');
         }
       } catch (pdfError) {
-        console.error('❌ ERREUR GÉNÉRATION PDF:', pdfError);
-        setPdfUrlForModal("");
+        console.error('❌ ERREUR PDF:', pdfError);
       }
 
       const dossierId = sessionStorage.getItem('arrivee_dossier_id');
@@ -551,32 +549,27 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
 
       sessionStorage.setItem('fiche_arrivee_id', fiche.id);
       
-      console.log('📊 RÉSUMÉ FINAL COMPLET:');
-      console.log('- Fiche ID:', fiche.id);
-      console.log('- PDF URL:', pdfGenere || 'NON GÉNÉRÉ');
-      console.log('- Intervention Ménage ID:', interventionMenage?.id || 'Aucune');
-      console.log('- Intervention Technique ID:', interventionTechnique?.id || 'Aucune');
-      console.log('- Intervention Réception ID:', interventionReception?.id || 'Aucune');
+      console.log('📊 RÉSUMÉ:');
+      console.log('- Fiche:', fiche.id);
+      console.log('- PDF:', urlPDF || 'AUCUN');
+      console.log('- Interventions:', { menage: interventionMenage?.id, technique: interventionTechnique?.id, reception: interventionReception?.id });
       
       toast.dismiss('submit');
-      toast.success(lang === "fr" ? "✅ Contrôle validé" : "✅ Check validated");
+      toast.success(lang === "fr" ? "✅ Validé" : "✅ Validated");
       
-      // IMPORTANT: Fermer le récap et attendre avant d'ouvrir la modale
-      setShowRecap(false);
+      // Stocker PDF et ouvrir modale
+      setPdfUrlForModal(urlPDF);
+      setSubmitting(false);
       
-      // Utiliser requestAnimationFrame pour garantir que React a fermé le Dialog précédent
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          console.log('🚀 OUVERTURE MODALE SUCCÈS - PDF disponible:', !!pdfGenere);
-          setSubmitting(false);
-          setShowSuccessModal(true);
-        });
-      });
+      setTimeout(() => {
+        console.log('🎉 OUVERTURE MODALE - PDF:', urlPDF);
+        setShowSuccessModal(true);
+      }, 300);
       
     } catch (e) {
-      console.error('❌ ERREUR SOUMISSION:', e);
+      console.error('❌ ERREUR:', e);
       toast.dismiss('submit');
-      toast.error(lang === "fr" ? "Erreur lors de l'envoi. Réessayez." : "Error while sending. Please retry.");
+      toast.error(lang === "fr" ? "Erreur" : "Error");
       setShowRecap(false);
       setSubmitting(false);
     }
