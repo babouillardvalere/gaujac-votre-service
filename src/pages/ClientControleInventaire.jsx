@@ -515,7 +515,7 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
         });
       }
 
-      // Générer PDF
+      // Générer PDF AVANT d'ouvrir la modale
       console.log('📄 GÉNÉRATION PDF...');
       const pdfGenere = await genererPDF({ 
         ficheId: fiche.id, 
@@ -548,16 +548,19 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
       console.log('- Interventions Ménage:', interventionMenage?.id || 'Aucune');
       console.log('- Interventions Technique:', interventionTechnique?.id || 'Aucune');
       console.log('- Interventions Réception:', interventionReception?.id || 'Aucune');
-      console.log('🎯 OUVERTURE MODALE DE SUCCÈS...');
+      console.log('🎯 OUVERTURE MODALE DE SUCCÈS avec pdfUrl:', pdfGenere);
       
       toast.dismiss('submit');
       setShowRecap(false);
+      
+      // IMPORTANT: On attend un instant pour que React ait le temps de mettre à jour pdfUrl
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       // Afficher la modale de succès
       setShowSuccessModal(true);
       
       console.log('✅ État showSuccessModal défini à TRUE');
-      console.log('📄 pdfUrl:', pdfGenere);
+      console.log('📄 pdfUrl state:', pdfGenere);
     } catch (e) {
       console.error('Erreur soumission:', e);
       toast.dismiss('submit');
@@ -790,18 +793,29 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
           </div>
 
           <div className="space-y-2">
-            {pdfUrl && (
-              <Button 
-                onClick={() => window.open(pdfUrl, '_blank')} 
-                className="w-full bg-[#00AEEF] hover:bg-[#0077A8]"
-              >
-                <Download className="mr-2" />
-                {lang === "fr" ? "⬇ Télécharger le contrôle inventaire (PDF)" : "⬇ Download inventory check (PDF)"}
-              </Button>
-            )}
+            <Button 
+              onClick={() => {
+                console.log('🔽 TENTATIVE TÉLÉCHARGEMENT PDF, URL:', pdfUrl);
+                if (pdfUrl) {
+                  window.open(pdfUrl, '_blank');
+                } else {
+                  toast.error(lang === "fr" ? "PDF en cours de génération..." : "PDF is being generated...");
+                }
+              }} 
+              className="w-full bg-[#00AEEF] hover:bg-[#0077A8]"
+              disabled={!pdfUrl}
+            >
+              <Download className="mr-2" />
+              {pdfUrl 
+                ? (lang === "fr" ? "📄 Télécharger le récapitulatif (PDF)" : "📄 Download summary (PDF)")
+                : (lang === "fr" ? "⏳ Génération PDF..." : "⏳ Generating PDF...")}
+            </Button>
             
             <Button 
-              onClick={() => navigate(createPageUrl('ClientMenu'))} 
+              onClick={() => {
+                console.log('🏠 RETOUR MENU CLIENT');
+                navigate(createPageUrl('ClientMenu'));
+              }} 
               variant="outline"
               className="w-full border-2"
             >
