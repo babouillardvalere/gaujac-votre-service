@@ -518,19 +518,25 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
 
       // Générer PDF AVANT d'ouvrir la modale
       console.log('📄 GÉNÉRATION PDF...');
-      const pdfGenere = await genererPDF({ 
-        ficheId: fiche.id, 
-        interventions: { menage, technique, reception } 
-      });
-      
-      if (pdfGenere) {
-        console.log('✅ PDF GÉNÉRÉ AVEC SUCCÈS:', pdfGenere);
-        await base44.entities.FicheArrivee.update(fiche.id, { pdf_url: pdfGenere });
-        setPdfUrl(pdfGenere);
-        setPdfUrlForModal(pdfGenere); // État dédié pour la modale
-      } else {
-        console.error('❌ ÉCHEC GÉNÉRATION PDF - URL NULL');
-        setPdfUrlForModal(""); // S'assurer que c'est vide
+      let pdfGenere = null;
+      try {
+        pdfGenere = await genererPDF({ 
+          ficheId: fiche.id, 
+          interventions: { menage, technique, reception } 
+        });
+        
+        if (pdfGenere) {
+          console.log('✅ PDF GÉNÉRÉ AVEC SUCCÈS:', pdfGenere);
+          await base44.entities.FicheArrivee.update(fiche.id, { pdf_url: pdfGenere });
+          setPdfUrl(pdfGenere);
+          setPdfUrlForModal(pdfGenere);
+        } else {
+          console.error('❌ ÉCHEC GÉNÉRATION PDF - URL NULL');
+          setPdfUrlForModal("");
+        }
+      } catch (pdfError) {
+        console.error('❌ ERREUR GÉNÉRATION PDF:', pdfError);
+        setPdfUrlForModal("");
       }
 
       const dossierId = sessionStorage.getItem('arrivee_dossier_id');
@@ -548,20 +554,23 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
       console.log('📊 RÉSUMÉ FINAL COMPLET:');
       console.log('- Fiche ID:', fiche.id);
       console.log('- PDF URL:', pdfGenere || 'NON GÉNÉRÉ');
+      console.log('- pdfUrlForModal état:', pdfUrlForModal);
       console.log('- Intervention Ménage ID:', interventionMenage?.id || 'Aucune');
       console.log('- Intervention Technique ID:', interventionTechnique?.id || 'Aucune');
       console.log('- Intervention Réception ID:', interventionReception?.id || 'Aucune');
       
       toast.dismiss('submit');
       
-      // Fermer récap AVANT d'ouvrir la modale
+      // Fermer récap
       setShowRecap(false);
       setSubmitting(false);
       
-      // Ouvrir modale immédiatement
-      setShowSuccessModal(true);
+      // Attendre que React traite la fermeture du récap avant d'ouvrir la modale
+      setTimeout(() => {
+        console.log('🚀 OUVERTURE MODALE SUCCÈS - PDF:', pdfUrlForModal);
+        setShowSuccessModal(true);
+      }, 200);
       
-      console.log('✅ SUCCÈS COMPLET - Modale ouverte');
     } catch (e) {
       console.error('❌ ERREUR SOUMISSION:', e);
       toast.dismiss('submit');
@@ -791,20 +800,26 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
 
           <div className="space-y-2">
             {pdfUrlForModal ? (
-              <Button 
-                onClick={() => {
-                  console.log('🔽 TÉLÉCHARGEMENT PDF, URL:', pdfUrlForModal);
-                  window.open(pdfUrlForModal, '_blank');
-                }} 
-                className="w-full bg-[#00AEEF] hover:bg-[#0077A8] h-14 text-base font-semibold"
-              >
-                <Download className="mr-2 w-5 h-5" />
-                {lang === "fr" ? "📄 Télécharger le récapitulatif (PDF)" : "📄 Download summary (PDF)"}
-              </Button>
+              <>
+                <Button 
+                  onClick={() => {
+                    console.log('🔽 TÉLÉCHARGEMENT PDF, URL:', pdfUrlForModal);
+                    if (pdfUrlForModal) {
+                      window.open(pdfUrlForModal, '_blank');
+                    } else {
+                      toast.error(lang === "fr" ? "PDF non disponible" : "PDF not available");
+                    }
+                  }} 
+                  className="w-full bg-[#00AEEF] hover:bg-[#0077A8] h-14 text-base font-semibold"
+                >
+                  <Download className="mr-2 w-5 h-5" />
+                  {lang === "fr" ? "📄 Télécharger le récapitulatif (PDF)" : "📄 Download summary (PDF)"}
+                </Button>
+                <p className="text-xs text-center text-gray-500">{lang === "fr" ? "Le PDF s'ouvrira dans un nouvel onglet" : "PDF will open in new tab"}</p>
+              </>
             ) : (
-              <div className="w-full h-14 bg-gray-100 border-2 border-gray-300 rounded-lg flex items-center justify-center text-gray-500">
-                <Loader2 className="mr-2 w-5 h-5 animate-spin" />
-                {lang === "fr" ? "Génération du PDF en cours..." : "Generating PDF..."}
+              <div className="w-full h-14 bg-yellow-50 border-2 border-yellow-300 rounded-lg flex items-center justify-center text-yellow-700">
+                <span className="text-sm">{lang === "fr" ? "⚠️ PDF non généré - Contactez la réception" : "⚠️ PDF not generated - Contact reception"}</span>
               </div>
             )}
             
