@@ -554,22 +554,24 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
       console.log('📊 RÉSUMÉ FINAL COMPLET:');
       console.log('- Fiche ID:', fiche.id);
       console.log('- PDF URL:', pdfGenere || 'NON GÉNÉRÉ');
-      console.log('- pdfUrlForModal état:', pdfUrlForModal);
       console.log('- Intervention Ménage ID:', interventionMenage?.id || 'Aucune');
       console.log('- Intervention Technique ID:', interventionTechnique?.id || 'Aucune');
       console.log('- Intervention Réception ID:', interventionReception?.id || 'Aucune');
       
       toast.dismiss('submit');
+      toast.success(lang === "fr" ? "✅ Contrôle validé" : "✅ Check validated");
       
-      // Fermer récap
+      // IMPORTANT: Fermer le récap et attendre avant d'ouvrir la modale
       setShowRecap(false);
-      setSubmitting(false);
       
-      // Attendre que React traite la fermeture du récap avant d'ouvrir la modale
-      setTimeout(() => {
-        console.log('🚀 OUVERTURE MODALE SUCCÈS - PDF:', pdfUrlForModal);
-        setShowSuccessModal(true);
-      }, 200);
+      // Utiliser requestAnimationFrame pour garantir que React a fermé le Dialog précédent
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          console.log('🚀 OUVERTURE MODALE SUCCÈS - PDF disponible:', !!pdfGenere);
+          setSubmitting(false);
+          setShowSuccessModal(true);
+        });
+      });
       
     } catch (e) {
       console.error('❌ ERREUR SOUMISSION:', e);
