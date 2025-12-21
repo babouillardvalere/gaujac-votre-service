@@ -72,11 +72,6 @@ const INVENTAIRE_PREMIUM_2CH = {
     { id: 'telecommande_clim', emoji: '❄️', label: 'Télécommande climatisation', qty: 1, service: 'TECHNIQUE' },
     { id: 'lave_vaisselle', emoji: '🍽️', label: 'Lave-vaisselle', qty: 1, service: 'TECHNIQUE' }
   ],
-  sanitaires: [
-    { id: 'lavabo', emoji: '🚰', label: 'Lavabo', qty: 1, service: 'TECHNIQUE' },
-    { id: 'wc', emoji: '🚽', label: 'WC', qty: 1, service: 'TECHNIQUE' },
-    { id: 'douche', emoji: '🚿', label: 'Douche', qty: 1, service: 'TECHNIQUE' }
-  ],
   menage: [
     { id: 'seau', emoji: '🪣', label: 'Seau', qty: 1, service: 'MENAGE' },
     { id: 'bassine', emoji: '🧴', label: 'Bassine', qty: 1, service: 'MENAGE' },
@@ -135,7 +130,6 @@ export default function ClientControleInventairePremium2ch() {
       ...INVENTAIRE_PREMIUM_2CH.couverts,
       ...INVENTAIRE_PREMIUM_2CH.batterie,
       ...INVENTAIRE_PREMIUM_2CH.appareils,
-      ...INVENTAIRE_PREMIUM_2CH.sanitaires,
       ...INVENTAIRE_PREMIUM_2CH.menage,
       ...INVENTAIRE_PREMIUM_2CH.literie,
       ...INVENTAIRE_PREMIUM_2CH.exterieur
