@@ -398,24 +398,23 @@ ${detailsItems}
 
   const handleFinalSubmit = async () => {
     if (submitting) return;
-    setSubmitting(true);
-    setShowRecap(false); // Fermer immédiatement le récap
     
-    toast.loading(lang === "fr" ? 'Envoi en cours...' : 'Sending...', { id: 'submit' });
+    console.log('🚀 DÉBUT SOUMISSION');
+    setSubmitting(true);
+    setShowRecap(false);
+    
+    toast.loading(lang === "fr" ? 'Envoi...' : 'Sending...', { id: 'submit' });
     
     try {
       const { menage, technique, reception } = analyzeAnomalies();
+      console.log('📊 Anomalies:', { technique: technique.length, menage: menage.length, reception: reception.length });
 
       const allPhotos = {};
       Object.keys(photos).forEach(key => {
-        if (photos[key]?.length > 0) {
-          allPhotos[key] = photos[key];
-        }
+        if (photos[key]?.length > 0) allPhotos[key] = photos[key];
       });
 
-      console.log('🔧 DÉBUT CRÉATION FICHE ET INTERVENTIONS');
-      console.log('Anomalies détectées:', { technique: technique.length, menage: menage.length, reception: reception.length });
-
+      // 1. Créer fiche
       const fiche = await base44.entities.FicheArrivee.create({
         client_nom: nom,
         client_prenom: prenom,
@@ -433,110 +432,74 @@ ${detailsItems}
         autorisation_acces: autorisationAcces,
         plage_horaire_client: autorisationAcces === 'non' ? plagesHoraires.join(', ') : null
       });
+      console.log('✅ Fiche créée:', fiche.id);
 
-      console.log('✅ FICHE CRÉÉE - ID:', fiche.id);
-
-      // Ajouter autorisation + plages dans les interventions
-      const createInterventionWithAccess = async ({ service, items, ficheId }) => {
-        if (!items || items.length === 0) return null;
-        
-        const incident = await createIntervention({ service, items, ficheId });
-        
-        // Mise à jour avec autorisation et plages
-        if (incident) {
-          await base44.entities.Incident.update(incident.id, {
-            autorisation_acces: autorisationAcces,
-            plage_horaire_client: autorisationAcces === 'non' ? plagesHoraires.join(', ') : null
-          });
-        }
-        
-        return incident;
-      };
-      
+      // 2. Créer interventions
       let interventionMenage = null;
       let interventionTechnique = null;
       let interventionReception = null;
 
       if (menage.length > 0) {
-        console.log('🧹 CRÉATION INTERVENTION MÉNAGE...');
         interventionMenage = await createIntervention({ service: "MENAGE", items: menage, ficheId: fiche.id });
-        console.log('✅ INTERVENTION MÉNAGE CRÉÉE:', interventionMenage?.id);
+        console.log('✅ Ménage:', interventionMenage?.id);
       }
 
       if (technique.length > 0) {
-        console.log('🔧 CRÉATION INTERVENTION TECHNIQUE...');
         interventionTechnique = await createIntervention({ service: "TECHNIQUE", items: technique, ficheId: fiche.id });
-        console.log('✅ INTERVENTION TECHNIQUE CRÉÉE:', interventionTechnique?.id);
+        console.log('✅ Technique:', interventionTechnique?.id);
       }
 
       if (reception.length > 0) {
-        console.log('🏠 CRÉATION INTERVENTION RÉCEPTION...');
         interventionReception = await createIntervention({ service: "RECEPTION", items: reception, ficheId: fiche.id });
-        console.log('✅ INTERVENTION RÉCEPTION CRÉÉE:', interventionReception?.id);
+        console.log('✅ Réception:', interventionReception?.id);
       }
 
-      // Stocker le résumé des interventions
+      // 3. Stocker résumé
       setInterventionsSummary({
         technique: technique.length,
         menage: menage.length,
         reception: reception.length
       });
 
-      // Notification globale RÉCEPTION (vision consolidée multi-services)
+      // 4. Notification globale
       if (menage.length > 0 || technique.length > 0 || reception.length > 0) {
         const totalAnomalies = menage.length + technique.length + reception.length;
         const totalUrgent = [...menage, ...technique, ...reception].filter(i => i.urgent).length;
-        const totalPhotos = [...menage, ...technique, ...reception].flatMap(i => i.photos).length;
 
         const resumeServices = [];
         if (technique.length > 0) resumeServices.push(`🔧 ${technique.length} technique`);
         if (menage.length > 0) resumeServices.push(`🧹 ${menage.length} ménage`);
         if (reception.length > 0) resumeServices.push(`🏠 ${reception.length} réception`);
 
-        const messageReception = `📋 CONTRÔLE INVENTAIRE VALIDÉ
-
-📍 Hébergement: ${categorie} ${numero}
-👤 Client: ${prenom} ${nom}
-📅 Séjour: ${dateArrivee} → ${dateDepart}
-
-⚠️ ${totalAnomalies} anomalie(s) détectée(s):
-${resumeServices.join(' • ')}
-${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}
-
-🔐 Accès: ${autorisationAcces === 'oui' ? '✅ Autorisé en absence client' : '❌ Présence client REQUISE'}
-${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
-
-📄 PDF complet disponible dans la fiche d'arrivée`;
-
         await base44.entities.Notification.create({
           type: totalUrgent > 0 ? 'INCIDENT_URGENT' : 'NOUVEAU_INCIDENT',
-          titre: `${totalUrgent > 0 ? '🔴 ' : ''}📋 Contrôle Inventaire - ${numero}`,
-          message: messageReception,
+          titre: `${totalUrgent > 0 ? '🔴 ' : ''}📋 Contrôle - ${numero}`,
+          message: `📋 CONTRÔLE INVENTAIRE
+📍 ${categorie} ${numero}
+👤 ${prenom} ${nom}
+⚠️ ${totalAnomalies} anomalie(s): ${resumeServices.join(' • ')}
+${totalUrgent > 0 ? '🔴 ' + totalUrgent + ' URGENT(S)' : ''}
+🔐 ${autorisationAcces === 'oui' ? '✅ Accès autorisé' : '❌ Présence requise'}`,
           destinataire_role: 'RECEPTION',
           statut: 'non_lu'
         });
+        console.log('✅ Notification envoyée');
       }
 
-      // Générer PDF
-      console.log('📄 GÉNÉRATION PDF...');
+      // 5. Générer PDF
       let urlPDF = "";
       try {
-        const pdfGenere = await genererPDF({ 
-          ficheId: fiche.id, 
-          interventions: { menage, technique, reception } 
-        });
-        
-        if (pdfGenere) {
-          console.log('✅ PDF GÉNÉRÉ:', pdfGenere);
-          await base44.entities.FicheArrivee.update(fiche.id, { pdf_url: pdfGenere });
-          urlPDF = pdfGenere;
-        } else {
-          console.error('❌ PDF NULL');
+        const pdf = await genererPDF({ ficheId: fiche.id, interventions: { menage, technique, reception } });
+        if (pdf) {
+          await base44.entities.FicheArrivee.update(fiche.id, { pdf_url: pdf });
+          urlPDF = pdf;
+          console.log('✅ PDF:', pdf);
         }
-      } catch (pdfError) {
-        console.error('❌ ERREUR PDF:', pdfError);
+      } catch (err) {
+        console.error('❌ PDF:', err);
       }
 
+      // 6. Finaliser dossier
       const dossierId = sessionStorage.getItem('arrivee_dossier_id');
       if (dossierId) {
         await base44.entities.DossierArrivee.update(dossierId, {
@@ -546,31 +509,21 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
           statut: 'termine'
         });
       }
-
       sessionStorage.setItem('fiche_arrivee_id', fiche.id);
-      
-      console.log('📊 RÉSUMÉ:');
-      console.log('- Fiche:', fiche.id);
-      console.log('- PDF:', urlPDF || 'AUCUN');
-      console.log('- Interventions:', { menage: interventionMenage?.id, technique: interventionTechnique?.id, reception: interventionReception?.id });
-      
+
+      // 7. Afficher succès
       toast.dismiss('submit');
       toast.success(lang === "fr" ? "✅ Validé" : "✅ Validated");
       
-      // Stocker PDF et ouvrir modale
       setPdfUrlForModal(urlPDF);
       setSubmitting(false);
-      
-      setTimeout(() => {
-        console.log('🎉 OUVERTURE MODALE - PDF:', urlPDF);
-        setShowSuccessModal(true);
-      }, 300);
+      setShowSuccessModal(true);
+      console.log('🎉 MODALE OUVERTE - PDF:', urlPDF);
       
     } catch (e) {
       console.error('❌ ERREUR:', e);
       toast.dismiss('submit');
       toast.error(lang === "fr" ? "Erreur" : "Error");
-      setShowRecap(false);
       setSubmitting(false);
     }
   };
