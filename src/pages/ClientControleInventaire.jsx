@@ -548,12 +548,16 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
       console.log('- Interventions Ménage:', interventionMenage?.id || 'Aucune');
       console.log('- Interventions Technique:', interventionTechnique?.id || 'Aucune');
       console.log('- Interventions Réception:', interventionReception?.id || 'Aucune');
+      console.log('🎯 OUVERTURE MODALE DE SUCCÈS...');
       
       toast.dismiss('submit');
       setShowRecap(false);
       
       // Afficher la modale de succès
       setShowSuccessModal(true);
+      
+      console.log('✅ État showSuccessModal défini à TRUE');
+      console.log('📄 pdfUrl:', pdfGenere);
     } catch (e) {
       console.error('Erreur soumission:', e);
       toast.dismiss('submit');
@@ -726,7 +730,10 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
       </Button>
 
       {/* Dialog Succès */}
-      <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
+      <Dialog open={showSuccessModal} onOpenChange={(open) => {
+        console.log('🔄 Changement état modale succès:', open);
+        setShowSuccessModal(open);
+      }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-center text-2xl">
