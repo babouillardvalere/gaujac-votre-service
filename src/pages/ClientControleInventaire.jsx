@@ -555,18 +555,22 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
       toast.dismiss('submit');
       toast.success(lang === "fr" ? "✅ Contrôle inventaire validé" : "✅ Inventory check validated");
       
-      // Fermer le récap et ouvrir la modale de succès
-      setShowRecap(false);
-      setShowSuccessModal(true);
-      
       console.log('🎯 MODALE DE SUCCÈS OUVERTE - pdfUrlForModal:', pdfGenere);
     } catch (e) {
-      console.error('Erreur soumission:', e);
+      console.error('❌ ERREUR SOUMISSION:', e);
       toast.dismiss('submit');
       toast.error(lang === "fr" ? "Erreur lors de l'envoi. Réessayez." : "Error while sending. Please retry.");
-      setShowRecap(false);
     } finally {
       setSubmitting(false);
+      
+      // IMPORTANT: Fermer récap et ouvrir modale DANS LE FINALLY pour garantir l'exécution
+      setShowRecap(false);
+      
+      // Attendre un tick pour que React traite la fermeture du récap
+      setTimeout(() => {
+        console.log('🚀 OUVERTURE FORCÉE MODALE SUCCÈS');
+        setShowSuccessModal(true);
+      }, 100);
     }
   };
 
