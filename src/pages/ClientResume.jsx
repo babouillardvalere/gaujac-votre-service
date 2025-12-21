@@ -15,6 +15,7 @@ import { format } from 'date-fns';
 import { fr, enUS } from 'date-fns/locale';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { useRetry } from '../components/useRetry';
 
 export default function ClientResume() {
   const { t, lang } = useTranslation();
@@ -23,6 +24,7 @@ export default function ClientResume() {
   const [showSignatureSection, setShowSignatureSection] = useState(false);
   const [newSignature, setNewSignature] = useState('');
   const [updating, setUpdating] = useState(false);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
 
   // Récupérer l'ID de la fiche depuis sessionStorage ou URL
   const ficheId = sessionStorage.getItem('fiche_arrivee_id');
@@ -97,8 +99,9 @@ export default function ClientResume() {
       return;
     }
     
-    // Sinon, générer le PDF
-    toast.info(lang === 'fr' ? 'Génération du PDF...' : 'Generating PDF...');
+    // Générer le PDF en async pour ne pas bloquer l'UI
+    setGeneratingPdf(true);
+    toast.loading(lang === 'fr' ? 'Génération du PDF en cours...' : 'Generating PDF...', { id: 'pdf-gen' });
     
     try {
       const doc = new jsPDF('p', 'mm', 'a4');
@@ -369,12 +372,19 @@ export default function ClientResume() {
       }
 
       const fileName = `Arrivee_${fiche.client_nom}_${fiche.client_prenom}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      
+      // Sauvegarder avec un petit délai pour permettre à l'UI de respirer
+      await new Promise(resolve => setTimeout(resolve, 100));
       doc.save(fileName);
       
-      toast.success(lang === 'fr' ? 'PDF téléchargé avec succès' : 'PDF downloaded successfully');
+      toast.dismiss('pdf-gen');
+      toast.success(lang === 'fr' ? 'PDF téléchargé avec succès ✅' : 'PDF downloaded successfully ✅');
     } catch (error) {
       console.error(error);
-      toast.error(lang === 'fr' ? 'Erreur génération PDF' : 'PDF generation error');
+      toast.dismiss('pdf-gen');
+      toast.error(lang === 'fr' ? 'Erreur génération PDF. Réessayez.' : 'PDF generation error. Please retry.');
+    } finally {
+      setGeneratingPdf(false);
     }
   };
 
@@ -807,11 +817,21 @@ export default function ClientResume() {
           </Button>
           <Button
             onClick={handleDownload}
+            disabled={generatingPdf}
             variant="outline"
-            className="w-full h-14 border-2 border-[#00AEEF] text-[#0077A8] font-heading text-lg hover:bg-blue-50"
+            className="w-full h-14 border-2 border-[#00AEEF] text-[#0077A8] font-heading text-lg hover:bg-blue-50 disabled:opacity-50"
           >
-            <Download className="w-5 h-5 mr-2" />
-            {lang === 'fr' ? 'Télécharger le document' : 'Download document'}
+            {generatingPdf ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                {lang === 'fr' ? 'Génération...' : 'Generating...'}
+              </>
+            ) : (
+              <>
+                <Download className="w-5 h-5 mr-2" />
+                {lang === 'fr' ? 'Télécharger le document' : 'Download document'}
+              </>
+            )}
           </Button>
         </div>
       </div>

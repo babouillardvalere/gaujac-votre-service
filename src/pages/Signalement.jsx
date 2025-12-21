@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import { toast } from 'sonner';
+import { uploadFileWithRetry } from '../components/useRetry';
 
 
 
@@ -152,8 +153,16 @@ export default function Signalement() {
     try {
       let photoUrl = null;
       if (photo) {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file: photo });
-        photoUrl = file_url;
+        // Upload avec retry automatique
+        toast.loading(lang === 'fr' ? 'Upload de la photo...' : 'Uploading photo...', { id: 'photo-upload' });
+        const result = await uploadFileWithRetry(photo, { maxRetries: 3, lang });
+        toast.dismiss('photo-upload');
+        
+        if (result.success) {
+          photoUrl = result.data.file_url;
+        } else {
+          throw new Error('Upload failed');
+        }
       }
 
       const isTechnique = selectedProblems.some(p => 

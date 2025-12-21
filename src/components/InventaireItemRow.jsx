@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { Camera, X, MessageSquare, AlertCircle, Check } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { Camera, X, MessageSquare, AlertCircle, Check, Loader2 } from 'lucide-react';
+import { uploadFileWithRetry } from './useRetry';
 import { toast } from 'sonner';
 
 const ARTICLES_TECHNIQUES = [
@@ -66,6 +66,8 @@ export default function InventaireItemRow({
     setUploading(true);
     try {
       const uploadedPhotos = [];
+      let uploadedCount = 0;
+      
       for (const file of files) {
         // Validation taille (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
@@ -73,13 +75,32 @@ export default function InventaireItemRow({
           continue;
         }
         
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
-        uploadedPhotos.push(file_url);
+        // Upload avec retry automatique
+        const result = await uploadFileWithRetry(file, { 
+          maxRetries: 3,
+          lang,
+          onProgress: ({ attempt, total }) => {
+            if (attempt > 1) {
+              toast.loading(
+                lang === 'fr' 
+                  ? `Upload ${uploadedCount + 1}/${files.length} - Tentative ${attempt}/${total}...`
+                  : `Upload ${uploadedCount + 1}/${files.length} - Attempt ${attempt}/${total}...`,
+                { id: 'upload-progress' }
+              );
+            }
+          }
+        });
+        
+        if (result.success) {
+          uploadedPhotos.push(result.data.file_url);
+          uploadedCount++;
+          toast.dismiss('upload-progress');
+        }
       }
       
       if (uploadedPhotos.length > 0) {
         onPhotosChange(item.id, [...photos, ...uploadedPhotos]);
-        toast.success(lang === 'fr' ? `${uploadedPhotos.length} photo(s) ajoutée(s)` : `${uploadedPhotos.length} photo(s) added`);
+        toast.success(lang === 'fr' ? `${uploadedPhotos.length} photo(s) ajoutée(s) ✅` : `${uploadedPhotos.length} photo(s) added ✅`);
       }
     } catch (error) {
       console.error('Upload error:', error);

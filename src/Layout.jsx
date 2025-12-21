@@ -3,6 +3,7 @@ import AccessibilityPanel, { getAccessibilitySettings, applyAccessibilityStyles,
 import NavigationBar from './components/NavigationBar';
 import VoiceAssistant from './components/VoiceAssistant';
 import RealtimeNotificationProvider from './components/RealtimeNotificationProvider';
+import ErrorBoundary from './components/ErrorBoundary';
 import { base44 } from '@/api/base44Client';
 
 export default function Layout({ children }) {
@@ -84,6 +85,7 @@ export default function Layout({ children }) {
   }, []);
 
   return (
+    <ErrorBoundary>
     <RealtimeNotificationProvider userRole={userRole}>
     <div className="min-h-screen relative" role="application" aria-label="Application Camping Paradis">
       {/* Import des polices + styles accessibilité */}
@@ -293,7 +295,8 @@ export default function Layout({ children }) {
         enabled={accessibilitySettings.voiceAssistant}
         onAccessibilityChange={handleAccessibilityAction}
       />
-    </div>
-    </RealtimeNotificationProvider>
-  );
-}
+      </div>
+      </RealtimeNotificationProvider>
+      </ErrorBoundary>
+      );
+      }
