@@ -16,6 +16,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Smile, Meh, Frown, Send, Loader2, Home, Download, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
+import { uploadFileWithRetry } from "../components/useRetry";
 
 export default function ClientControleInventaire() {
   const { lang } = useTranslation();
@@ -374,6 +375,8 @@ ${allPhotos.length > 0 ? `📸 ${allPhotos.length} photo(s) jointe(s)` : ''}
     if (submitting) return;
     setSubmitting(true);
     
+    toast.loading(lang === "fr" ? 'Envoi en cours...' : 'Sending...', { id: 'submit' });
+    
     try {
       const { menage, technique, reception } = analyzeAnomalies();
 
@@ -479,6 +482,7 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
       }
 
       sessionStorage.setItem('fiche_arrivee_id', fiche.id);
+      toast.dismiss('submit');
       toast.success(lang === "fr" ? "Inventaire validé ✅" : "Inventory validated ✅");
       setShowRecap(false);
       
@@ -488,7 +492,8 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
       navigate(createPageUrl('ClientResume'));
     } catch (e) {
       console.error(e);
-      toast.error(lang === "fr" ? "Erreur lors de l'envoi" : "Error while sending");
+      toast.dismiss('submit');
+      toast.error(lang === "fr" ? "Erreur lors de l'envoi. Réessayez." : "Error while sending. Please retry.");
     } finally {
       setSubmitting(false);
     }

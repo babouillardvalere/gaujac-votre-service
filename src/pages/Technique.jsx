@@ -140,7 +140,15 @@ export default function Technique() {
       return;
     }
 
-    await prendreEnChargeSansPhoto(incident);
+    toast.loading(lang === 'fr' ? 'Prise en charge...' : 'Taking over...', { id: 'prise-charge' });
+    
+    try {
+      await prendreEnChargeSansPhoto(incident);
+      toast.dismiss('prise-charge');
+    } catch (error) {
+      toast.dismiss('prise-charge');
+      toast.error(lang === 'fr' ? 'Erreur de prise en charge' : 'Take over error');
+    }
   };
 
   const prendreEnChargeSansPhoto = async (incident) => {
@@ -218,7 +226,15 @@ export default function Technique() {
       return;
     }
 
-    await terminerSansPhoto(incident);
+    toast.loading(lang === 'fr' ? 'Clôture...' : 'Closing...', { id: 'terminer' });
+    
+    try {
+      await terminerSansPhoto(incident);
+      toast.dismiss('terminer');
+    } catch (error) {
+      toast.dismiss('terminer');
+      toast.error(lang === 'fr' ? 'Erreur de clôture' : 'Closing error');
+    }
   };
 
   const terminerSansPhoto = async (incident) => {

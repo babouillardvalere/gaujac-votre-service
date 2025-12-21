@@ -124,8 +124,11 @@ export default function Menage() {
       return;
     }
 
-    const now = new Date();
-    const tempsPriseEnCharge = incident.date_saisie ? differenceInMinutes(now, new Date(incident.date_saisie)) : 0;
+    toast.loading(lang === 'fr' ? 'Prise en charge...' : 'Taking over...', { id: 'prise-charge' });
+    
+    try {
+      const now = new Date();
+      const tempsPriseEnCharge = incident.date_saisie ? differenceInMinutes(now, new Date(incident.date_saisie)) : 0;
 
     await base44.entities.InterventionLog.create({
       incident_id: incident.id,
@@ -152,6 +155,11 @@ export default function Menage() {
     });
 
     await notifyBureau(`Intervention ménage prise en charge par ${collaborateurNom} - ${incident.logement || incident.emplacement}`);
+      toast.dismiss('prise-charge');
+    } catch (error) {
+      toast.dismiss('prise-charge');
+      toast.error(lang === 'fr' ? 'Erreur de prise en charge' : 'Take over error');
+    }
   };
 
   const handlePhotoAvantUploaded = async (photoData) => {
@@ -192,8 +200,11 @@ export default function Menage() {
   };
 
   const handleTerminer = async (incident) => {
-    const now = new Date();
-    const tempsTotal = incident.date_saisie ? differenceInMinutes(now, new Date(incident.date_saisie)) : 0;
+    toast.loading(lang === 'fr' ? 'Clôture...' : 'Closing...', { id: 'terminer' });
+    
+    try {
+      const now = new Date();
+      const tempsTotal = incident.date_saisie ? differenceInMinutes(now, new Date(incident.date_saisie)) : 0;
 
     await base44.entities.InterventionLog.create({
       incident_id: incident.id,
@@ -220,7 +231,12 @@ export default function Menage() {
     });
 
     await notifyBureau(`Intervention ménage clôturée (${incident.logement || incident.emplacement})`);
-    setCommentaire('');
+      setCommentaire('');
+      toast.dismiss('terminer');
+    } catch (error) {
+      toast.dismiss('terminer');
+      toast.error(lang === 'fr' ? 'Erreur de clôture' : 'Closing error');
+    }
   };
 
   const handlePhotoApresUploaded = async (photoData) => {

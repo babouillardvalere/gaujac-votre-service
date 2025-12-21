@@ -17,7 +17,7 @@ import {
   ArrowLeft, Clock, Star, AlertTriangle, TrendingUp, Loader2, 
   Users, Home as HomeIcon, Search, Building2, Filter, Calendar, CalendarDays,
   ChevronDown, ChevronUp, Eye, AlertCircle, MoreVertical, LogOut,
-  Trash2, ArrowUp, ArrowDown, CheckSquare, Square, Home, ListTodo, CheckCircle, User
+  Trash2, ArrowUp, ArrowDown, CheckSquare, Square, Home, ListTodo, CheckCircle, User, RefreshCw
 } from 'lucide-react';
 import SuiviInventaireStaff from '../components/staff/SuiviInventaireStaff';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -136,11 +136,13 @@ export default function Bureau() {
     queryFn: () => base44.auth.me(),
   });
 
-  const { data: incidents = [], isLoading } = useQuery({
+  const { data: incidents = [], isLoading, error: incidentsError } = useQuery({
     queryKey: ['bureau-incidents'],
     queryFn: () => base44.entities.Incident.filter({}, '-date_saisie', 250),
     refetchInterval: 60000,
-    staleTime: 45000
+    staleTime: 45000,
+    retry: 2,
+    retryDelay: 1000
   });
 
   const { data: avis = [] } = useQuery({
@@ -974,8 +976,22 @@ export default function Bureau() {
             <Card className="border-2 border-[#FFA500]/30 rounded-xl overflow-hidden">
               <CardContent className="p-0">
                 {isLoading ? (
-                  <div className="flex justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-[#FFA500]" />
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-[#FFA500] mb-3" />
+                    <p className="text-sm text-gray-500">
+                      {lang === 'fr' ? 'Chargement des interventions...' : 'Loading interventions...'}
+                    </p>
+                  </div>
+                ) : incidentsError ? (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <AlertCircle className="w-12 h-12 text-red-500 mb-3" />
+                    <p className="text-sm text-gray-600 mb-4">
+                      {lang === 'fr' ? 'Erreur de chargement' : 'Loading error'}
+                    </p>
+                    <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['bureau-incidents'] })}>
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      {lang === 'fr' ? 'Réessayer' : 'Retry'}
+                    </Button>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
