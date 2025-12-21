@@ -300,7 +300,8 @@ export default function Technique() {
         statut: 'resolu',
         commentaire_interne: commentaire || incident.commentaire_interne,
         temps_total_intervention: tempsTotal
-      }
+      },
+      isInterventionClient: incident.isInterventionClient
     });
 
     await pushClientEvent({
