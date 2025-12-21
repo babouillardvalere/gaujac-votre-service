@@ -473,5 +473,194 @@ export default function InterventionsClients() {
     );
   }
 
-  return <div>Chargement...</div>;
+  return (
+    <div className="min-h-screen px-4 py-6">
+      <div className="max-w-6xl mx-auto">
+        <Button onClick={() => navigate(createPageUrl('MenuCollaborateur'))} variant="ghost" className="mb-4">
+          <ArrowLeft className="mr-2" /> Menu
+        </Button>
+
+        <h1 className="text-3xl font-bold mb-6">🔧 Interventions Clients</h1>
+
+        <div className="flex gap-2 mb-6">
+          <Button 
+            variant={service === 'TECHNIQUE' ? 'default' : 'outline'}
+            onClick={() => setService('TECHNIQUE')}
+            className={service === 'TECHNIQUE' ? 'bg-blue-600' : ''}
+          >
+            🔧 Technique
+          </Button>
+          <Button 
+            variant={service === 'MENAGE' ? 'default' : 'outline'}
+            onClick={() => setService('MENAGE')}
+            className={service === 'MENAGE' ? 'bg-yellow-600' : ''}
+          >
+            🧹 Ménage
+          </Button>
+          <Button 
+            variant={service === 'RECEPTION' ? 'default' : 'outline'}
+            onClick={() => setService('RECEPTION')}
+            className={service === 'RECEPTION' ? 'bg-green-600' : ''}
+          >
+            🏠 Réception
+          </Button>
+        </div>
+
+        {/* À faire */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            📋 À faire
+            <Badge>{interventionsAFaire.length}</Badge>
+          </h2>
+          <div className="grid gap-4">
+            {interventionsAFaire.map(intervention => (
+              <Card key={intervention.id} className="cursor-pointer hover:shadow-lg transition-shadow border-2 border-orange-300" onClick={() => setSelectedIntervention(intervention)}>
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-bold text-lg">{intervention.type_hebergement} {intervention.numero_hebergement}</h3>
+                        {intervention.priorite === 'URGENTE' && (
+                          <Badge className="bg-red-500">🔴 URGENT</Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600">👤 {intervention.client_prenom} {intervention.client_nom}</p>
+                      <p className="text-xs text-gray-500">📅 {intervention.date_arrivee} → {intervention.date_depart}</p>
+                      <p className="text-sm mt-2 text-gray-700">{intervention.description}</p>
+                      <div className="mt-2">
+                        <Badge variant="outline">{intervention.taches.length} tâche(s)</Badge>
+                        {intervention.autorisation_acces === 'non' && (
+                          <Badge variant="outline" className="ml-2 bg-orange-50">⏰ Présence requise</Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            {interventionsAFaire.length === 0 && (
+              <p className="text-center text-gray-500 py-8">Aucune intervention à faire</p>
+            )}
+          </div>
+        </div>
+
+        {/* En cours */}
+        {interventionsEnCours.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              ⚡ En cours
+              <Badge className="bg-blue-500">{interventionsEnCours.length}</Badge>
+            </h2>
+            <div className="grid gap-4">
+              {interventionsEnCours.map(intervention => (
+                <Card key={intervention.id} className="border-2 border-blue-400 cursor-pointer" onClick={() => {
+                  setSelectedIntervention(intervention);
+                  setModeTraitement(true);
+                  setNomAgent(intervention.pris_en_charge_par);
+                  setIsTimerRunning(true);
+                  setTimer(intervention.temps_ecoule_minutes || 0);
+                }}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="font-bold">{intervention.type_hebergement} {intervention.numero_hebergement}</h3>
+                        <p className="text-sm text-gray-600">👤 {intervention.client_prenom} {intervention.client_nom}</p>
+                        <p className="text-xs text-gray-500">🔧 {intervention.pris_en_charge_par}</p>
+                        <Badge className="mt-2 bg-blue-100 text-blue-800">
+                          <Clock className="w-3 h-3 mr-1" />
+                          {intervention.temps_ecoule_minutes || 0} min
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* En attente */}
+        {interventionsEnAttente.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              ⏸️ En attente
+              <Badge className="bg-orange-500">{interventionsEnAttente.length}</Badge>
+            </h2>
+            <div className="grid gap-4">
+              {interventionsEnAttente.map(intervention => (
+                <Card key={intervention.id} className="border-2 border-orange-400">
+                  <CardContent className="p-4">
+                    <h3 className="font-bold">{intervention.type_hebergement} {intervention.numero_hebergement}</h3>
+                    <p className="text-sm text-gray-600">👤 {intervention.client_prenom} {intervention.client_nom}</p>
+                    <Badge className="mt-2 bg-orange-100 text-orange-800">
+                      <Package className="w-3 h-3 mr-1" />
+                      Attente matériel
+                    </Badge>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Terminées */}
+        {interventionsTerminees.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              ✅ Terminées
+              <Badge className="bg-green-500">{interventionsTerminees.length}</Badge>
+            </h2>
+            <div className="grid gap-4">
+              {interventionsTerminees.slice(0, 5).map(intervention => (
+                <Card key={intervention.id} className="border-2 border-green-300 opacity-60">
+                  <CardContent className="p-4">
+                    <h3 className="font-bold">{intervention.type_hebergement} {intervention.numero_hebergement}</h3>
+                    <p className="text-sm text-gray-600">👤 {intervention.client_prenom} {intervention.client_nom}</p>
+                    <p className="text-xs text-gray-500">✅ Par {intervention.pris_en_charge_par} • {intervention.temps_ecoule_minutes}min</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Dialog pour prise en charge */}
+        <Dialog open={selectedIntervention && !modeTraitement} onOpenChange={(open) => {
+          if (!open) setSelectedIntervention(null);
+        }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Prendre en charge</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              {selectedIntervention && (
+                <>
+                  <div className="bg-gray-50 p-4 rounded">
+                    <p className="font-bold">{selectedIntervention.type_hebergement} {selectedIntervention.numero_hebergement}</p>
+                    <p className="text-sm text-gray-600">👤 {selectedIntervention.client_prenom} {selectedIntervention.client_nom}</p>
+                    <p className="text-sm mt-2">{selectedIntervention.description}</p>
+                    <p className="text-xs text-gray-500 mt-2">📋 {selectedIntervention.taches.length} tâche(s) à effectuer</p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium block mb-2">Votre prénom *</label>
+                    <Input
+                      value={nomAgent}
+                      onChange={(e) => setNomAgent(e.target.value)}
+                      placeholder="Ex: Pierre"
+                    />
+                  </div>
+
+                  <Button onClick={handlePrendreEnCharge} className="w-full bg-blue-600">
+                    <Play className="mr-2" />
+                    Prendre en charge
+                  </Button>
+                </>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
+  );
 }
