@@ -95,8 +95,7 @@ const INVENTAIRE_CONFORT_PLUS_2CH = {
     { id: 'carte_barriere', emoji: '🪪', label: 'Carte barrière', qty: 1, service: 'TECHNIQUE' },
     { id: 'table_jardin', emoji: '🍽️', label: 'Table de jardin', qty: 1, service: 'TECHNIQUE' },
     { id: 'chaises_jardin', emoji: '🪑', label: 'Chaises de jardin', qty: 4, service: 'TECHNIQUE' },
-    { id: 'terrasse_couverte', emoji: '🌤️', label: 'Terrasse semi-couverte', qty: 1, service: 'TECHNIQUE' },
-    { id: 'animaux_autorises', emoji: '🐾', label: 'Animaux autorisés', qty: 1, service: 'RECEPTION' }
+    { id: 'terrasse_couverte', emoji: '🌤️', label: 'Terrasse semi-couverte', qty: 1, service: 'TECHNIQUE' }
   ]
 };
 
