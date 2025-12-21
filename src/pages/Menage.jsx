@@ -334,7 +334,8 @@ export default function Menage() {
         attente_delai: formData.delai,
         attente_commentaire: formData.commentaire,
         attente_date: new Date().toISOString()
-      }
+      },
+      isInterventionClient: incidentToWait.isInterventionClient
     });
 
     await pushClientEvent({
