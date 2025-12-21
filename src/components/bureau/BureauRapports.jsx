@@ -24,6 +24,9 @@ import { toast } from 'sonner';
 import RapportPreview from './RapportPreview';
 import LitigePDFGenerator from './LitigePDFGenerator';
 import RapportPDFGenerator, { generateRapportPDF } from './RapportPDFGenerator';
+import PDFRapportMensuel from './PDFRapportMensuel';
+import PDFRapportAvisClients from './PDFRapportAvisClients';
+import PDFRapportCommandes from './PDFRapportCommandes';
 
 const translations = {
   fr: {
@@ -1145,6 +1148,13 @@ Rapport généré automatiquement par Camping Paradis`;
           <Zap className="w-4 h-4 mr-2" />
           {t('generer_litige')}
         </Button>
+      </div>
+
+      {/* Rapports PDF spécialisés */}
+      <div className="grid md:grid-cols-3 gap-4">
+        <PDFRapportMensuel incidents={incidents} lang={lang} />
+        <PDFRapportAvisClients avis={avis} lang={lang} />
+        <PDFRapportCommandes lang={lang} />
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
