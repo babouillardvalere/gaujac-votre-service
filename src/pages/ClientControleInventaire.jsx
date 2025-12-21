@@ -157,18 +157,17 @@ export default function ClientControleInventaire() {
 
     const hasUrgent = items.some(i => i.urgent);
 
-    // Créer les tâches avec détails précis
     const taches = items.map((item, index) => {
       let texte = `${item.emoji} ${item.label}`;
       if (item.problemeTechnique) {
-        texte += ` - Équipement défectueux / Ne fonctionne pas`;
+        texte += ` - Équipement défectueux`;
       } else if (item.qtyManquante > 0) {
         texte += ` - ${item.qtyManquante} manquant(s)`;
       }
       if (item.remarque) {
         texte += `\n💬 ${item.remarque}`;
       }
-      
+
       return {
         numero: index + 1,
         texte,
@@ -180,22 +179,16 @@ export default function ClientControleInventaire() {
       };
     });
 
-    // Description résumée pour la vue liste
     const descriptionComplete = items.map(i => {
       let desc = `${i.emoji} ${i.label}`;
-      if (i.problemeTechnique) {
-        desc += `: Défectueux`;
-      } else if (i.qtyManquante > 0) {
-        desc += `: ${i.qtyManquante} manquant(s)`;
-      }
-      if (i.urgent) {
-        desc += ' 🔴';
-      }
+      if (i.problemeTechnique) desc += `: Défectueux`;
+      else if (i.qtyManquante > 0) desc += `: ${i.qtyManquante} manquant(s)`;
+      if (i.urgent) desc += ' 🔴';
       return desc;
     }).join(' • ');
 
-    console.log(`🔧 CRÉATION INTERVENTION CLIENT - Service: ${service}, Tâches: ${taches.length}`);
-    
+    console.log(`🔧 Création intervention ${service}, ${taches.length} tâches`);
+
     const interventionClient = await base44.entities.InterventionClient.create({
       type_intervention: "INVENTAIRE_ARRIVEE",
       type_hebergement: categorie,
@@ -214,45 +207,34 @@ export default function ClientControleInventaire() {
       fiche_arrivee_id: ficheId
     });
 
-    console.log(`✅ INTERVENTION CLIENT CRÉÉE - ID: ${interventionClient.id}, Service: ${interventionClient.service}, Statut: ${interventionClient.statut}`);
+    console.log(`✅ Intervention créée: ${interventionClient.id}`);
 
-    // Notification pour le service
+    // NOTIFICATION DIRECTE AU SERVICE
+    const serviceLabel = service === 'MENAGE' ? '🧹 Ménage' : service === 'TECHNIQUE' ? '🔧 Technique' : '🏠 Réception';
+
     const detailsItems = items.map(i => {
       let line = `• ${i.emoji} ${i.label}`;
-      if (i.problemeTechnique) {
-        line += `: ⚠️ Défectueux`;
-      } else if (i.qtyManquante > 0) {
-        line += `: ${i.qtyManquante} manquant(s)`;
-      }
-      if (i.remarque) {
-        line += `\n  💬 ${i.remarque}`;
-      }
-      if (i.urgent) {
-        line += ' 🔴';
-      }
+      if (i.problemeTechnique) line += `: ⚠️ Défectueux`;
+      else if (i.qtyManquante > 0) line += `: ${i.qtyManquante} manquant(s)`;
+      if (i.remarque) line += `\n  💬 ${i.remarque}`;
+      if (i.urgent) line += ' 🔴';
       return line;
     }).join('\n');
 
-    const serviceLabel = service === 'MENAGE' ? '🧹 Ménage' : 
-                         service === 'TECHNIQUE' ? '🔧 Technique' : 
-                         '🏠 Réception';
-
-    const messageNotif = `📍 Hébergement: ${categorie} ${numero}
-👤 Client: ${prenom} ${nom}
-📅 Séjour: ${dateArrivee} → ${dateDepart}
-🔐 Accès: ${autorisationAcces === 'oui' ? '✅ Autorisé en absence' : '❌ Présence client requise'}
-${autorisationAcces === 'non' && plagesHoraires.length > 0 ? `⏰ Plages: ${plagesHoraires.join(', ')}` : ''}
-
-📋 ${items.length} tâche(s) à traiter:
-${detailsItems}
-
-📄 Contrôle inventaire arrivée - ${items.length} intervention(s) ${service}`;
-
+    // Notification pour le service concerné
     await base44.entities.Notification.create({
       type: hasUrgent ? 'INCIDENT_URGENT' : 'NOUVEAU_INCIDENT',
       titre: `${hasUrgent ? '🔴 URGENT - ' : ''}${serviceLabel} - ${numero}`,
-      message: messageNotif,
-      destinataire_role: 'RECEPTION',
+      message: `📍 ${categorie} ${numero}
+  👤 ${prenom} ${nom}
+  📅 ${dateArrivee} → ${dateDepart}
+  🔐 ${autorisationAcces === 'oui' ? '✅ Accès autorisé' : '❌ Présence requise'}
+  ${autorisationAcces === 'non' && plagesHoraires.length > 0 ? `⏰ ${plagesHoraires.join(', ')}` : ''}
+
+  ${detailsItems}
+
+  📄 Contrôle inventaire arrivée`,
+      destinataire_role: service === 'TECHNIQUE' ? 'TECHNIQUE' : service === 'MENAGE' ? 'MENAGE' : 'RECEPTION',
       statut: 'non_lu'
     });
 
@@ -461,29 +443,28 @@ ${detailsItems}
         reception: reception.length
       });
 
-      // 4. Notification globale
+      // 4. Notification RÉCEPTION (vue d'ensemble)
       if (menage.length > 0 || technique.length > 0 || reception.length > 0) {
         const totalAnomalies = menage.length + technique.length + reception.length;
         const totalUrgent = [...menage, ...technique, ...reception].filter(i => i.urgent).length;
 
         const resumeServices = [];
-        if (technique.length > 0) resumeServices.push(`🔧 ${technique.length} technique`);
-        if (menage.length > 0) resumeServices.push(`🧹 ${menage.length} ménage`);
-        if (reception.length > 0) resumeServices.push(`🏠 ${reception.length} réception`);
+        if (technique.length > 0) resumeServices.push(`🔧 ${technique.length}`);
+        if (menage.length > 0) resumeServices.push(`🧹 ${menage.length}`);
+        if (reception.length > 0) resumeServices.push(`🏠 ${reception.length}`);
 
         await base44.entities.Notification.create({
-          type: totalUrgent > 0 ? 'INCIDENT_URGENT' : 'NOUVEAU_INCIDENT',
-          titre: `${totalUrgent > 0 ? '🔴 ' : ''}📋 Contrôle - ${numero}`,
-          message: `📋 CONTRÔLE INVENTAIRE
+          type: 'NOUVEAU_INCIDENT',
+          titre: `📋 Contrôle ${numero} - ${totalAnomalies} interventions`,
+          message: `📋 CONTRÔLE INVENTAIRE VALIDÉ
 📍 ${categorie} ${numero}
 👤 ${prenom} ${nom}
-⚠️ ${totalAnomalies} anomalie(s): ${resumeServices.join(' • ')}
-${totalUrgent > 0 ? '🔴 ' + totalUrgent + ' URGENT(S)' : ''}
-🔐 ${autorisationAcces === 'oui' ? '✅ Accès autorisé' : '❌ Présence requise'}`,
+⚠️ ${resumeServices.join(' • ')}
+${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
           destinataire_role: 'RECEPTION',
           statut: 'non_lu'
         });
-        console.log('✅ Notification envoyée');
+        console.log('✅ Notif réception');
       }
 
       // 5. Générer PDF
@@ -690,98 +671,66 @@ ${totalUrgent > 0 ? '🔴 ' + totalUrgent + ' URGENT(S)' : ''}
       </Button>
 
       {/* Dialog Succès */}
-      <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
+      <Dialog open={showSuccessModal} onOpenChange={(open) => {
+        console.log('🔔 Dialog onOpenChange:', open);
+        setShowSuccessModal(open);
+      }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-center text-2xl">
-              ✅ {lang === "fr" ? "Merci pour votre retour !" : "Thank you for your feedback!"}
+              ✅ {lang === "fr" ? "Contrôle validé !" : "Check validated!"}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="bg-green-50 border-2 border-green-300 rounded-lg p-4">
               <p className="text-center font-semibold text-green-800 mb-3">
-                {lang === "fr" 
-                  ? "Votre contrôle inventaire a été enregistré avec succès"
-                  : "Your inventory check has been successfully recorded"}
+                {lang === "fr" ? "Votre contrôle a été enregistré" : "Your check has been recorded"}
               </p>
 
               <div className="space-y-2 text-sm">
-                <p><strong>{lang === "fr" ? "Hébergement" : "Accommodation"}:</strong> {categorie} – {numero}</p>
-                <p><strong>{lang === "fr" ? "Dates" : "Dates"}:</strong> {dateArrivee} → {dateDepart}</p>
-                
+                <p><strong>{categorie} {numero}</strong></p>
+                <p>{dateArrivee} → {dateDepart}</p>
+
                 {(interventionsSummary.technique > 0 || interventionsSummary.menage > 0 || interventionsSummary.reception > 0) && (
                   <div className="mt-3 pt-3 border-t border-green-300">
-                    <p className="font-semibold mb-2">{lang === "fr" ? "Interventions créées:" : "Interventions created:"}</p>
-                    {interventionsSummary.technique > 0 && (
-                      <p className="text-blue-700">🔧 {lang === "fr" ? "Technique" : "Technical"}: {interventionsSummary.technique}</p>
-                    )}
-                    {interventionsSummary.menage > 0 && (
-                      <p className="text-yellow-700">🧹 {lang === "fr" ? "Ménage" : "Housekeeping"}: {interventionsSummary.menage}</p>
-                    )}
-                    {interventionsSummary.reception > 0 && (
-                      <p className="text-green-700">🏠 {lang === "fr" ? "Réception" : "Reception"}: {interventionsSummary.reception}</p>
-                    )}
+                    <p className="font-semibold mb-2">{lang === "fr" ? "Interventions:" : "Interventions:"}</p>
+                    {interventionsSummary.technique > 0 && <p className="text-blue-700">🔧 {interventionsSummary.technique}</p>}
+                    {interventionsSummary.menage > 0 && <p className="text-yellow-700">🧹 {interventionsSummary.menage}</p>}
+                    {interventionsSummary.reception > 0 && <p className="text-green-700">🏠 {interventionsSummary.reception}</p>}
                   </div>
                 )}
-
-                <p className="mt-3">
-                  <strong>{lang === "fr" ? "Autorisation d'accès" : "Access authorization"}:</strong>{" "}
-                  {autorisationAcces === 'oui' ? '✅ Oui' : '❌ Non'}
-                  {autorisationAcces === 'non' && plagesHoraires.length > 0 && (
-                    <span className="text-xs block mt-1 text-gray-600">
-                      ({plagesHoraires.join(', ')})
-                    </span>
-                  )}
-                </p>
               </div>
-            </div>
-
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-sm text-blue-900 text-center">
-                {lang === "fr" 
-                  ? "Nos équipes ont bien été informées. Merci pour votre collaboration !" 
-                  : "Our teams have been notified. Thank you for your cooperation!"}
-              </p>
             </div>
           </div>
 
           <div className="space-y-2">
             {pdfUrlForModal ? (
-              <>
-                <Button 
-                  onClick={() => {
-                    console.log('🔽 TÉLÉCHARGEMENT PDF, URL:', pdfUrlForModal);
-                    if (pdfUrlForModal) {
-                      window.open(pdfUrlForModal, '_blank');
-                    } else {
-                      toast.error(lang === "fr" ? "PDF non disponible" : "PDF not available");
-                    }
-                  }} 
-                  className="w-full bg-[#00AEEF] hover:bg-[#0077A8] h-14 text-base font-semibold"
-                >
-                  <Download className="mr-2 w-5 h-5" />
-                  {lang === "fr" ? "📄 Télécharger le récapitulatif (PDF)" : "📄 Download summary (PDF)"}
-                </Button>
-                <p className="text-xs text-center text-gray-500">{lang === "fr" ? "Le PDF s'ouvrira dans un nouvel onglet" : "PDF will open in new tab"}</p>
-              </>
+              <Button 
+                onClick={() => {
+                  console.log('📄 Ouverture PDF:', pdfUrlForModal);
+                  window.open(pdfUrlForModal, '_blank');
+                }} 
+                className="w-full bg-[#00AEEF] h-12"
+              >
+                <Download className="mr-2" />
+                {lang === "fr" ? "📄 Télécharger PDF" : "📄 Download PDF"}
+              </Button>
             ) : (
-              <div className="w-full h-14 bg-yellow-50 border-2 border-yellow-300 rounded-lg flex items-center justify-center text-yellow-700">
-                <span className="text-sm">{lang === "fr" ? "⚠️ PDF non généré - Contactez la réception" : "⚠️ PDF not generated - Contact reception"}</span>
-              </div>
+              <p className="text-sm text-center text-gray-600 py-2">{lang === "fr" ? "PDF en cours de génération..." : "PDF being generated..."}</p>
             )}
-            
+
             <Button 
               onClick={() => {
-                console.log('🏠 NAVIGATION VERS MENU CLIENT');
+                console.log('🏠 Retour menu');
                 setShowSuccessModal(false);
                 navigate(createPageUrl('ClientMenu'));
               }} 
               variant="outline"
-              className="w-full border-2 h-12"
+              className="w-full h-12"
             >
               <Home className="mr-2" />
-              {lang === "fr" ? "🏠 Retour à l'accueil" : "🏠 Back to home"}
+              {lang === "fr" ? "Retour accueil" : "Back home"}
             </Button>
           </div>
         </DialogContent>
