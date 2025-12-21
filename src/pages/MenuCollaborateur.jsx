@@ -70,6 +70,15 @@ export default function MenuCollaborateur() {
       badgeCount: 0
     },
     {
+      title: '🔧 Interventions Clients',
+      icon: Wrench,
+      href: 'InterventionsClients',
+      color: 'bg-[#3b82f6]',
+      textColor: 'text-white',
+      description: lang === 'fr' ? 'Contrôles inventaires' : 'Inventory checks',
+      badgeCount: 0
+    },
+    {
       title: t('menu_materiel'),
       icon: Package,
       href: 'Materiel',
