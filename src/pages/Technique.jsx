@@ -115,9 +115,32 @@ export default function Technique() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Incident.update(id, data),
+    mutationFn: ({ id, data, isInterventionClient }) => {
+      if (isInterventionClient) {
+        // Mapper les champs Incident vers InterventionClient
+        const clientData = {};
+        if (data.statut) {
+          const mapping = {
+            'en_attente': 'A_FAIRE',
+            'en_cours': 'EN_COURS',
+            'en_attente_materiel': 'EN_ATTENTE',
+            'resolu': 'TERMINEE'
+          };
+          clientData.statut = mapping[data.statut] || 'A_FAIRE';
+        }
+        if (data.pris_par) clientData.pris_en_charge_par = data.pris_par;
+        if (data.date_debut) clientData.date_prise_en_charge = data.date_debut;
+        if (data.date_resolution) clientData.date_terminee = data.date_resolution;
+        if (data.temps_prise_en_charge !== undefined) clientData.temps_ecoule_minutes = data.temps_prise_en_charge;
+        if (data.temps_total_intervention !== undefined) clientData.temps_ecoule_minutes = data.temps_total_intervention;
+        
+        return base44.entities.InterventionClient.update(id, clientData);
+      }
+      return base44.entities.Incident.update(id, data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['incidents-technique'] });
+      queryClient.invalidateQueries({ queryKey: ['interventions-clients-technique'] });
       toast.success(t('intervention_mise_a_jour'));
       setSelectedIncident(null);
     }
