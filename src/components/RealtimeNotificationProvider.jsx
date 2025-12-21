@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import { pushNotificationService } from './notifications/PushNotificationService';
 
 const RealtimeNotificationContext = createContext(null);
 
@@ -25,8 +26,28 @@ export default function RealtimeNotificationProvider({ children, userRole = 'cli
   const queryClient = useQueryClient();
   const [isConnected, setIsConnected] = useState(true);
   const [lastNotificationCheck, setLastNotificationCheck] = useState(new Date());
+  const [userEmail, setUserEmail] = useState(null);
+  const [userPreferences, setUserPreferences] = useState(null);
   const audioRef = useRef(null);
   const notificationSoundRef = useRef(null);
+
+  // Charger l'email utilisateur et ses préférences
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const user = await base44.auth.me();
+        setUserEmail(user?.email);
+        
+        if (user?.email) {
+          const prefs = await pushNotificationService.getPreferences(user.email);
+          setUserPreferences(prefs);
+        }
+      } catch (error) {
+        console.error('Erreur chargement utilisateur:', error);
+      }
+    };
+    loadUserData();
+  }, []);
   
   // Initialiser les sons de notification
   useEffect(() => {
@@ -70,59 +91,94 @@ export default function RealtimeNotificationProvider({ children, userRole = 'cli
     }
   }, []);
 
+  // Vérifier les interventions en retard
+  const checkInterventionsRetard = useCallback(async () => {
+    if (!userEmail || !userPreferences) return;
+
+    try {
+      const seuil = userPreferences.seuil_intervention_retard || 120;
+      const dateLimit = new Date(Date.now() - seuil * 60 * 1000);
+
+      const enRetard = await base44.entities.Incident.filter({
+        statut: 'en_attente',
+        pris_par: null,
+        date_saisie: { $lte: dateLimit.toISOString() }
+      }, '-date_saisie', 10);
+
+      if (enRetard.length > 0 && userPreferences.interventions_urgentes) {
+        enRetard.forEach(incident => {
+          const minutesRetard = Math.floor((Date.now() - new Date(incident.date_saisie)) / 60000);
+          pushNotificationService.notifyInterventionRetard(userEmail, incident, minutesRetard);
+        });
+        queryClient.invalidateQueries({ queryKey: ['incidents'] });
+      }
+    } catch (error) {
+      console.error('Error checking delayed interventions:', error);
+    }
+  }, [userEmail, userPreferences, queryClient]);
+
   // Vérifier les nouveaux incidents urgents (CRITICAL)
   const checkUrgentIncidents = useCallback(async () => {
+    if (!userEmail || !userPreferences) return;
+
     try {
-      const urgentIncidents = await base44.entities.Incident.list('-created_date', 5, {
+      const urgentIncidents = await base44.entities.Incident.filter({
         statut: 'en_attente',
         urgent: true,
         created_date: { $gte: lastNotificationCheck.toISOString() }
-      });
+      }, '-created_date', 5);
 
-      if (urgentIncidents.length > 0) {
-        playNotificationSound();
-        
+      if (urgentIncidents.length > 0 && userPreferences.interventions_urgentes) {
         urgentIncidents.forEach(incident => {
-          const title = `🚨 INCIDENT URGENT`;
-          const body = `${incident.client_nom} - ${incident.logement || incident.emplacement}\n${incident.categorie}`;
-          
-          showBrowserNotification(title, { body, tag: `urgent-${incident.id}`, requireInteraction: true });
-          
-          toast.error(title, {
-            description: body,
-            duration: 10000,
-            action: {
-              label: 'Voir',
-              onClick: () => window.location.href = `/intervention/${incident.id}`
-            }
-          });
+          pushNotificationService.notifyInterventionUrgente(userEmail, incident);
         });
 
-        // Invalider les requêtes pour rafraîchir les listes
         queryClient.invalidateQueries({ queryKey: ['incidents'] });
         queryClient.invalidateQueries({ queryKey: ['pending-incidents'] });
       }
     } catch (error) {
       console.error('Error checking urgent incidents:', error);
     }
-  }, [lastNotificationCheck, playNotificationSound, showBrowserNotification, queryClient]);
+  }, [userEmail, userPreferences, lastNotificationCheck, queryClient]);
+
+  // Vérifier missions réactivées
+  const checkMissionsReactivees = useCallback(async () => {
+    if (!userEmail || !userPreferences) return;
+
+    try {
+      const recentMissions = await base44.entities.InterventionDirection.filter({
+        statut: 'A_FAIRE',
+        updated_date: { $gte: lastNotificationCheck.toISOString() }
+      }, '-updated_date', 5);
+
+      if (recentMissions.length > 0 && userPreferences.missions_reactivation) {
+        recentMissions.forEach(mission => {
+          if (mission.description?.includes('réactivée') || mission.description?.includes('matériel')) {
+            pushNotificationService.notifyMissionReactivee(userEmail, mission);
+          }
+        });
+        queryClient.invalidateQueries({ queryKey: ['interventions-direction'] });
+      }
+    } catch (error) {
+      console.error('Error checking reactivated missions:', error);
+    }
+  }, [userEmail, userPreferences, lastNotificationCheck, queryClient]);
 
   // Vérifier les nouveaux incidents non-urgents (HIGH)
   const checkNewIncidents = useCallback(async () => {
+    if (!userEmail || !userPreferences) return;
+
     try {
-      const newIncidents = await base44.entities.Incident.list('-created_date', 10, {
+      const newIncidents = await base44.entities.Incident.filter({
         statut: 'en_attente',
         created_date: { $gte: lastNotificationCheck.toISOString() }
-      });
+      }, '-created_date', 10);
 
       const nonUrgent = newIncidents.filter(inc => !inc.urgent);
       
-      if (nonUrgent.length > 0) {
-        const title = `📋 ${nonUrgent.length} nouveau(x) incident(s)`;
-        
-        toast.info(title, {
-          description: `${nonUrgent[0].client_nom} - ${nonUrgent[0].logement || nonUrgent[0].emplacement}`,
-          duration: 5000
+      if (nonUrgent.length > 0 && userPreferences.interventions_nouvelles) {
+        nonUrgent.forEach(incident => {
+          pushNotificationService.notifyNouvelleIntervention(userEmail, incident);
         });
 
         queryClient.invalidateQueries({ queryKey: ['incidents'] });
@@ -130,7 +186,7 @@ export default function RealtimeNotificationProvider({ children, userRole = 'cli
     } catch (error) {
       console.error('Error checking new incidents:', error);
     }
-  }, [lastNotificationCheck, queryClient]);
+  }, [userEmail, userPreferences, lastNotificationCheck, queryClient]);
 
   // Vérifier les inventaires soumis (HIGH)
   const checkNewInventories = useCallback(async () => {
@@ -212,24 +268,28 @@ export default function RealtimeNotificationProvider({ children, userRole = 'cli
     }
   }, [userRole, lastNotificationCheck, playNotificationSound, showBrowserNotification, queryClient]);
 
-  // Polling pour incidents urgents (CRITICAL - 5s)
+  // Polling pour incidents urgents et retards (CRITICAL - 5s)
   useEffect(() => {
-    if (userRole === 'client') return;
+    if (userRole === 'client' || !userEmail) return;
 
     const interval = setInterval(() => {
       checkUrgentIncidents();
+      checkInterventionsRetard();
       setLastNotificationCheck(new Date());
     }, POLLING_INTERVALS.CRITICAL);
 
     return () => clearInterval(interval);
-  }, [userRole, checkUrgentIncidents]);
+  }, [userRole, userEmail, checkUrgentIncidents, checkInterventionsRetard]);
 
-  // Polling pour nouveaux incidents et inventaires (HIGH - 10s)
+  // Polling pour nouveaux incidents, inventaires et missions (HIGH - 10s)
   useEffect(() => {
+    if (!userEmail) return;
+
     const interval = setInterval(() => {
       if (userRole !== 'client') {
         checkNewIncidents();
         checkNewInventories();
+        checkMissionsReactivees();
       } else {
         checkResolvedIncidents();
       }
@@ -237,7 +297,7 @@ export default function RealtimeNotificationProvider({ children, userRole = 'cli
     }, POLLING_INTERVALS.HIGH);
 
     return () => clearInterval(interval);
-  }, [userRole, checkNewIncidents, checkNewInventories, checkResolvedIncidents]);
+  }, [userRole, userEmail, checkNewIncidents, checkNewInventories, checkMissionsReactivees, checkResolvedIncidents]);
 
   // Polling pour avis (MEDIUM - 30s)
   useEffect(() => {
@@ -277,12 +337,14 @@ export default function RealtimeNotificationProvider({ children, userRole = 'cli
   // Méthode pour forcer un refresh immédiat
   const refreshNow = useCallback(() => {
     checkUrgentIncidents();
+    checkInterventionsRetard();
     checkNewIncidents();
+    checkMissionsReactivees();
     checkNewInventories();
     checkResolvedIncidents();
     checkNewReviews();
     setLastNotificationCheck(new Date());
-  }, [checkUrgentIncidents, checkNewIncidents, checkNewInventories, checkResolvedIncidents, checkNewReviews]);
+  }, [checkUrgentIncidents, checkInterventionsRetard, checkNewIncidents, checkMissionsReactivees, checkNewInventories, checkResolvedIncidents, checkNewReviews]);
 
   const value = {
     isConnected,

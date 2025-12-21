@@ -89,6 +89,7 @@ import DirectionRecapIntervention from './pages/DirectionRecapIntervention';
 import DirectionSuiviHivernage from './pages/DirectionSuiviHivernage';
 import DirectionSuiviDeshivernage from './pages/DirectionSuiviDeshivernage';
 import DirectionCommandes from './pages/DirectionCommandes';
+import PreferencesNotifications from './pages/PreferencesNotifications';
 import __Layout from './Layout.jsx';
 
 
@@ -184,6 +185,7 @@ export const PAGES = {
     "DirectionSuiviHivernage": DirectionSuiviHivernage,
     "DirectionSuiviDeshivernage": DirectionSuiviDeshivernage,
     "DirectionCommandes": DirectionCommandes,
+    "PreferencesNotifications": PreferencesNotifications,
 }
 
 export const pagesConfig = {
