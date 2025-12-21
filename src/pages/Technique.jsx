@@ -394,7 +394,55 @@ export default function Technique() {
 
   const collaborateurs = [...new Set(incidents.map(i => i.pris_par).filter(Boolean))];
 
-  const filteredIncidents = incidents
+  // Conversion des InterventionClient en format compatible Incident
+  const convertedInterventionsClients = interventionsClients
+    .filter(ic => {
+      // Mapper les statuts InterventionClient vers Incident
+      const statutMapping = {
+        'A_FAIRE': 'en_attente',
+        'EN_COURS': 'en_cours',
+        'EN_ATTENTE': 'en_attente_materiel',
+        'TERMINEE': 'resolu'
+      };
+      const mappedStatut = statutMapping[ic.statut] || 'en_attente';
+      
+      // Filtrer par statut si nécessaire
+      if (filter !== 'tous' && mappedStatut !== filter) return false;
+      return true;
+    })
+    .map(ic => ({
+      id: ic.id,
+      type: 'technique',
+      categorie: 'divers_technique',
+      description: ic.description,
+      urgent: ic.priorite === 'URGENTE',
+      client_nom: ic.client_nom,
+      client_prenom: ic.client_prenom,
+      logement: ic.numero_hebergement,
+      emplacement: null,
+      date_saisie: ic.created_date,
+      date_arrivee: ic.date_arrivee,
+      date_depart: ic.date_depart,
+      pris_par: ic.pris_en_charge_par,
+      date_debut: ic.date_prise_en_charge,
+      date_resolution: ic.date_terminee,
+      statut: ic.statut === 'A_FAIRE' ? 'en_attente' : 
+              ic.statut === 'EN_COURS' ? 'en_cours' :
+              ic.statut === 'EN_ATTENTE' ? 'en_attente_materiel' : 'resolu',
+      autorisation_acces: ic.autorisation_acces,
+      plage_horaire_client: ic.plages_horaires?.join(', '),
+      commentaire_interne: '',
+      motif_attente: '',
+      intervention_id: ic.id,
+      fiche_arrivee_id: ic.fiche_arrivee_id,
+      isInterventionClient: true,
+      taches: ic.taches || []
+    }));
+
+  // Combiner incidents et interventions clients
+  const allIncidents = [...incidents, ...convertedInterventionsClients];
+
+  const filteredIncidents = allIncidents
     .filter(i => {
       // Filtre statut
       if (filter !== 'tous' && i.statut !== filter) return false;
