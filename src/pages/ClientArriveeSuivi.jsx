@@ -27,18 +27,21 @@ export default function ClientArriveeSuivi() {
     enabled: !!dossierId
   });
 
-  const { data: interventions } = useQuery({
-    queryKey: ['interventions-arrivee', dossier?.numero_logement],
+  const { data: interventions = [] } = useQuery({
+    queryKey: ['interventions-arrivee', dossier?.numero_logement, dossier?.client_nom],
     queryFn: async () => {
-      if (!dossier?.numero_logement) return [];
-      const incidents = await base44.entities.Incident.list();
-      return incidents.filter(inc => 
-        inc.logement === dossier.numero_logement &&
-        inc.client_nom === dossier.client_nom &&
-        inc.date_arrivee === dossier.date_arrivee
-      );
+      if (!dossier?.numero_logement || !dossier?.client_nom) return [];
+      
+      // Filter côté backend pour éviter de charger TOUS les incidents
+      const incidents = await base44.entities.Incident.filter({
+        dossier_arrivee_id: dossier.id
+      }, '-date_saisie', 50);
+      
+      return incidents;
     },
-    enabled: !!dossier
+    enabled: !!dossier,
+    staleTime: 30000,
+    refetchInterval: 60000
   });
 
   if (isLoading) {

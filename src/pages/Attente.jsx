@@ -57,7 +57,8 @@ export default function Attente() {
   const { data: incidents = [], isLoading } = useQuery({
     queryKey: ['incidents-attente'],
     queryFn: () => base44.entities.Incident.filter({ statut: 'en_attente_materiel' }, '-attente_date', 200),
-    refetchInterval: 30000
+    refetchInterval: 45000,
+    staleTime: 30000
   });
 
   const updateMutation = useMutation({

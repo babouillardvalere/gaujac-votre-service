@@ -41,7 +41,9 @@ export default function SuiviInventaireStaff({ serviceFilter = 'all' }) {
         return allSuivis.filter(s => s.items_technique && s.items_technique.length > 0);
       }
       return allSuivis;
-    }
+    },
+    refetchInterval: 60000,
+    staleTime: 45000
   });
 
   const updateMutation = useMutation({

@@ -38,8 +38,14 @@ export default function IdentiteClient() {
     if (!formData.dateArrivee) newErrors.dateArrivee = t('champs_obligatoires');
     if (!formData.dateDepart) newErrors.dateDepart = t('champs_obligatoires');
     
+    // Date d'arrivée doit être aujourd'hui ou passée
     if (formData.dateArrivee && formData.dateArrivee > today) {
       newErrors.dateArrivee = t('date_error_arrivee');
+    }
+    
+    // Date de départ doit être aujourd'hui ou future
+    if (formData.dateDepart && formData.dateDepart < today) {
+      newErrors.dateDepart = t('date_error_depart');
     }
     
     if (formData.dateArrivee && formData.dateDepart && formData.dateDepart < formData.dateArrivee) {

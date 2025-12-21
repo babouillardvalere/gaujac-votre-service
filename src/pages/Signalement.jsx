@@ -160,28 +160,10 @@ export default function Signalement() {
         problemesTechniques.some(pt => pt.id === p) || nuisances.some(n => n.id === p)
       );
 
-      // Récupérer le dernier priorite_ordre pour calculer le prochain
-      const existingIncidents = await base44.entities.Incident.filter({ statut: 'en_attente' }, '-priorite_ordre', 1);
-      let nextOrdre = 1;
-      if (existingIncidents.length > 0 && existingIncidents[0].priorite_ordre) {
-        nextOrdre = existingIncidents[0].priorite_ordre + 1;
-      } else {
-        // Compter tous les incidents non résolus pour déterminer l'ordre
-        const allPending = await base44.entities.Incident.filter({}, '-date_saisie', 1000);
-        const nonResolved = allPending.filter(i => i.statut !== 'resolu');
-        nextOrdre = nonResolved.length + 1;
-      }
-
-      // Si urgent, placer après les urgents existants mais avant les non-urgents
-      if (urgent) {
-        const urgentIncidents = await base44.entities.Incident.filter({ urgent: true, statut: 'en_attente' }, 'priorite_ordre', 100);
-        if (urgentIncidents.length > 0) {
-          const lastUrgentOrdre = Math.max(...urgentIncidents.map(i => i.priorite_ordre || 0));
-          nextOrdre = lastUrgentOrdre + 1;
-        } else {
-          nextOrdre = 1; // Premier urgent = première position
-        }
-      }
+      // Logique simplifiée pour priorite_ordre
+      // Les urgents auront priorite_ordre = 1, les normaux = 999
+      // Le tri sera géré côté affichage (Bureau, Technique, Menage)
+      const nextOrdre = urgent ? 1 : 999;
 
       const stayId = getStayId();
       

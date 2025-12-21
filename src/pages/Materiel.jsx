@@ -52,17 +52,21 @@ export default function Materiel() {
 
   const { data: incidentsAttente = [] } = useQuery({
     queryKey: ['incidents-attente-materiel'],
-    queryFn: () => base44.entities.Incident.filter({ statut: 'en_attente_materiel', attente_materiel: true }, '-attente_date', 100)
+    queryFn: () => base44.entities.Incident.filter({ statut: 'en_attente_materiel', attente_materiel: true }, '-attente_date', 100),
+    refetchInterval: 45000,
+    staleTime: 30000
   });
 
   const { data: stock = [], isLoading: stockLoading } = useQuery({
     queryKey: ['stock'],
-    queryFn: () => base44.entities.Stock.list('-created_date', 200)
+    queryFn: () => base44.entities.Stock.list('-created_date', 200),
+    staleTime: 120000
   });
 
   const { data: historique = [] } = useQuery({
     queryKey: ['historique-materiel'],
-    queryFn: () => base44.entities.HistoriqueMateriel.list('-date_utilisation', 100)
+    queryFn: () => base44.entities.HistoriqueMateriel.list('-date_utilisation', 100),
+    staleTime: 300000
   });
 
   const createStockMutation = useMutation({
