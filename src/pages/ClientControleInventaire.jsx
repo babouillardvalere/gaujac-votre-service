@@ -686,6 +686,86 @@ ${totalPhotos > 0 ? `📸 ${totalPhotos} photo(s) transmise(s)` : ''}
         {lang === "fr" ? "Valider le contrôle inventaire" : "Confirm inventory check"}
       </Button>
 
+      {/* Dialog Succès */}
+      <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-center text-2xl">
+              ✅ {lang === "fr" ? "Merci pour votre retour !" : "Thank you for your feedback!"}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="bg-green-50 border-2 border-green-300 rounded-lg p-4">
+              <p className="text-center font-semibold text-green-800 mb-3">
+                {lang === "fr" 
+                  ? "Votre contrôle inventaire a été enregistré avec succès"
+                  : "Your inventory check has been successfully recorded"}
+              </p>
+
+              <div className="space-y-2 text-sm">
+                <p><strong>{lang === "fr" ? "Hébergement" : "Accommodation"}:</strong> {categorie} – {numero}</p>
+                <p><strong>{lang === "fr" ? "Dates" : "Dates"}:</strong> {dateArrivee} → {dateDepart}</p>
+                
+                {(interventionsSummary.technique > 0 || interventionsSummary.menage > 0 || interventionsSummary.reception > 0) && (
+                  <div className="mt-3 pt-3 border-t border-green-300">
+                    <p className="font-semibold mb-2">{lang === "fr" ? "Interventions créées:" : "Interventions created:"}</p>
+                    {interventionsSummary.technique > 0 && (
+                      <p className="text-blue-700">🔧 {lang === "fr" ? "Technique" : "Technical"}: {interventionsSummary.technique}</p>
+                    )}
+                    {interventionsSummary.menage > 0 && (
+                      <p className="text-yellow-700">🧹 {lang === "fr" ? "Ménage" : "Housekeeping"}: {interventionsSummary.menage}</p>
+                    )}
+                    {interventionsSummary.reception > 0 && (
+                      <p className="text-green-700">🏠 {lang === "fr" ? "Réception" : "Reception"}: {interventionsSummary.reception}</p>
+                    )}
+                  </div>
+                )}
+
+                <p className="mt-3">
+                  <strong>{lang === "fr" ? "Autorisation d'accès" : "Access authorization"}:</strong>{" "}
+                  {autorisationAcces === 'oui' ? '✅ Oui' : '❌ Non'}
+                  {autorisationAcces === 'non' && plagesHoraires.length > 0 && (
+                    <span className="text-xs block mt-1 text-gray-600">
+                      ({plagesHoraires.join(', ')})
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-sm text-blue-900 text-center">
+                {lang === "fr" 
+                  ? "Nos équipes ont bien été informées. Merci pour votre collaboration !" 
+                  : "Our teams have been notified. Thank you for your cooperation!"}
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            {pdfUrl && (
+              <Button 
+                onClick={() => window.open(pdfUrl, '_blank')} 
+                className="w-full bg-[#00AEEF] hover:bg-[#0077A8]"
+              >
+                <Download className="mr-2" />
+                {lang === "fr" ? "⬇ Télécharger le contrôle inventaire (PDF)" : "⬇ Download inventory check (PDF)"}
+              </Button>
+            )}
+            
+            <Button 
+              onClick={() => navigate(createPageUrl('ClientMenu'))} 
+              variant="outline"
+              className="w-full border-2"
+            >
+              <Home className="mr-2" />
+              {lang === "fr" ? "🏠 Retour à l'accueil" : "🏠 Back to home"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Dialog Récapitulatif */}
       <Dialog open={showRecap} onOpenChange={setShowRecap}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
