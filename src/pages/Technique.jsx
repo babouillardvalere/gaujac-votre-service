@@ -393,7 +393,8 @@ export default function Technique() {
   const handleReprendre = async (incident) => {
     updateMutation.mutate({
       id: incident.id,
-      data: { statut: 'en_cours' }
+      data: { statut: 'en_cours' },
+      isInterventionClient: incident.isInterventionClient
     });
 
     await pushClientEvent({
