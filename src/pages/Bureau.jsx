@@ -19,6 +19,7 @@ import {
   ChevronDown, ChevronUp, Eye, AlertCircle, MoreVertical, LogOut,
   Trash2, ArrowUp, ArrowDown, CheckSquare, Square, Home, ListTodo, CheckCircle, User, RefreshCw
 } from 'lucide-react';
+import { toast } from 'sonner';
 import SuiviInventaireStaff from '../components/staff/SuiviInventaireStaff';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import InterventionActions from '../components/bureau/InterventionActions';
