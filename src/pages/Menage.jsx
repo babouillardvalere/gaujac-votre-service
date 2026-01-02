@@ -210,6 +210,19 @@ export default function Menage() {
       incident_id: incident.id,
       intervention_client_id: incident.isInterventionClient ? incident.id : null
     });
+    
+    // Mettre à jour le WorkItem associé
+    const workItems = await base44.entities.WorkItem.filter({
+      intervention_client_id: incident.isInterventionClient ? incident.id : null,
+      incident_id: !incident.isInterventionClient ? incident.id : null
+    });
+    if (workItems.length > 0) {
+      await base44.entities.WorkItem.update(workItems[0].id, {
+        statut: 'EN_COURS',
+        collaborateur: collaborateurNom,
+        date_prise_en_charge: now.toISOString()
+      });
+    }
       toast.dismiss('prise-charge');
     } catch (error) {
       toast.dismiss('prise-charge');
@@ -303,6 +316,19 @@ export default function Menage() {
       incident_id: incident.id,
       intervention_client_id: incident.isInterventionClient ? incident.id : null
     });
+    
+    // Mettre à jour le WorkItem associé
+    const workItems = await base44.entities.WorkItem.filter({
+      intervention_client_id: incident.isInterventionClient ? incident.id : null,
+      incident_id: !incident.isInterventionClient ? incident.id : null
+    });
+    if (workItems.length > 0) {
+      await base44.entities.WorkItem.update(workItems[0].id, {
+        statut: 'TERMINEE',
+        date_terminee: now.toISOString(),
+        duree_minutes: tempsTotal
+      });
+    }
     
       setCommentaire('');
       toast.dismiss('terminer');

@@ -29,6 +29,7 @@ import BureauRapports from '../components/bureau/BureauRapports';
 import BureauFrequentation from '../components/bureau/BureauFrequentation';
 import BureauDemographie from '../components/bureau/BureauDemographie';
 import BureauFichesPDF from '../components/bureau/BureauFichesPDF';
+import WorkItemManager from '../components/bureau/WorkItemManager';
 
 import Statistiques from './Statistiques';
 import { format, differenceInHours, differenceInMinutes, isToday, parseISO } from 'date-fns';
@@ -741,6 +742,16 @@ export default function Bureau() {
 
           {/* Historique */}
           <TabsContent value="historique" className="space-y-4">
+            <Card className="border-2 border-[#00AEEF] rounded-xl mb-6">
+              <CardHeader>
+                <CardTitle className="font-heading text-[#0077A8]">
+                  🎯 {lang === 'fr' ? 'Pilotage des demandes actives' : 'Active requests management'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <WorkItemManager lang={lang} />
+              </CardContent>
+            </Card>
             {/* Filtres */}
             <Card className="border-2 border-[#FFA500]/30 rounded-xl">
               <CardHeader className="pb-2">

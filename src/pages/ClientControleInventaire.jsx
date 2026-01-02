@@ -234,6 +234,29 @@ export default function ClientControleInventaire() {
       priorite: interventionClient.priorite
     });
 
+    // Créer WorkItem pilotable pour le Bureau
+    await base44.entities.WorkItem.create({
+      type: 'INTERVENTION_CLIENT',
+      service,
+      statut: 'A_FAIRE',
+      priorite: hasUrgent ? 'URGENTE' : 'NORMALE',
+      rank: 0,
+      titre: `${service} - ${numero} - ${items.length} element(s)`,
+      description: descriptionComplete,
+      hebergement: numero,
+      type_hebergement: categorie,
+      client_nom: nom,
+      client_prenom: prenom,
+      date_arrivee: dateArrivee,
+      date_depart: dateDepart,
+      autorisation_acces: autorisationAcces,
+      plages_horaires: autorisationAcces === 'non' ? plagesHoraires : [],
+      taches,
+      intervention_client_id: interventionClient.id,
+      fiche_arrivee_id: ficheId
+    });
+    console.log(`[WORKITEM_CREATE] WorkItem créé pour ${service}`);
+
     // NOTIFICATION DIRECTE AU SERVICE
     const serviceLabel = service === 'MENAGE' ? '🧹 Ménage' : service === 'TECHNIQUE' ? '🔧 Technique' : '🏠 Réception';
 
