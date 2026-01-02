@@ -126,29 +126,51 @@ export default function ClientControleInventaire() {
   };
 
   const handlePrepareSubmit = () => {
+    console.log('🔍 VALIDATION START', {
+      evaluationProprete,
+      autorisationAcces,
+      plagesHoraires,
+      signature: signature ? 'OK' : 'MANQUANT'
+    });
+
     if (!evaluationProprete) {
+      console.error('❌ VALIDATION FAILED: évaluation propreté manquante');
       toast.error(lang === "fr" ? "Veuillez évaluer la propreté" : "Please rate cleanliness");
       return;
     }
 
     if (!autorisationAcces) {
+      console.error('❌ VALIDATION FAILED: autorisation accès manquante');
       toast.error(lang === "fr" ? "Veuillez indiquer l'autorisation d'accès" : "Please indicate access authorization");
       return;
     }
 
     if (autorisationAcces === "non" && plagesHoraires.length === 0) {
+      console.error('❌ VALIDATION FAILED: plages horaires manquantes');
       toast.error(lang === "fr" ? "Veuillez sélectionner au moins une plage horaire" : "Please select at least one time slot");
       return;
     }
 
     const { menage, technique, reception } = analyzeAnomalies();
+    console.log('🔍 ANOMALIES DETECTÉES:', { menage: menage.length, technique: technique.length, reception: reception.length });
+    
     const hasAnomalies = menage.length > 0 || technique.length > 0 || reception.length > 0 || evaluationProprete === "pas_satisfaisant";
 
     if (hasAnomalies && !signature) {
-      toast.error(lang === "fr" ? "Signature obligatoire en cas d'anomalie" : "Signature required");
+      console.error('❌ VALIDATION FAILED: signature manquante (anomalies détectées)');
+      toast.error(lang === "fr" ? "⚠️ Signature obligatoire en cas d'anomalie détectée" : "⚠️ Signature required when issues detected");
+      
+      // Scroll vers la signature
+      const sigElement = document.querySelector('[data-signature-pad]');
+      if (sigElement) {
+        sigElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        sigElement.style.border = '3px solid red';
+        setTimeout(() => { sigElement.style.border = ''; }, 3000);
+      }
       return;
     }
 
+    console.log('✅ VALIDATION OK - Ouverture récapitulatif');
     setShowRecap(true);
   };
 
@@ -711,7 +733,14 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
 
       <SignaturePad onSave={setSignature} disabled={submitting} lang={lang} />
 
-      <Button onClick={handlePrepareSubmit} className="w-full h-14 bg-[#00AEEF] mt-6" disabled={submitting}>
+      <Button 
+        onClick={() => {
+          console.log('🔘 BOUTON CLIQUÉ - Lancement validation');
+          handlePrepareSubmit();
+        }} 
+        className="w-full h-14 bg-[#00AEEF] hover:bg-[#0077A8] mt-6 text-lg font-semibold" 
+        disabled={submitting}
+      >
         <Send className="mr-2" />
         {lang === "fr" ? "Valider le contrôle inventaire" : "Confirm inventory check"}
       </Button>
