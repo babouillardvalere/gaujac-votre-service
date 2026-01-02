@@ -338,8 +338,44 @@ export default function Bureau() {
     return filtered;
   }, [interventionsClients, activeView, filters]);
 
+  // Transformer InterventionClient en format événement pour l'historique
+  const interventionsAsEvents = useMemo(() => {
+    return interventionsClients.map(inter => ({
+      id: inter.id,
+      type_event: inter.statut === 'TERMINEE' ? 'INTERVENTION_CLOTUREE' : 
+                  inter.statut === 'EN_COURS' ? 'INTERVENTION_PRISE_EN_CHARGE' :
+                  'INTERVENTION_CLIENT_CREEE',
+      titre: `${inter.service} - ${inter.numero_hebergement}`,
+      description: `${inter.type_intervention} - ${inter.taches?.length || 0} tâche(s)`,
+      service: inter.service,
+      hebergement: inter.numero_hebergement,
+      type_hebergement: inter.type_hebergement,
+      client_nom: inter.client_nom,
+      client_prenom: inter.client_prenom,
+      collaborateur: inter.pris_en_charge_par,
+      urgent: inter.priorite === 'URGENTE',
+      created_date: inter.created_date,
+      metadata: {
+        intervention_client_id: inter.id,
+        statut: inter.statut,
+        duree_minutes: inter.temps_ecoule_minutes,
+        taches_total: inter.taches?.length || 0,
+        taches_completes: inter.taches?.filter(t => t.faite).length || 0
+      },
+      date_arrivee: inter.date_arrivee,
+      date_depart: inter.date_depart
+    }));
+  }, [interventionsClients]);
+
+  // Combiner historique et interventions
+  const allEvents = useMemo(() => {
+    return [...historique, ...interventionsAsEvents].sort((a, b) => 
+      new Date(b.created_date) - new Date(a.created_date)
+    );
+  }, [historique, interventionsAsEvents]);
+
   // Filtrage avancé - OPTIMISÉ avec useMemo
-  const filteredIncidents = useMemo(() => historique.filter(i => {
+  const filteredIncidents = useMemo(() => allEvents.filter(i => {
     // Vue spéciale
     if (activeView === 'today') {
       if (!isToday(new Date(i.created_date))) return false;
@@ -366,7 +402,7 @@ export default function Bureau() {
       if (filters.heure === 'soir' && (hour < 18 || hour >= 22)) return false;
     }
     return true;
-  }), [historique, activeView, filters]);
+  }), [allEvents, activeView, filters]);
 
   // Tri par priorité - OPTIMISÉ avec useMemo
   const sortedIncidents = useMemo(() => [...filteredIncidents].sort((a, b) => {
@@ -392,7 +428,7 @@ export default function Bureau() {
   //   : 0;
 
   // Compteurs vues spéciales
-  const todayCount = historique.filter(i => isToday(new Date(i.created_date))).length;
+  const todayCount = allEvents.filter(i => isToday(new Date(i.created_date))).length;
   const lateCount = incidents.filter(i => i.statut !== 'resolu' && differenceInHours(new Date(), new Date(i.date_saisie)) >= 3).length;
   const critiqueCount = incidents.filter(i => i.statut !== 'resolu' && differenceInHours(new Date(), new Date(i.date_saisie)) >= 72).length;
 
@@ -960,7 +996,8 @@ export default function Bureau() {
             <Card className="border-2 border-[#00AEEF] rounded-xl mb-6">
               <CardHeader>
                 <CardTitle className="font-heading text-[#0077A8]">
-                  🎯 {lang === 'fr' ? 'Pilotage des demandes actives' : 'Active requests management'}
+                  📋 {lang === 'fr' ? 'Historique complet' : 'Complete history'}
+                  <span className="text-sm text-gray-500 ml-2">({allEvents.length} événements)</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
