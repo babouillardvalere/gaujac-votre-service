@@ -1,193 +1,193 @@
-import ChoixLangue from './pages/ChoixLangue';
-import Home from './pages/Home';
-import IdentiteClient from './pages/IdentiteClient';
-import ChoixHebergement from './pages/ChoixHebergement';
-import Signalement from './pages/Signalement';
-import Collaborateur from './pages/Collaborateur';
-import CollaborateurTechnique from './pages/CollaborateurTechnique';
-import CollaborateurMenage from './pages/CollaborateurMenage';
-import Bureau from './pages/Bureau';
-import Avis from './pages/Avis';
-import SignalementClient from './pages/SignalementClient';
-import Intervention from './pages/Intervention';
-import Dashboard from './pages/Dashboard';
-import Piscine from './pages/Piscine';
-import SatisfactionClient from './pages/SatisfactionClient';
-import MenuCollaborateur from './pages/MenuCollaborateur';
-import ConditionsClient from './pages/ConditionsClient';
-import Attente from './pages/Attente';
-import Materiel from './pages/Materiel';
-import SuiviIntervention from './pages/SuiviIntervention';
-import AvisIdentification from './pages/AvisIdentification';
-import AvisFormulaire from './pages/AvisFormulaire';
-import MeilleursAvis from './pages/MeilleursAvis';
-import Taches from './pages/Taches';
-import ClientMenu from './pages/ClientMenu';
-import ClientArrivee from './pages/ClientArrivee';
-import ClientDepart from './pages/ClientDepart';
-import ClientDepartIdentite from './pages/ClientDepartIdentite';
-import ClientDepartHebergement from './pages/ClientDepartHebergement';
-import ClientDepartChecklist from './pages/ClientDepartChecklist';
-import ClientDepartPhotos from './pages/ClientDepartPhotos';
-import ClientDepartConfirmation from './pages/ClientDepartConfirmation';
-import ClientArriveeIdentite from './pages/ClientArriveeIdentite';
-import ClientArriveeHebergement from './pages/ClientArriveeHebergement';
-import ClientControleInventaire from './pages/ClientControleInventaire';
-import ClientArriveeSuivi from './pages/ClientArriveeSuivi';
-import ClientDepartInventaire from './pages/ClientDepartInventaire';
-import Statistiques from './pages/Statistiques';
-import InfosPratiques from './pages/InfosPratiques';
-import AvisApplicationForm from './pages/AvisApplicationForm';
-import AvisMenu from './pages/AvisMenu';
-import Notifications from './pages/Notifications';
-import NotificationPreferences from './pages/NotificationPreferences';
-import CalendrierReservations from './pages/CalendrierReservations';
-import GestionUtilisateurs from './pages/GestionUtilisateurs';
-import Reservations from './pages/Reservations';
-import PaiementReservation from './pages/PaiementReservation';
-import MesReservations from './pages/MesReservations';
-import GestionReservationsReception from './pages/GestionReservationsReception';
-import Reception from './pages/Reception';
 import AdminLoadTest from './pages/AdminLoadTest';
-import DashboardRapports from './pages/DashboardRapports';
-import ClientDepartIdentification from './pages/ClientDepartIdentification';
-import ClientDepartLogement from './pages/ClientDepartLogement';
-import ClientDepartProprete from './pages/ClientDepartProprete';
-import ClientDepartRecap from './pages/ClientDepartRecap';
-import ClientDepartConditions from './pages/ClientDepartConditions';
-import RapportsInterventions from './pages/RapportsInterventions';
-import ClientResume from './pages/ClientResume';
-import DirectionMenu from './pages/DirectionMenu';
-import Bar from './pages/Bar';
 import Animations from './pages/Animations';
-import ClientSuiviInventaire from './pages/ClientSuiviInventaire';
-import ClientSuiviSearch from './pages/ClientSuiviSearch';
-import ClientSuiviDetail from './pages/ClientSuiviDetail';
-import Technique from './pages/Technique';
-import Menage from './pages/Menage';
-import ClientControleInventaireEmplacement from './pages/ClientControleInventaireEmplacement';
-import ClientControleInventaireCottage from './pages/ClientControleInventaireCottage';
-import ClientControleInventairePremiumTwins from './pages/ClientControleInventairePremiumTwins';
-import ClientControleInventairePremium3ch from './pages/ClientControleInventairePremium3ch';
-import ClientControleInventairePremium2ch from './pages/ClientControleInventairePremium2ch';
-import ClientControleInventaireConfortPlus3ch from './pages/ClientControleInventaireConfortPlus3ch';
-import ClientControleInventaireEcoClim from './pages/ClientControleInventaireEcoClim';
-import ClientControleInventaireEco from './pages/ClientControleInventaireEco';
+import Attente from './pages/Attente';
+import Avis from './pages/Avis';
+import AvisApplicationForm from './pages/AvisApplicationForm';
+import AvisFormulaire from './pages/AvisFormulaire';
+import AvisIdentification from './pages/AvisIdentification';
+import AvisMenu from './pages/AvisMenu';
+import Bar from './pages/Bar';
+import Bureau from './pages/Bureau';
+import CalendrierReservations from './pages/CalendrierReservations';
+import ChoixHebergement from './pages/ChoixHebergement';
+import ChoixLangue from './pages/ChoixLangue';
+import ClientArrivee from './pages/ClientArrivee';
+import ClientArriveeHebergement from './pages/ClientArriveeHebergement';
+import ClientArriveeIdentite from './pages/ClientArriveeIdentite';
+import ClientArriveeSuivi from './pages/ClientArriveeSuivi';
+import ClientControleInventaire from './pages/ClientControleInventaire';
+import ClientControleInventaireChaletClassique1ch from './pages/ClientControleInventaireChaletClassique1ch';
+import ClientControleInventaireChaletEco1ch from './pages/ClientControleInventaireChaletEco1ch';
+import ClientControleInventaireClassique2ch from './pages/ClientControleInventaireClassique2ch';
+import ClientControleInventaireClassique3ch from './pages/ClientControleInventaireClassique3ch';
+import ClientControleInventaireClassiqueClim2ch from './pages/ClientControleInventaireClassiqueClim2ch';
+import ClientControleInventaireConfort2ch from './pages/ClientControleInventaireConfort2ch';
 import ClientControleInventaireConfort3ch from './pages/ClientControleInventaireConfort3ch';
 import ClientControleInventaireConfortPlus2ch from './pages/ClientControleInventaireConfortPlus2ch';
-import ClientControleInventaireConfort2ch from './pages/ClientControleInventaireConfort2ch';
-import ClientControleInventaireClassiqueClim2ch from './pages/ClientControleInventaireClassiqueClim2ch';
-import ClientControleInventaireClassique3ch from './pages/ClientControleInventaireClassique3ch';
-import ClientControleInventaireClassique2ch from './pages/ClientControleInventaireClassique2ch';
-import ClientControleInventaireChaletEco1ch from './pages/ClientControleInventaireChaletEco1ch';
-import ClientControleInventaireChaletClassique1ch from './pages/ClientControleInventaireChaletClassique1ch';
-import DirectionInterventions from './pages/DirectionInterventions';
+import ClientControleInventaireConfortPlus3ch from './pages/ClientControleInventaireConfortPlus3ch';
+import ClientControleInventaireCottage from './pages/ClientControleInventaireCottage';
+import ClientControleInventaireEco from './pages/ClientControleInventaireEco';
+import ClientControleInventaireEcoClim from './pages/ClientControleInventaireEcoClim';
+import ClientControleInventaireEmplacement from './pages/ClientControleInventaireEmplacement';
+import ClientControleInventairePremium2ch from './pages/ClientControleInventairePremium2ch';
+import ClientControleInventairePremium3ch from './pages/ClientControleInventairePremium3ch';
+import ClientControleInventairePremiumTwins from './pages/ClientControleInventairePremiumTwins';
+import ClientDepart from './pages/ClientDepart';
+import ClientDepartChecklist from './pages/ClientDepartChecklist';
+import ClientDepartConditions from './pages/ClientDepartConditions';
+import ClientDepartConfirmation from './pages/ClientDepartConfirmation';
+import ClientDepartHebergement from './pages/ClientDepartHebergement';
+import ClientDepartIdentification from './pages/ClientDepartIdentification';
+import ClientDepartIdentite from './pages/ClientDepartIdentite';
+import ClientDepartInventaire from './pages/ClientDepartInventaire';
+import ClientDepartLogement from './pages/ClientDepartLogement';
+import ClientDepartPhotos from './pages/ClientDepartPhotos';
+import ClientDepartProprete from './pages/ClientDepartProprete';
+import ClientDepartRecap from './pages/ClientDepartRecap';
+import ClientMenu from './pages/ClientMenu';
+import ClientResume from './pages/ClientResume';
+import ClientSuiviDetail from './pages/ClientSuiviDetail';
+import ClientSuiviInventaire from './pages/ClientSuiviInventaire';
+import ClientSuiviSearch from './pages/ClientSuiviSearch';
+import Collaborateur from './pages/Collaborateur';
+import CollaborateurMenage from './pages/CollaborateurMenage';
+import CollaborateurTechnique from './pages/CollaborateurTechnique';
+import ConditionsClient from './pages/ConditionsClient';
+import Dashboard from './pages/Dashboard';
+import DashboardRapports from './pages/DashboardRapports';
 import DirectionChoixHebergement from './pages/DirectionChoixHebergement';
 import DirectionChoixNumero from './pages/DirectionChoixNumero';
-import DirectionCreerIntervention from './pages/DirectionCreerIntervention';
-import DirectionRecapIntervention from './pages/DirectionRecapIntervention';
-import DirectionSuiviHivernage from './pages/DirectionSuiviHivernage';
-import DirectionSuiviDeshivernage from './pages/DirectionSuiviDeshivernage';
 import DirectionCommandes from './pages/DirectionCommandes';
-import PreferencesNotifications from './pages/PreferencesNotifications';
+import DirectionCreerIntervention from './pages/DirectionCreerIntervention';
+import DirectionInterventions from './pages/DirectionInterventions';
+import DirectionMenu from './pages/DirectionMenu';
+import DirectionRecapIntervention from './pages/DirectionRecapIntervention';
+import DirectionSuiviDeshivernage from './pages/DirectionSuiviDeshivernage';
+import DirectionSuiviHivernage from './pages/DirectionSuiviHivernage';
+import GestionReservationsReception from './pages/GestionReservationsReception';
+import GestionUtilisateurs from './pages/GestionUtilisateurs';
+import Home from './pages/Home';
+import IdentiteClient from './pages/IdentiteClient';
+import InfosPratiques from './pages/InfosPratiques';
+import Intervention from './pages/Intervention';
 import InterventionsClients from './pages/InterventionsClients';
+import Materiel from './pages/Materiel';
+import MeilleursAvis from './pages/MeilleursAvis';
+import Menage from './pages/Menage';
+import MenuCollaborateur from './pages/MenuCollaborateur';
+import MesReservations from './pages/MesReservations';
+import NotificationPreferences from './pages/NotificationPreferences';
+import Notifications from './pages/Notifications';
+import PaiementReservation from './pages/PaiementReservation';
+import Piscine from './pages/Piscine';
+import PreferencesNotifications from './pages/PreferencesNotifications';
+import RapportsInterventions from './pages/RapportsInterventions';
+import Reception from './pages/Reception';
+import Reservations from './pages/Reservations';
+import SatisfactionClient from './pages/SatisfactionClient';
+import Signalement from './pages/Signalement';
+import SignalementClient from './pages/SignalementClient';
+import Statistiques from './pages/Statistiques';
+import SuiviIntervention from './pages/SuiviIntervention';
+import Taches from './pages/Taches';
+import Technique from './pages/Technique';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "ChoixLangue": ChoixLangue,
-    "Home": Home,
-    "IdentiteClient": IdentiteClient,
-    "ChoixHebergement": ChoixHebergement,
-    "Signalement": Signalement,
-    "Collaborateur": Collaborateur,
-    "CollaborateurTechnique": CollaborateurTechnique,
-    "CollaborateurMenage": CollaborateurMenage,
-    "Bureau": Bureau,
-    "Avis": Avis,
-    "SignalementClient": SignalementClient,
-    "Intervention": Intervention,
-    "Dashboard": Dashboard,
-    "Piscine": Piscine,
-    "SatisfactionClient": SatisfactionClient,
-    "MenuCollaborateur": MenuCollaborateur,
-    "ConditionsClient": ConditionsClient,
-    "Attente": Attente,
-    "Materiel": Materiel,
-    "SuiviIntervention": SuiviIntervention,
-    "AvisIdentification": AvisIdentification,
-    "AvisFormulaire": AvisFormulaire,
-    "MeilleursAvis": MeilleursAvis,
-    "Taches": Taches,
-    "ClientMenu": ClientMenu,
-    "ClientArrivee": ClientArrivee,
-    "ClientDepart": ClientDepart,
-    "ClientDepartIdentite": ClientDepartIdentite,
-    "ClientDepartHebergement": ClientDepartHebergement,
-    "ClientDepartChecklist": ClientDepartChecklist,
-    "ClientDepartPhotos": ClientDepartPhotos,
-    "ClientDepartConfirmation": ClientDepartConfirmation,
-    "ClientArriveeIdentite": ClientArriveeIdentite,
-    "ClientArriveeHebergement": ClientArriveeHebergement,
-    "ClientControleInventaire": ClientControleInventaire,
-    "ClientArriveeSuivi": ClientArriveeSuivi,
-    "ClientDepartInventaire": ClientDepartInventaire,
-    "Statistiques": Statistiques,
-    "InfosPratiques": InfosPratiques,
-    "AvisApplicationForm": AvisApplicationForm,
-    "AvisMenu": AvisMenu,
-    "Notifications": Notifications,
-    "NotificationPreferences": NotificationPreferences,
-    "CalendrierReservations": CalendrierReservations,
-    "GestionUtilisateurs": GestionUtilisateurs,
-    "Reservations": Reservations,
-    "PaiementReservation": PaiementReservation,
-    "MesReservations": MesReservations,
-    "GestionReservationsReception": GestionReservationsReception,
-    "Reception": Reception,
     "AdminLoadTest": AdminLoadTest,
-    "DashboardRapports": DashboardRapports,
-    "ClientDepartIdentification": ClientDepartIdentification,
-    "ClientDepartLogement": ClientDepartLogement,
-    "ClientDepartProprete": ClientDepartProprete,
-    "ClientDepartRecap": ClientDepartRecap,
-    "ClientDepartConditions": ClientDepartConditions,
-    "RapportsInterventions": RapportsInterventions,
-    "ClientResume": ClientResume,
-    "DirectionMenu": DirectionMenu,
-    "Bar": Bar,
     "Animations": Animations,
-    "ClientSuiviInventaire": ClientSuiviInventaire,
-    "ClientSuiviSearch": ClientSuiviSearch,
-    "ClientSuiviDetail": ClientSuiviDetail,
-    "Technique": Technique,
-    "Menage": Menage,
-    "ClientControleInventaireEmplacement": ClientControleInventaireEmplacement,
-    "ClientControleInventaireCottage": ClientControleInventaireCottage,
-    "ClientControleInventairePremiumTwins": ClientControleInventairePremiumTwins,
-    "ClientControleInventairePremium3ch": ClientControleInventairePremium3ch,
-    "ClientControleInventairePremium2ch": ClientControleInventairePremium2ch,
-    "ClientControleInventaireConfortPlus3ch": ClientControleInventaireConfortPlus3ch,
-    "ClientControleInventaireEcoClim": ClientControleInventaireEcoClim,
-    "ClientControleInventaireEco": ClientControleInventaireEco,
+    "Attente": Attente,
+    "Avis": Avis,
+    "AvisApplicationForm": AvisApplicationForm,
+    "AvisFormulaire": AvisFormulaire,
+    "AvisIdentification": AvisIdentification,
+    "AvisMenu": AvisMenu,
+    "Bar": Bar,
+    "Bureau": Bureau,
+    "CalendrierReservations": CalendrierReservations,
+    "ChoixHebergement": ChoixHebergement,
+    "ChoixLangue": ChoixLangue,
+    "ClientArrivee": ClientArrivee,
+    "ClientArriveeHebergement": ClientArriveeHebergement,
+    "ClientArriveeIdentite": ClientArriveeIdentite,
+    "ClientArriveeSuivi": ClientArriveeSuivi,
+    "ClientControleInventaire": ClientControleInventaire,
+    "ClientControleInventaireChaletClassique1ch": ClientControleInventaireChaletClassique1ch,
+    "ClientControleInventaireChaletEco1ch": ClientControleInventaireChaletEco1ch,
+    "ClientControleInventaireClassique2ch": ClientControleInventaireClassique2ch,
+    "ClientControleInventaireClassique3ch": ClientControleInventaireClassique3ch,
+    "ClientControleInventaireClassiqueClim2ch": ClientControleInventaireClassiqueClim2ch,
+    "ClientControleInventaireConfort2ch": ClientControleInventaireConfort2ch,
     "ClientControleInventaireConfort3ch": ClientControleInventaireConfort3ch,
     "ClientControleInventaireConfortPlus2ch": ClientControleInventaireConfortPlus2ch,
-    "ClientControleInventaireConfort2ch": ClientControleInventaireConfort2ch,
-    "ClientControleInventaireClassiqueClim2ch": ClientControleInventaireClassiqueClim2ch,
-    "ClientControleInventaireClassique3ch": ClientControleInventaireClassique3ch,
-    "ClientControleInventaireClassique2ch": ClientControleInventaireClassique2ch,
-    "ClientControleInventaireChaletEco1ch": ClientControleInventaireChaletEco1ch,
-    "ClientControleInventaireChaletClassique1ch": ClientControleInventaireChaletClassique1ch,
-    "DirectionInterventions": DirectionInterventions,
+    "ClientControleInventaireConfortPlus3ch": ClientControleInventaireConfortPlus3ch,
+    "ClientControleInventaireCottage": ClientControleInventaireCottage,
+    "ClientControleInventaireEco": ClientControleInventaireEco,
+    "ClientControleInventaireEcoClim": ClientControleInventaireEcoClim,
+    "ClientControleInventaireEmplacement": ClientControleInventaireEmplacement,
+    "ClientControleInventairePremium2ch": ClientControleInventairePremium2ch,
+    "ClientControleInventairePremium3ch": ClientControleInventairePremium3ch,
+    "ClientControleInventairePremiumTwins": ClientControleInventairePremiumTwins,
+    "ClientDepart": ClientDepart,
+    "ClientDepartChecklist": ClientDepartChecklist,
+    "ClientDepartConditions": ClientDepartConditions,
+    "ClientDepartConfirmation": ClientDepartConfirmation,
+    "ClientDepartHebergement": ClientDepartHebergement,
+    "ClientDepartIdentification": ClientDepartIdentification,
+    "ClientDepartIdentite": ClientDepartIdentite,
+    "ClientDepartInventaire": ClientDepartInventaire,
+    "ClientDepartLogement": ClientDepartLogement,
+    "ClientDepartPhotos": ClientDepartPhotos,
+    "ClientDepartProprete": ClientDepartProprete,
+    "ClientDepartRecap": ClientDepartRecap,
+    "ClientMenu": ClientMenu,
+    "ClientResume": ClientResume,
+    "ClientSuiviDetail": ClientSuiviDetail,
+    "ClientSuiviInventaire": ClientSuiviInventaire,
+    "ClientSuiviSearch": ClientSuiviSearch,
+    "Collaborateur": Collaborateur,
+    "CollaborateurMenage": CollaborateurMenage,
+    "CollaborateurTechnique": CollaborateurTechnique,
+    "ConditionsClient": ConditionsClient,
+    "Dashboard": Dashboard,
+    "DashboardRapports": DashboardRapports,
     "DirectionChoixHebergement": DirectionChoixHebergement,
     "DirectionChoixNumero": DirectionChoixNumero,
-    "DirectionCreerIntervention": DirectionCreerIntervention,
-    "DirectionRecapIntervention": DirectionRecapIntervention,
-    "DirectionSuiviHivernage": DirectionSuiviHivernage,
-    "DirectionSuiviDeshivernage": DirectionSuiviDeshivernage,
     "DirectionCommandes": DirectionCommandes,
-    "PreferencesNotifications": PreferencesNotifications,
+    "DirectionCreerIntervention": DirectionCreerIntervention,
+    "DirectionInterventions": DirectionInterventions,
+    "DirectionMenu": DirectionMenu,
+    "DirectionRecapIntervention": DirectionRecapIntervention,
+    "DirectionSuiviDeshivernage": DirectionSuiviDeshivernage,
+    "DirectionSuiviHivernage": DirectionSuiviHivernage,
+    "GestionReservationsReception": GestionReservationsReception,
+    "GestionUtilisateurs": GestionUtilisateurs,
+    "Home": Home,
+    "IdentiteClient": IdentiteClient,
+    "InfosPratiques": InfosPratiques,
+    "Intervention": Intervention,
     "InterventionsClients": InterventionsClients,
+    "Materiel": Materiel,
+    "MeilleursAvis": MeilleursAvis,
+    "Menage": Menage,
+    "MenuCollaborateur": MenuCollaborateur,
+    "MesReservations": MesReservations,
+    "NotificationPreferences": NotificationPreferences,
+    "Notifications": Notifications,
+    "PaiementReservation": PaiementReservation,
+    "Piscine": Piscine,
+    "PreferencesNotifications": PreferencesNotifications,
+    "RapportsInterventions": RapportsInterventions,
+    "Reception": Reception,
+    "Reservations": Reservations,
+    "SatisfactionClient": SatisfactionClient,
+    "Signalement": Signalement,
+    "SignalementClient": SignalementClient,
+    "Statistiques": Statistiques,
+    "SuiviIntervention": SuiviIntervention,
+    "Taches": Taches,
+    "Technique": Technique,
 }
 
 export const pagesConfig = {

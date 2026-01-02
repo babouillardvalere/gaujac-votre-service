@@ -187,8 +187,6 @@ export default function ClientControleInventaire() {
       return desc;
     }).join(' • ');
 
-    console.log(`🔧 Création intervention ${service}, ${taches.length} tâches`);
-
     const interventionClient = await base44.entities.InterventionClient.create({
       type_intervention: "INVENTAIRE_ARRIVEE",
       type_hebergement: categorie,
@@ -207,7 +205,15 @@ export default function ClientControleInventaire() {
       fiche_arrivee_id: ficheId
     });
 
-    console.log(`✅ Intervention créée: ${interventionClient.id}`);
+    console.log(`[INTERVENTION_CREATE] InterventionClient créée:`, {
+      id: interventionClient.id,
+      service: interventionClient.service,
+      statut: interventionClient.statut,
+      type_intervention: interventionClient.type_intervention,
+      numero_hebergement: interventionClient.numero_hebergement,
+      taches: taches.length,
+      priorite: interventionClient.priorite
+    });
 
     // NOTIFICATION DIRECTE AU SERVICE
     const serviceLabel = service === 'MENAGE' ? '🧹 Ménage' : service === 'TECHNIQUE' ? '🔧 Technique' : '🏠 Réception';
@@ -381,7 +387,15 @@ export default function ClientControleInventaire() {
   const handleFinalSubmit = async () => {
     if (submitting) return;
     
-    console.log('🚀 DÉBUT SOUMISSION');
+    console.log('========================================');
+    console.log('[ARRIVAL_VALIDATE] start', {
+      inventoryId: sessionStorage.getItem('arrivee_dossier_id'),
+      housing: `${categorie} ${numero}`,
+      client: `${prenom} ${nom}`,
+      dates: `${dateArrivee} → ${dateDepart}`
+    });
+    console.log('========================================');
+    
     setSubmitting(true);
     setShowRecap(false);
     
@@ -389,7 +403,11 @@ export default function ClientControleInventaire() {
     
     try {
       const { menage, technique, reception } = analyzeAnomalies();
-      console.log('📊 Anomalies:', { technique: technique.length, menage: menage.length, reception: reception.length });
+      console.log('[ARRIVAL_VALIDATE] Anomalies détectées:', { 
+        technique: technique.length, 
+        menage: menage.length, 
+        reception: reception.length 
+      });
 
       const allPhotos = {};
       Object.keys(photos).forEach(key => {
@@ -414,27 +432,36 @@ export default function ClientControleInventaire() {
         autorisation_acces: autorisationAcces,
         plage_horaire_client: autorisationAcces === 'non' ? plagesHoraires.join(', ') : null
       });
-      console.log('✅ Fiche créée:', fiche.id);
+      console.log('[ARRIVAL_VALIDATE] saved/locked OK - FicheArrivee ID:', fiche.id);
 
       // 2. Créer interventions
       let interventionMenage = null;
       let interventionTechnique = null;
       let interventionReception = null;
+      const createdIds = [];
 
       if (menage.length > 0) {
         interventionMenage = await createIntervention({ service: "MENAGE", items: menage, ficheId: fiche.id });
-        console.log('✅ Ménage:', interventionMenage?.id);
+        if (interventionMenage) createdIds.push({ service: 'MENAGE', id: interventionMenage.id });
       }
 
       if (technique.length > 0) {
         interventionTechnique = await createIntervention({ service: "TECHNIQUE", items: technique, ficheId: fiche.id });
-        console.log('✅ Technique:', interventionTechnique?.id);
+        if (interventionTechnique) createdIds.push({ service: 'TECHNIQUE', id: interventionTechnique.id });
       }
 
       if (reception.length > 0) {
         interventionReception = await createIntervention({ service: "RECEPTION", items: reception, ficheId: fiche.id });
-        console.log('✅ Réception:', interventionReception?.id);
+        if (interventionReception) createdIds.push({ service: 'RECEPTION', id: interventionReception.id });
       }
+
+      console.log('[ARRIVAL_VALIDATE] interventionsCreated', {
+        count: createdIds.length,
+        tech: technique.length,
+        menage: menage.length,
+        reception: reception.length,
+        ids: createdIds
+      });
 
       // 3. Stocker résumé
       setInterventionsSummary({
@@ -464,7 +491,12 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
           destinataire_role: 'RECEPTION',
           statut: 'non_lu'
         });
-        console.log('✅ Notif réception');
+        
+        console.log('[ARRIVAL_VALIDATE] notificationsSent', {
+          tech: technique.length > 0,
+          menage: menage.length > 0,
+          reception: totalAnomalies > 0
+        });
       }
 
       // 5. Générer PDF
@@ -474,10 +506,12 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
         if (pdf) {
           await base44.entities.FicheArrivee.update(fiche.id, { pdf_url: pdf });
           urlPDF = pdf;
-          console.log('✅ PDF:', pdf);
+          console.log('[ARRIVAL_VALIDATE] pdfGenerated url=', pdf);
+        } else {
+          console.error('[ARRIVAL_VALIDATE] pdfGenerated FAILED - null result');
         }
       } catch (err) {
-        console.error('❌ PDF:', err);
+        console.error('[ARRIVAL_VALIDATE] pdfGenerated ERROR:', err);
       }
 
       // 6. Finaliser dossier
@@ -499,10 +533,22 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
       setPdfUrlForModal(urlPDF);
       setSubmitting(false);
       setShowSuccessModal(true);
-      console.log('🎉 MODALE OUVERTE - PDF:', urlPDF);
+      
+      console.log('[ARRIVAL_VALIDATE] showFinalModal OK');
+      console.log('========================================');
+      console.log('[ARRIVAL_VALIDATE] RÉSUMÉ FINAL:', {
+        ficheId: fiche.id,
+        dossierId: sessionStorage.getItem('arrivee_dossier_id'),
+        pdfUrl: urlPDF,
+        interventionsTech: interventionTechnique?.id || 'AUCUNE',
+        interventionsMenage: interventionMenage?.id || 'AUCUNE',
+        interventionsReception: interventionReception?.id || 'AUCUNE',
+        modalOpen: true
+      });
+      console.log('========================================');
       
     } catch (e) {
-      console.error('❌ ERREUR:', e);
+      console.error('[ARRIVAL_VALIDATE] ERROR GLOBAL:', e);
       toast.dismiss('submit');
       toast.error(lang === "fr" ? "Erreur" : "Error");
       setSubmitting(false);
