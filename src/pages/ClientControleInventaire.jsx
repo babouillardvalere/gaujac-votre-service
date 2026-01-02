@@ -706,9 +706,31 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
           menage: menage.length > 0,
           reception: totalAnomalies > 0
         });
-      }
+        }
 
-      // 5. Générer PDF
+        // 4.5. Écriture dans l'historique central
+        await base44.entities.HistoriqueEvent.create({
+        type_event: 'CONTROLE_INVENTAIRE_VALIDE',
+        titre: `Controle inventaire ${numero}`,
+        description: `${prenom} ${nom} - ${totalAnomalies} anomalie(s) detectee(s)`,
+        service: 'RECEPTION',
+        hebergement: numero,
+        type_hebergement: categorie,
+        client_nom: nom,
+        client_prenom: prenom,
+        urgent: totalUrgent > 0,
+        metadata: {
+          total_anomalies: totalAnomalies,
+          technique: technique.length,
+          menage: menage.length,
+          reception: reception.length,
+          intervention_ids: createdIds
+        },
+        fiche_arrivee_id: fiche.id
+        });
+        console.log('[ARRIVAL_VALIDATE] historiqueEventCreated');
+
+        // 5. Générer PDF
       let urlPDF = "";
       try {
         const pdf = await genererPDF({ ficheId: fiche.id, interventions: { menage, technique, reception } });

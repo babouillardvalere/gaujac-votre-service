@@ -137,13 +137,20 @@ export default function Bureau() {
     queryFn: () => base44.auth.me(),
   });
 
-  const { data: incidents = [], isLoading, error: incidentsError } = useQuery({
-    queryKey: ['bureau-incidents'],
-    queryFn: () => base44.entities.Incident.filter({}, '-date_saisie', 250),
+  const { data: historique = [], isLoading, error: incidentsError } = useQuery({
+    queryKey: ['bureau-historique'],
+    queryFn: () => base44.entities.HistoriqueEvent.filter({}, '-created_date', 250),
     refetchInterval: 60000,
     staleTime: 45000,
     retry: 2,
     retryDelay: 1000
+  });
+
+  const { data: incidents = [] } = useQuery({
+    queryKey: ['bureau-incidents'],
+    queryFn: () => base44.entities.Incident.filter({}, '-date_saisie', 250),
+    refetchInterval: 60000,
+    staleTime: 45000
   });
 
   const { data: avis = [] } = useQuery({
@@ -167,11 +174,18 @@ export default function Bureau() {
 
   // Mutations pour actions de groupe
   const updateIncidentMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Incident.update(id, data),
+    mutationFn: ({ id, data }) => base44.entities.HistoriqueEvent.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bureau-historique'] });
+    }
   });
 
   const deleteIncidentMutation = useMutation({
-    mutationFn: (id) => base44.entities.Incident.delete(id),
+    mutationFn: (id) => base44.entities.HistoriqueEvent.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bureau-historique'] });
+      toast.success(lang === 'fr' ? 'Événement supprimé' : 'Event deleted');
+    }
   });
 
   const deleteInterventionDirectionMutation = useMutation({
@@ -279,65 +293,43 @@ export default function Bureau() {
   };
 
   // Filtrage avancé - OPTIMISÉ avec useMemo
-  const filteredIncidents = useMemo(() => incidents.filter(i => {
+  const filteredIncidents = useMemo(() => historique.filter(i => {
     // Vue spéciale
     if (activeView === 'today') {
-      if (!isToday(new Date(i.date_saisie))) return false;
-      if (i.statut === 'resolu') return false;
+      if (!isToday(new Date(i.created_date))) return false;
     }
     if (activeView === 'late') {
-      if (i.statut === 'resolu') return false;
-      const hours = differenceInHours(new Date(), new Date(i.date_saisie));
-      if (hours < 3) return false;
+      // Pour historique, on ne filtre pas par retard
     }
 
     // Filtres standards
-    if (filters.nom && !`${i.client_nom} ${i.client_prenom}`.toLowerCase().includes(filters.nom.toLowerCase())) return false;
-    if (filters.logement && !(i.logement || i.emplacement || '').toLowerCase().includes(filters.logement.toLowerCase())) return false;
-    if (filters.type !== 'tous' && i.type !== filters.type) return false;
-    if (filters.categories.length > 0 && !filters.categories.includes(i.categorie)) return false;
-    if (filters.statut !== 'tous' && i.statut !== filters.statut) return false;
+    if (filters.nom && !`${i.client_nom || ''} ${i.client_prenom || ''}`.toLowerCase().includes(filters.nom.toLowerCase())) return false;
+    if (filters.logement && !(i.hebergement || '').toLowerCase().includes(filters.logement.toLowerCase())) return false;
+    if (filters.type !== 'tous' && i.service?.toLowerCase() !== filters.type) return false;
+    if (filters.statut !== 'tous') return false; // Pas de statut dans HistoriqueEvent
     if (filters.urgent !== 'tous') {
       if (filters.urgent === 'oui' && !i.urgent) return false;
       if (filters.urgent === 'non' && i.urgent) return false;
     }
-    if (filters.hebergementType !== 'tous') {
-      if (filters.hebergementType === 'emplacement' && !i.emplacement) return false;
-      if (filters.hebergementType === 'mobilhome' && !i.logement) return false;
-    }
-    if (filters.dateFrom && new Date(i.date_saisie) < new Date(filters.dateFrom)) return false;
-    if (filters.dateTo && new Date(i.date_saisie) > new Date(filters.dateTo + 'T23:59:59')) return false;
-    if (filters.heure !== 'tous' && i.date_saisie) {
-      const hour = new Date(i.date_saisie).getHours();
+    if (filters.dateFrom && new Date(i.created_date) < new Date(filters.dateFrom)) return false;
+    if (filters.dateTo && new Date(i.created_date) > new Date(filters.dateTo + 'T23:59:59')) return false;
+    if (filters.heure !== 'tous' && i.created_date) {
+      const hour = new Date(i.created_date).getHours();
       if (filters.heure === 'matin' && (hour < 6 || hour >= 12)) return false;
       if (filters.heure === 'apres-midi' && (hour < 12 || hour >= 18)) return false;
       if (filters.heure === 'soir' && (hour < 18 || hour >= 22)) return false;
     }
     return true;
-  }), [incidents, activeView, filters]);
+  }), [historique, activeView, filters]);
 
   // Tri par priorité - OPTIMISÉ avec useMemo
   const sortedIncidents = useMemo(() => [...filteredIncidents].sort((a, b) => {
-    // Les résolus toujours à la fin
-    if (a.statut === 'resolu' && b.statut !== 'resolu') return 1;
-    if (b.statut === 'resolu' && a.statut !== 'resolu') return -1;
-    
-    // Si priorite_ordre est défini, l'utiliser
-    if (a.priorite_ordre !== undefined && b.priorite_ordre !== undefined) {
-      if (a.priorite_ordre !== b.priorite_ordre) return a.priorite_ordre - b.priorite_ordre;
-    }
-    
-    // Priorité bureau manuelle (1=prioritaire, 0=normal, -1=basse)
-    const prioA = a.priorite_bureau || 0;
-    const prioB = b.priorite_bureau || 0;
-    if (prioB !== prioA) return prioB - prioA;
-    
     // Urgents avant non-urgents
     if (a.urgent && !b.urgent) return -1;
     if (!a.urgent && b.urgent) return 1;
     
-    // Dans chaque groupe (urgents ou non-urgents), tri chronologique (ancien → récent)
-    return new Date(a.date_saisie) - new Date(b.date_saisie);
+    // Tri chronologique (récent → ancien)
+    return new Date(b.created_date) - new Date(a.created_date);
   }), [filteredIncidents]);
 
   // Stats
@@ -354,7 +346,7 @@ export default function Bureau() {
     : 0;
 
   // Compteurs vues spéciales
-  const todayCount = incidents.filter(i => isToday(new Date(i.date_saisie)) && i.statut !== 'resolu').length;
+  const todayCount = historique.filter(i => isToday(new Date(i.created_date))).length;
   const lateCount = incidents.filter(i => i.statut !== 'resolu' && differenceInHours(new Date(), new Date(i.date_saisie)) >= 3).length;
   const critiqueCount = incidents.filter(i => i.statut !== 'resolu' && differenceInHours(new Date(), new Date(i.date_saisie)) >= 72).length;
 
@@ -412,7 +404,7 @@ export default function Bureau() {
             </Link>
             <div>
               <h1 className="font-heading text-xl">{t('bureau_title')} - {lang === 'fr' ? 'Gestion & Historique' : 'Management & History'}</h1>
-              <p className="text-white/80 text-sm font-body">{incidents.length} {lang === 'fr' ? 'intervention(s) au total' : 'total intervention(s)'}</p>
+              <p className="text-white/80 text-sm font-body">{historique.length} {lang === 'fr' ? 'événement(s) au total' : 'total event(s)'}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -1016,138 +1008,118 @@ export default function Bureau() {
                           <th className="p-3">Date / Heure</th>
                           <th className="p-3">Client</th>
                           <th className="p-3">Hébergement</th>
-                          <th className="p-3">Catégorie</th>
+                          <th className="p-3">Type</th>
                           <th className="p-3">Urgence</th>
-                          <th className="p-3">Statut</th>
-                          <th className="p-3">Temps</th>
-                          <th className="p-3">Avis</th>
+                          <th className="p-3">Événement</th>
+                          <th className="p-3">Détails</th>
+                          <th className="p-3"></th>
                           <th className="p-3"></th>
                         </tr>
                       </thead>
                       <tbody>
-                        {sortedIncidents.slice(0, 100).map((incident, index) => {
-                          const temps = incident.date_resolution && incident.date_saisie
-                            ? differenceInMinutes(new Date(incident.date_resolution), new Date(incident.date_saisie))
-                            : null;
-                          const delayStatus = getDelayStatus(incident);
-                          const tempsAttente = incident.date_saisie && incident.statut !== 'resolu'
-                            ? differenceInMinutes(new Date(), new Date(incident.date_saisie))
-                            : null;
-                          
-                          return (
-                            <tr 
-                              key={incident.id} 
-                              className={`border-t hover:bg-[#FFA500]/5 cursor-pointer font-body ${
-                                delayStatus === 'critique' ? 'bg-red-50' :
-                                delayStatus === 'retard' ? 'bg-orange-50' :
-                                delayStatus === 'lent' ? 'bg-yellow-50' : ''
-                              } ${selectedIds.includes(incident.id) ? 'bg-[#e6f7ff]' : ''}`}
-                              onClick={() => setSelectedIncident(incident)}
-                            >
-                              <td className="p-3" onClick={(e) => e.stopPropagation()}>
-                                <button
-                                  onClick={(e) => toggleSelect(incident.id, e)}
-                                  className="p-1 hover:bg-[#00AEEF]/20 rounded transition-colors"
-                                >
-                                  {selectedIds.includes(incident.id) ? (
-                                    <CheckSquare className="w-5 h-5 text-[#00AEEF]" />
-                                  ) : (
-                                    <Square className="w-5 h-5 text-gray-400" />
-                                  )}
-                                </button>
-                              </td>
-                              <td className="p-3 text-center">
-                                <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
-                                  incident.urgent ? 'bg-red-500 text-white' : 
-                                  incident.statut === 'resolu' ? 'bg-green-100 text-green-700' :
-                                  'bg-[#00AEEF]/20 text-[#0077A8]'
-                                }`}>
-                                  {incident.priorite_ordre || index + 1}
-                                </span>
-                              </td>
-                              <td className="p-3 text-xs">
-                                <div className="font-medium">{incident.date_saisie && format(new Date(incident.date_saisie), 'dd/MM/yy')}</div>
-                                <div className="text-[#00AEEF] font-heading">{incident.date_saisie && format(new Date(incident.date_saisie), 'HH:mm')}</div>
-                                {tempsAttente !== null && incident.statut !== 'resolu' && (
-                                  <div className={`text-xs mt-1 ${tempsAttente > 180 ? 'text-red-500' : tempsAttente > 60 ? 'text-orange-500' : 'text-gray-400'}`}>
-                                    ⏱ {formatDuration(tempsAttente)}
-                                  </div>
-                                )}
-                              </td>
-                              <td className="p-3 text-sm">
-                                <div>{incident.client_prenom} {incident.client_nom}</div>
-                                <div className="text-xs text-gray-400">
-                                  {incident.date_arrivee && format(new Date(incident.date_arrivee), 'dd/MM')} → {incident.date_depart && format(new Date(incident.date_depart), 'dd/MM')}
-                                </div>
-                              </td>
-                              <td className="p-3">
-                                <span className="font-heading text-[#0077A8]">
-                                  {incident.logement ? '🏠' : '⛺'} {incident.logement || incident.emplacement}
-                                </span>
-                              </td>
-                              <td className="p-3">
-                                <div className="flex items-center gap-1">
-                                  <span className="text-lg">{categoryEmojis[incident.categorie]}</span>
-                                  <Badge className={incident.type === 'technique' ? 'bg-[#00AEEF] text-white text-xs' : 'bg-[#FFD700] text-[#0077A8] text-xs'}>
-                                    {incident.categorie}
-                                  </Badge>
-                                </div>
-                              </td>
-                              <td className="p-3">
-                                {incident.urgent && (
-                                  <Badge className="bg-red-500 text-white text-xs">
-                                    <AlertTriangle className="w-3 h-3 mr-1" />
-                                    URGENT
-                                  </Badge>
-                                )}
-                                {delayStatus === 'critique' && (
-                                  <Badge className="bg-red-600 text-white text-xs mt-1">🚨 +3j</Badge>
-                                )}
-                                {delayStatus === 'retard' && (
-                                  <Badge className="bg-orange-500 text-white text-xs mt-1">⚠️ +24h</Badge>
-                                )}
-                              </td>
-                              <td className="p-3">
-                                <div className="space-y-1">
-                                  <Badge className={
-                                    incident.statut === 'resolu' ? 'bg-green-500 text-white' :
-                                    incident.statut === 'en_cours' ? 'bg-[#00AEEF] text-white' :
-                                    incident.statut === 'en_attente_materiel' ? 'bg-gray-500 text-white' :
-                                    'bg-[#FFA500] text-white'
-                                  }>
-                                    {incident.statut === 'en_attente_materiel' ? '⏳ Reporté' : incident.statut}
-                                  </Badge>
-                                  {incident.statut === 'en_attente_materiel' && incident.motif_attente && (
-                                    <p className="text-xs text-gray-500 max-w-[120px] truncate" title={incident.motif_attente}>
-                                      {incident.motif_attente}
-                                    </p>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="p-3 text-sm">
-                                <div className="space-y-1">
-                                  {temps !== null && <div>Total: {formatDuration(temps)}</div>}
-                                  {incident.temps_prise_en_charge && (
-                                    <div className="text-xs text-gray-400">
-                                      Attente: {formatDuration(incident.temps_prise_en_charge)}
-                                    </div>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="p-3">
-                                {incident.note_client && (
-                                  <div className="flex items-center gap-1">
-                                    <Star className="w-3 h-3 text-[#FFD700] fill-[#FFD700]" />
-                                    <span className="text-sm">{incident.note_client}</span>
-                                  </div>
-                                )}
-                              </td>
-                              <td className="p-3">
-                                <InterventionActions incident={incident} onRefresh={() => {}} />
-                              </td>
-                            </tr>
-                          );
-                        })}
+                       {sortedIncidents.slice(0, 100).map((event, index) => {
+                         const eventIcon = {
+                           'CONTROLE_INVENTAIRE_VALIDE': '📋',
+                           'INTERVENTION_CLIENT_CREEE': '🆕',
+                           'MISSION_DIRECTION_CREEE': '🔧',
+                           'MISSION_DIRECTION_PRISE_EN_CHARGE': '▶️',
+                           'MISSION_DIRECTION_VALIDEE': '✅',
+                           'TACHE_VALIDEE': '✓',
+                           'INTERVENTION_PRISE_EN_CHARGE': '🟢',
+                           'INTERVENTION_MISE_EN_ATTENTE': '⏸',
+                           'INTERVENTION_REPRISE': '▶️',
+                           'INTERVENTION_CLOTUREE': '✅',
+                           'PDF_GENERE': '📄'
+                         }[event.type_event] || '•';
+
+                         const serviceColor = {
+                           'TECHNIQUE': 'bg-blue-100 text-blue-700',
+                           'MENAGE': 'bg-yellow-100 text-yellow-700',
+                           'RECEPTION': 'bg-green-100 text-green-700',
+                           'DIRECTION': 'bg-purple-100 text-purple-700'
+                         }[event.service] || 'bg-gray-100 text-gray-700';
+
+                         return (
+                           <tr 
+                             key={event.id} 
+                             className={`border-t hover:bg-[#FFA500]/5 cursor-pointer font-body ${
+                               event.urgent ? 'bg-red-50' : ''
+                             } ${selectedIds.includes(event.id) ? 'bg-[#e6f7ff]' : ''}`}
+                             onClick={() => setSelectedIncident(event)}
+                           >
+                             <td className="p-3" onClick={(e) => e.stopPropagation()}>
+                               <button
+                                 onClick={(e) => toggleSelect(event.id, e)}
+                                 className="p-1 hover:bg-[#00AEEF]/20 rounded transition-colors"
+                               >
+                                 {selectedIds.includes(event.id) ? (
+                                   <CheckSquare className="w-5 h-5 text-[#00AEEF]" />
+                                 ) : (
+                                   <Square className="w-5 h-5 text-gray-400" />
+                                 )}
+                               </button>
+                             </td>
+                             <td className="p-3 text-center">
+                               <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
+                                 event.urgent ? 'bg-red-500 text-white' : 'bg-[#00AEEF]/20 text-[#0077A8]'
+                               }`}>
+                                 {index + 1}
+                               </span>
+                             </td>
+                             <td className="p-3 text-xs">
+                               <div className="font-medium">{format(new Date(event.created_date), 'dd/MM/yy')}</div>
+                               <div className="text-[#00AEEF] font-heading">{format(new Date(event.created_date), 'HH:mm')}</div>
+                             </td>
+                             <td className="p-3 text-sm">
+                               <div>{event.client_prenom} {event.client_nom}</div>
+                             </td>
+                             <td className="p-3">
+                               <span className="font-heading text-[#0077A8]">
+                                 {event.hebergement}
+                               </span>
+                             </td>
+                             <td className="p-3">
+                               <div className="flex items-center gap-1">
+                                 <span className="text-lg">{eventIcon}</span>
+                                 <Badge className={serviceColor}>
+                                   {event.service}
+                                 </Badge>
+                               </div>
+                             </td>
+                             <td className="p-3">
+                               {event.urgent && (
+                                 <Badge className="bg-red-500 text-white text-xs">
+                                   <AlertTriangle className="w-3 h-3 mr-1" />
+                                   URGENT
+                                 </Badge>
+                               )}
+                             </td>
+                             <td className="p-3">
+                               <div className="text-xs font-semibold text-gray-700">
+                                 {event.titre}
+                               </div>
+                               <div className="text-xs text-gray-500 truncate max-w-[200px]">
+                                 {event.description}
+                               </div>
+                             </td>
+                             <td className="p-3 text-sm">
+                               {event.collaborateur && (
+                                 <div className="text-xs text-gray-600">
+                                   <User className="w-3 h-3 inline mr-1" />
+                                   {event.collaborateur}
+                                 </div>
+                               )}
+                               {event.metadata?.duree_minutes && (
+                                 <div className="text-xs text-gray-500">
+                                   {formatDuration(event.metadata.duree_minutes)}
+                                 </div>
+                               )}
+                             </td>
+                             <td className="p-3"></td>
+                             <td className="p-3"></td>
+                           </tr>
+                         );
+                       })}
                       </tbody>
                     </table>
                   </div>

@@ -196,6 +196,20 @@ export default function Menage() {
     });
 
     await notifyBureau(`Intervention ménage prise en charge par ${collaborateurNom} - ${incident.logement || incident.emplacement}`);
+    
+    await base44.entities.HistoriqueEvent.create({
+      type_event: 'INTERVENTION_PRISE_EN_CHARGE',
+      titre: `Intervention prise en charge - ${incident.logement || incident.emplacement}`,
+      description: `${collaborateurNom} - ${incident.categorie}`,
+      service: 'MENAGE',
+      hebergement: incident.logement || incident.emplacement,
+      client_nom: incident.client_nom,
+      client_prenom: incident.client_prenom,
+      collaborateur: collaborateurNom,
+      urgent: incident.urgent,
+      incident_id: incident.id,
+      intervention_client_id: incident.isInterventionClient ? incident.id : null
+    });
       toast.dismiss('prise-charge');
     } catch (error) {
       toast.dismiss('prise-charge');
@@ -274,6 +288,22 @@ export default function Menage() {
     });
 
     await notifyBureau(`Intervention ménage clôturée (${incident.logement || incident.emplacement})`);
+    
+    await base44.entities.HistoriqueEvent.create({
+      type_event: 'INTERVENTION_CLOTUREE',
+      titre: `Intervention cloturee - ${incident.logement || incident.emplacement}`,
+      description: `${incident.pris_par || collaborateurNom} - ${incident.categorie} - ${tempsTotal}min`,
+      service: 'MENAGE',
+      hebergement: incident.logement || incident.emplacement,
+      client_nom: incident.client_nom,
+      client_prenom: incident.client_prenom,
+      collaborateur: incident.pris_par || collaborateurNom,
+      urgent: incident.urgent,
+      metadata: { duree_minutes: tempsTotal },
+      incident_id: incident.id,
+      intervention_client_id: incident.isInterventionClient ? incident.id : null
+    });
+    
       setCommentaire('');
       toast.dismiss('terminer');
     } catch (error) {
@@ -353,6 +383,21 @@ export default function Menage() {
     });
 
     await notifyBureau(`Intervention ménage en attente - ${formData.raison} (${incidentToWait.logement})`);
+    
+    await base44.entities.HistoriqueEvent.create({
+      type_event: 'INTERVENTION_MISE_EN_ATTENTE',
+      titre: `Intervention mise en attente - ${incidentToWait.logement || incidentToWait.emplacement}`,
+      description: `${formData.raison} - ${formData.motifAttente}`,
+      service: 'MENAGE',
+      hebergement: incidentToWait.logement || incidentToWait.emplacement,
+      client_nom: incidentToWait.client_nom,
+      client_prenom: incidentToWait.client_prenom,
+      collaborateur: incidentToWait.pris_par,
+      urgent: incidentToWait.urgent,
+      metadata: { raison: formData.raison, delai: formData.delai },
+      incident_id: incidentToWait.id,
+      intervention_client_id: incidentToWait.isInterventionClient ? incidentToWait.id : null
+    });
 
     setShowAttenteDialog(false);
     setIncidentToWait(null);
