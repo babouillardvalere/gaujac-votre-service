@@ -1332,6 +1332,7 @@ export default function Bureau() {
           <TabsContent value="fiches" className="space-y-6">
             <BureauFichesPDF lang={lang} />
           </TabsContent>
+        </Tabs>
             {(() => {
               // Grouper les interventions par collaborateur
               const interventionsParCollab = {};
