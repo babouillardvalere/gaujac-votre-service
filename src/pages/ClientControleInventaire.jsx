@@ -298,106 +298,290 @@ ${detailsItems}
       let y = 45;
       doc.setFontSize(18);
       doc.setTextColor(0, 119, 168);
-      doc.text(lang === "fr" ? 'CONTRÔLE INVENTAIRE ARRIVÉE' : 'ARRIVAL INVENTORY CHECK', 105, y, { align: 'center' });
-      y += 15;
+      doc.text(lang === "fr" ? 'CONTROLE INVENTAIRE ARRIVEE' : 'ARRIVAL INVENTORY CHECK', 105, y, { align: 'center' });
+      y += 10;
       
-      // Infos
+      // Infos client
       doc.setFontSize(11);
       doc.setTextColor(0, 0, 0);
-      doc.text(`${lang === "fr" ? "Client" : "Guest"}: ${prenom} ${nom}`, 20, y);
+      doc.text(`Client: ${prenom} ${nom}`, 20, y);
       y += 6;
-      doc.text(`${lang === "fr" ? "Hébergement" : "Accommodation"}: ${categorie} ${numero}`, 20, y);
+      doc.text(`Hebergement: ${categorie} ${numero}`, 20, y);
       y += 6;
-      doc.text(`${lang === "fr" ? "Séjour" : "Stay"}: ${dateArrivee} → ${dateDepart}`, 20, y);
+      doc.text(`Sejour: ${dateArrivee} -> ${dateDepart}`, 20, y);
+      y += 6;
+      doc.text(`Date validation: ${new Date().toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-US')}`, 20, y);
       y += 12;
       
-      // Interventions
-      if (interventions.menage.length > 0 || interventions.technique.length > 0 || interventions.reception.length > 0) {
+      // === SECTION A: ÉLÉMENTS SIGNALÉS ===
+      const elementsSignales = [];
+      const elementsConformes = [];
+      
+      items.forEach(item => {
+        const declared = quantities[item.id] !== undefined ? quantities[item.id] : item.quantity;
+        const hasProblemeTechnique = problemesTechniques[item.id] || false;
+        const hasAnomaly = declared < item.quantity || hasProblemeTechnique;
+        const isUrgent = urgencies[item.id] || false;
+        const remarque = remarques[item.id] || '';
+        const photosItem = photos[item.id] || [];
+        
+        if (hasAnomaly || isUrgent || remarque || photosItem.length > 0) {
+          const ARTICLES_TECHNIQUES = ['tv', 'refrigerateur', 'micro_ondes', 'chauffage', 'plaques_cuisson', 'plaque_cuisson', 'chauffe_eau', 'wc', 'douche', 'lavabo', 'feux_gaz', 'telecommande_clim', 'climatisation', 'lave_vaisselle', 'congelateur', 'evier', 'cafetiere', 'hotte', 'cumulus', 'chauffe_eau_gaz', 'seche_serviette', 'seche_cheveux', 'extincteur', 'detecteur_fumee'];
+          const ARTICLES_RECEPTION = ['cle_locatif', 'cle_locative', 'carte_barriere', 'badge', 'table_jardin', 'chaises_jardin', 'salon_jardin', 'bancs_jardin', 'table_interieur', 'chaises_interieur'];
+          
+          let serviceAssigne = 'MENAGE';
+          if (ARTICLES_TECHNIQUES.includes(item.id)) serviceAssigne = 'TECHNIQUE';
+          else if (ARTICLES_RECEPTION.includes(item.id)) serviceAssigne = 'RECEPTION';
+          
+          let typeSignalement = '';
+          if (hasProblemeTechnique) typeSignalement = 'Defectueux';
+          else if (declared < item.quantity) typeSignalement = 'Manquant';
+          
+          elementsSignales.push({
+            nom: item.label,
+            attendu: item.quantity,
+            present: declared,
+            ecart: item.quantity - declared,
+            type: typeSignalement,
+            urgent: isUrgent ? 'Oui' : 'Non',
+            service: serviceAssigne,
+            remarque: remarque || '-',
+            photos: photosItem.length
+          });
+        } else {
+          elementsConformes.push({
+            nom: item.label,
+            attendu: item.quantity,
+            present: declared
+          });
+        }
+      });
+      
+      if (elementsSignales.length > 0) {
         doc.setFont(undefined, 'bold');
-        doc.text(lang === "fr" ? "INTERVENTIONS DÉTECTÉES" : "INTERVENTIONS DETECTED", 20, y);
+        doc.setFontSize(14);
+        doc.setTextColor(220, 38, 38);
+        doc.text(lang === "fr" ? 'A. ELEMENTS SIGNALES' : 'A. REPORTED ITEMS', 20, y);
         y += 8;
         
-        const renderInterventions = (items, emoji, titre) => {
-          if (items.length === 0) return;
-          doc.setFont(undefined, 'bold');
-          doc.text(`${emoji} ${titre} (${items.length})`, 20, y);
-          y += 6;
-          doc.setFont(undefined, 'normal');
-          items.forEach(item => {
-            const ligne = `• ${item.emoji} ${item.label}${item.problemeTechnique ? ' - Défectueux' : item.qtyManquante > 0 ? ` - ${item.qtyManquante} manquant(s)` : ''}${item.urgent ? ' 🔴' : ''}`;
-            doc.text(ligne, 25, y);
-            y += 5;
-            if (item.remarque) {
-              const remarqueLines = doc.splitTextToSize(`  💬 ${item.remarque}`, 160);
-              doc.setFontSize(9);
-              doc.text(remarqueLines, 30, y);
-              y += remarqueLines.length * 4;
-              doc.setFontSize(11);
-            }
-          });
-          y += 5;
-        };
+        doc.autoTable({
+          startY: y,
+          head: [[
+            lang === 'fr' ? 'Objet' : 'Item',
+            lang === 'fr' ? 'Attendu' : 'Expected',
+            lang === 'fr' ? 'Present' : 'Present',
+            lang === 'fr' ? 'Ecart' : 'Diff',
+            lang === 'fr' ? 'Type' : 'Type',
+            lang === 'fr' ? 'Urgent' : 'Urgent',
+            'Service',
+            lang === 'fr' ? 'Remarque' : 'Note'
+          ]],
+          body: elementsSignales.map(el => [
+            el.nom,
+            el.attendu,
+            el.present,
+            el.ecart > 0 ? `-${el.ecart}` : '-',
+            el.type,
+            el.urgent,
+            el.service,
+            el.remarque.substring(0, 30) + (el.remarque.length > 30 ? '...' : '')
+          ]),
+          headStyles: { fillColor: [220, 38, 38], textColor: 255, fontSize: 9 },
+          bodyStyles: { fontSize: 8 },
+          columnStyles: {
+            0: { cellWidth: 35 },
+            1: { cellWidth: 15, halign: 'center' },
+            2: { cellWidth: 15, halign: 'center' },
+            3: { cellWidth: 15, halign: 'center' },
+            4: { cellWidth: 20 },
+            5: { cellWidth: 15, halign: 'center' },
+            6: { cellWidth: 20 },
+            7: { cellWidth: 'auto' }
+          },
+          theme: 'grid',
+          margin: { left: 20, right: 20 }
+        });
         
-        renderInterventions(interventions.technique, '🔧', lang === "fr" ? 'Technique' : 'Technical');
-        renderInterventions(interventions.menage, '🧹', lang === "fr" ? 'Ménage' : 'Housekeeping');
-        renderInterventions(interventions.reception, '🏠', lang === "fr" ? 'Réception' : 'Reception');
+        y = doc.lastAutoTable.finalY + 10;
       }
       
-      // Autorisation
-      y += 5;
+      // === SECTION B: ÉLÉMENTS CONFORMES ===
+      if (elementsConformes.length > 0) {
+        if (y > 240) {
+          doc.addPage();
+          y = 20;
+        }
+        
+        doc.setFont(undefined, 'bold');
+        doc.setFontSize(14);
+        doc.setTextColor(34, 197, 94);
+        doc.text(lang === "fr" ? 'B. ELEMENTS CONFORMES' : 'B. COMPLIANT ITEMS', 20, y);
+        y += 8;
+        
+        doc.autoTable({
+          startY: y,
+          head: [[
+            lang === 'fr' ? 'Objet' : 'Item',
+            lang === 'fr' ? 'Attendu' : 'Expected',
+            lang === 'fr' ? 'Present' : 'Present',
+            lang === 'fr' ? 'Statut' : 'Status'
+          ]],
+          body: elementsConformes.map(el => [
+            el.nom,
+            el.attendu,
+            el.present,
+            'OK'
+          ]),
+          headStyles: { fillColor: [34, 197, 94], textColor: 255, fontSize: 9 },
+          bodyStyles: { fontSize: 8 },
+          columnStyles: {
+            0: { cellWidth: 'auto' },
+            1: { cellWidth: 20, halign: 'center' },
+            2: { cellWidth: 20, halign: 'center' },
+            3: { cellWidth: 20, halign: 'center' }
+          },
+          theme: 'grid',
+          margin: { left: 20, right: 20 }
+        });
+        
+        y = doc.lastAutoTable.finalY + 10;
+      }
+      
+      // === AUTORISATION D'ACCÈS ===
+      if (y > 240) {
+        doc.addPage();
+        y = 20;
+      }
+      
       doc.setFont(undefined, 'bold');
-      doc.text(lang === "fr" ? "AUTORISATION D'ACCÈS" : "ACCESS AUTHORIZATION", 20, y);
-      y += 6;
+      doc.setFontSize(12);
+      doc.setTextColor(0, 119, 168);
+      doc.text(lang === "fr" ? 'AUTORISATION D\'ACCES' : 'ACCESS AUTHORIZATION', 20, y);
+      y += 8;
       doc.setFont(undefined, 'normal');
-      doc.text(autorisationAcces === 'oui' ? '✅ Oui' : '❌ Non', 20, y);
+      doc.setFontSize(11);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Autorisation: ${autorisationAcces === 'oui' ? 'OUI' : 'NON'}`, 20, y);
       y += 6;
+      
       if (autorisationAcces === 'non' && plagesHoraires.length > 0) {
         doc.setFontSize(10);
-        doc.text(lang === "fr" ? "Plages horaires demandées:" : "Requested time slots:", 20, y);
+        doc.text(lang === "fr" ? "Creneaux horaires demandes:" : "Requested time slots:", 20, y);
         y += 5;
         plagesHoraires.forEach(plage => {
-          doc.text(`  • ${plage}`, 25, y);
+          doc.text(`  - ${plage}`, 25, y);
           y += 5;
         });
         doc.setFontSize(11);
+        y += 3;
       }
       
-      // Appréciation
-      y += 5;
+      // === APPRÉCIATION GLOBALE ===
+      if (y > 250) {
+        doc.addPage();
+        y = 20;
+      }
+      
       doc.setFont(undefined, 'bold');
-      doc.text(lang === "fr" ? "APPRÉCIATION GLOBALE" : "OVERALL RATING", 20, y);
-      y += 6;
+      doc.setFontSize(12);
+      doc.setTextColor(0, 119, 168);
+      doc.text(lang === "fr" ? 'APPRECIATION GLOBALE' : 'OVERALL RATING', 20, y);
+      y += 8;
       doc.setFont(undefined, 'normal');
-      const appreciationText = evaluationProprete === "pas_satisfaisant" ? "😠 Insatisfaisant" :
-                               evaluationProprete === "correct" ? "😐 Correct" : "😄 Très propre";
-      doc.text(appreciationText, 20, y);
+      doc.setFontSize(11);
+      doc.setTextColor(0, 0, 0);
+      
+      const appreciationText = evaluationProprete === "pas_satisfaisant" ? "Insatisfaisant" :
+                               evaluationProprete === "correct" ? "Correct" : "Tres propre";
+      doc.text(`Proprete: ${appreciationText}`, 20, y);
       y += 6;
+      
       if (commentaireProprete) {
-        const commentLines = doc.splitTextToSize(commentaireProprete, 170);
+        doc.setFontSize(10);
+        const commentLines = doc.splitTextToSize(`Commentaire: ${commentaireProprete}`, 170);
         doc.text(commentLines, 20, y);
         y += commentLines.length * 5;
+        doc.setFontSize(11);
       }
       
-      // Signature
+      // === SIGNATURE ===
       if (signature) {
         y += 10;
-        if (y > 250) {
+        if (y > 230) {
           doc.addPage();
           y = 20;
         }
         doc.setFont(undefined, 'bold');
-        doc.text(lang === "fr" ? "SIGNATURE CLIENT" : "CLIENT SIGNATURE", 20, y);
-        y += 6;
+        doc.setFontSize(12);
+        doc.text(lang === "fr" ? 'SIGNATURE CLIENT (electronique)' : 'CLIENT SIGNATURE (electronic)', 20, y);
+        y += 8;
         try {
           doc.addImage(signature, 'PNG', 20, y, 60, 25);
+          y += 30;
         } catch (e) {
           console.error('Erreur signature:', e);
         }
       }
       
-      // Footer
-      doc.setFontSize(8);
-      doc.text(`Camping Paradis - ${new Date().toLocaleDateString()} - Page 1`, 105, 287, { align: 'center' });
+      // === ANNEXE PHOTOS (si présentes) ===
+      const toutesPhotos = [];
+      Object.keys(photos).forEach(itemId => {
+        if (photos[itemId]?.length > 0) {
+          const item = items.find(i => i.id === itemId);
+          photos[itemId].forEach(photoUrl => {
+            toutesPhotos.push({ label: item?.label || itemId, url: photoUrl });
+          });
+        }
+      });
+      
+      if (toutesPhotos.length > 0) {
+        doc.addPage();
+        y = 20;
+        doc.setFont(undefined, 'bold');
+        doc.setFontSize(14);
+        doc.setTextColor(0, 119, 168);
+        doc.text(lang === "fr" ? 'ANNEXE - PHOTOS' : 'APPENDIX - PHOTOS', 105, y, { align: 'center' });
+        y += 10;
+        
+        for (const photo of toutesPhotos) {
+          if (y > 250) {
+            doc.addPage();
+            y = 20;
+          }
+          doc.setFont(undefined, 'bold');
+          doc.setFontSize(10);
+          doc.setTextColor(0, 0, 0);
+          doc.text(`Photo - ${photo.label}`, 20, y);
+          y += 6;
+          
+          try {
+            const imgResponse = await fetch(photo.url);
+            const imgBlob = await imgResponse.blob();
+            const imgReader = new FileReader();
+            const imgBase64 = await new Promise((resolve) => {
+              imgReader.onloadend = () => resolve(imgReader.result);
+              imgReader.readAsDataURL(imgBlob);
+            });
+            doc.addImage(imgBase64, 'JPEG', 20, y, 80, 60);
+            y += 65;
+          } catch (e) {
+            console.error('Erreur photo:', e);
+            doc.setFontSize(8);
+            doc.setTextColor(128, 128, 128);
+            doc.text('(photo non disponible)', 20, y);
+            y += 10;
+          }
+        }
+      }
+      
+      // Footer sur toutes les pages
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Camping Paradis - ${new Date().toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US')} - Page ${i}/${pageCount}`, 105, 287, { align: 'center' });
+      }
       
       const pdfBlob = doc.output('blob');
       const pdfFile = new File([pdfBlob], `Arrivee_${nom}_${prenom}.pdf`, { type: 'application/pdf' });
