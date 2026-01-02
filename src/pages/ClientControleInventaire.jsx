@@ -41,10 +41,7 @@ export default function ClientControleInventaire() {
   const [signature, setSignature] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showRecap, setShowRecap] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [pdfUrl, setPdfUrl] = useState("");
-  const [pdfUrlForModal, setPdfUrlForModal] = useState("");
-  const [interventionsSummary, setInterventionsSummary] = useState({ technique: 0, menage: 0, reception: 0 });
+  const [finalReceipt, setFinalReceipt] = useState(null);
 
   const inventaire = useMemo(() => getInventaireParCategorie(categorie, lang), [categorie, lang]);
   const items = inventaire?.objets || [];
@@ -485,12 +482,12 @@ export default function ClientControleInventaire() {
         ids: createdIds
       });
 
-      // 3. Stocker résumé
-      setInterventionsSummary({
+      // 3. Stocker résumé (pour display final)
+      const interventionsSummary = {
         technique: technique.length,
         menage: menage.length,
         reception: reception.length
-      });
+      };
 
       // 4. Notification RÉCEPTION (vue d'ensemble)
       if (menage.length > 0 || technique.length > 0 || reception.length > 0) {
@@ -548,15 +545,23 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
       }
       sessionStorage.setItem('fiche_arrivee_id', fiche.id);
 
-      // 7. Afficher succès
+      // 7. Afficher page finale de succès
       toast.dismiss('submit');
       toast.success(lang === "fr" ? "✅ Validé" : "✅ Validated");
       
-      setPdfUrlForModal(urlPDF);
-      setSubmitting(false);
-      setShowSuccessModal(true);
+      setFinalReceipt({
+        ficheId: fiche.id,
+        pdfUrl: urlPDF,
+        interventionsSummary,
+        categorie,
+        numero,
+        dateArrivee,
+        dateDepart
+      });
       
-      console.log('[ARRIVAL_VALIDATE] showFinalModal OK');
+      setSubmitting(false);
+      
+      console.log('[ARRIVAL_VALIDATE] SUCCESS - Navigation vers écran final');
       console.log('========================================');
       console.log('[ARRIVAL_VALIDATE] RÉSUMÉ FINAL:', {
         ficheId: fiche.id,
@@ -565,19 +570,106 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
         interventionsTech: interventionTechnique?.id || 'AUCUNE',
         interventionsMenage: interventionMenage?.id || 'AUCUNE',
         interventionsReception: interventionReception?.id || 'AUCUNE',
-        modalOpen: true
+        finalReceiptSet: true
       });
       console.log('========================================');
       
     } catch (e) {
       console.error('[ARRIVAL_VALIDATE] ERROR GLOBAL:', e);
       toast.dismiss('submit');
-      toast.error(lang === "fr" ? "Erreur" : "Error");
+      toast.error(lang === "fr" ? "Erreur lors de la validation. Réessayez." : "Validation error. Try again.");
       setSubmitting(false);
+      setShowRecap(true); // Rester sur le récap en cas d'erreur
     }
   };
 
+  // ÉCRAN FINAL DE SUCCÈS
+  if (finalReceipt) {
+    return (
+      <div className="min-h-screen max-w-2xl mx-auto px-6 py-8 flex flex-col items-center justify-center">
+        <Logo className="h-16 mb-8" />
+        
+        <Card className="w-full border-2 border-green-500 shadow-xl">
+          <CardContent className="p-8 text-center space-y-6">
+            <div className="flex justify-center mb-4">
+              <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center">
+                <CheckCircle className="w-12 h-12 text-green-600" />
+              </div>
+            </div>
+            
+            <h1 className="text-3xl font-bold text-green-700">
+              ✅ {lang === "fr" ? "Contrôle inventaire validé" : "Inventory check validated"}
+            </h1>
+            
+            <p className="text-lg text-gray-700">
+              {lang === "fr" 
+                ? "Merci. Votre contrôle a bien été enregistré."
+                : "Thank you. Your check has been recorded."}
+            </p>
 
+            <div className="bg-gray-50 p-4 rounded-lg text-left">
+              <p className="text-sm text-gray-600 mb-2">
+                <strong>{finalReceipt.categorie} {finalReceipt.numero}</strong>
+              </p>
+              <p className="text-sm text-gray-600">
+                {finalReceipt.dateArrivee} → {finalReceipt.dateDepart}
+              </p>
+              
+              {(finalReceipt.interventionsSummary.technique > 0 || 
+                finalReceipt.interventionsSummary.menage > 0 || 
+                finalReceipt.interventionsSummary.reception > 0) && (
+                <div className="mt-4 pt-4 border-t">
+                  <p className="text-sm font-semibold text-gray-700 mb-2">
+                    {lang === "fr" ? "Interventions créées:" : "Interventions created:"}
+                  </p>
+                  {finalReceipt.interventionsSummary.technique > 0 && (
+                    <p className="text-sm text-blue-700">🔧 Technique: {finalReceipt.interventionsSummary.technique}</p>
+                  )}
+                  {finalReceipt.interventionsSummary.menage > 0 && (
+                    <p className="text-sm text-yellow-700">🧹 Ménage: {finalReceipt.interventionsSummary.menage}</p>
+                  )}
+                  {finalReceipt.interventionsSummary.reception > 0 && (
+                    <p className="text-sm text-green-700">🏠 Réception: {finalReceipt.interventionsSummary.reception}</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-3 pt-4">
+              {finalReceipt.pdfUrl ? (
+                <Button 
+                  onClick={() => {
+                    console.log('📄 Ouverture PDF:', finalReceipt.pdfUrl);
+                    window.open(finalReceipt.pdfUrl, '_blank');
+                  }}
+                  className="w-full h-14 bg-[#00AEEF] hover:bg-[#0077A8] text-lg"
+                >
+                  <Download className="mr-2 w-5 h-5" />
+                  {lang === "fr" ? "📄 Télécharger / Ouvrir le PDF" : "📄 Download / Open PDF"}
+                </Button>
+              ) : (
+                <div className="py-3 text-sm text-gray-500">
+                  {lang === "fr" ? "PDF en cours de génération..." : "PDF being generated..."}
+                </div>
+              )}
+
+              <Button 
+                onClick={() => {
+                  console.log('🏠 Retour menu principal');
+                  navigate(createPageUrl('ClientMenu'));
+                }}
+                variant="outline"
+                className="w-full h-14 text-lg font-semibold"
+              >
+                <Home className="mr-2 w-5 h-5" />
+                {lang === "fr" ? "🏠 Retour menu principal" : "🏠 Back to main menu"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen max-w-4xl mx-auto px-6 py-8">
@@ -744,72 +836,6 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
         <Send className="mr-2" />
         {lang === "fr" ? "Valider le contrôle inventaire" : "Confirm inventory check"}
       </Button>
-
-      {/* Dialog Succès */}
-      <Dialog open={showSuccessModal} onOpenChange={(open) => {
-        console.log('🔔 Dialog onOpenChange:', open);
-        setShowSuccessModal(open);
-      }}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="text-center text-2xl">
-              ✅ {lang === "fr" ? "Contrôle validé !" : "Check validated!"}
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            <div className="bg-green-50 border-2 border-green-300 rounded-lg p-4">
-              <p className="text-center font-semibold text-green-800 mb-3">
-                {lang === "fr" ? "Votre contrôle a été enregistré" : "Your check has been recorded"}
-              </p>
-
-              <div className="space-y-2 text-sm">
-                <p><strong>{categorie} {numero}</strong></p>
-                <p>{dateArrivee} → {dateDepart}</p>
-
-                {(interventionsSummary.technique > 0 || interventionsSummary.menage > 0 || interventionsSummary.reception > 0) && (
-                  <div className="mt-3 pt-3 border-t border-green-300">
-                    <p className="font-semibold mb-2">{lang === "fr" ? "Interventions:" : "Interventions:"}</p>
-                    {interventionsSummary.technique > 0 && <p className="text-blue-700">🔧 {interventionsSummary.technique}</p>}
-                    {interventionsSummary.menage > 0 && <p className="text-yellow-700">🧹 {interventionsSummary.menage}</p>}
-                    {interventionsSummary.reception > 0 && <p className="text-green-700">🏠 {interventionsSummary.reception}</p>}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            {pdfUrlForModal ? (
-              <Button 
-                onClick={() => {
-                  console.log('📄 Ouverture PDF:', pdfUrlForModal);
-                  window.open(pdfUrlForModal, '_blank');
-                }} 
-                className="w-full bg-[#00AEEF] h-12"
-              >
-                <Download className="mr-2" />
-                {lang === "fr" ? "📄 Télécharger PDF" : "📄 Download PDF"}
-              </Button>
-            ) : (
-              <p className="text-sm text-center text-gray-600 py-2">{lang === "fr" ? "PDF en cours de génération..." : "PDF being generated..."}</p>
-            )}
-
-            <Button 
-              onClick={() => {
-                console.log('🏠 Retour menu');
-                setShowSuccessModal(false);
-                navigate(createPageUrl('ClientMenu'));
-              }} 
-              variant="outline"
-              className="w-full h-12"
-            >
-              <Home className="mr-2" />
-              {lang === "fr" ? "Retour accueil" : "Back home"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Dialog Récapitulatif */}
       <Dialog open={showRecap} onOpenChange={setShowRecap}>
