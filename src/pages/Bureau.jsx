@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Logo from '../components/Logo';
@@ -201,7 +200,7 @@ export default function Bureau() {
     }
   });
 
-  const deleteIncidentMutation = useMutation({
+  const deleteHistoriqueEventMutation = useMutation({
     mutationFn: (id) => base44.entities.HistoriqueEvent.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bureau-historique'] });
@@ -297,10 +296,10 @@ export default function Bureau() {
   const handleGroupDelete = async () => {
     if (selectedIds.length === 0) return;
 
-    await Promise.all(selectedIds.map(id => deleteIncidentMutation.mutateAsync(id)));
+    await Promise.all(selectedIds.map(id => deleteHistoriqueEventMutation.mutateAsync(id)));
     setSelectedIds([]);
     setShowDeleteConfirm(false);
-    queryClient.invalidateQueries({ queryKey: ['bureau-incidents'] });
+    queryClient.invalidateQueries({ queryKey: ['bureau-historique'] });
   };
 
   // Calcul des délais
@@ -1146,35 +1145,15 @@ export default function Bureau() {
                 <CardContent className="p-3">
                   <div className="flex items-center justify-between flex-wrap gap-3">
                     <span className="font-heading text-[#0077A8] text-sm">
-                      {selectedIds.length} {lang === 'fr' ? 'intervention(s) sélectionnée(s)' : 'intervention(s) selected'}
+                      {selectedIds.length} {lang === 'fr' ? 'événement(s) sélectionné(s)' : 'event(s) selected'}
                     </span>
                     <div className="flex items-center gap-2">
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleGroupMove('up')}
-                        className="border-[#00AEEF] text-[#0077A8] hover:bg-[#00AEEF] hover:text-white"
-                        disabled={updateIncidentMutation.isPending}
-                      >
-                        <ArrowUp className="w-4 h-4 mr-1" />
-                        {lang === 'fr' ? 'Monter groupe' : 'Move up'}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleGroupMove('down')}
-                        className="border-[#00AEEF] text-[#0077A8] hover:bg-[#00AEEF] hover:text-white"
-                        disabled={updateIncidentMutation.isPending}
-                      >
-                        <ArrowDown className="w-4 h-4 mr-1" />
-                        {lang === 'fr' ? 'Descendre groupe' : 'Move down'}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
                         onClick={() => setShowDeleteConfirm(true)}
                         className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
-                        disabled={deleteIncidentMutation.isPending}
+                        disabled={deleteHistoriqueEventMutation.isPending}
                       >
                         <Trash2 className="w-4 h-4 mr-1" />
                         {t('supprimer')} {lang === 'fr' ? 'groupe' : 'group'}
@@ -1535,9 +1514,9 @@ export default function Bureau() {
             <Button
               onClick={handleGroupDelete}
               className="bg-red-500 hover:bg-red-600 text-white rounded-xl"
-              disabled={deleteIncidentMutation.isPending}
+              disabled={deleteHistoriqueEventMutation.isPending}
             >
-              {deleteIncidentMutation.isPending ? (
+              {deleteHistoriqueEventMutation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
               ) : null}
               {lang === 'fr' ? 'Oui, supprimer' : 'Yes, delete'}
