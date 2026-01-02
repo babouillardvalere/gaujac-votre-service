@@ -11,11 +11,25 @@ export function useNotifications() {
     refetchInterval: 30000 // 30 secondes au lieu de 10
   });
 
+  // InterventionClient en attente (contrôles inventaire) - polling à 30s
+  const { data: pendingInterventionsClient = [] } = useQuery({
+    queryKey: ['notif-pending-client'],
+    queryFn: () => base44.entities.InterventionClient.filter({ statut: 'A_FAIRE' }, '-created_date', 100),
+    refetchInterval: 30000
+  });
+
   // Interventions urgentes - polling à 15s (plus rapide pour les urgences)
   const { data: urgentIncidents = [] } = useQuery({
     queryKey: ['notif-urgent'],
     queryFn: () => base44.entities.Incident.filter({ urgent: true, statut: 'en_attente' }, '-date_saisie', 50),
     refetchInterval: 15000 // 15 secondes pour les urgences
+  });
+
+  // InterventionClient urgentes
+  const { data: urgentInterventionsClient = [] } = useQuery({
+    queryKey: ['notif-urgent-client'],
+    queryFn: () => base44.entities.InterventionClient.filter({ priorite: 'URGENTE', statut: 'A_FAIRE' }, '-created_date', 50),
+    refetchInterval: 15000
   });
 
   // Interventions en attente matériel - polling à 60s (moins urgent)
@@ -84,13 +98,17 @@ export function useNotifications() {
     return ['eau', 'gaz', 'electricite', 'eau_plomberie'].includes(categorie);
   }).length;
 
-  // Interventions techniques en attente
-  const techniqueCount = pendingIncidents.filter(i => i.type === 'technique').length;
-  const techniqueUrgent = urgentIncidents.filter(i => i.type === 'technique').length;
+  // Interventions techniques en attente (Incident + InterventionClient)
+  const techniqueCount = pendingIncidents.filter(i => i.type === 'technique').length + 
+    pendingInterventionsClient.filter(i => i.service === 'TECHNIQUE').length;
+  const techniqueUrgent = urgentIncidents.filter(i => i.type === 'technique').length + 
+    urgentInterventionsClient.filter(i => i.service === 'TECHNIQUE').length;
 
-  // Interventions ménage en attente
-  const menageCount = pendingIncidents.filter(i => i.type === 'menage').length;
-  const menageUrgent = urgentIncidents.filter(i => i.type === 'menage').length;
+  // Interventions ménage en attente (Incident + InterventionClient)
+  const menageCount = pendingIncidents.filter(i => i.type === 'menage').length + 
+    pendingInterventionsClient.filter(i => i.service === 'MENAGE').length;
+  const menageUrgent = urgentIncidents.filter(i => i.type === 'menage').length + 
+    urgentInterventionsClient.filter(i => i.service === 'MENAGE').length;
 
   // Total pour le bureau
   const bureauCount = recentAvis.length + recentlyResolved.length + waitingIncidents.length;
@@ -100,7 +118,9 @@ export function useNotifications() {
 
   return {
     pendingIncidents: sortedIncidents, // Retourner les incidents triés
+    pendingInterventionsClient,
     urgentIncidents,
+    urgentInterventionsClient,
     waitingIncidents,
     recentlyResolved,
     recentAvis,
