@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Logo from '../components/Logo';
 import CollaborateurNotificationBell from '../components/CollaborateurNotificationBell';
@@ -13,8 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { 
-  ArrowLeft, Clock, Star, AlertTriangle, TrendingUp, Loader2, 
+import {
+  ArrowLeft, Clock, Star, AlertTriangle, TrendingUp, Loader2,
   Users, Home as HomeIcon, Search, Building2, Filter, Calendar, CalendarDays,
   ChevronDown, ChevronUp, Eye, AlertCircle, MoreVertical, LogOut,
   Trash2, ArrowUp, ArrowDown, CheckSquare, Square, Home, ListTodo, CheckCircle, User, RefreshCw
@@ -33,7 +34,6 @@ import WorkItemManager from '../components/bureau/WorkItemManager';
 
 import Statistiques from './Statistiques';
 import { format, differenceInHours, differenceInMinutes, isToday, parseISO } from 'date-fns';
-import { useMemo } from 'react';
 import { fr } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { createPageUrl } from '../utils';
@@ -72,7 +72,7 @@ export default function Bureau() {
   const [selectedIds, setSelectedIds] = useState([]); // Sélection multiple
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState('interventions');
-  
+
   const [filters, setFilters] = useState({
     nom: '',
     logement: '',
@@ -113,12 +113,12 @@ export default function Bureau() {
   useEffect(() => {
     const collabAuth = sessionStorage.getItem('collaborateur_authenticated');
     const bureauAuth = sessionStorage.getItem('bureau_authenticated');
-    
+
     if (collabAuth !== 'true') {
       navigate(createPageUrl('Collaborateur'));
       return;
     }
-    
+
     if (bureauAuth !== 'true') {
       navigate(createPageUrl('MenuCollaborateur'));
       return;
@@ -220,7 +220,7 @@ export default function Bureau() {
   // Sélection
   const toggleSelect = (id, e) => {
     e.stopPropagation();
-    setSelectedIds(prev => 
+    setSelectedIds(prev =>
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   };
@@ -237,24 +237,24 @@ export default function Bureau() {
   // Actions de groupe
   const handleGroupMove = async (direction) => {
     if (selectedIds.length === 0) return;
-    
+
     const selectedIncidents = sortedIncidents.filter(i => selectedIds.includes(i.id));
     const nonSelectedIncidents = sortedIncidents.filter(i => !selectedIds.includes(i.id) && i.statut !== 'resolu');
-    
+
     // Recalculer les ordres
     const updates = [];
-    
+
     if (direction === 'up') {
       // Trouver le plus petit ordre parmi les sélectionnés
       const minOrder = Math.min(...selectedIncidents.map(i => i.priorite_ordre || sortedIncidents.indexOf(i) + 1));
       if (minOrder <= 1) return; // Déjà en haut
-      
+
       // Déplacer chaque sélectionné vers le haut
-      selectedIncidents.forEach((inc, idx) => {
+      selectedIncidents.forEach((inc) => {
         const currentOrder = inc.priorite_ordre || sortedIncidents.indexOf(inc) + 1;
         updates.push({ id: inc.id, data: { priorite_ordre: currentOrder - 1 } });
       });
-      
+
       // Décaler les non-sélectionnés qui sont maintenant en conflit
       nonSelectedIncidents.forEach(inc => {
         const currentOrder = inc.priorite_ordre || sortedIncidents.indexOf(inc) + 1;
@@ -271,12 +271,12 @@ export default function Bureau() {
       const maxOrder = Math.max(...selectedIncidents.map(i => i.priorite_ordre || sortedIncidents.indexOf(i) + 1));
       const totalNonResolved = sortedIncidents.filter(i => i.statut !== 'resolu').length;
       if (maxOrder >= totalNonResolved) return; // Déjà en bas
-      
-      selectedIncidents.forEach((inc, idx) => {
+
+      selectedIncidents.forEach((inc) => {
         const currentOrder = inc.priorite_ordre || sortedIncidents.indexOf(inc) + 1;
         updates.push({ id: inc.id, data: { priorite_ordre: currentOrder + 1 } });
       });
-      
+
       nonSelectedIncidents.forEach(inc => {
         const currentOrder = inc.priorite_ordre || sortedIncidents.indexOf(inc) + 1;
         const conflicting = selectedIncidents.some(sel => {
@@ -288,7 +288,7 @@ export default function Bureau() {
         }
       });
     }
-    
+
     // Exécuter les updates
     await Promise.all(updates.map(u => updateIncidentMutation.mutateAsync(u)));
     queryClient.invalidateQueries({ queryKey: ['bureau-incidents'] });
@@ -296,7 +296,7 @@ export default function Bureau() {
 
   const handleGroupDelete = async () => {
     if (selectedIds.length === 0) return;
-    
+
     await Promise.all(selectedIds.map(id => deleteIncidentMutation.mutateAsync(id)));
     setSelectedIds([]);
     setShowDeleteConfirm(false);
@@ -304,14 +304,14 @@ export default function Bureau() {
   };
 
   // Calcul des délais
-  const getDelayStatus = (incident) => {
-    if (incident.statut === 'resolu') return null;
-    const hours = differenceInHours(new Date(), new Date(incident.date_saisie));
-    if (hours >= 72) return 'critique';
-    if (hours >= 24) return 'retard';
-    if (hours >= 3) return 'lent';
-    return null;
-  };
+  // const getDelayStatus = (incident) => { // This function is not used. Removing to avoid linting warning.
+  //   if (incident.statut === 'resolu') return null;
+  //   const hours = differenceInHours(new Date(), new Date(incident.date_saisie));
+  //   if (hours >= 72) return 'critique';
+  //   if (hours >= 24) return 'retard';
+  //   if (hours >= 3) return 'lent';
+  //   return null;
+  // };
 
   // Filtrage Interventions Clients
   const filteredInterventionsClients = useMemo(() => {
@@ -328,13 +328,13 @@ export default function Bureau() {
       }
       if (filters.dateFrom && new Date(i.created_date) < new Date(filters.dateFrom)) return false;
       if (filters.dateTo && new Date(i.created_date) > new Date(filters.dateTo + 'T23:59:59')) return false;
-      
+
       // Vue spéciale
       if (activeView === 'today' && !isToday(new Date(i.created_date))) return false;
-      
+
       return true;
     });
-    
+
     console.log('[BUREAU] Interventions après filtres:', filtered.length, 'filtres actifs:', filters);
     return filtered;
   }, [interventionsClients, activeView, filters]);
@@ -345,15 +345,15 @@ export default function Bureau() {
     if (activeView === 'today') {
       if (!isToday(new Date(i.created_date))) return false;
     }
-    if (activeView === 'late') {
-      // Pour historique, on ne filtre pas par retard
-    }
+    // `late` view specifically for 'incidents' (active incidents), not 'historique'
+    // if (activeView === 'late') { /* ... */ }
 
-    // Filtres standards
+    // Filters standards
     if (filters.nom && !`${i.client_nom || ''} ${i.client_prenom || ''}`.toLowerCase().includes(filters.nom.toLowerCase())) return false;
     if (filters.logement && !(i.hebergement || '').toLowerCase().includes(filters.logement.toLowerCase())) return false;
     if (filters.type !== 'tous' && i.service?.toLowerCase() !== filters.type) return false;
-    if (filters.statut !== 'tous') return false; // Pas de statut dans HistoriqueEvent
+    // 'statut' filter is for active incidents, not for general HistoriqueEvent
+    // if (filters.statut !== 'tous') return false; // Not applicable for HistoriqueEvent as it doesn't have a 'statut' in the same way
     if (filters.urgent !== 'tous') {
       if (filters.urgent === 'oui' && !i.urgent) return false;
       if (filters.urgent === 'non' && i.urgent) return false;
@@ -374,54 +374,89 @@ export default function Bureau() {
     // Urgents avant non-urgents
     if (a.urgent && !b.urgent) return -1;
     if (!a.urgent && b.urgent) return 1;
-    
+
     // Tri chronologique (récent → ancien)
     return new Date(b.created_date) - new Date(a.created_date);
   }), [filteredIncidents]);
 
-  // Stats
+  // Stats (These stats seem to be based on 'incidents' which are distinct from 'historique' in this file)
   const resolus = incidents.filter(i => i.statut === 'resolu' && i.date_resolution && i.date_saisie);
   const tempsResolution = resolus.map(i => differenceInHours(new Date(i.date_resolution), new Date(i.date_saisie)));
-  const tempsMoyen = tempsResolution.length > 0 ? (tempsResolution.reduce((a, b) => a + b, 0) / tempsResolution.length).toFixed(1) : 0;
+  // const tempsMoyen = tempsResolution.length > 0 ? (tempsResolution.reduce((a, b) => a + b, 0) / tempsResolution.length).toFixed(1) : 0; // Not used
 
-  const moins3h = tempsResolution.filter(t => t < 3).length;
-  const moins24h = tempsResolution.filter(t => t >= 3 && t < 24).length;
-  const plus3j = tempsResolution.filter(t => t >= 72).length;
+  // const moins3h = tempsResolution.filter(t => t < 3).length; // Not used
+  // const moins24h = tempsResolution.filter(t => t >= 3 && t < 24).length; // Not used
+  // const plus3j = tempsResolution.filter(t => t >= 72).length; // Not used
 
-  const avgNote = incidents.filter(i => i.note_client).length > 0
-    ? (incidents.filter(i => i.note_client).reduce((s, i) => s + i.note_client, 0) / incidents.filter(i => i.note_client).length).toFixed(1)
-    : 0;
+  // const avgNote = incidents.filter(i => i.note_client).length > 0 // Not used
+  //   ? (incidents.filter(i => i.note_client).reduce((s, i) => s + i.note_client, 0) / incidents.filter(i => i.note_client).length).toFixed(1)
+  //   : 0;
 
   // Compteurs vues spéciales
   const todayCount = historique.filter(i => isToday(new Date(i.created_date))).length;
   const lateCount = incidents.filter(i => i.statut !== 'resolu' && differenceInHours(new Date(), new Date(i.date_saisie)) >= 3).length;
   const critiqueCount = incidents.filter(i => i.statut !== 'resolu' && differenceInHours(new Date(), new Date(i.date_saisie)) >= 72).length;
 
-  // Par catégorie
-  const parCategorie = Object.entries(
-    incidents.reduce((acc, i) => {
-      acc[i.categorie] = (acc[i.categorie] || 0) + 1;
-      return acc;
-    }, {})
-  ).map(([name, value]) => ({ name: categoryLabels[name]?.replace(/^.+\s/, '') || name, value }))
-    .sort((a, b) => b.value - a.value);
+  // Par catégorie (uses 'incidents')
+  // const parCategorie = Object.entries( // Not used
+  //   incidents.reduce((acc, i) => {
+  //     acc[i.categorie] = (acc[i.categorie] || 0) + 1;
+  //     return acc;
+  //   }, {})
+  // ).map(([name, value]) => ({ name: categoryLabels[name]?.replace(/^.+\s/, '') || name, value }))
+  //   .sort((a, b) => b.value - a.value);
 
-  // Par logement
-  const parLogement = Object.entries(
-    incidents.reduce((acc, i) => {
-      const loc = i.logement || i.emplacement || 'Inconnu';
-      acc[loc] = (acc[loc] || 0) + 1;
-      return acc;
-    }, {})
-  ).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  // Par logement (uses 'incidents')
+  // const parLogement = Object.entries( // Not used
+  //   incidents.reduce((acc, i) => {
+  //     const loc = i.logement || i.emplacement || 'Inconnu';
+  //     acc[loc] = (acc[loc] || 0) + 1;
+  //     return acc;
+  //   }, {})
+  // ).sort((a, b) => b[1] - a[1]).slice(0, 10);
 
-  // Par collaborateur
-  const parCollab = Object.entries(
-    resolus.reduce((acc, i) => {
-      if (i.pris_par) acc[i.pris_par] = (acc[i.pris_par] || 0) + 1;
-      return acc;
-    }, {})
-  ).sort((a, b) => b[1] - a[1]);
+  // Par collaborateur (uses 'incidents')
+  // const parCollab = Object.entries( // Not used
+  //   resolus.reduce((acc, i) => {
+  //     if (i.pris_par) acc[i.pris_par] = (acc[i.pris_par] || 0) + 1;
+  //     return acc;
+  //   }, {})
+  // ).sort((a, b) => b[1] - a[1]);
+
+  // Group interventions by collaborator for the new tab
+  const { collabsList } = useMemo(() => {
+    const interventionsParCollab = {};
+
+    incidents.forEach(inc => {
+      if (inc.statut === 'resolu') return; // Ignore resolved ones
+
+      const collab = inc.pris_par || (lang === 'fr' ? 'Non assigné' : 'Unassigned');
+      if (!interventionsParCollab[collab]) {
+        interventionsParCollab[collab] = {
+          enAttente: [],
+          enCours: [],
+          reportees: []
+        };
+      }
+
+      if (inc.statut === 'en_attente') {
+        interventionsParCollab[collab].enAttente.push(inc);
+      } else if (inc.statut === 'en_cours') {
+        interventionsParCollab[collab].enCours.push(inc);
+      } else if (inc.statut === 'en_attente_materiel') {
+        interventionsParCollab[collab].reportees.push(inc);
+      }
+    });
+
+    const collabsList = Object.entries(interventionsParCollab).sort((a, b) => {
+      const totalA = a[1].enAttente.length + a[1].enCours.length + a[1].reportees.length;
+      const totalB = b[1].enAttente.length + b[1].enCours.length + b[1].reportees.length;
+      return totalB - totalA;
+    });
+
+    return { interventionsParCollab, collabsList };
+  }, [incidents, lang]);
+
 
   const resetFilters = () => {
     setFilters({
@@ -480,7 +515,7 @@ export default function Bureau() {
       <div className="max-w-6xl mx-auto px-4 py-6">
         {/* Bouton Gestion Utilisateurs (Admin uniquement) */}
         {user?.role === 'admin' && (
-          <Card 
+          <Card
             className="border-2 border-purple-300 rounded-xl hover:shadow-lg transition-all cursor-pointer mb-6"
             onClick={() => navigate(createPageUrl('GestionUtilisateurs'))}
           >
@@ -511,7 +546,7 @@ export default function Bureau() {
               <Badge className="bg-white/20 text-inherit mt-1">{todayCount}</Badge>
             </div>
           </Button>
-          
+
           <Button
             variant={activeView === 'late' ? 'default' : 'outline'}
             onClick={() => setActiveView(activeView === 'late' ? 'all' : 'late')}
@@ -523,7 +558,7 @@ export default function Bureau() {
               <Badge className="bg-white/20 text-inherit mt-1">{lateCount}</Badge>
             </div>
           </Button>
-          
+
           <Button
             variant="outline"
             className={`h-auto py-3 rounded-xl border-red-500 ${critiqueCount > 0 ? 'bg-red-500 text-white animate-pulse' : 'text-red-500'}`}
@@ -554,6 +589,9 @@ export default function Bureau() {
             <TabsTrigger value="suivis" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               📦 Suivis
             </TabsTrigger>
+            <TabsTrigger value="collaborateurs" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
+              👥 Collabs ({collabsList.length})
+            </TabsTrigger>
             <TabsTrigger value="statistiques" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               📊 Stats
             </TabsTrigger>
@@ -582,7 +620,7 @@ export default function Bureau() {
                       const tachesCompletees = intervention.taches?.filter(t => t.faite).length || 0;
                       const tachesTotal = intervention.taches?.length || 0;
                       const progress = tachesTotal > 0 ? Math.round((tachesCompletees / tachesTotal) * 100) : 0;
-                      
+
                       return (
                         <Card key={intervention.id} className="border rounded-xl">
                           <CardContent className="p-4">
@@ -604,25 +642,25 @@ export default function Bureau() {
                                   )}
                                   <Badge className={
                                     intervention.statut === 'TERMINEE' ? 'bg-green-500 text-white' :
-                                    intervention.statut === 'EN_COURS' ? 'bg-blue-500 text-white' :
-                                    intervention.statut === 'EN_ATTENTE' ? 'bg-orange-500 text-white' :
-                                    'bg-gray-500 text-white'
+                                      intervention.statut === 'EN_COURS' ? 'bg-blue-500 text-white' :
+                                        intervention.statut === 'EN_ATTENTE' ? 'bg-orange-500 text-white' :
+                                          'bg-gray-500 text-white'
                                   }>
                                     {intervention.statut === 'A_FAIRE' ? (lang === 'fr' ? 'À faire' : 'To do') :
-                                     intervention.statut === 'EN_COURS' ? (lang === 'fr' ? 'En cours' : 'In progress') :
-                                     intervention.statut === 'EN_ATTENTE' ? (lang === 'fr' ? 'En attente' : 'On hold') :
-                                     (lang === 'fr' ? 'Terminée' : 'Completed')}
+                                      intervention.statut === 'EN_COURS' ? (lang === 'fr' ? 'En cours' : 'In progress') :
+                                        intervention.statut === 'EN_ATTENTE' ? (lang === 'fr' ? 'En attente' : 'On hold') :
+                                          (lang === 'fr' ? 'Terminée' : 'Completed')}
                                   </Badge>
                                 </div>
-                                
+
                                 <h3 className="font-heading text-lg text-purple-700">
                                   {intervention.type_hebergement} - {intervention.numero_hebergement}
                                 </h3>
-                                
+
                                 {intervention.description && (
                                   <p className="text-sm text-gray-600 mt-2">{intervention.description}</p>
                                 )}
-                                
+
                                 <div className="mt-3 space-y-1">
                                   <p className="text-xs text-gray-600">
                                     📋 {tachesTotal} tâche(s) - {tachesCompletees} terminée(s)
@@ -647,7 +685,7 @@ export default function Bureau() {
                                 {tachesTotal > 0 && (
                                   <div className="mt-3">
                                     <div className="w-full bg-gray-200 rounded-full h-2">
-                                      <div 
+                                      <div
                                         className="bg-purple-600 h-2 rounded-full transition-all"
                                         style={{ width: `${progress}%` }}
                                       />
@@ -655,12 +693,12 @@ export default function Bureau() {
                                   </div>
                                 )}
                               </div>
-                              
+
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={async () => {
-                                  if (confirm(lang === 'fr' 
+                                  if (confirm(lang === 'fr'
                                     ? `Supprimer l'intervention "${intervention.type_hebergement} - ${intervention.numero_hebergement}" ?`
                                     : `Delete intervention "${intervention.type_hebergement} - ${intervention.numero_hebergement}"?`)) {
                                     await deleteInterventionDirectionMutation.mutateAsync(intervention.id);
@@ -709,33 +747,33 @@ export default function Bureau() {
                               <div className="flex flex-wrap gap-2 mt-3">
                                 <Badge className={
                                   tache.statut === 'terminee' ? 'bg-green-500 text-white' :
-                                  tache.statut === 'en_cours' ? 'bg-blue-500 text-white' :
-                                  'bg-orange-500 text-white'
+                                    tache.statut === 'en_cours' ? 'bg-blue-500 text-white' :
+                                      'bg-orange-500 text-white'
                                 }>
                                   {tache.statut === 'a_faire' ? (lang === 'fr' ? 'À faire' : 'To do') :
-                                   tache.statut === 'en_cours' ? (lang === 'fr' ? 'En cours' : 'In progress') :
-                                   tache.statut === 'terminee' ? (lang === 'fr' ? 'Terminée' : 'Completed') :
-                                   tache.statut}
+                                    tache.statut === 'en_cours' ? (lang === 'fr' ? 'En cours' : 'In progress') :
+                                      tache.statut === 'terminee' ? (lang === 'fr' ? 'Terminée' : 'Completed') :
+                                        tache.statut}
                                 </Badge>
                                 <Badge className={
                                   tache.categorie === 'technique' ? 'bg-purple-100 text-purple-700' :
-                                  tache.categorie === 'menage' ? 'bg-pink-100 text-pink-700' :
-                                  'bg-gray-100 text-gray-700'
+                                    tache.categorie === 'menage' ? 'bg-pink-100 text-pink-700' :
+                                      'bg-gray-100 text-gray-700'
                                 }>
                                   {tache.categorie === 'technique' ? '🔧 Technique' :
-                                   tache.categorie === 'menage' ? '🧹 Ménage' :
-                                   tache.categorie}
+                                    tache.categorie === 'menage' ? '🧹 Ménage' :
+                                      tache.categorie}
                                 </Badge>
                                 {tache.priorite && (
                                   <Badge className={
                                     tache.priorite === 'urgente' ? 'bg-red-100 text-red-700' :
-                                    tache.priorite === 'haute' ? 'bg-orange-100 text-orange-700' :
-                                    'bg-blue-100 text-blue-700'
+                                      tache.priorite === 'haute' ? 'bg-orange-100 text-orange-700' :
+                                        'bg-blue-100 text-blue-700'
                                   }>
                                     {tache.priorite === 'urgente' ? '🔴 Urgent' :
-                                     tache.priorite === 'haute' ? '⬆️ Haute' :
-                                     tache.priorite === 'normale' ? '➡️ Normale' :
-                                     '⬇️ Basse'}
+                                      tache.priorite === 'haute' ? '⬆️ Haute' :
+                                        tache.priorite === 'normale' ? '➡️ Normale' :
+                                          '⬇️ Basse'}
                                   </Badge>
                                 )}
                                 {tache.assignee && (
@@ -783,7 +821,7 @@ export default function Bureau() {
                     🎯 {lang === 'fr' ? 'Interventions Clients (Services)' : 'Client Interventions (Services)'}
                   </CardTitle>
                   <p className="text-sm text-gray-600 mt-1">
-                    {interventionsClients.length} {lang === 'fr' ? 'intervention(s) totale(s)' : 'total intervention(s)'} • 
+                    {interventionsClients.length} {lang === 'fr' ? 'intervention(s) totale(s)' : 'total intervention(s)'} •
                     {filteredInterventionsClients.length} {lang === 'fr' ? 'après filtres' : 'after filters'}
                   </p>
                 </div>
@@ -801,7 +839,7 @@ export default function Bureau() {
                       {lang === 'fr' ? 'Aucune intervention trouvée' : 'No interventions found'}
                     </p>
                     <p className="text-sm text-gray-500">
-                      {interventionsClients.length === 0 
+                      {interventionsClients.length === 0
                         ? (lang === 'fr' ? 'Aucune intervention dans la base' : 'No interventions in database')
                         : (lang === 'fr' ? 'Essayez de modifier les filtres' : 'Try changing filters')}
                     </p>
@@ -826,8 +864,8 @@ export default function Bureau() {
                       </thead>
                       <tbody>
                         {filteredInterventionsClients.map((inter, idx) => (
-                          <tr 
-                            key={inter.id} 
+                          <tr
+                            key={inter.id}
                             className={`border-t hover:bg-[#FFA500]/5 cursor-pointer ${
                               inter.priorite === 'URGENTE' ? 'bg-red-50' : ''
                             }`}
@@ -847,7 +885,7 @@ export default function Bureau() {
                             <td className="p-3 text-sm">
                               <div>{inter.client_prenom} {inter.client_nom}</div>
                               <div className="text-xs text-gray-400">
-                                {inter.date_arrivee && format(new Date(inter.date_arrivee), 'dd/MM')} → 
+                                {inter.date_arrivee && format(new Date(inter.date_arrivee), 'dd/MM')} →
                                 {inter.date_depart && format(new Date(inter.date_depart), 'dd/MM')}
                               </div>
                             </td>
@@ -859,8 +897,8 @@ export default function Bureau() {
                             <td className="p-3">
                               <Badge className={
                                 inter.service === 'TECHNIQUE' ? 'bg-blue-500 text-white' :
-                                inter.service === 'MENAGE' ? 'bg-yellow-500 text-white' :
-                                'bg-green-500 text-white'
+                                  inter.service === 'MENAGE' ? 'bg-yellow-500 text-white' :
+                                    'bg-green-500 text-white'
                               }>
                                 {inter.service}
                               </Badge>
@@ -871,9 +909,9 @@ export default function Bureau() {
                             <td className="p-3">
                               <Badge className={
                                 inter.statut === 'TERMINEE' ? 'bg-green-500 text-white' :
-                                inter.statut === 'EN_COURS' ? 'bg-[#00AEEF] text-white' :
-                                inter.statut === 'EN_ATTENTE' ? 'bg-gray-500 text-white' :
-                                'bg-[#FFA500] text-white'
+                                  inter.statut === 'EN_COURS' ? 'bg-[#00AEEF] text-white' :
+                                    inter.statut === 'EN_ATTENTE' ? 'bg-gray-500 text-white' :
+                                      'bg-[#FFA500] text-white'
                               }>
                                 {inter.statut}
                               </Badge>
@@ -942,9 +980,9 @@ export default function Bureau() {
                     <Button variant="ghost" size="sm" onClick={resetFilters} className="text-xs text-gray-500">
                       {lang === 'fr' ? 'Réinitialiser' : 'Reset'}
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
                       className="text-[#00AEEF]"
                     >
@@ -985,11 +1023,11 @@ export default function Bureau() {
                       <SelectValue placeholder={t('statut')} />
                     </SelectTrigger>
                     <SelectContent>
-                     <SelectItem value="tous">{lang === 'fr' ? 'Tous statuts' : 'All statuses'}</SelectItem>
-                     <SelectItem value="A_FAIRE">🟠 {lang === 'fr' ? 'À faire' : 'To do'}</SelectItem>
-                     <SelectItem value="EN_COURS">🔵 {t('en_cours')}</SelectItem>
-                     <SelectItem value="EN_ATTENTE">⏸ {t('en_attente')}</SelectItem>
-                     <SelectItem value="TERMINEE">✅ {lang === 'fr' ? 'Terminée' : 'Completed'}</SelectItem>
+                      <SelectItem value="tous">{lang === 'fr' ? 'Tous statuts' : 'All statuses'}</SelectItem>
+                      <SelectItem value="A_FAIRE">🟠 {lang === 'fr' ? 'À faire' : 'To do'}</SelectItem>
+                      <SelectItem value="EN_COURS">🔵 {t('en_cours')}</SelectItem>
+                      <SelectItem value="EN_ATTENTE">⏸ {t('en_attente')}</SelectItem>
+                      <SelectItem value="TERMINEE">✅ {lang === 'fr' ? 'Terminée' : 'Completed'}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1207,109 +1245,109 @@ export default function Bureau() {
                         </tr>
                       </thead>
                       <tbody>
-                       {sortedIncidents.slice(0, 100).map((event, index) => {
-                         const eventIcon = {
-                           'CONTROLE_INVENTAIRE_VALIDE': '📋',
-                           'INTERVENTION_CLIENT_CREEE': '🆕',
-                           'MISSION_DIRECTION_CREEE': '🔧',
-                           'MISSION_DIRECTION_PRISE_EN_CHARGE': '▶️',
-                           'MISSION_DIRECTION_VALIDEE': '✅',
-                           'TACHE_VALIDEE': '✓',
-                           'INTERVENTION_PRISE_EN_CHARGE': '🟢',
-                           'INTERVENTION_MISE_EN_ATTENTE': '⏸',
-                           'INTERVENTION_REPRISE': '▶️',
-                           'INTERVENTION_CLOTUREE': '✅',
-                           'PDF_GENERE': '📄'
-                         }[event.type_event] || '•';
+                        {sortedIncidents.slice(0, 100).map((event, index) => {
+                          const eventIcon = {
+                            'CONTROLE_INVENTAIRE_VALIDE': '📋',
+                            'INTERVENTION_CLIENT_CREEE': '🆕',
+                            'MISSION_DIRECTION_CREEE': '🔧',
+                            'MISSION_DIRECTION_PRISE_EN_CHARGE': '▶️',
+                            'MISSION_DIRECTION_VALIDEE': '✅',
+                            'TACHE_VALIDEE': '✓',
+                            'INTERVENTION_PRISE_EN_CHARGE': '🟢',
+                            'INTERVENTION_MISE_EN_ATTENTE': '⏸',
+                            'INTERVENTION_REPRISE': '▶️',
+                            'INTERVENTION_CLOTUREE': '✅',
+                            'PDF_GENERE': '📄'
+                          }[event.type_event] || '•';
 
-                         const serviceColor = {
-                           'TECHNIQUE': 'bg-blue-100 text-blue-700',
-                           'MENAGE': 'bg-yellow-100 text-yellow-700',
-                           'RECEPTION': 'bg-green-100 text-green-700',
-                           'DIRECTION': 'bg-purple-100 text-purple-700'
-                         }[event.service] || 'bg-gray-100 text-gray-700';
+                          const serviceColor = {
+                            'TECHNIQUE': 'bg-blue-100 text-blue-700',
+                            'MENAGE': 'bg-yellow-100 text-yellow-700',
+                            'RECEPTION': 'bg-green-100 text-green-700',
+                            'DIRECTION': 'bg-purple-100 text-purple-700'
+                          }[event.service] || 'bg-gray-100 text-gray-700';
 
-                         return (
-                           <tr 
-                             key={event.id} 
-                             className={`border-t hover:bg-[#FFA500]/5 cursor-pointer font-body ${
-                               event.urgent ? 'bg-red-50' : ''
-                             } ${selectedIds.includes(event.id) ? 'bg-[#e6f7ff]' : ''}`}
-                             onClick={() => setSelectedIncident(event)}
-                           >
-                             <td className="p-3" onClick={(e) => e.stopPropagation()}>
-                               <button
-                                 onClick={(e) => toggleSelect(event.id, e)}
-                                 className="p-1 hover:bg-[#00AEEF]/20 rounded transition-colors"
-                               >
-                                 {selectedIds.includes(event.id) ? (
-                                   <CheckSquare className="w-5 h-5 text-[#00AEEF]" />
-                                 ) : (
-                                   <Square className="w-5 h-5 text-gray-400" />
-                                 )}
-                               </button>
-                             </td>
-                             <td className="p-3 text-center">
-                               <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
-                                 event.urgent ? 'bg-red-500 text-white' : 'bg-[#00AEEF]/20 text-[#0077A8]'
-                               }`}>
-                                 {index + 1}
-                               </span>
-                             </td>
-                             <td className="p-3 text-xs">
-                               <div className="font-medium">{format(new Date(event.created_date), 'dd/MM/yy')}</div>
-                               <div className="text-[#00AEEF] font-heading">{format(new Date(event.created_date), 'HH:mm')}</div>
-                             </td>
-                             <td className="p-3 text-sm">
-                               <div>{event.client_prenom} {event.client_nom}</div>
-                             </td>
-                             <td className="p-3">
-                               <span className="font-heading text-[#0077A8]">
-                                 {event.hebergement}
-                               </span>
-                             </td>
-                             <td className="p-3">
-                               <div className="flex items-center gap-1">
-                                 <span className="text-lg">{eventIcon}</span>
-                                 <Badge className={serviceColor}>
-                                   {event.service}
-                                 </Badge>
-                               </div>
-                             </td>
-                             <td className="p-3">
-                               {event.urgent && (
-                                 <Badge className="bg-red-500 text-white text-xs">
-                                   <AlertTriangle className="w-3 h-3 mr-1" />
-                                   URGENT
-                                 </Badge>
-                               )}
-                             </td>
-                             <td className="p-3">
-                               <div className="text-xs font-semibold text-gray-700">
-                                 {event.titre}
-                               </div>
-                               <div className="text-xs text-gray-500 truncate max-w-[200px]">
-                                 {event.description}
-                               </div>
-                             </td>
-                             <td className="p-3 text-sm">
-                               {event.collaborateur && (
-                                 <div className="text-xs text-gray-600">
-                                   <User className="w-3 h-3 inline mr-1" />
-                                   {event.collaborateur}
-                                 </div>
-                               )}
-                               {event.metadata?.duree_minutes && (
-                                 <div className="text-xs text-gray-500">
-                                   {formatDuration(event.metadata.duree_minutes)}
-                                 </div>
-                               )}
-                             </td>
-                             <td className="p-3"></td>
-                             <td className="p-3"></td>
-                           </tr>
-                         );
-                       })}
+                          return (
+                            <tr
+                              key={event.id}
+                              className={`border-t hover:bg-[#FFA500]/5 cursor-pointer font-body ${
+                                event.urgent ? 'bg-red-50' : ''
+                              } ${selectedIds.includes(event.id) ? 'bg-[#e6f7ff]' : ''}`}
+                              onClick={() => setSelectedIncident(event)}
+                            >
+                              <td className="p-3" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                  onClick={(e) => toggleSelect(event.id, e)}
+                                  className="p-1 hover:bg-[#00AEEF]/20 rounded transition-colors"
+                                >
+                                  {selectedIds.includes(event.id) ? (
+                                    <CheckSquare className="w-5 h-5 text-[#00AEEF]" />
+                                  ) : (
+                                    <Square className="w-5 h-5 text-gray-400" />
+                                  )}
+                                </button>
+                              </td>
+                              <td className="p-3 text-center">
+                                <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
+                                  event.urgent ? 'bg-red-500 text-white' : 'bg-[#00AEEF]/20 text-[#0077A8]'
+                                }`}>
+                                  {index + 1}
+                                </span>
+                              </td>
+                              <td className="p-3 text-xs">
+                                <div className="font-medium">{format(new Date(event.created_date), 'dd/MM/yy')}</div>
+                                <div className="text-[#00AEEF] font-heading">{format(new Date(event.created_date), 'HH:mm')}</div>
+                              </td>
+                              <td className="p-3 text-sm">
+                                <div>{event.client_prenom} {event.client_nom}</div>
+                              </td>
+                              <td className="p-3">
+                                <span className="font-heading text-[#0077A8]">
+                                  {event.hebergement}
+                                </span>
+                              </td>
+                              <td className="p-3">
+                                <div className="flex items-center gap-1">
+                                  <span className="text-lg">{eventIcon}</span>
+                                  <Badge className={serviceColor}>
+                                    {event.service}
+                                  </Badge>
+                                </div>
+                              </td>
+                              <td className="p-3">
+                                {event.urgent && (
+                                  <Badge className="bg-red-500 text-white text-xs">
+                                    <AlertTriangle className="w-3 h-3 mr-1" />
+                                    URGENT
+                                  </Badge>
+                                )}
+                              </td>
+                              <td className="p-3">
+                                <div className="text-xs font-semibold text-gray-700">
+                                  {event.titre}
+                                </div>
+                                <div className="text-xs text-gray-500 truncate max-w-[200px]">
+                                  {event.description}
+                                </div>
+                              </td>
+                              <td className="p-3 text-sm">
+                                {event.collaborateur && (
+                                  <div className="text-xs text-gray-600">
+                                    <User className="w-3 h-3 inline mr-1" />
+                                    {event.collaborateur}
+                                  </div>
+                                )}
+                                {event.metadata?.duree_minutes && (
+                                  <div className="text-xs text-gray-500">
+                                    {formatDuration(event.metadata.duree_minutes)}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="p-3"></td>
+                              <td className="p-3"></td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -1332,169 +1370,137 @@ export default function Bureau() {
           <TabsContent value="fiches" className="space-y-6">
             <BureauFichesPDF lang={lang} />
           </TabsContent>
-        </Tabs>
-            {(() => {
-              // Grouper les interventions par collaborateur
-              const interventionsParCollab = {};
-              
-              incidents.forEach(inc => {
-                if (inc.statut === 'resolu') return; // Ignorer les résolus
-                
-                const collab = inc.pris_par || 'Non assigné';
-                if (!interventionsParCollab[collab]) {
-                  interventionsParCollab[collab] = {
-                    enAttente: [],
-                    enCours: [],
-                    reportees: []
-                  };
-                }
-                
-                if (inc.statut === 'en_attente') {
-                  interventionsParCollab[collab].enAttente.push(inc);
-                } else if (inc.statut === 'en_cours') {
-                  interventionsParCollab[collab].enCours.push(inc);
-                } else if (inc.statut === 'en_attente_materiel') {
-                  interventionsParCollab[collab].reportees.push(inc);
-                }
-              });
-              
-              const collabsList = Object.entries(interventionsParCollab).sort((a, b) => {
-                const totalA = a[1].enAttente.length + a[1].enCours.length + a[1].reportees.length;
-                const totalB = b[1].enAttente.length + b[1].enCours.length + b[1].reportees.length;
-                return totalB - totalA;
-              });
-              
-              return (
-                <div className="space-y-4">
-                  <Card className="border-2 border-[#00AEEF] rounded-xl">
-                    <CardHeader>
-                      <CardTitle className="text-xl font-heading text-[#0077A8]">
-                        👷 {lang === 'fr' ? 'Interventions par collaborateur' : 'Interventions by staff member'}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-gray-600 mb-4">
-                        {lang === 'fr' ? 'Vue d\'ensemble des interventions actives de chaque collaborateur' : 'Overview of active interventions for each staff member'}
-                      </p>
-                    </CardContent>
-                  </Card>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {collabsList.map(([collab, data]) => {
-                      const total = data.enAttente.length + data.enCours.length + data.reportees.length;
-                      const hasUrgent = [...data.enAttente, ...data.enCours, ...data.reportees].some(i => i.urgent);
-                      
-                      return (
-                        <Card key={collab} className={`border-2 rounded-xl ${hasUrgent ? 'border-red-500 animate-pulse' : 'border-[#00AEEF]/30'}`}>
-                          <CardHeader className="pb-3">
-                            <div className="flex items-center justify-between">
-                              <CardTitle className="text-base font-heading text-[#0077A8]">
-                                👤 {collab}
-                              </CardTitle>
-                              {total > 0 && (
-                                <Badge className={hasUrgent ? 'bg-red-500 text-white' : 'bg-[#00AEEF] text-white'}>
-                                  {total}
-                                </Badge>
-                              )}
+
+          {/* Collaborateurs */}
+          <TabsContent value="collaborateurs" className="space-y-6">
+            <div className="space-y-4">
+              <Card className="border-2 border-[#00AEEF] rounded-xl">
+                <CardHeader>
+                  <CardTitle className="text-xl font-heading text-[#0077A8]">
+                    👷 {lang === 'fr' ? 'Interventions par collaborateur' : 'Interventions by staff member'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600 mb-4">
+                    {lang === 'fr' ? 'Vue d\'overview des interventions actives de chaque collaborateur' : 'Overview of active interventions for each staff member'}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {collabsList.map(([collab, data]) => {
+                  const total = data.enAttente.length + data.enCours.length + data.reportees.length;
+                  const hasUrgent = [...data.enAttente, ...data.enCours, ...data.reportees].some(i => i.urgent);
+
+                  return (
+                    <Card key={collab} className={`border-2 rounded-xl ${hasUrgent ? 'border-red-500 animate-pulse' : 'border-[#00AEEF]/30'}`}>
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-base font-heading text-[#0077A8]">
+                            👤 {collab}
+                          </CardTitle>
+                          {total > 0 && (
+                            <Badge className={hasUrgent ? 'bg-red-500 text-white' : 'bg-[#00AEEF] text-white'}>
+                              {total}
+                            </Badge>
+                          )}
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {/* En attente */}
+                        {data.enAttente.length > 0 && (
+                          <div className="bg-[#FFA500]/10 rounded-lg p-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs font-heading text-[#FFA500]">🟠 {t('en_attente')}</span>
+                              <Badge className="bg-[#FFA500] text-white text-xs">{data.enAttente.length}</Badge>
                             </div>
-                          </CardHeader>
-                          <CardContent className="space-y-3">
-                            {/* En attente */}
-                            {data.enAttente.length > 0 && (
-                              <div className="bg-[#FFA500]/10 rounded-lg p-3">
-                                <div className="flex items-center justify-between mb-2">
-                                  <span className="text-xs font-heading text-[#FFA500]">🟠 {t('en_attente')}</span>
-                                  <Badge className="bg-[#FFA500] text-white text-xs">{data.enAttente.length}</Badge>
+                            <div className="space-y-1 max-h-32 overflow-y-auto">
+                              {data.enAttente.map(inc => (
+                                <div key={inc.id} className="text-xs bg-white rounded p-2 flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <span className="font-heading text-[#0077A8]">{inc.logement || inc.emplacement}</span>
+                                    <span className="text-gray-500 ml-2">{categoryEmojis[inc.categorie]}</span>
+                                    {inc.urgent && <span className="ml-1 text-red-500">🚨</span>}
+                                  </div>
+                                  <span className="text-gray-400 text-xs">
+                                    {differenceInHours(new Date(), new Date(inc.date_saisie))}h
+                                  </span>
                                 </div>
-                                <div className="space-y-1 max-h-32 overflow-y-auto">
-                                  {data.enAttente.map(inc => (
-                                    <div key={inc.id} className="text-xs bg-white rounded p-2 flex items-start justify-between">
-                                      <div className="flex-1">
-                                        <span className="font-heading text-[#0077A8]">{inc.logement || inc.emplacement}</span>
-                                        <span className="text-gray-500 ml-2">{categoryEmojis[inc.categorie]}</span>
-                                        {inc.urgent && <span className="ml-1 text-red-500">🚨</span>}
-                                      </div>
-                                      <span className="text-gray-400 text-xs">
-                                        {differenceInHours(new Date(), new Date(inc.date_saisie))}h
-                                      </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* En cours */}
+                        {data.enCours.length > 0 && (
+                          <div className="bg-[#00AEEF]/10 rounded-lg p-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs font-heading text-[#00AEEF]">🔵 {t('en_cours')}</span>
+                              <Badge className="bg-[#00AEEF] text-white text-xs">{data.enCours.length}</Badge>
+                            </div>
+                            <div className="space-y-1 max-h-32 overflow-y-auto">
+                              {data.enCours.map(inc => (
+                                <div key={inc.id} className="text-xs bg-white rounded p-2 flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <span className="font-heading text-[#0077A8]">{inc.logement || inc.emplacement}</span>
+                                    <span className="text-gray-500 ml-2">{categoryEmojis[inc.categorie]}</span>
+                                    {inc.urgent && <span className="ml-1 text-red-500">🚨</span>}
+                                  </div>
+                                  <span className="text-gray-400 text-xs">
+                                    {inc.date_debut && differenceInMinutes(new Date(), new Date(inc.date_debut))}min
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Reportées */}
+                        {data.reportees.length > 0 && (
+                          <div className="bg-gray-100 rounded-lg p-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs font-heading text-gray-600">⏳ {lang === 'fr' ? 'Reportées' : 'Postponed'}</span>
+                              <Badge className="bg-gray-500 text-white text-xs">{data.reportees.length}</Badge>
+                            </div>
+                            <div className="space-y-1 max-h-32 overflow-y-auto">
+                              {data.reportees.map(inc => (
+                                <div key={inc.id} className="text-xs bg-white rounded p-2">
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <span className="font-heading text-[#0077A8]">{inc.logement || inc.emplacement}</span>
+                                      <span className="text-gray-500 ml-2">{categoryEmojis[inc.categorie]}</span>
                                     </div>
-                                  ))}
+                                  </div>
+                                  {inc.motif_attente && (
+                                    <p className="text-gray-400 mt-1 truncate" title={inc.motif_attente}>
+                                      {inc.motif_attente}
+                                    </p>
+                                  )}
                                 </div>
-                              </div>
-                            )}
-                            
-                            {/* En cours */}
-                            {data.enCours.length > 0 && (
-                              <div className="bg-[#00AEEF]/10 rounded-lg p-3">
-                                <div className="flex items-center justify-between mb-2">
-                                  <span className="text-xs font-heading text-[#00AEEF]">🔵 {t('en_cours')}</span>
-                                  <Badge className="bg-[#00AEEF] text-white text-xs">{data.enCours.length}</Badge>
-                                </div>
-                                <div className="space-y-1 max-h-32 overflow-y-auto">
-                                  {data.enCours.map(inc => (
-                                    <div key={inc.id} className="text-xs bg-white rounded p-2 flex items-start justify-between">
-                                      <div className="flex-1">
-                                        <span className="font-heading text-[#0077A8]">{inc.logement || inc.emplacement}</span>
-                                        <span className="text-gray-500 ml-2">{categoryEmojis[inc.categorie]}</span>
-                                        {inc.urgent && <span className="ml-1 text-red-500">🚨</span>}
-                                      </div>
-                                      <span className="text-gray-400 text-xs">
-                                        {inc.date_debut && differenceInMinutes(new Date(), new Date(inc.date_debut))}min
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                            
-                            {/* Reportées */}
-                            {data.reportees.length > 0 && (
-                              <div className="bg-gray-100 rounded-lg p-3">
-                                <div className="flex items-center justify-between mb-2">
-                                  <span className="text-xs font-heading text-gray-600">⏳ {lang === 'fr' ? 'Reportées' : 'Postponed'}</span>
-                                  <Badge className="bg-gray-500 text-white text-xs">{data.reportees.length}</Badge>
-                                </div>
-                                <div className="space-y-1 max-h-32 overflow-y-auto">
-                                  {data.reportees.map(inc => (
-                                    <div key={inc.id} className="text-xs bg-white rounded p-2">
-                                      <div className="flex items-start justify-between">
-                                        <div className="flex-1">
-                                          <span className="font-heading text-[#0077A8]">{inc.logement || inc.emplacement}</span>
-                                          <span className="text-gray-500 ml-2">{categoryEmojis[inc.categorie]}</span>
-                                        </div>
-                                      </div>
-                                      {inc.motif_attente && (
-                                        <p className="text-gray-400 mt-1 truncate" title={inc.motif_attente}>
-                                          {inc.motif_attente}
-                                        </p>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                            
-                            {total === 0 && (
-                              <p className="text-center text-gray-400 text-sm py-4">
-                                ✓ {lang === 'fr' ? 'Aucune intervention active' : 'No active intervention'}
-                              </p>
-                            )}
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                  
-                  {collabsList.length === 0 && (
-                    <Card className="border-2 border-gray-200 rounded-xl">
-                      <CardContent className="py-12 text-center">
-                        <p className="text-gray-500">{lang === 'fr' ? 'Aucune intervention active pour le moment' : 'No active intervention at the moment'}</p>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {total === 0 && (
+                          <p className="text-center text-gray-400 text-sm py-4">
+                            ✓ {lang === 'fr' ? 'Aucune intervention active' : 'No active intervention'}
+                          </p>
+                        )}
                       </CardContent>
                     </Card>
-                  )}
-                </div>
-              );
-            })()}
+                  );
+                })}
+              </div>
+
+              {collabsList.length === 0 && (
+                <Card className="border-2 border-gray-200 rounded-xl">
+                  <CardContent className="py-12 text-center">
+                    <p className="text-gray-500">{lang === 'fr' ? 'Aucune intervention active pour le moment' : 'No active intervention at the moment'}</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </div>
@@ -1510,7 +1516,7 @@ export default function Bureau() {
           </DialogHeader>
           <div className="py-4">
             <p className="font-body text-gray-700">
-              ⚠️ {lang === 'fr' 
+              ⚠️ {lang === 'fr'
                 ? `Voulez-vous vraiment supprimer les ${selectedIds.length} intervention(s) sélectionnée(s) ?`
                 : `Do you really want to delete the ${selectedIds.length} selected intervention(s)?`}
             </p>
@@ -1546,7 +1552,7 @@ export default function Bureau() {
           <DialogHeader>
             <DialogTitle className="font-heading text-[#0077A8] flex items-center gap-2">
               <span className="text-xl">{selectedIncident && categoryEmojis[selectedIncident.categorie]}</span>
-              {lang === 'fr' ? 'Fiche intervention' : 'Intervention details'} #{selectedIncident?.logement || selectedIncident?.emplacement}
+              {lang === 'fr' ? 'Fiche intervention' : 'Intervention details'} #{selectedIncident?.hebergement || selectedIncident?.numero_hebergement}
             </DialogTitle>
           </DialogHeader>
           {selectedIncident && (
@@ -1565,7 +1571,7 @@ export default function Bureau() {
                 <h4 className="font-heading text-[#0077A8] mb-2">🏠 {t('hebergement')}</h4>
                 <div className="grid grid-cols-2 gap-2 text-sm font-body">
                   <div><span className="text-gray-500">{lang === 'fr' ? 'Type' : 'Type'}:</span> {selectedIncident.logement ? (lang === 'fr' ? 'Mobil-home' : 'Mobile home') : (lang === 'fr' ? 'Emplacement' : 'Pitch')}</div>
-                  <div><span className="text-gray-500">{lang === 'fr' ? 'Numéro' : 'Number'}:</span> <strong>{selectedIncident.logement || selectedIncident.emplacement}</strong></div>
+                  <div><span className="text-gray-500">{lang === 'fr' ? 'Numéro' : 'Number'}:</span> <strong>{selectedIncident.logement || selectedIncident.emplacement || selectedIncident.hebergement || selectedIncident.numero_hebergement}</strong></div>
                 </div>
               </div>
 
@@ -1583,7 +1589,7 @@ export default function Bureau() {
                       {selectedIncident.urgent && <Badge className="bg-red-500 text-white text-xs mt-1">URGENT</Badge>}
                     </div>
                   </div>
-                  
+
                   {selectedIncident.date_debut && (
                     <div className="flex items-start gap-3">
                       <div className="w-8 h-8 rounded-full bg-[#FFA500] flex items-center justify-center flex-shrink-0">
@@ -1599,7 +1605,7 @@ export default function Bureau() {
                       </div>
                     </div>
                   )}
-                  
+
                   {selectedIncident.attente_date && (
                     <div className="flex items-start gap-3">
                       <div className="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center flex-shrink-0">
@@ -1612,7 +1618,7 @@ export default function Bureau() {
                       </div>
                     </div>
                   )}
-                  
+
                   {selectedIncident.date_resolution && (
                     <div className="flex items-start gap-3">
                       <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
@@ -1663,7 +1669,7 @@ export default function Bureau() {
                   <div><span className="text-gray-500">Résolu:</span> {selectedIncident.date_resolution ? format(new Date(selectedIncident.date_resolution), 'dd/MM/yyyy HH:mm') : '-'}</div>
                   <div>
                     <span className="text-gray-500">Durée:</span>{' '}
-                    {selectedIncident.date_resolution && selectedIncident.date_saisie 
+                    {selectedIncident.date_resolution && selectedIncident.date_saisie
                       ? formatDuration(differenceInMinutes(new Date(selectedIncident.date_resolution), new Date(selectedIncident.date_saisie)))
                       : '-'}
                   </div>
@@ -1709,21 +1715,21 @@ export default function Bureau() {
                     {selectedIncident.photo_url && (
                       <div className="space-y-2">
                         <p className="text-xs font-heading text-gray-600">📸 Photo client (signalement)</p>
-                        <img 
-                          src={selectedIncident.photo_url} 
-                          alt="Photo signalement" 
+                        <img
+                          src={selectedIncident.photo_url}
+                          alt="Photo signalement"
                           className="w-full h-32 object-cover rounded-lg border-2 border-gray-300"
                         />
                       </div>
                     )}
-                    
+
                     {/* Photo AVANT */}
                     {selectedIncident.photo_avant_url && (
                       <div className="space-y-2">
                         <p className="text-xs font-heading text-orange-600">📷 Photo AVANT intervention</p>
-                        <img 
-                          src={selectedIncident.photo_avant_url} 
-                          alt="Photo avant" 
+                        <img
+                          src={selectedIncident.photo_avant_url}
+                          alt="Photo avant"
                           className="w-full h-32 object-cover rounded-lg border-2 border-orange-300"
                         />
                         {selectedIncident.photo_avant_timestamp && (
@@ -1733,14 +1739,14 @@ export default function Bureau() {
                         )}
                       </div>
                     )}
-                    
+
                     {/* Photo APRÈS */}
                     {selectedIncident.photo_apres_url && (
                       <div className="space-y-2">
                         <p className="text-xs font-heading text-green-600">📷 Photo APRÈS intervention</p>
-                        <img 
-                          src={selectedIncident.photo_apres_url} 
-                          alt="Photo après" 
+                        <img
+                          src={selectedIncident.photo_apres_url}
+                          alt="Photo après"
                           className="w-full h-32 object-cover rounded-lg border-2 border-green-300"
                         />
                         {selectedIncident.photo_apres_timestamp && (
@@ -1751,7 +1757,7 @@ export default function Bureau() {
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Garanties juridiques */}
                   {(selectedIncident.photo_avant_hash || selectedIncident.photo_apres_hash) && (
                     <div className="mt-4 p-3 bg-white rounded-lg border border-blue-200">
@@ -1780,7 +1786,7 @@ export default function Bureau() {
                 <div className="bg-[#FFD700]/20 rounded-xl p-4">
                   <h4 className="font-heading text-[#0077A8] mb-2">⭐ {lang === 'fr' ? 'Avis client' : 'Guest review'}</h4>
                   <div className="flex items-center gap-1 mb-2">
-                    {[1,2,3,4,5].map(s => (
+                    {[1, 2, 3, 4, 5].map(s => (
                       <Star key={s} className={`w-5 h-5 ${s <= selectedIncident.note_client ? 'text-[#FFD700] fill-[#FFD700]' : 'text-gray-300'}`} />
                     ))}
                     <span className="ml-2 font-heading text-[#0077A8]">{selectedIncident.note_client}/5</span>
