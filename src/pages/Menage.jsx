@@ -81,10 +81,15 @@ export default function Menage() {
   const { data: interventionsClients = [] } = useQuery({
     queryKey: ['interventions-clients-menage', filter],
     queryFn: async () => {
-      return await base44.entities.InterventionClient.filter({ 
-        service: 'MENAGE',
-        statut: filter === 'resolu' ? 'TERMINEE' : undefined 
+      console.log('🔍 FETCH InterventionClient MENAGE, filtre:', filter);
+      const result = await base44.entities.InterventionClient.filter({ 
+        service: 'MENAGE'
       }, '-created_date', 250);
+      console.log('✅ InterventionClient MENAGE récupérées:', result.length, 'intervention(s)');
+      result.forEach(ic => {
+        console.log(`  - ID: ${ic.id}, Statut: ${ic.statut}, Type: ${ic.type_intervention}, Hébergement: ${ic.numero_hebergement}`);
+      });
+      return result;
     },
     refetchInterval: 30000,
     staleTime: 15000
