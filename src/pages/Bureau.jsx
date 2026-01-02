@@ -200,6 +200,14 @@ export default function Bureau() {
     }
   });
 
+  const deleteInterventionClientMutation = useMutation({
+    mutationFn: (id) => base44.entities.InterventionClient.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bureau-interventions-clients'] });
+      toast.success(lang === 'fr' ? 'Intervention supprimée' : 'Intervention deleted');
+    }
+  });
+
   const deleteHistoriqueEventMutation = useMutation({
     mutationFn: (id) => base44.entities.HistoriqueEvent.delete(id),
     onSuccess: () => {
@@ -296,10 +304,19 @@ export default function Bureau() {
   const handleGroupDelete = async () => {
     if (selectedIds.length === 0) return;
 
-    await Promise.all(selectedIds.map(id => deleteHistoriqueEventMutation.mutateAsync(id)));
+    // Séparer les IDs selon leur source
+    const selectedEvents = allEvents.filter(e => selectedIds.includes(e.id));
+    const interventionIds = selectedEvents.filter(e => e._source === 'intervention_client').map(e => e.id);
+    const historiqueIds = selectedEvents.filter(e => !e._source).map(e => e.id);
+
+    // Supprimer selon le type
+    await Promise.all([
+      ...interventionIds.map(id => deleteInterventionClientMutation.mutateAsync(id)),
+      ...historiqueIds.map(id => deleteHistoriqueEventMutation.mutateAsync(id))
+    ]);
+
     setSelectedIds([]);
     setShowDeleteConfirm(false);
-    queryClient.invalidateQueries({ queryKey: ['bureau-historique'] });
   };
 
   // Calcul des délais
@@ -342,6 +359,7 @@ export default function Bureau() {
   const interventionsAsEvents = useMemo(() => {
     return interventionsClients.map(inter => ({
       id: inter.id,
+      _source: 'intervention_client', // Marquer la source
       type_event: inter.statut === 'TERMINEE' ? 'INTERVENTION_CLOTUREE' : 
                   inter.statut === 'EN_COURS' ? 'INTERVENTION_PRISE_EN_CHARGE' :
                   'INTERVENTION_CLIENT_CREEE',
@@ -1190,7 +1208,7 @@ export default function Bureau() {
                         variant="outline"
                         onClick={() => setShowDeleteConfirm(true)}
                         className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
-                        disabled={deleteHistoriqueEventMutation.isPending}
+                        disabled={deleteHistoriqueEventMutation.isPending || deleteInterventionClientMutation.isPending}
                       >
                         <Trash2 className="w-4 h-4 mr-1" />
                         {t('supprimer')} {lang === 'fr' ? 'groupe' : 'group'}
@@ -1551,9 +1569,9 @@ export default function Bureau() {
             <Button
               onClick={handleGroupDelete}
               className="bg-red-500 hover:bg-red-600 text-white rounded-xl"
-              disabled={deleteHistoriqueEventMutation.isPending}
+              disabled={deleteHistoriqueEventMutation.isPending || deleteInterventionClientMutation.isPending}
             >
-              {deleteHistoriqueEventMutation.isPending ? (
+              {(deleteHistoriqueEventMutation.isPending || deleteInterventionClientMutation.isPending) ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
               ) : null}
               {lang === 'fr' ? 'Oui, supprimer' : 'Yes, delete'}
