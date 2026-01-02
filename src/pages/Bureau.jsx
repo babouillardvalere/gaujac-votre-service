@@ -71,6 +71,7 @@ export default function Bureau() {
   const [activeView, setActiveView] = useState('all'); // all, today, late
   const [selectedIds, setSelectedIds] = useState([]); // Sélection multiple
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [activeTab, setActiveTab] = useState('interventions');
   
   const [filters, setFilters] = useState({
     nom: '',
