@@ -13,6 +13,7 @@ import PhotoInterventionCapture from '../components/PhotoInterventionCapture';
 import InterventionTimer from '../components/InterventionTimer';
 import ServiceTabs from '../components/missions/ServiceTabs';
 import MissionsDirectionService from '../components/missions/MissionsDirectionService';
+import NotificationsPanelCollab from '../components/NotificationsPanelCollab';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -543,6 +544,11 @@ export default function Technique() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6">
+        {/* Panneau notifications */}
+        <div className="mb-6">
+          <NotificationsPanelCollab service="TECHNIQUE" />
+        </div>
+
         <ServiceTabs
           service="TECHNIQUE"
           interventionsCount={incidents.filter(i => i.statut === 'en_attente').length}
