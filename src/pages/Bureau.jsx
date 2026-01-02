@@ -216,6 +216,14 @@ export default function Bureau() {
     }
   });
 
+  const deleteTacheMutation = useMutation({
+    mutationFn: (id) => base44.entities.Tache.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bureau-taches'] });
+      toast.success(lang === 'fr' ? 'Tâche supprimée' : 'Task deleted');
+    }
+  });
+
   const deleteInterventionDirectionMutation = useMutation({
     mutationFn: (id) => base44.entities.InterventionDirection.delete(id),
     onSuccess: () => {
@@ -791,7 +799,7 @@ export default function Bureau() {
                     {taches.map(tache => (
                       <Card key={tache.id} className="border rounded-xl">
                         <CardContent className="p-4">
-                          <div className="flex items-start justify-between">
+                          <div className="flex items-start justify-between gap-3">
                             <div className="flex-1">
                               <h3 className="font-heading text-[#0077A8]">{tache.titre}</h3>
                               {tache.description && (
@@ -832,24 +840,39 @@ export default function Bureau() {
                                 {tache.assignee && (
                                   <Badge variant="outline">{tache.assignee}</Badge>
                                 )}
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-            <Button
-              onClick={() => navigate(createPageUrl('Taches'))}
-              className="w-full h-12 bg-[#00AEEF] hover:bg-[#0077A8] text-white rounded-xl font-heading"
-            >
-              <ListTodo className="w-5 h-5 mr-2" />
-              {lang === 'fr' ? 'Voir toutes les tâches' : 'View all tasks'}
-            </Button>
-          </TabsContent>
+                                </div>
+                                </div>
+
+                                <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={async () => {
+                                if (confirm(lang === 'fr' 
+                                 ? `Supprimer la tâche "${tache.titre}" ?`
+                                 : `Delete task "${tache.titre}"?`)) {
+                                 await deleteTacheMutation.mutateAsync(tache.id);
+                                }
+                                }}
+                                className="text-red-500 hover:text-red-700 flex-shrink-0"
+                                >
+                                <Trash2 className="w-4 h-4" />
+                                </Button>
+                                </div>
+                                </CardContent>
+                                </Card>
+                                ))}
+                                </div>
+                                )}
+                                </CardContent>
+                                </Card>
+                                <Button
+                                onClick={() => navigate(createPageUrl('Taches'))}
+                                className="w-full h-12 bg-[#00AEEF] hover:bg-[#0077A8] text-white rounded-xl font-heading"
+                                >
+                                <ListTodo className="w-5 h-5 mr-2" />
+                                {lang === 'fr' ? 'Voir toutes les tâches' : 'View all tasks'}
+                                </Button>
+                                </TabsContent>
 
           {/* Suivis inventaires */}
           <TabsContent value="suivis" className="space-y-4">
