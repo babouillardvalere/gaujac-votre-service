@@ -247,21 +247,27 @@ export default function ClientControleInventaire() {
     }).join('\n');
 
     // Notification pour le service concerné
-    await base44.entities.Notification.create({
+    const notificationPayload = {
       type: hasUrgent ? 'INCIDENT_URGENT' : 'NOUVEAU_INCIDENT',
       titre: `${hasUrgent ? '🔴 URGENT - ' : ''}${serviceLabel} - ${numero}`,
       message: `📍 ${categorie} ${numero}
-  👤 ${prenom} ${nom}
-  📅 ${dateArrivee} → ${dateDepart}
-  🔐 ${autorisationAcces === 'oui' ? '✅ Accès autorisé' : '❌ Présence requise'}
-  ${autorisationAcces === 'non' && plagesHoraires.length > 0 ? `⏰ ${plagesHoraires.join(', ')}` : ''}
+👤 ${prenom} ${nom}
+📅 ${dateArrivee} → ${dateDepart}
+🔐 ${autorisationAcces === 'oui' ? '✅ Accès autorisé' : '❌ Présence requise'}
+${autorisationAcces === 'non' && plagesHoraires.length > 0 ? `⏰ ${plagesHoraires.join(', ')}` : ''}
 
-  ${detailsItems}
+${detailsItems}
 
-  📄 Contrôle inventaire arrivée`,
-      destinataire_role: service === 'TECHNIQUE' ? 'TECHNIQUE' : service === 'MENAGE' ? 'MENAGE' : 'RECEPTION',
-      statut: 'non_lu'
-    });
+📄 Contrôle inventaire arrivée`,
+      destinataire_role: service,
+      statut: 'non_lu',
+      priorite: hasUrgent ? 'URGENTE' : 'NORMALE',
+      intervention_client_id: interventionClient.id
+    };
+
+    console.log(`[NOTIFICATION_CREATE] Création pour ${service}:`, notificationPayload);
+    
+    await base44.entities.Notification.create(notificationPayload);
 
     return interventionClient;
   };
