@@ -138,7 +138,7 @@ export default function Bureau() {
     queryFn: () => base44.auth.me(),
   });
 
-  const { data: historique = [], isLoading, error: incidentsError } = useQuery({
+  const { data: historique = [], isLoading: loadingHistorique, error: incidentsError } = useQuery({
     queryKey: ['bureau-historique'],
     queryFn: () => base44.entities.HistoriqueEvent.filter({}, '-created_date', 250),
     refetchInterval: 60000,
@@ -153,6 +153,25 @@ export default function Bureau() {
     refetchInterval: 60000,
     staleTime: 45000
   });
+
+  const { data: interventionsClients = [], isLoading: loadingInterventions } = useQuery({
+    queryKey: ['bureau-interventions-clients'],
+    queryFn: async () => {
+      const data = await base44.entities.InterventionClient.filter({}, '-created_date', 250);
+      console.log('[BUREAU] InterventionClient récupérées:', data.length);
+      console.log('[BUREAU] Détail par statut:', {
+        A_FAIRE: data.filter(i => i.statut === 'A_FAIRE').length,
+        EN_COURS: data.filter(i => i.statut === 'EN_COURS').length,
+        EN_ATTENTE: data.filter(i => i.statut === 'EN_ATTENTE').length,
+        TERMINEE: data.filter(i => i.statut === 'TERMINEE').length
+      });
+      return data;
+    },
+    refetchInterval: 30000,
+    staleTime: 20000
+  });
+
+  const isLoading = loadingHistorique || loadingInterventions;
 
   const { data: avis = [] } = useQuery({
     queryKey: ['bureau-avis'],
@@ -292,6 +311,32 @@ export default function Bureau() {
     if (hours >= 3) return 'lent';
     return null;
   };
+
+  // Filtrage Interventions Clients
+  const filteredInterventionsClients = useMemo(() => {
+    const filtered = interventionsClients.filter(i => {
+      // Filtres standards
+      if (filters.nom && !`${i.client_nom || ''} ${i.client_prenom || ''}`.toLowerCase().includes(filters.nom.toLowerCase())) return false;
+      if (filters.logement && !(i.numero_hebergement || '').toLowerCase().includes(filters.logement.toLowerCase())) return false;
+      if (filters.type !== 'tous' && i.service?.toUpperCase() !== filters.type.toUpperCase()) return false;
+      if (filters.statut !== 'tous' && i.statut !== filters.statut) return false;
+      if (filters.urgent !== 'tous') {
+        const isUrgent = i.priorite === 'URGENTE';
+        if (filters.urgent === 'oui' && !isUrgent) return false;
+        if (filters.urgent === 'non' && isUrgent) return false;
+      }
+      if (filters.dateFrom && new Date(i.created_date) < new Date(filters.dateFrom)) return false;
+      if (filters.dateTo && new Date(i.created_date) > new Date(filters.dateTo + 'T23:59:59')) return false;
+      
+      // Vue spéciale
+      if (activeView === 'today' && !isToday(new Date(i.created_date))) return false;
+      
+      return true;
+    });
+    
+    console.log('[BUREAU] Interventions après filtres:', filtered.length, 'filtres actifs:', filters);
+    return filtered;
+  }, [interventionsClients, activeView, filters]);
 
   // Filtrage avancé - OPTIMISÉ avec useMemo
   const filteredIncidents = useMemo(() => historique.filter(i => {
@@ -736,6 +781,150 @@ export default function Bureau() {
               </CardHeader>
               <CardContent>
                 <SuiviInventaireStaff serviceFilter="all" />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Interventions Clients */}
+          <TabsContent value="interventions" className="space-y-4">
+            <Card className="border-2 border-[#00AEEF] rounded-xl mb-6">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="font-heading text-[#0077A8]">
+                    🎯 {lang === 'fr' ? 'Interventions Clients (Services)' : 'Client Interventions (Services)'}
+                  </CardTitle>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {interventionsClients.length} {lang === 'fr' ? 'intervention(s) totale(s)' : 'total intervention(s)'} • 
+                    {filteredInterventionsClients.length} {lang === 'fr' ? 'après filtres' : 'after filters'}
+                  </p>
+                </div>
+                <WorkItemManager lang={lang} />
+              </CardHeader>
+              <CardContent>
+                {loadingInterventions ? (
+                  <div className="text-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#00AEEF]" />
+                  </div>
+                ) : filteredInterventionsClients.length === 0 ? (
+                  <div className="text-center py-12 bg-gray-50 rounded-lg">
+                    <AlertCircle className="w-12 h-12 mx-auto text-gray-400 mb-3" />
+                    <p className="text-gray-600 font-semibold mb-2">
+                      {lang === 'fr' ? 'Aucune intervention trouvée' : 'No interventions found'}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {interventionsClients.length === 0 
+                        ? (lang === 'fr' ? 'Aucune intervention dans la base' : 'No interventions in database')
+                        : (lang === 'fr' ? 'Essayez de modifier les filtres' : 'Try changing filters')}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-[#00AEEF]/10 font-heading">
+                        <tr>
+                          <th className="p-3 text-left">N°</th>
+                          <th className="p-3 text-left">Date</th>
+                          <th className="p-3 text-left">Client</th>
+                          <th className="p-3 text-left">Hébergement</th>
+                          <th className="p-3 text-left">Service</th>
+                          <th className="p-3 text-left">Type</th>
+                          <th className="p-3 text-left">Statut</th>
+                          <th className="p-3 text-left">Priorité</th>
+                          <th className="p-3 text-left">Tâches</th>
+                          <th className="p-3 text-left">Agent</th>
+                          <th className="p-3"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredInterventionsClients.map((inter, idx) => (
+                          <tr 
+                            key={inter.id} 
+                            className={`border-t hover:bg-[#FFA500]/5 cursor-pointer ${
+                              inter.priorite === 'URGENTE' ? 'bg-red-50' : ''
+                            }`}
+                            onClick={() => setSelectedIncident(inter)}
+                          >
+                            <td className="p-3">
+                              <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
+                                inter.priorite === 'URGENTE' ? 'bg-red-500 text-white' : 'bg-[#00AEEF]/20 text-[#0077A8]'
+                              }`}>
+                                {idx + 1}
+                              </span>
+                            </td>
+                            <td className="p-3 text-xs">
+                              <div className="font-medium">{format(new Date(inter.created_date), 'dd/MM/yy')}</div>
+                              <div className="text-[#00AEEF]">{format(new Date(inter.created_date), 'HH:mm')}</div>
+                            </td>
+                            <td className="p-3 text-sm">
+                              <div>{inter.client_prenom} {inter.client_nom}</div>
+                              <div className="text-xs text-gray-400">
+                                {inter.date_arrivee && format(new Date(inter.date_arrivee), 'dd/MM')} → 
+                                {inter.date_depart && format(new Date(inter.date_depart), 'dd/MM')}
+                              </div>
+                            </td>
+                            <td className="p-3">
+                              <span className="font-heading text-[#0077A8]">
+                                🏠 {inter.numero_hebergement}
+                              </span>
+                            </td>
+                            <td className="p-3">
+                              <Badge className={
+                                inter.service === 'TECHNIQUE' ? 'bg-blue-500 text-white' :
+                                inter.service === 'MENAGE' ? 'bg-yellow-500 text-white' :
+                                'bg-green-500 text-white'
+                              }>
+                                {inter.service}
+                              </Badge>
+                            </td>
+                            <td className="p-3 text-xs">
+                              {inter.type_intervention}
+                            </td>
+                            <td className="p-3">
+                              <Badge className={
+                                inter.statut === 'TERMINEE' ? 'bg-green-500 text-white' :
+                                inter.statut === 'EN_COURS' ? 'bg-[#00AEEF] text-white' :
+                                inter.statut === 'EN_ATTENTE' ? 'bg-gray-500 text-white' :
+                                'bg-[#FFA500] text-white'
+                              }>
+                                {inter.statut}
+                              </Badge>
+                            </td>
+                            <td className="p-3">
+                              {inter.priorite === 'URGENTE' && (
+                                <Badge className="bg-red-500 text-white text-xs">
+                                  <AlertTriangle className="w-3 h-3 mr-1" />
+                                  URGENT
+                                </Badge>
+                              )}
+                            </td>
+                            <td className="p-3 text-sm">
+                              {inter.taches?.length > 0 && (
+                                <span className="text-xs text-gray-600">
+                                  📋 {inter.taches.filter(t => t.faite).length}/{inter.taches.length}
+                                </span>
+                              )}
+                            </td>
+                            <td className="p-3 text-xs text-gray-600">
+                              {inter.pris_en_charge_par || '-'}
+                            </td>
+                            <td className="p-3">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedIncident(inter);
+                                }}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
