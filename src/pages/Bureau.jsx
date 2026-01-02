@@ -537,40 +537,28 @@ export default function Bureau() {
           </Button>
         </div>
 
-        <Tabs defaultValue="historique" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-[#FFA500]/20 p-1 rounded-xl border border-[#FFA500]/30 flex-wrap h-auto">
+            <TabsTrigger value="interventions" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
+              🎯 {lang === 'fr' ? 'Interventions' : 'Interventions'} ({interventionsClients.filter(i => i.statut !== 'TERMINEE').length})
+            </TabsTrigger>
             <TabsTrigger value="historique" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              📋 {t('historique')}
+              📋 {t('historique')} ({historique.length})
             </TabsTrigger>
             <TabsTrigger value="taches" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               ✅ {lang === 'fr' ? 'Tâches' : 'Tasks'} ({taches.filter(t => t.statut !== 'terminee').length})
             </TabsTrigger>
             <TabsTrigger value="missions-direction" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              🔧 {lang === 'fr' ? 'Interventions Direction' : 'Direction Interventions'} ({missionsDirection.filter(m => m.statut !== 'TERMINEE').length})
+              🔧 Direction ({missionsDirection.filter(m => m.statut !== 'TERMINEE').length})
             </TabsTrigger>
             <TabsTrigger value="suivis" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              📦 {lang === 'fr' ? 'Suivis inventaires' : 'Inventory tracking'}
-            </TabsTrigger>
-            <TabsTrigger value="frequentation" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              🔹 {lang === 'fr' ? 'Fréquentation' : 'Attendance'}
-            </TabsTrigger>
-            <TabsTrigger value="interventions" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              🔹 {t('interventions')}
+              📦 Suivis
             </TabsTrigger>
             <TabsTrigger value="statistiques" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              📊 {t('statistiques')}
-            </TabsTrigger>
-            <TabsTrigger value="demographie" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              👨‍👩‍👧 {lang === 'fr' ? 'Démographie' : 'Demographics'}
+              📊 Stats
             </TabsTrigger>
             <TabsTrigger value="fiches" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              📄 {lang === 'fr' ? 'Fiches PDF' : 'PDF Files'}
-            </TabsTrigger>
-            <TabsTrigger value="rapports" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              📦 {lang === 'fr' ? 'Rapports' : 'Reports'}
-            </TabsTrigger>
-            <TabsTrigger value="collaborateurs" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              👷 {lang === 'fr' ? 'Collaborateurs' : 'Staff'}
+              📄 PDF
             </TabsTrigger>
           </TabsList>
 
@@ -986,9 +974,10 @@ export default function Bureau() {
                       <SelectValue placeholder={lang === 'fr' ? 'Type' : 'Type'} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="tous">{lang === 'fr' ? 'Tous types' : 'All types'}</SelectItem>
-                      <SelectItem value="technique">🛠 {t('technique')}</SelectItem>
-                      <SelectItem value="menage">🧹 {t('menage')}</SelectItem>
+                      <SelectItem value="tous">{lang === 'fr' ? 'Tous services' : 'All services'}</SelectItem>
+                      <SelectItem value="TECHNIQUE">🛠 Technique</SelectItem>
+                      <SelectItem value="MENAGE">🧹 Ménage</SelectItem>
+                      <SelectItem value="RECEPTION">🏠 Réception</SelectItem>
                     </SelectContent>
                   </Select>
                   <Select value={filters.statut} onValueChange={(v) => setFilters({ ...filters, statut: v })}>
@@ -996,11 +985,11 @@ export default function Bureau() {
                       <SelectValue placeholder={t('statut')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="tous">{lang === 'fr' ? 'Tous statuts' : 'All statuses'}</SelectItem>
-                      <SelectItem value="en_attente">🟠 {t('en_attente')}</SelectItem>
-                      <SelectItem value="en_cours">🔵 {t('en_cours')}</SelectItem>
-                      <SelectItem value="en_attente_materiel">⏳ {lang === 'fr' ? 'Reporté' : 'Postponed'}</SelectItem>
-                      <SelectItem value="resolu">✅ {t('resolu')}</SelectItem>
+                     <SelectItem value="tous">{lang === 'fr' ? 'Tous statuts' : 'All statuses'}</SelectItem>
+                     <SelectItem value="A_FAIRE">🟠 {lang === 'fr' ? 'À faire' : 'To do'}</SelectItem>
+                     <SelectItem value="EN_COURS">🔵 {t('en_cours')}</SelectItem>
+                     <SelectItem value="EN_ATTENTE">⏸ {t('en_attente')}</SelectItem>
+                     <SelectItem value="TERMINEE">✅ {lang === 'fr' ? 'Terminée' : 'Completed'}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1334,33 +1323,15 @@ export default function Bureau() {
             <BureauFrequentation lang={lang} />
           </TabsContent>
 
-          {/* Statistiques Interventions */}
-          <TabsContent value="interventions" className="space-y-6">
-            <BureauStatistiques incidents={incidents} />
-          </TabsContent>
-
           {/* Statistiques Globales */}
           <TabsContent value="statistiques" className="space-y-6">
             <Statistiques embedded={true} />
-          </TabsContent>
-
-          {/* Démographie */}
-          <TabsContent value="demographie" className="space-y-6">
-            <BureauDemographie lang={lang} />
           </TabsContent>
 
           {/* Fiches PDF */}
           <TabsContent value="fiches" className="space-y-6">
             <BureauFichesPDF lang={lang} />
           </TabsContent>
-
-          {/* Rapports */}
-          <TabsContent value="rapports" className="space-y-6">
-            <BureauRapports incidents={incidents} avis={avis} />
-          </TabsContent>
-
-          {/* Collaborateurs */}
-          <TabsContent value="collaborateurs" className="space-y-6">
             {(() => {
               // Grouper les interventions par collaborateur
               const interventionsParCollab = {};
