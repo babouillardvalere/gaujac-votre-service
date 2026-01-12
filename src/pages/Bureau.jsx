@@ -30,6 +30,7 @@ import BureauFrequentation from '../components/bureau/BureauFrequentation';
 import BureauDemographie from '../components/bureau/BureauDemographie';
 import BureauFichesPDF from '../components/bureau/BureauFichesPDF';
 import WorkItemManager from '../components/bureau/WorkItemManager';
+import BureauAvis from '../components/bureau/BureauAvis';
 
 import Statistiques from './Statistiques';
 import { format, differenceInHours, differenceInMinutes, isToday, parseISO } from 'date-fns';
@@ -658,6 +659,9 @@ export default function Bureau() {
             </TabsTrigger>
             <TabsTrigger value="fiches" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               📄 PDF
+            </TabsTrigger>
+            <TabsTrigger value="avis" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
+              ⭐ Avis ({avis.length})
             </TabsTrigger>
           </TabsList>
 
@@ -1426,6 +1430,11 @@ export default function Bureau() {
           {/* Fiches PDF */}
           <TabsContent value="fiches" className="space-y-6">
             <BureauFichesPDF lang={lang} />
+          </TabsContent>
+
+          {/* Avis */}
+          <TabsContent value="avis" className="space-y-6">
+            <BureauAvis />
           </TabsContent>
 
           {/* Collaborateurs */}
