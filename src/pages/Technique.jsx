@@ -113,6 +113,13 @@ export default function Technique() {
     staleTime: 45000
   });
 
+  const { data: missionsDirectionGlobal = [] } = useQuery({
+    queryKey: ['missions-direction-global'],
+    queryFn: () => base44.entities.MissionDirection.filter({ mission_direction: true }, '-created_date', 250),
+    refetchInterval: 60000,
+    staleTime: 45000
+  });
+
   const updateMutation = useMutation({
     mutationFn: ({ id, data, isInterventionClient }) => {
       if (isInterventionClient) {
@@ -544,8 +551,44 @@ export default function Technique() {
       taches: ic.taches || []
     }));
 
-  // Combiner incidents et interventions clients
-  const allIncidents = [...incidents, ...convertedInterventionsClients];
+  // Convertir les MissionDirection en format compatible
+  const convertedMissionsDirection = missionsDirectionGlobal
+    .filter(m => {
+      // Inclure missions qui ont des intervenants TECHNIQUE dans services_intervenants
+      return m.services_intervenants?.some(s => s.service === 'TECHNIQUE') || false;
+    })
+    .map(m => ({
+      id: m.id,
+      type: 'technique',
+      categorie: 'divers_technique',
+      description: `[MISSION DIRECTION] ${m.type_mission}: ${m.titre}`,
+      urgent: m.priorite === 'URGENTE' || m.priorite === 'CRITIQUE',
+      client_nom: '',
+      client_prenom: '',
+      logement: m.zones?.[0]?.numero || (lang === 'fr' ? 'Multi-zones' : 'Multi-zones'),
+      emplacement: null,
+      date_saisie: m.date_creation || m.created_date,
+      date_arrivee: null,
+      date_depart: null,
+      pris_par: m.services_intervenants?.find(s => s.service === 'TECHNIQUE')?.agent || '',
+      date_debut: m.date_debut_reelle,
+      date_resolution: m.date_fin_reelle,
+      statut: m.statut === 'A_FAIRE' ? 'en_attente' :
+              m.statut === 'EN_COURS' ? 'en_cours' :
+              m.statut === 'EN_ATTENTE' ? 'en_attente_materiel' :
+              m.statut === 'TERMINEE' ? 'resolu' : 'en_attente',
+      autorisation_acces: 'oui',
+      plage_horaire_client: null,
+      commentaire_interne: m.commentaire_direction || '',
+      motif_attente: '',
+      intervention_id: null,
+      fiche_arrivee_id: null,
+      isMissionDirection: true,
+      missionDirectionData: m
+    }));
+
+  // Combiner incidents, interventions clients et missions Direction
+  const allIncidents = [...incidents, ...convertedInterventionsClients, ...convertedMissionsDirection];
 
   const filteredIncidents = allIncidents
     .filter(i => {

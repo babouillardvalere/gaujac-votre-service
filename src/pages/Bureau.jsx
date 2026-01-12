@@ -195,6 +195,13 @@ export default function Bureau() {
     staleTime: 60000
   });
 
+  const { data: missionsDirectionGlobal = [] } = useQuery({
+    queryKey: ['missions-direction-global'],
+    queryFn: () => base44.entities.MissionDirection.filter({ mission_direction: true }, '-created_date', 250),
+    refetchInterval: 60000,
+    staleTime: 45000
+  });
+
   // Mutations pour actions de groupe
   const updateIncidentMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.HistoriqueEvent.update(id, data),
@@ -370,7 +377,7 @@ export default function Bureau() {
   const interventionsAsEvents = useMemo(() => {
     return interventionsClients.map(inter => ({
       id: inter.id,
-      _source: 'intervention_client', // Marquer la source
+      _source: 'intervention_client',
       type_event: inter.statut === 'TERMINEE' ? 'INTERVENTION_CLOTUREE' : 
                   inter.statut === 'EN_COURS' ? 'INTERVENTION_PRISE_EN_CHARGE' :
                   'INTERVENTION_CLIENT_CREEE',
@@ -396,12 +403,45 @@ export default function Bureau() {
     }));
   }, [interventionsClients]);
 
-  // Combiner historique et interventions
+  // Transformer MissionDirection en format événement pour l'historique
+  const missionsDirectionAsEvents = useMemo(() => {
+    return missionsDirectionGlobal.map(m => ({
+      id: m.id,
+      _source: 'mission_direction',
+      type_event: m.statut === 'TERMINEE' ? 'MISSION_DIRECTION_VALIDEE' :
+                  m.statut === 'EN_COURS' ? 'MISSION_DIRECTION_PRISE_EN_CHARGE' :
+                  'MISSION_DIRECTION_CREEE',
+      titre: `[MISSION DIRECTION] ${m.type_mission}: ${m.titre}`,
+      description: `${m.zones?.length || 0} zone(s) - ${m.services_intervenants?.length || 0} service(s)`,
+      service: 'DIRECTION',
+      hebergement: m.zones?.[0]?.numero || (lang === 'fr' ? 'Multi-zones' : 'Multi-zones'),
+      type_hebergement: m.zones?.[0]?.categorie || '',
+      client_nom: '',
+      client_prenom: '',
+      collaborateur: m.createur,
+      urgent: m.priorite === 'URGENTE' || m.priorite === 'CRITIQUE',
+      created_date: m.date_creation || m.created_date,
+      metadata: {
+        mission_direction_id: m.id,
+        type_mission: m.type_mission,
+        statut: m.statut,
+        duree_minutes: m.temps_reel_minutes,
+        zones_count: m.zones?.length || 0,
+        services_count: m.services_intervenants?.length || 0,
+        validation_cloture: m.validation_cloture
+      },
+      date_arrivee: null,
+      date_depart: null,
+      missionDirectionData: m
+    }));
+  }, [missionsDirectionGlobal, lang]);
+
+  // Combiner historique, interventions et missions Direction
   const allEvents = useMemo(() => {
-    return [...historique, ...interventionsAsEvents].sort((a, b) => 
+    return [...historique, ...interventionsAsEvents, ...missionsDirectionAsEvents].sort((a, b) => 
       new Date(b.created_date) - new Date(a.created_date)
     );
-  }, [historique, interventionsAsEvents]);
+  }, [historique, interventionsAsEvents, missionsDirectionAsEvents]);
 
   // Filtrage avancé - OPTIMISÉ avec useMemo
   const filteredIncidents = useMemo(() => allEvents.filter(i => {

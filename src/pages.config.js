@@ -91,6 +91,7 @@ import Statistiques from './pages/Statistiques';
 import SuiviIntervention from './pages/SuiviIntervention';
 import Taches from './pages/Taches';
 import Technique from './pages/Technique';
+import MissionsDirection from './pages/MissionsDirection';
 import __Layout from './Layout.jsx';
 
 
@@ -188,6 +189,7 @@ export const PAGES = {
     "SuiviIntervention": SuiviIntervention,
     "Taches": Taches,
     "Technique": Technique,
+    "MissionsDirection": MissionsDirection,
 }
 
 export const pagesConfig = {
