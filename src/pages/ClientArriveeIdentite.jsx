@@ -135,7 +135,6 @@ export default function ClientArriveeIdentite() {
           nombre_animaux: totalAnimaux,
           nombre_chiens: formData.nombre_chiens,
           nombre_chats: formData.nombre_chats,
-          autres_animaux: formData.autres_animaux,
           etape_1_terminee: true,
           etape_2_terminee: true,
           etape_actuelle: 3,
@@ -156,7 +155,6 @@ export default function ClientArriveeIdentite() {
           nombre_animaux: totalAnimaux,
           nombre_chiens: formData.nombre_chiens,
           nombre_chats: formData.nombre_chats,
-          autres_animaux: formData.autres_animaux,
           etape_1_terminee: true,
           etape_2_terminee: true,
           etape_actuelle: 3
