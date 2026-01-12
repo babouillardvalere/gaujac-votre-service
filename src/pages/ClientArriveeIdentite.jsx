@@ -82,18 +82,18 @@ export default function ClientArriveeIdentite() {
       return false;
     }
 
-    // RÈGLE ANTIFRAUDE : Un client ne peut pas s'enregistrer le jour même ou dans le passé
+    // RÈGLE ANTIFRAUDE : Un client ne peut pas s'enregistrer avec une date passée
     const aujourdhui = new Date();
     aujourdhui.setHours(0, 0, 0, 0);
     
     const arrivee = new Date(formData.date_arrivee);
     arrivee.setHours(0, 0, 0, 0);
     
-    if (arrivee.getTime() <= aujourdhui.getTime()) {
+    if (arrivee.getTime() < aujourdhui.getTime()) {
       toast.error(
         lang === 'fr' 
-          ? '⚠️ Les arrivées le jour même ou passées ne peuvent pas être enregistrées par le client. Veuillez contacter l\'accueil.'
-          : '⚠️ Same-day or past arrivals cannot be registered by guests. Please contact reception.',
+          ? '⚠️ Les arrivées passées ne peuvent pas être enregistrées. Veuillez contacter l\'accueil.'
+          : '⚠️ Past arrivals cannot be registered. Please contact reception.',
         { duration: 5000 }
       );
       return false;
