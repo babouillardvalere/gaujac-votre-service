@@ -79,7 +79,7 @@ export default function ClientControleInventaire() {
 
     const ARTICLES_TECHNIQUES = [
       'tv', 'refrigerateur', 'micro_ondes', 'chauffage', 'plaques_cuisson', 'plaque_cuisson',
-      'chauffe_eau', 'wc', 'douche', 'lavabo', 'feux_gaz', 'telecommande_clim', 'climatisation',
+      'chauffe_eau', 'wc', 'douche', 'lavabo', 'robinet', 'feux_gaz', 'telecommande_clim', 'climatisation',
       'lave_vaisselle', 'congelateur', 'evier', 'cafetiere', 'hotte', 'cumulus', 'chauffe_eau_gaz',
       'seche_serviette', 'seche_cheveux', 'extincteur', 'detecteur_fumee'
     ];
@@ -150,22 +150,6 @@ export default function ClientControleInventaire() {
 
     const { menage, technique, reception } = analyzeAnomalies();
     console.log('🔍 ANOMALIES DETECTÉES:', { menage: menage.length, technique: technique.length, reception: reception.length });
-    
-    const hasAnomalies = menage.length > 0 || technique.length > 0 || reception.length > 0 || evaluationProprete === "pas_satisfaisant";
-
-    if (hasAnomalies && !signature) {
-      console.error('❌ VALIDATION FAILED: signature manquante (anomalies détectées)');
-      toast.error(lang === "fr" ? "⚠️ Signature obligatoire en cas d'anomalie détectée" : "⚠️ Signature required when issues detected");
-      
-      // Scroll vers la signature
-      const sigElement = document.querySelector('[data-signature-pad]');
-      if (sigElement) {
-        sigElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        sigElement.style.border = '3px solid red';
-        setTimeout(() => { sigElement.style.border = ''; }, 3000);
-      }
-      return;
-    }
 
     console.log('✅ VALIDATION OK - Ouverture récapitulatif');
     setShowRecap(true);
@@ -349,7 +333,7 @@ ${detailsItems}
         const photosItem = photos[item.id] || [];
         
         if (hasAnomaly || isUrgent || remarque || photosItem.length > 0) {
-          const ARTICLES_TECHNIQUES = ['tv', 'refrigerateur', 'micro_ondes', 'chauffage', 'plaques_cuisson', 'plaque_cuisson', 'chauffe_eau', 'wc', 'douche', 'lavabo', 'feux_gaz', 'telecommande_clim', 'climatisation', 'lave_vaisselle', 'congelateur', 'evier', 'cafetiere', 'hotte', 'cumulus', 'chauffe_eau_gaz', 'seche_serviette', 'seche_cheveux', 'extincteur', 'detecteur_fumee'];
+          const ARTICLES_TECHNIQUES = ['tv', 'refrigerateur', 'micro_ondes', 'chauffage', 'plaques_cuisson', 'plaque_cuisson', 'chauffe_eau', 'wc', 'douche', 'lavabo', 'robinet', 'feux_gaz', 'telecommande_clim', 'climatisation', 'lave_vaisselle', 'congelateur', 'evier', 'cafetiere', 'hotte', 'cumulus', 'chauffe_eau_gaz', 'seche_serviette', 'seche_cheveux', 'extincteur', 'detecteur_fumee'];
           const ARTICLES_RECEPTION = ['cle_locatif', 'cle_locative', 'carte_barriere', 'badge', 'table_jardin', 'chaises_jardin', 'salon_jardin', 'bancs_jardin', 'table_interieur', 'chaises_interieur'];
           
           let serviceAssigne = 'MENAGE';
