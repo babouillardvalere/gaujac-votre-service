@@ -99,7 +99,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'wc', icon: '🚽', label_fr: 'Toilettes (fonctionnement)', label_en: 'Toilet (functioning)', quantity: 1 },
       { id: 'douche', icon: '🚿', label_fr: 'Douche', label_en: 'Shower', quantity: 1 },
       { id: 'robinet', icon: '🚰', label_fr: 'Robinet', label_en: 'Tap', quantity: 1 },
-      { id: 'lavabo', icon: '🚿', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
+      { id: 'lavabo', icon: '💦', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
       // Ménage
       { id: 'kit_brosse_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'WC brush kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
@@ -177,7 +177,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'wc', icon: '🚽', label_fr: 'Toilettes (fonctionnement)', label_en: 'Toilet (functioning)', quantity: 1 },
       { id: 'douche', icon: '🚿', label_fr: 'Douche', label_en: 'Shower', quantity: 1 },
       { id: 'robinet', icon: '🚰', label_fr: 'Robinet', label_en: 'Tap', quantity: 1 },
-      { id: 'lavabo', icon: '🚿', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
+      { id: 'lavabo', icon: '💦', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
       // Ménage
       { id: 'kit_brosse_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'WC brush kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
@@ -254,7 +254,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'wc', icon: '🚽', label_fr: 'Toilettes (fonctionnement)', label_en: 'Toilet (functioning)', quantity: 1 },
       { id: 'douche', icon: '🚿', label_fr: 'Douche', label_en: 'Shower', quantity: 1 },
       { id: 'robinet', icon: '🚰', label_fr: 'Robinet', label_en: 'Tap', quantity: 1 },
-      { id: 'lavabo', icon: '🚿', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
+      { id: 'lavabo', icon: '💦', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
       // Ménage
       { id: 'kit_brosse_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'WC brush kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
@@ -332,7 +332,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'wc', icon: '🚽', label_fr: 'Toilettes (fonctionnement)', label_en: 'Toilet (functioning)', quantity: 1 },
       { id: 'douche', icon: '🚿', label_fr: 'Douche', label_en: 'Shower', quantity: 1 },
       { id: 'robinet', icon: '🚰', label_fr: 'Robinet', label_en: 'Tap', quantity: 1 },
-      { id: 'lavabo', icon: '🚿', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
+      { id: 'lavabo', icon: '💦', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
       // Ménage
       { id: 'kit_brosse_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'WC brush kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
@@ -411,7 +411,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'wc', icon: '🚽', label_fr: 'Toilettes (fonctionnement)', label_en: 'Toilet (functioning)', quantity: 1 },
       { id: 'douche', icon: '🚿', label_fr: 'Douche', label_en: 'Shower', quantity: 1 },
       { id: 'robinet', icon: '🚰', label_fr: 'Robinet', label_en: 'Tap', quantity: 1 },
-      { id: 'lavabo', icon: '🚿', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
+      { id: 'lavabo', icon: '💦', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
       // Ménage
       { id: 'kit_brosse_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'WC brush kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
@@ -493,7 +493,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'wc', icon: '🚽', label_fr: 'Toilettes (fonctionnement)', label_en: 'Toilet (functioning)', quantity: 1 },
       { id: 'douche', icon: '🚿', label_fr: 'Douche', label_en: 'Shower', quantity: 1 },
       { id: 'robinet', icon: '🚰', label_fr: 'Robinet', label_en: 'Tap', quantity: 1 },
-      { id: 'lavabo', icon: '🚿', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
+      { id: 'lavabo', icon: '💦', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
       // Ménage
       { id: 'kit_brosse_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'WC brush kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
@@ -576,7 +576,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'wc', icon: '🚽', label_fr: 'Toilettes (fonctionnement)', label_en: 'Toilet (functioning)', quantity: 1 },
       { id: 'douche', icon: '🚿', label_fr: 'Douche', label_en: 'Shower', quantity: 1 },
       { id: 'robinet', icon: '🚰', label_fr: 'Robinet', label_en: 'Tap', quantity: 1 },
-      { id: 'lavabo', icon: '🚿', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
+      { id: 'lavabo', icon: '💦', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
       // Ménage
       { id: 'kit_brosse_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'WC brush kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
@@ -651,7 +651,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'wc', icon: '🚽', label_fr: 'Toilettes (fonctionnement)', label_en: 'Toilet (functioning)', quantity: 1 },
       { id: 'douche', icon: '🚿', label_fr: 'Douche', label_en: 'Shower', quantity: 1 },
       { id: 'robinet', icon: '🚰', label_fr: 'Robinet', label_en: 'Tap', quantity: 1 },
-      { id: 'lavabo', icon: '🚿', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
+      { id: 'lavabo', icon: '💦', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
       // Ménage
       { id: 'kit_brosse_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'WC brush kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
@@ -730,7 +730,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'wc', icon: '🚽', label_fr: 'Toilettes (fonctionnement)', label_en: 'Toilet (functioning)', quantity: 1 },
       { id: 'douche', icon: '🚿', label_fr: 'Douche', label_en: 'Shower', quantity: 1 },
       { id: 'robinet', icon: '🚰', label_fr: 'Robinet', label_en: 'Tap', quantity: 1 },
-      { id: 'lavabo', icon: '🚿', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
+      { id: 'lavabo', icon: '💦', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
       // Ménage
       { id: 'kit_brosse_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'WC brush kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
@@ -808,7 +808,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'wc', icon: '🚽', label_fr: 'Toilettes (fonctionnement)', label_en: 'Toilet (functioning)', quantity: 1 },
       { id: 'douche', icon: '🚿', label_fr: 'Douche', label_en: 'Shower', quantity: 1 },
       { id: 'robinet', icon: '🚰', label_fr: 'Robinet', label_en: 'Tap', quantity: 1 },
-      { id: 'lavabo', icon: '🚿', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
+      { id: 'lavabo', icon: '💦', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
       // Ménage
       { id: 'kit_brosse_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'WC brush kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
@@ -887,7 +887,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'wc', icon: '🚽', label_fr: 'Toilettes (fonctionnement)', label_en: 'Toilet (functioning)', quantity: 1 },
       { id: 'douche', icon: '🚿', label_fr: 'Douche', label_en: 'Shower', quantity: 1 },
       { id: 'robinet', icon: '🚰', label_fr: 'Robinet', label_en: 'Tap', quantity: 1 },
-      { id: 'lavabo', icon: '🚿', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
+      { id: 'lavabo', icon: '💦', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
       // Ménage
       { id: 'kit_brosse_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'WC brush kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
@@ -965,7 +965,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'wc', icon: '🚽', label_fr: 'Toilettes (fonctionnement)', label_en: 'Toilet (functioning)', quantity: 1 },
       { id: 'douche', icon: '🚿', label_fr: 'Douche', label_en: 'Shower', quantity: 1 },
       { id: 'robinet', icon: '🚰', label_fr: 'Robinet', label_en: 'Tap', quantity: 1 },
-      { id: 'lavabo', icon: '🚿', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
+      { id: 'lavabo', icon: '💦', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
       // Ménage
       { id: 'kit_brosse_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'WC brush kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
@@ -1044,7 +1044,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'wc', icon: '🚽', label_fr: 'Toilettes (fonctionnement)', label_en: 'Toilet (functioning)', quantity: 1 },
       { id: 'douche', icon: '🚿', label_fr: 'Douche', label_en: 'Shower', quantity: 1 },
       { id: 'robinet', icon: '🚰', label_fr: 'Robinet', label_en: 'Tap', quantity: 1 },
-      { id: 'lavabo', icon: '🚿', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
+      { id: 'lavabo', icon: '💦', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
       // Ménage
       { id: 'kit_brosse_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'WC brush kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
@@ -1123,7 +1123,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'wc', icon: '🚽', label_fr: 'Toilettes (fonctionnement)', label_en: 'Toilet (functioning)', quantity: 1 },
       { id: 'douche', icon: '🚿', label_fr: 'Douche', label_en: 'Shower', quantity: 1 },
       { id: 'robinet', icon: '🚰', label_fr: 'Robinet', label_en: 'Tap', quantity: 1 },
-      { id: 'lavabo', icon: '🚿', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
+      { id: 'lavabo', icon: '💦', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
       // Ménage
       { id: 'kit_brosse_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'WC brush kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
@@ -1203,7 +1203,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'wc', icon: '🚽', label_fr: 'Toilettes (fonctionnement)', label_en: 'Toilet (functioning)', quantity: 1 },
       { id: 'douche', icon: '🚿', label_fr: 'Douche', label_en: 'Shower', quantity: 1 },
       { id: 'robinet', icon: '🚰', label_fr: 'Robinet', label_en: 'Tap', quantity: 1 },
-      { id: 'lavabo', icon: '🚿', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
+      { id: 'lavabo', icon: '💦', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
       // Ménage
       { id: 'kit_brosse_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'WC brush kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
