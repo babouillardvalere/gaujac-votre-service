@@ -8,6 +8,7 @@ import SignaturePad from "../components/SignaturePad";
 import ArriveeProgressBar from "../components/ArriveeProgressBar";
 import { getInventaireParCategorie } from "../components/categoryCodeMapping";
 import InventaireItemRow from "../components/InventaireItemRow";
+import { ConfigurationLiterie, isLiterieTechnique } from "../components/literieConfig";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Textarea } from "../components/ui/textarea";
@@ -81,7 +82,9 @@ export default function ClientControleInventaire() {
       'tv', 'refrigerateur', 'micro_ondes', 'chauffage', 'plaques_cuisson', 'plaque_cuisson',
       'chauffe_eau', 'wc', 'douche', 'lavabo', 'robinet', 'feux_gaz', 'telecommande_clim', 'climatisation',
       'lave_vaisselle', 'congelateur', 'evier', 'cafetiere', 'hotte', 'cumulus', 'chauffe_eau_gaz',
-      'seche_serviette', 'seche_cheveux', 'extincteur', 'detecteur_fumee'
+      'seche_serviette', 'seche_cheveux', 'extincteur', 'detecteur_fumee',
+      // LITERIE - Toujours TECHNIQUE
+      'lit_double', 'lit_simple', 'lit_superpose', 'sommier', 'matelas'
     ];
 
     const ARTICLES_RECEPTION = [
@@ -109,11 +112,20 @@ export default function ClientControleInventaire() {
         };
 
         // Logique d'orientation automatique
-        if (ARTICLES_TECHNIQUES.includes(item.id)) {
+        // PRIORITÉ 1: Literie = toujours TECHNIQUE
+        if (isLiterieTechnique(item.id)) {
           technique.push(obj);
-        } else if (ARTICLES_RECEPTION.includes(item.id)) {
+        }
+        // PRIORITÉ 2: Articles techniques
+        else if (ARTICLES_TECHNIQUES.includes(item.id)) {
+          technique.push(obj);
+        } 
+        // PRIORITÉ 3: Articles réception
+        else if (ARTICLES_RECEPTION.includes(item.id)) {
           reception.push(obj);
-        } else {
+        } 
+        // Par défaut: ménage
+        else {
           menage.push(obj);
         }
       }
@@ -906,6 +918,9 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
       <p className="text-center text-gray-600 mb-6">
         {categorie} {numero} • {nom} {prenom}
       </p>
+
+      {/* Configuration literie */}
+      <ConfigurationLiterie categorie={categorie} lang={lang} />
 
       <Card className="mb-6">
         <CardContent className="p-6 space-y-3">
