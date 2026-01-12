@@ -326,6 +326,11 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'refrigerateur', icon: '🧊', label_fr: 'Réfrigérateur', label_en: 'Fridge', quantity: 1 },
       { id: 'plaques_cuisson', icon: '🔥', label_fr: 'Plaques de cuisson', label_en: 'Cooking plates', quantity: 1 },
       { id: 'telecommande_clim', icon: '❄️', label_fr: 'Télécommande climatisation', label_en: 'AC remote', quantity: 1 },
+      // Sanitaires
+      { id: 'wc', icon: '🚽', label_fr: 'Toilettes (fonctionnement)', label_en: 'Toilet (functioning)', quantity: 1 },
+      { id: 'douche', icon: '🚿', label_fr: 'Douche', label_en: 'Shower', quantity: 1 },
+      { id: 'robinet', icon: '🚰', label_fr: 'Robinet', label_en: 'Tap', quantity: 1 },
+      { id: 'lavabo', icon: '🚿', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
       // Ménage
       { id: 'kit_brosse_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'WC brush kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
@@ -719,6 +724,11 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'telecommande_clim', icon: '❄️', label_fr: 'Télécommande climatisation', label_en: 'AC remote', quantity: 1 },
       { id: 'refrigerateur_congelateur', icon: '🧊', label_fr: 'Réfrigérateur-congélateur', label_en: 'Fridge-freezer', quantity: 1 },
       { id: 'lave_vaisselle', icon: '🍽️', label_fr: 'Lave-vaisselle', label_en: 'Dishwasher', quantity: 1 },
+      // Sanitaires
+      { id: 'wc', icon: '🚽', label_fr: 'Toilettes (fonctionnement)', label_en: 'Toilet (functioning)', quantity: 1 },
+      { id: 'douche', icon: '🚿', label_fr: 'Douche', label_en: 'Shower', quantity: 1 },
+      { id: 'robinet', icon: '🚰', label_fr: 'Robinet', label_en: 'Tap', quantity: 1 },
+      { id: 'lavabo', icon: '🚿', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
       // Ménage
       { id: 'kit_brosse_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'WC brush kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
@@ -793,6 +803,11 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'telecommande_clim', icon: '❄️', label_fr: 'Télécommande climatisation', label_en: 'AC remote', quantity: 1 },
       { id: 'refrigerateur_congelateur', icon: '🧊', label_fr: 'Réfrigérateur-congélateur', label_en: 'Fridge-freezer', quantity: 1 },
       { id: 'lave_vaisselle', icon: '🍽️', label_fr: 'Lave-vaisselle', label_en: 'Dishwasher', quantity: 1 },
+      // Sanitaires
+      { id: 'wc', icon: '🚽', label_fr: 'Toilettes (fonctionnement)', label_en: 'Toilet (functioning)', quantity: 1 },
+      { id: 'douche', icon: '🚿', label_fr: 'Douche', label_en: 'Shower', quantity: 1 },
+      { id: 'robinet', icon: '🚰', label_fr: 'Robinet', label_en: 'Tap', quantity: 1 },
+      { id: 'lavabo', icon: '🚿', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
       // Ménage
       { id: 'kit_brosse_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'WC brush kit', quantity: 1 },
       { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
@@ -1124,18 +1139,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'refrigerateur', icon: '🧊', label_fr: 'Réfrigérateur', label_en: 'Fridge', quantity: 1 },
       { id: 'congelateur', icon: '🧊', label_fr: 'Congélateur', label_en: 'Freezer', quantity: 1 },
       { id: 'lave_vaisselle', icon: '🍽️', label_fr: 'Lave-vaisselle', label_en: 'Dishwasher', quantity: 1 },
-      // Ménage
-      { id: 'kit_brosse_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'WC brush kit', quantity: 1 },
-      { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
-      { id: 'bassine', icon: '🧴', label_fr: 'Bassine', label_en: 'Basin', quantity: 1 },
-      { id: 'balai', icon: '🧹', label_fr: 'Balai', label_en: 'Broom', quantity: 1 },
-      { id: 'balai_brosse', icon: '🧼', label_fr: 'Balai brosse', label_en: 'Scrubbing brush', quantity: 1 },
-      { id: 'pelle_balayette', icon: '🧽', label_fr: 'Pelle + balayette', label_en: 'Dustpan + brush', quantity: 1 },
-      { id: 'serpilliere', icon: '🪣', label_fr: 'Serpillière', label_en: 'Mop', quantity: 1 },
-      { id: 'sechoir_linge', icon: '👕', label_fr: 'Séchoir à linge', label_en: 'Clothes dryer', quantity: 1 },
-      { id: 'pinces_linge', icon: '🧷', label_fr: 'Pinces à linge', label_en: 'Clothespins', quantity: 8 },
-      { id: 'poubelles', icon: '🗑️', label_fr: 'Poubelles', label_en: 'Trash cans', quantity: 2 },
-      { id: 'detecteur_fumee', icon: '🚨', label_fr: 'Détecteur de fumée', label_en: 'Smoke detector', quantity: 1 },
       // Sanitaires
       { id: 'wc', icon: '🚽', label_fr: 'Toilettes (fonctionnement)', label_en: 'Toilet (functioning)', quantity: 1 },
       { id: 'douche', icon: '🚿', label_fr: 'Douche', label_en: 'Shower', quantity: 1 },
@@ -1175,23 +1178,6 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'refrigerateur', icon: '🧊', label_fr: 'Réfrigérateur', label_en: 'Fridge', quantity: 1 },
       { id: 'congelateur', icon: '🧊', label_fr: 'Congélateur', label_en: 'Freezer', quantity: 1 },
       { id: 'lave_vaisselle', icon: '🍽️', label_fr: 'Lave-vaisselle', label_en: 'Dishwasher', quantity: 1 },
-      // Sanitaires
-      { id: 'wc', icon: '🚽', label_fr: 'Toilettes (fonctionnement)', label_en: 'Toilet (functioning)', quantity: 1 },
-      { id: 'douche', icon: '🚿', label_fr: 'Douche', label_en: 'Shower', quantity: 1 },
-      { id: 'robinet', icon: '🚰', label_fr: 'Robinet', label_en: 'Tap', quantity: 1 },
-      { id: 'lavabo', icon: '🚿', label_fr: 'Lavabo', label_en: 'Washbasin', quantity: 1 },
-      // Ménage
-      { id: 'kit_brosse_wc', icon: '🚽', label_fr: 'Kit brosse WC', label_en: 'WC brush kit', quantity: 1 },
-      { id: 'seau', icon: '🪣', label_fr: 'Seau', label_en: 'Bucket', quantity: 1 },
-      { id: 'bassine', icon: '🧴', label_fr: 'Bassine', label_en: 'Basin', quantity: 1 },
-      { id: 'balai', icon: '🧹', label_fr: 'Balai', label_en: 'Broom', quantity: 1 },
-      { id: 'balai_brosse', icon: '🧼', label_fr: 'Balai brosse', label_en: 'Scrubbing brush', quantity: 1 },
-      { id: 'pelle_balayette', icon: '🧽', label_fr: 'Pelle + balayette', label_en: 'Dustpan + brush', quantity: 1 },
-      { id: 'serpilliere', icon: '🪣', label_fr: 'Serpillière', label_en: 'Mop', quantity: 1 },
-      { id: 'sechoir_linge', icon: '👕', label_fr: 'Séchoir à linge', label_en: 'Clothes dryer', quantity: 1 },
-      { id: 'pinces_linge', icon: '🧷', label_fr: 'Pinces à linge', label_en: 'Clothespins', quantity: 8 },
-      { id: 'poubelles', icon: '🗑️', label_fr: 'Poubelles', label_en: 'Trash cans', quantity: 2 },
-      { id: 'detecteur_fumee', icon: '🚨', label_fr: 'Détecteur de fumée', label_en: 'Smoke detector', quantity: 1 },
       // Sanitaires
       { id: 'wc', icon: '🚽', label_fr: 'Toilettes (fonctionnement)', label_en: 'Toilet (functioning)', quantity: 1 },
       { id: 'douche', icon: '🚿', label_fr: 'Douche', label_en: 'Shower', quantity: 1 },
