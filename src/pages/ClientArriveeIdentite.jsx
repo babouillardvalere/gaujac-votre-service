@@ -82,11 +82,35 @@ export default function ClientArriveeIdentite() {
       return false;
     }
 
+    // RÈGLE ANTIFRAUDE : Un client ne peut pas s'enregistrer le jour même
+    const aujourdhui = new Date();
+    aujourdhui.setHours(0, 0, 0, 0);
+    
     const arrivee = new Date(formData.date_arrivee);
+    arrivee.setHours(0, 0, 0, 0);
+    
+    if (arrivee.getTime() === aujourdhui.getTime()) {
+      toast.error(
+        lang === 'fr' 
+          ? '⚠️ Les arrivées le jour même ne peuvent pas être enregistrées par le client. Veuillez contacter l\'accueil.'
+          : '⚠️ Same-day arrivals cannot be registered by guests. Please contact reception.',
+        { duration: 5000 }
+      );
+      return false;
+    }
+
     const depart = new Date(formData.date_depart);
+    depart.setHours(0, 0, 0, 0);
 
     if (depart <= arrivee) {
       toast.error(t('date_error_ordre'));
+      return false;
+    }
+
+    if (formData.nb_adultes < 1) {
+      toast.error(lang === 'fr' 
+        ? 'Au moins 1 adulte est requis'
+        : 'At least 1 adult is required');
       return false;
     }
 
@@ -424,7 +448,7 @@ export default function ClientArriveeIdentite() {
 
           <Button
             onClick={handleSubmit}
-            disabled={submitting}
+            disabled={submitting || !formData.nom || !formData.prenom || !formData.date_arrivee || !formData.date_depart || formData.nb_adultes < 1}
             className="w-full h-12 bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl font-heading disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {submitting ? (
