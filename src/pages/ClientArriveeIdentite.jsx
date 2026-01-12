@@ -28,9 +28,7 @@ export default function ClientArriveeIdentite() {
     nb_enfants: 0,
     nb_bebes: 0,
     nombre_chiens: 0,
-    nombre_chats: 0,
-    autres_animaux: '',
-    remarque_arrivee: ''
+    nombre_chats: 0
   });
 
   const [dossierId, setDossierId] = useState(sessionStorage.getItem('arrivee_dossier_id'));
@@ -120,8 +118,6 @@ export default function ClientArriveeIdentite() {
       sessionStorage.setItem('arrivee_nb_bebes', formData.nb_bebes);
       sessionStorage.setItem('arrivee_nombre_chiens', formData.nombre_chiens);
       sessionStorage.setItem('arrivee_nombre_chats', formData.nombre_chats);
-      sessionStorage.setItem('arrivee_autres_animaux', formData.autres_animaux);
-      sessionStorage.setItem('arrivee_remarque', formData.remarque_arrivee);
 
       const totalAnimaux = formData.nombre_chiens + formData.nombre_chats;
 
@@ -424,35 +420,7 @@ export default function ClientArriveeIdentite() {
                     </button>
                   </div>
                 </div>
-
-                <div>
-                  <Label className="font-heading text-[#0077A8] mb-2 block">
-                    {lang === 'fr' ? 'Autres animaux (facultatif)' : 'Other pets (optional)'}
-                  </Label>
-                  <Input
-                    value={formData.autres_animaux}
-                    onChange={(e) => handleChange('autres_animaux', e.target.value)}
-                    placeholder={lang === 'fr' ? 'Ex: lapin, perroquet...' : 'Ex: rabbit, parrot...'}
-                    className="border-2"
-                  />
-                </div>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Remarques */}
-          <Card className="border-2 border-gray-300 rounded-xl mb-6">
-            <CardContent className="p-6">
-              <Label className="font-heading text-[#0077A8] mb-2 block">
-                {lang === 'fr' ? 'Remarque ou demande spéciale (facultatif)' : 'Special request (optional)'}
-              </Label>
-              <Textarea
-                value={formData.remarque_arrivee}
-                onChange={(e) => handleChange('remarque_arrivee', e.target.value)}
-                placeholder={lang === 'fr' ? 'Ex: allergie, demande spécifique...' : 'Ex: allergy, specific request...'}
-                rows={3}
-                className="border-2"
-              />
             </CardContent>
           </Card>
 
