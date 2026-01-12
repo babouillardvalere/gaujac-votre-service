@@ -540,6 +540,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       // Literie - structure (TECHNIQUE)
       { id: 'lit_double_chambre_1', icon: '🛏️', label_fr: 'Lit double - chambre 1', label_en: 'Double bed - bedroom 1', quantity: 1 },
       { id: 'lit_double_chambre_2', icon: '🛏️', label_fr: 'Lit double - chambre 2', label_en: 'Double bed - bedroom 2', quantity: 1 },
+      { id: 'lits_simples_chambre_3', icon: '🛏️', label_fr: 'Lits simples - chambre 3', label_en: 'Single beds - bedroom 3', quantity: 2 },
       // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 8 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 8 },
@@ -703,6 +704,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       // Literie - structure (TECHNIQUE)
       { id: 'lit_double_chambre_1', icon: '🛏️', label_fr: 'Lit double - chambre 1', label_en: 'Double bed - bedroom 1', quantity: 1 },
       { id: 'lit_double_chambre_2', icon: '🛏️', label_fr: 'Lit double - chambre 2', label_en: 'Double bed - bedroom 2', quantity: 1 },
+      { id: 'lits_simples_chambre_3', icon: '🛏️', label_fr: 'Lits simples - chambre 3', label_en: 'Single beds - bedroom 3', quantity: 2 },
       // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 8 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 8 },
@@ -866,6 +868,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       // Literie - structure (TECHNIQUE)
       { id: 'lit_double_chambre_1', icon: '🛏️', label_fr: 'Lit double - chambre 1', label_en: 'Double bed - bedroom 1', quantity: 1 },
       { id: 'lit_double_chambre_2', icon: '🛏️', label_fr: 'Lit double - chambre 2', label_en: 'Double bed - bedroom 2', quantity: 1 },
+      { id: 'lits_simples_chambre_3', icon: '🛏️', label_fr: 'Lits simples - chambre 3', label_en: 'Single beds - bedroom 3', quantity: 2 },
       // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 8 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 8 },
@@ -1030,6 +1033,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       // Literie - structure (TECHNIQUE)
       { id: 'lit_double_chambre_1', icon: '🛏️', label_fr: 'Lit double - chambre 1', label_en: 'Double bed - bedroom 1', quantity: 1 },
       { id: 'lit_double_chambre_2', icon: '🛏️', label_fr: 'Lit double - chambre 2', label_en: 'Double bed - bedroom 2', quantity: 1 },
+      { id: 'lits_simples_chambre_3', icon: '🛏️', label_fr: 'Lits simples - chambre 3', label_en: 'Single beds - bedroom 3', quantity: 2 },
       // Vaisselle (8 personnes)
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 8 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 8 },
