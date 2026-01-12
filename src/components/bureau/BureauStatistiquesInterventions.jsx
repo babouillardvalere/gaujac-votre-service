@@ -507,11 +507,4 @@ export default function BureauStatistiquesInterventions({ lang = 'fr' }) {
       </Card>
     </div>
   );
-
-  function formatDuree(minutes) {
-    if (minutes < 60) return `${minutes}min`;
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    return m > 0 ? `${h}h${m}min` : `${h}h`;
-  }
 }
