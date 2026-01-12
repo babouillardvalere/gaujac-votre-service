@@ -25,6 +25,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import InterventionActions from '../components/bureau/InterventionActions';
 import BureauStatistiques from '../components/bureau/BureauStatistiques';
 import BureauStatistiquesClients from '../components/bureau/BureauStatistiquesClients';
+import BureauStatistiquesAvis from '../components/bureau/BureauStatistiquesAvis';
 import BureauRapports from '../components/bureau/BureauRapports';
 import BureauFrequentation from '../components/bureau/BureauFrequentation';
 import BureauDemographie from '../components/bureau/BureauDemographie';
@@ -1424,7 +1425,7 @@ export default function Bureau() {
 
           {/* Statistiques Globales */}
           <TabsContent value="statistiques" className="space-y-6">
-            <Statistiques embedded={true} />
+            <BureauStatistiquesAvis lang={lang} />
           </TabsContent>
 
           {/* Fiches PDF */}
