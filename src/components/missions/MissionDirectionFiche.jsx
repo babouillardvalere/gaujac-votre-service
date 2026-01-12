@@ -10,11 +10,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  User, Calendar, Clock, MapPin, CheckCircle, AlertTriangle, 
-  Edit, Save, X, Plus, Trash2, FileText, Wrench
+  CheckCircle, AlertTriangle, Edit, Save, X, Plus, Trash2
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
 
 export default function MissionDirectionFiche({ mission, onClose, lang = 'fr' }) {
@@ -382,7 +380,6 @@ export default function MissionDirectionFiche({ mission, onClose, lang = 'fr' })
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* États des lieux AVANT/APRÈS */}
               <div className="space-y-3">
                 {formData.zones?.map((zone, i) => (
                   <Card key={i} className="border-2 border-gray-200">
@@ -477,202 +474,6 @@ export default function MissionDirectionFiche({ mission, onClose, lang = 'fr' })
                   {lang === 'fr' ? 'Aucune zone définie' : 'No zone defined'}
                 </p>
               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* QUAND */}
-        <TabsContent value="quand" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">📅 QUAND ?</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-xs text-gray-600">Date de création</Label>
-                  <p className="font-body">{formData.date_creation && format(new Date(formData.date_creation), 'dd/MM/yyyy HH:mm')}</p>
-                </div>
-                <div>
-                  <Label className="text-xs text-gray-600">Date planifiée</Label>
-                  {editMode ? (
-                    <Input 
-                      type="date"
-                      value={formData.date_planifiee || ''}
-                      onChange={(e) => setFormData({...formData, date_planifiee: e.target.value})}
-                    />
-                  ) : (
-                    <p className="font-body">{formData.date_planifiee && format(new Date(formData.date_planifiee), 'dd/MM/yyyy')}</p>
-                  )}
-                </div>
-                <div>
-                  <Label className="text-xs text-gray-600">Date réelle de début</Label>
-                  <p className="font-body">{formData.date_debut_reelle ? format(new Date(formData.date_debut_reelle), 'dd/MM/yyyy HH:mm') : '-'}</p>
-                </div>
-                <div>
-                  <Label className="text-xs text-gray-600">Date réelle de fin</Label>
-                  <p className="font-body">{formData.date_fin_reelle ? format(new Date(formData.date_fin_reelle), 'dd/MM/yyyy HH:mm') : '-'}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* COMMENT */}
-        <TabsContent value="comment" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">🔧 COMMENT ?</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label>Procédure suivie</Label>
-                {editMode ? (
-                  <Textarea 
-                    value={formData.procedure_suivie || ''}
-                    onChange={(e) => setFormData({...formData, procedure_suivie: e.target.value})}
-                    rows={4}
-                  />
-                ) : (
-                  <p className="text-sm bg-gray-50 p-3 rounded">{formData.procedure_suivie || '-'}</p>
-                )}
-              </div>
-
-              <div>
-                <Label>Outils et moyens utilisés</Label>
-                {editMode ? (
-                  <Textarea 
-                    value={formData.outils_moyens || ''}
-                    onChange={(e) => setFormData({...formData, outils_moyens: e.target.value})}
-                    rows={3}
-                  />
-                ) : (
-                  <p className="text-sm bg-gray-50 p-3 rounded">{formData.outils_moyens || '-'}</p>
-                )}
-              </div>
-
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <input 
-                    type="checkbox"
-                    checked={formData.problemes_rencontres || false}
-                    onChange={(e) => editMode && setFormData({...formData, problemes_rencontres: e.target.checked})}
-                    disabled={!editMode}
-                    className="w-4 h-4"
-                  />
-                  <Label>Problèmes rencontrés ?</Label>
-                </div>
-                {formData.problemes_rencontres && (
-                  <>
-                    <Label className="text-xs text-red-600">Description obligatoire</Label>
-                    {editMode ? (
-                      <Textarea 
-                        value={formData.problemes_description || ''}
-                        onChange={(e) => setFormData({...formData, problemes_description: e.target.value})}
-                        rows={4}
-                        className="border-red-300"
-                      />
-                    ) : (
-                      <p className="text-sm bg-red-50 p-3 rounded border border-red-200">
-                        {formData.problemes_description || <span className="text-red-500">Non renseigné</span>}
-                      </p>
-                    )}
-                  </>
-                )}
-              </div>
-
-              {/* Suivi par service intervenant */}
-              <div className="border-t pt-4 mt-4">
-                <div className="flex items-center justify-between mb-3">
-                  <Label className="text-base font-heading text-purple-700">
-                    👷 Suivi par service intervenant
-                  </Label>
-                  {editMode && (
-                    <Button onClick={addServiceIntervenant} size="sm" variant="outline">
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
-
-                <div className="space-y-3">
-                  {formData.services_intervenants?.map((serviceInt, i) => (
-                    <Card key={i} className="border-2 border-purple-200">
-                      <CardContent className="p-3 space-y-2">
-                        {editMode ? (
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <Select value={serviceInt.service} onValueChange={(v) => updateServiceIntervenant(i, 'service', v)}>
-                                <SelectTrigger className="w-32">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="TECHNIQUE">🧰 Technique</SelectItem>
-                                  <SelectItem value="MENAGE">🧹 Ménage</SelectItem>
-                                  <SelectItem value="POLYVALENT">⚡ Polyvalent</SelectItem>
-                                  <SelectItem value="AUTRE">📦 Autre</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <Button onClick={() => removeServiceIntervenant(i)} size="sm" variant="ghost">
-                                <Trash2 className="w-4 h-4 text-red-500" />
-                              </Button>
-                            </div>
-                            <Input 
-                              placeholder="Agent"
-                              value={serviceInt.agent || ''}
-                              onChange={(e) => updateServiceIntervenant(i, 'agent', e.target.value)}
-                            />
-                            <Input 
-                              placeholder="Zone / Périmètre"
-                              value={serviceInt.zone_perimetre || ''}
-                              onChange={(e) => updateServiceIntervenant(i, 'zone_perimetre', e.target.value)}
-                            />
-                            <Textarea 
-                              placeholder="Action réalisée"
-                              value={serviceInt.action_realisee || ''}
-                              onChange={(e) => updateServiceIntervenant(i, 'action_realisee', e.target.value)}
-                              rows={2}
-                            />
-                            <Select value={serviceInt.resultat || ''} onValueChange={(v) => updateServiceIntervenant(i, 'resultat', v)}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Résultat" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="conforme">✅ Conforme</SelectItem>
-                                <SelectItem value="partiel">⚠️ Partiel</SelectItem>
-                                <SelectItem value="echoue">❌ Échoué</SelectItem>
-                                <SelectItem value="reporte">⏸ Reporté</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        ) : (
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <Badge>{serviceInt.service}</Badge>
-                              {serviceInt.resultat && (
-                                <span className="text-lg">{resultatIcons[serviceInt.resultat]}</span>
-                              )}
-                            </div>
-                            <p className="text-sm"><strong>Agent:</strong> {serviceInt.agent || '-'}</p>
-                            <p className="text-sm"><strong>Zone:</strong> {serviceInt.zone_perimetre || '-'}</p>
-                            <p className="text-sm bg-gray-50 p-2 rounded">{serviceInt.action_realisee || '-'}</p>
-                            {serviceInt.resultat && (
-                              <p className="text-sm">
-                                <strong>Résultat:</strong> {resultatIcons[serviceInt.resultat]} {serviceInt.resultat}
-                              </p>
-                            )}
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
-
-                  {formData.services_intervenants?.length === 0 && (
-                    <p className="text-center text-gray-400 py-4">
-                      {lang === 'fr' ? 'Aucun service intervenant' : 'No intervening service'}
-                    </p>
-                  )}
-                </div>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>
