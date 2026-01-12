@@ -90,10 +90,16 @@ export function ConfigurationLiterie({ categorie, lang = 'fr' }) {
 export function isLiterieTechnique(itemId) {
   const literieItems = [
     'lit_double',
+    'lit_double_chambre_1',
+    'lit_double_chambre_2',
     'lit_simple', 
+    'lit_simple_chambre_3a',
+    'lit_simple_chambre_3b',
+    'lit_simple_chambre_4a',
+    'lit_simple_chambre_4b',
     'lit_superpose',
     'sommier',
-    'matelas' // Si des problèmes structurels de matelas sont signalés
+    'matelas'
   ];
   return literieItems.includes(itemId);
 }

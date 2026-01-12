@@ -125,6 +125,8 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     ],
 
     CHALET_CLASSIQUE: [
+      // Literie - structure (TECHNIQUE)
+      { id: 'lit_double', icon: '🛏️', label_fr: 'Lit double', label_en: 'Double bed', quantity: 1 },
       // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 4 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes dessert', label_en: 'Dessert plates', quantity: 4 },
@@ -202,6 +204,9 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     ],
 
     MH_ECO_2CH: [
+      // Literie - structure (TECHNIQUE)
+      { id: 'lit_double_chambre_1', icon: '🛏️', label_fr: 'Lit double - chambre 1', label_en: 'Double bed - bedroom 1', quantity: 1 },
+      { id: 'lit_double_chambre_2', icon: '🛏️', label_fr: 'Lit double - chambre 2', label_en: 'Double bed - bedroom 2', quantity: 1 },
       // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 6 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 6 },
@@ -282,6 +287,9 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     ],
 
     MH_ECO_CLIM_2CH: [
+      // Literie - structure (TECHNIQUE)
+      { id: 'lit_double_chambre_1', icon: '🛏️', label_fr: 'Lit double - chambre 1', label_en: 'Double bed - bedroom 1', quantity: 1 },
+      { id: 'lit_double_chambre_2', icon: '🛏️', label_fr: 'Lit double - chambre 2', label_en: 'Double bed - bedroom 2', quantity: 1 },
       // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 6 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 6 },
@@ -359,6 +367,9 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     ],
 
     MH_CLASSIQUE_2CH: [
+      // Literie - structure (TECHNIQUE)
+      { id: 'lit_double_chambre_1', icon: '🛏️', label_fr: 'Lit double - chambre 1', label_en: 'Double bed - bedroom 1', quantity: 1 },
+      { id: 'lit_double_chambre_2', icon: '🛏️', label_fr: 'Lit double - chambre 2', label_en: 'Double bed - bedroom 2', quantity: 1 },
       // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 6 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 6 },
@@ -401,7 +412,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'cafetiere', icon: '☕', label_fr: 'Cafetière électrique', label_en: 'Electric coffee maker', quantity: 1 },
       { id: 'micro_ondes', icon: '📡', label_fr: 'Micro-ondes', label_en: 'Microwave', quantity: 1 },
       { id: 'refrigerateur', icon: '🧊', label_fr: 'Réfrigérateur', label_en: 'Fridge', quantity: 1 },
-      { id: 'congelateur', icon: '🧊', label_fr: 'Congélateur', label_en: 'Freezer', quantity: 1 },
+      { id: 'congelateur', icon: '❄️', label_fr: 'Congélateur', label_en: 'Freezer', quantity: 1 },
       { id: 'evier', icon: '🚰', label_fr: 'Évier', label_en: 'Sink', quantity: 1 },
       { id: 'feux_gaz', icon: '🔥', label_fr: 'Feux gaz', label_en: 'Gas stove', quantity: 1 },
       { id: 'chauffe_eau_gaz', icon: '💧', label_fr: 'Chauffe-eau à gaz / Cumulus', label_en: 'Gas water heater / Boiler', quantity: 1 },
@@ -438,6 +449,9 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     ],
 
     MH_CLASSIQUE_CLIM_2CH: [
+      // Literie - structure (TECHNIQUE)
+      { id: 'lit_double_chambre_1', icon: '🛏️', label_fr: 'Lit double - chambre 1', label_en: 'Double bed - bedroom 1', quantity: 1 },
+      { id: 'lit_double_chambre_2', icon: '🛏️', label_fr: 'Lit double - chambre 2', label_en: 'Double bed - bedroom 2', quantity: 1 },
       // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 6 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 6 },
@@ -483,7 +497,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'cafetiere', icon: '☕', label_fr: 'Cafetière électrique', label_en: 'Electric coffee maker', quantity: 1 },
       { id: 'micro_ondes', icon: '📡', label_fr: 'Micro-ondes', label_en: 'Microwave', quantity: 1 },
       { id: 'refrigerateur', icon: '🧊', label_fr: 'Réfrigérateur', label_en: 'Fridge', quantity: 1 },
-      { id: 'congelateur', icon: '🧊', label_fr: 'Congélateur', label_en: 'Freezer', quantity: 1 },
+      { id: 'congelateur', icon: '❄️', label_fr: 'Congélateur', label_en: 'Freezer', quantity: 1 },
       { id: 'evier', icon: '🚰', label_fr: 'Évier', label_en: 'Sink', quantity: 1 },
       { id: 'feux_gaz', icon: '🔥', label_fr: 'Feux gaz', label_en: 'Gas stove', quantity: 1 },
       { id: 'chauffage', icon: '🔥', label_fr: 'Chauffage', label_en: 'Heating', quantity: 1 },
@@ -520,6 +534,9 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     ],
 
     MH_CLASSIQUE_3CH: [
+      // Literie - structure (TECHNIQUE)
+      { id: 'lit_double_chambre_1', icon: '🛏️', label_fr: 'Lit double - chambre 1', label_en: 'Double bed - bedroom 1', quantity: 1 },
+      { id: 'lit_double_chambre_2', icon: '🛏️', label_fr: 'Lit double - chambre 2', label_en: 'Double bed - bedroom 2', quantity: 1 },
       // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 8 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 8 },
@@ -565,7 +582,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'cafetiere', icon: '☕', label_fr: 'Cafetière électrique', label_en: 'Electric coffee maker', quantity: 1 },
       { id: 'micro_ondes', icon: '📡', label_fr: 'Micro-ondes', label_en: 'Microwave', quantity: 1 },
       { id: 'refrigerateur', icon: '🧊', label_fr: 'Réfrigérateur', label_en: 'Fridge', quantity: 1 },
-      { id: 'congelateur', icon: '🧊', label_fr: 'Congélateur', label_en: 'Freezer', quantity: 1 },
+      { id: 'congelateur', icon: '❄️', label_fr: 'Congélateur', label_en: 'Freezer', quantity: 1 },
       { id: 'evier', icon: '🚰', label_fr: 'Évier', label_en: 'Sink', quantity: 1 },
       { id: 'feux_gaz', icon: '🔥', label_fr: 'Feux gaz', label_en: 'Gas stove', quantity: 1 },
       { id: 'chauffe_eau_gaz', icon: '💧', label_fr: 'Chauffe-eau à gaz', label_en: 'Gas water heater', quantity: 1 },
@@ -603,6 +620,9 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     ],
 
     MH_CONFORT_2CH_4P: [
+      // Literie - structure (TECHNIQUE)
+      { id: 'lit_double_chambre_1', icon: '🛏️', label_fr: 'Lit double - chambre 1', label_en: 'Double bed - bedroom 1', quantity: 1 },
+      { id: 'lit_double_chambre_2', icon: '🛏️', label_fr: 'Lit double - chambre 2', label_en: 'Double bed - bedroom 2', quantity: 1 },
       // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 6 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 6 },
@@ -677,6 +697,9 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     ],
 
     MH_CONFORT_3CH_6P: [
+      // Literie - structure (TECHNIQUE)
+      { id: 'lit_double_chambre_1', icon: '🛏️', label_fr: 'Lit double - chambre 1', label_en: 'Double bed - bedroom 1', quantity: 1 },
+      { id: 'lit_double_chambre_2', icon: '🛏️', label_fr: 'Lit double - chambre 2', label_en: 'Double bed - bedroom 2', quantity: 1 },
       // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 8 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 8 },
@@ -756,6 +779,9 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     ],
 
     MH_CONFORT_PLUS_2CH: [
+      // Literie - structure (TECHNIQUE)
+      { id: 'lit_double_chambre_1', icon: '🛏️', label_fr: 'Lit double - chambre 1', label_en: 'Double bed - bedroom 1', quantity: 1 },
+      { id: 'lit_double_chambre_2', icon: '🛏️', label_fr: 'Lit double - chambre 2', label_en: 'Double bed - bedroom 2', quantity: 1 },
       // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 6 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 6 },
@@ -834,6 +860,9 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     ],
 
     MH_CONFORT_PLUS_3CH: [
+      // Literie - structure (TECHNIQUE)
+      { id: 'lit_double_chambre_1', icon: '🛏️', label_fr: 'Lit double - chambre 1', label_en: 'Double bed - bedroom 1', quantity: 1 },
+      { id: 'lit_double_chambre_2', icon: '🛏️', label_fr: 'Lit double - chambre 2', label_en: 'Double bed - bedroom 2', quantity: 1 },
       // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 8 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 8 },
@@ -913,6 +942,9 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     ],
 
     MH_PREMIUM_2CH: [
+      // Literie - structure (TECHNIQUE)
+      { id: 'lit_double_chambre_1', icon: '🛏️', label_fr: 'Lit double - chambre 1', label_en: 'Double bed - bedroom 1', quantity: 1 },
+      { id: 'lit_double_chambre_2', icon: '🛏️', label_fr: 'Lit double - chambre 2', label_en: 'Double bed - bedroom 2', quantity: 1 },
       // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 6 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes dessert', label_en: 'Dessert plates', quantity: 6 },
@@ -959,7 +991,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'tv', icon: '📺', label_fr: 'TV + télécommande', label_en: 'TV + remote', quantity: 1 },
       { id: 'telecommande_clim', icon: '❄️', label_fr: 'Télécommande climatisation', label_en: 'AC remote', quantity: 1 },
       { id: 'refrigerateur', icon: '🧊', label_fr: 'Réfrigérateur', label_en: 'Fridge', quantity: 1 },
-      { id: 'congelateur', icon: '🧊', label_fr: 'Congélateur', label_en: 'Freezer', quantity: 1 },
+      { id: 'congelateur', icon: '❄️', label_fr: 'Congélateur', label_en: 'Freezer', quantity: 1 },
       { id: 'lave_vaisselle', icon: '🍽️', label_fr: 'Lave-vaisselle', label_en: 'Dishwasher', quantity: 1 },
       // Sanitaires
       { id: 'wc', icon: '🚽', label_fr: 'Toilettes (fonctionnement)', label_en: 'Toilet (functioning)', quantity: 1 },
@@ -992,6 +1024,9 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     ],
 
     MH_PREMIUM_3CH: [
+      // Literie - structure (TECHNIQUE)
+      { id: 'lit_double_chambre_1', icon: '🛏️', label_fr: 'Lit double - chambre 1', label_en: 'Double bed - bedroom 1', quantity: 1 },
+      { id: 'lit_double_chambre_2', icon: '🛏️', label_fr: 'Lit double - chambre 2', label_en: 'Double bed - bedroom 2', quantity: 1 },
       // Vaisselle (8 personnes)
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 8 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 8 },
@@ -1038,7 +1073,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'tv', icon: '📺', label_fr: 'TV + télécommande', label_en: 'TV + remote', quantity: 1 },
       { id: 'telecommande_clim', icon: '❄️', label_fr: 'Télécommande climatisation', label_en: 'AC remote', quantity: 1 },
       { id: 'refrigerateur', icon: '🧊', label_fr: 'Réfrigérateur', label_en: 'Fridge', quantity: 1 },
-      { id: 'congelateur', icon: '🧊', label_fr: 'Congélateur', label_en: 'Freezer', quantity: 1 },
+      { id: 'congelateur', icon: '❄️', label_fr: 'Congélateur', label_en: 'Freezer', quantity: 1 },
       { id: 'lave_vaisselle', icon: '🍽️', label_fr: 'Lave-vaisselle', label_en: 'Dishwasher', quantity: 1 },
       // Sanitaires
       { id: 'wc', icon: '🚽', label_fr: 'Toilettes (fonctionnement)', label_en: 'Toilet (functioning)', quantity: 1 },
@@ -1071,6 +1106,13 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     ],
 
     MH_PREMIUM_TWINS: [
+      // Literie - structure (TECHNIQUE) - 4 chambres
+      { id: 'lit_double_chambre_1', icon: '🛏️', label_fr: 'Lit double - chambre 1', label_en: 'Double bed - bedroom 1', quantity: 1 },
+      { id: 'lit_double_chambre_2', icon: '🛏️', label_fr: 'Lit double - chambre 2', label_en: 'Double bed - bedroom 2', quantity: 1 },
+      { id: 'lit_simple_chambre_3a', icon: '🛏️', label_fr: 'Lit simple - chambre 3a', label_en: 'Single bed - bedroom 3a', quantity: 1 },
+      { id: 'lit_simple_chambre_3b', icon: '🛏️', label_fr: 'Lit simple - chambre 3b', label_en: 'Single bed - bedroom 3b', quantity: 1 },
+      { id: 'lit_simple_chambre_4a', icon: '🛏️', label_fr: 'Lit simple - chambre 4a', label_en: 'Single bed - bedroom 4a', quantity: 1 },
+      { id: 'lit_simple_chambre_4b', icon: '🛏️', label_fr: 'Lit simple - chambre 4b', label_en: 'Single bed - bedroom 4b', quantity: 1 },
       // Vaisselle (8 personnes)
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 8 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 8 },
@@ -1117,7 +1159,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'tv', icon: '📺', label_fr: 'TV + télécommande', label_en: 'TV + remote', quantity: 1 },
       { id: 'telecommande_clim', icon: '❄️', label_fr: 'Télécommande climatisation', label_en: 'AC remote', quantity: 1 },
       { id: 'refrigerateur', icon: '🧊', label_fr: 'Réfrigérateur', label_en: 'Fridge', quantity: 1 },
-      { id: 'congelateur', icon: '🧊', label_fr: 'Congélateur', label_en: 'Freezer', quantity: 1 },
+      { id: 'congelateur', icon: '❄️', label_fr: 'Congélateur', label_en: 'Freezer', quantity: 1 },
       { id: 'lave_vaisselle', icon: '🍽️', label_fr: 'Lave-vaisselle', label_en: 'Dishwasher', quantity: 1 },
       // Sanitaires
       { id: 'wc', icon: '🚽', label_fr: 'Toilettes (fonctionnement)', label_en: 'Toilet (functioning)', quantity: 1 },
@@ -1151,6 +1193,10 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     ],
 
     COTTAGE_PREMIUM: [
+      // Literie - structure (TECHNIQUE)
+      { id: 'lit_double', icon: '🛏️', label_fr: 'Lit double', label_en: 'Double bed', quantity: 1 },
+      { id: 'lit_superpose', icon: '🛏️', label_fr: 'Lit superposé', label_en: 'Bunk bed', quantity: 1 },
+      { id: 'lit_simple', icon: '🛏️', label_fr: 'Lit simple', label_en: 'Single bed', quantity: 1 },
       // Vaisselle (4 personnes)
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 4 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 4 },
@@ -1197,7 +1243,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
       { id: 'tv', icon: '📺', label_fr: 'TV + télécommande', label_en: 'TV + remote', quantity: 1 },
       { id: 'telecommande_clim', icon: '❄️', label_fr: 'Télécommande climatisation', label_en: 'AC remote', quantity: 1 },
       { id: 'refrigerateur', icon: '🧊', label_fr: 'Réfrigérateur', label_en: 'Fridge', quantity: 1 },
-      { id: 'congelateur', icon: '🧊', label_fr: 'Congélateur', label_en: 'Freezer', quantity: 1 },
+      { id: 'congelateur', icon: '❄️', label_fr: 'Congélateur', label_en: 'Freezer', quantity: 1 },
       { id: 'lave_vaisselle', icon: '🍽️', label_fr: 'Lave-vaisselle', label_en: 'Dishwasher', quantity: 1 },
       // Sanitaires
       { id: 'wc', icon: '🚽', label_fr: 'Toilettes (fonctionnement)', label_en: 'Toilet (functioning)', quantity: 1 },
