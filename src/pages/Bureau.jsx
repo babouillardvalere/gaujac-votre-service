@@ -26,6 +26,7 @@ import InterventionActions from '../components/bureau/InterventionActions';
 import BureauStatistiques from '../components/bureau/BureauStatistiques';
 import BureauStatistiquesClients from '../components/bureau/BureauStatistiquesClients';
 import BureauStatistiquesAvis from '../components/bureau/BureauStatistiquesAvis';
+import BureauStatistiquesInterventions from '../components/bureau/BureauStatistiquesInterventions';
 import BureauRapports from '../components/bureau/BureauRapports';
 import BureauFrequentation from '../components/bureau/BureauFrequentation';
 import BureauDemographie from '../components/bureau/BureauDemographie';
@@ -1425,6 +1426,13 @@ export default function Bureau() {
 
           {/* Statistiques Globales */}
           <TabsContent value="statistiques" className="space-y-6">
+            {/* Statistiques opérationnelles des interventions */}
+            <BureauStatistiquesInterventions lang={lang} />
+            
+            {/* Séparateur */}
+            <div className="py-6 border-t-4 border-[#00AEEF]"></div>
+            
+            {/* Avis sur interventions et application */}
             <BureauStatistiquesAvis lang={lang} />
           </TabsContent>
 
