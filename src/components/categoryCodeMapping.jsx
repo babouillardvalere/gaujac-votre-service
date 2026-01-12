@@ -209,7 +209,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     MH_ECO_2CH: [
       // Literie - structure (TECHNIQUE)
       { id: 'lit_double_chambre_1', icon: '🛏️', label_fr: 'Lit double - chambre 1', label_en: 'Double bed - bedroom 1', quantity: 1 },
-      { id: 'lit_double_chambre_2', icon: '🛏️', label_fr: 'Lit double - chambre 2', label_en: 'Double bed - bedroom 2', quantity: 1 },
+      { id: 'lits_simples_chambre_2', icon: '🛏️', label_fr: 'Lits simples - chambre 2', label_en: 'Single beds - bedroom 2', quantity: 2 },
       // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 6 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 6 },
@@ -292,7 +292,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     MH_ECO_CLIM_2CH: [
       // Literie - structure (TECHNIQUE)
       { id: 'lit_double_chambre_1', icon: '🛏️', label_fr: 'Lit double - chambre 1', label_en: 'Double bed - bedroom 1', quantity: 1 },
-      { id: 'lit_double_chambre_2', icon: '🛏️', label_fr: 'Lit double - chambre 2', label_en: 'Double bed - bedroom 2', quantity: 1 },
+      { id: 'lits_simples_chambre_2', icon: '🛏️', label_fr: 'Lits simples - chambre 2', label_en: 'Single beds - bedroom 2', quantity: 2 },
       // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 6 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 6 },
@@ -372,7 +372,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     MH_CLASSIQUE_2CH: [
       // Literie - structure (TECHNIQUE)
       { id: 'lit_double_chambre_1', icon: '🛏️', label_fr: 'Lit double - chambre 1', label_en: 'Double bed - bedroom 1', quantity: 1 },
-      { id: 'lit_double_chambre_2', icon: '🛏️', label_fr: 'Lit double - chambre 2', label_en: 'Double bed - bedroom 2', quantity: 1 },
+      { id: 'lits_simples_chambre_2', icon: '🛏️', label_fr: 'Lits simples - chambre 2', label_en: 'Single beds - bedroom 2', quantity: 2 },
       // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 6 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 6 },
@@ -454,7 +454,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     MH_CLASSIQUE_CLIM_2CH: [
       // Literie - structure (TECHNIQUE)
       { id: 'lit_double_chambre_1', icon: '🛏️', label_fr: 'Lit double - chambre 1', label_en: 'Double bed - bedroom 1', quantity: 1 },
-      { id: 'lit_double_chambre_2', icon: '🛏️', label_fr: 'Lit double - chambre 2', label_en: 'Double bed - bedroom 2', quantity: 1 },
+      { id: 'lits_simples_chambre_2', icon: '🛏️', label_fr: 'Lits simples - chambre 2', label_en: 'Single beds - bedroom 2', quantity: 2 },
       // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 6 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 6 },
@@ -626,7 +626,7 @@ export const getInventaireParCategorie = (categorie, lang = 'fr') => {
     MH_CONFORT_2CH_4P: [
       // Literie - structure (TECHNIQUE)
       { id: 'lit_double_chambre_1', icon: '🛏️', label_fr: 'Lit double - chambre 1', label_en: 'Double bed - bedroom 1', quantity: 1 },
-      { id: 'lit_double_chambre_2', icon: '🛏️', label_fr: 'Lit double - chambre 2', label_en: 'Double bed - bedroom 2', quantity: 1 },
+      { id: 'lits_simples_chambre_2', icon: '🛏️', label_fr: 'Lits simples - chambre 2', label_en: 'Single beds - bedroom 2', quantity: 2 },
       // Vaisselle
       { id: 'assiettes_creuses', icon: '🍽️', label_fr: 'Assiettes creuses', label_en: 'Soup plates', quantity: 6 },
       { id: 'assiettes_dessert', icon: '🍰', label_fr: 'Assiettes à dessert', label_en: 'Dessert plates', quantity: 6 },
