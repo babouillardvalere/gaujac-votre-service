@@ -4,6 +4,7 @@
  */
 
 const CACHE_PREFIX = 'inventaire_cache_';
+const CACHE_VERSION = 'v2_with_beds'; // Version avec lits intégrés
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 heures
 
 /**
@@ -18,7 +19,14 @@ export const getCachedInventaire = (codeCategorie) => {
     
     if (!cached) return null;
     
-    const { data, timestamp } = JSON.parse(cached);
+    const { data, timestamp, version } = JSON.parse(cached);
+    
+    // Invalider si version différente (structure inventaire modifiée)
+    if (version !== CACHE_VERSION) {
+      console.log(`🔄 Cache "${codeCategorie}" invalidé (version ${version} → ${CACHE_VERSION})`);
+      sessionStorage.removeItem(cacheKey);
+      return null;
+    }
     
     // Vérifier si le cache est encore valide
     if (Date.now() - timestamp > CACHE_DURATION) {
@@ -44,7 +52,8 @@ export const setCachedInventaire = (codeCategorie, data) => {
     const cacheKey = `${CACHE_PREFIX}${codeCategorie}`;
     const cacheData = {
       data,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      version: CACHE_VERSION
     };
     
     sessionStorage.setItem(cacheKey, JSON.stringify(cacheData));
