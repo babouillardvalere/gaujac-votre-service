@@ -262,7 +262,7 @@ export default function Bureau() {
   };
 
   const toggleSelectAll = () => {
-    const visibleIds = sortedIncidents.slice(0, 100).map(i => i.id);
+    const visibleIds = (sortedIncidents ?? []).slice(0, 100).map(i => i.id);
     if (selectedIds.length === visibleIds.length) {
       setSelectedIds([]);
     } else {
@@ -274,8 +274,8 @@ export default function Bureau() {
   const handleGroupMove = async (direction) => {
     if (selectedIds.length === 0) return;
 
-    const selectedIncidents = sortedIncidents.filter(i => selectedIds.includes(i.id));
-    const nonSelectedIncidents = sortedIncidents.filter(i => !selectedIds.includes(i.id) && i.statut !== 'resolu');
+    const selectedIncidents = (sortedIncidents ?? []).filter(i => selectedIds.includes(i.id));
+    const nonSelectedIncidents = (sortedIncidents ?? []).filter(i => !selectedIds.includes(i.id) && i.statut !== 'resolu');
 
     // Recalculer les ordres
     const updates = [];
@@ -334,7 +334,7 @@ export default function Bureau() {
     if (selectedIds.length === 0) return;
 
     // Séparer les IDs selon leur source
-    const selectedEvents = allEvents.filter(e => selectedIds.includes(e.id));
+    const selectedEvents = (allEvents ?? []).filter(e => selectedIds.includes(e.id));
     const interventionIds = selectedEvents.filter(e => e._source === 'intervention_client').map(e => e.id);
     const historiqueIds = selectedEvents.filter(e => !e._source).map(e => e.id);
 
@@ -387,8 +387,8 @@ export default function Bureau() {
 
   // Fusionner InterventionClient + WorkItems
   const allInterventionsData = useMemo(() => {
-    return [...interventionsClients, ...workItemsAsInterventions];
-  }, [allInterventionsData]);
+    return [...(interventionsClients ?? []), ...(workItemsAsInterventions ?? [])];
+  }, [interventionsClients, workItemsAsInterventions]);
 
   console.log('[BUREAU] Total interventions affichables:', {
     interventionsClients: interventionsClients.length,
@@ -488,13 +488,13 @@ export default function Bureau() {
 
   // Combiner historique, interventions et missions Direction
   const allEvents = useMemo(() => {
-    return [...historique, ...interventionsAsEvents, ...missionsDirectionAsEvents].sort((a, b) => 
+    return [...(historique ?? []), ...(interventionsAsEvents ?? []), ...(missionsDirectionAsEvents ?? [])].sort((a, b) => 
       new Date(b.created_date) - new Date(a.created_date)
     );
   }, [historique, interventionsAsEvents, missionsDirectionAsEvents]);
 
   // Filtrage avancé - OPTIMISÉ avec useMemo
-  const filteredIncidents = useMemo(() => allEvents.filter(i => {
+  const filteredIncidents = useMemo(() => (allEvents ?? []).filter(i => {
     // Vue spéciale
     if (activeView === 'today') {
       if (!isToday(new Date(i.created_date))) return false;
@@ -524,7 +524,7 @@ export default function Bureau() {
   }), [allEvents, activeView, filters]);
 
   // Tri par priorité - OPTIMISÉ avec useMemo
-  const sortedIncidents = useMemo(() => [...filteredIncidents].sort((a, b) => {
+  const sortedIncidents = useMemo(() => [...(filteredIncidents ?? [])].sort((a, b) => {
     // Urgents avant non-urgents
     if (a.urgent && !b.urgent) return -1;
     if (!a.urgent && b.urgent) return 1;
@@ -534,8 +534,8 @@ export default function Bureau() {
   }), [filteredIncidents]);
 
   // Stats (These stats seem to be based on 'incidents' which are distinct from 'historique' in this file)
-  const resolus = incidents.filter(i => i.statut === 'resolu' && i.date_resolution && i.date_saisie);
-  const tempsResolution = resolus.map(i => differenceInHours(new Date(i.date_resolution), new Date(i.date_saisie)));
+  const resolus = (incidents ?? []).filter(i => i.statut === 'resolu' && i.date_resolution && i.date_saisie);
+  const tempsResolution = (resolus ?? []).map(i => differenceInHours(new Date(i.date_resolution), new Date(i.date_saisie)));
   // const tempsMoyen = tempsResolution.length > 0 ? (tempsResolution.reduce((a, b) => a + b, 0) / tempsResolution.length).toFixed(1) : 0; // Not used
 
   // const moins3h = tempsResolution.filter(t => t < 3).length; // Not used
@@ -547,9 +547,9 @@ export default function Bureau() {
   //   : 0;
 
   // Compteurs vues spéciales
-  const todayCount = allEvents.filter(i => isToday(new Date(i.created_date))).length;
-  const lateCount = incidents.filter(i => i.statut !== 'resolu' && differenceInHours(new Date(), new Date(i.date_saisie)) >= 3).length;
-  const critiqueCount = incidents.filter(i => i.statut !== 'resolu' && differenceInHours(new Date(), new Date(i.date_saisie)) >= 72).length;
+  const todayCount = (allEvents ?? []).filter(i => isToday(new Date(i.created_date))).length;
+  const lateCount = (incidents ?? []).filter(i => i.statut !== 'resolu' && differenceInHours(new Date(), new Date(i.date_saisie)) >= 3).length;
+  const critiqueCount = (incidents ?? []).filter(i => i.statut !== 'resolu' && differenceInHours(new Date(), new Date(i.date_saisie)) >= 72).length;
 
   // Par catégorie (uses 'incidents')
   // const parCategorie = Object.entries( // Not used
@@ -581,7 +581,7 @@ export default function Bureau() {
   const { collabsList } = useMemo(() => {
     const interventionsParCollab = {};
 
-    incidents.forEach(inc => {
+    (incidents ?? []).forEach(inc => {
       if (inc.statut === 'resolu') return; // Ignore resolved ones
 
       const collab = inc.pris_par || (lang === 'fr' ? 'Non assigné' : 'Unassigned');
@@ -640,7 +640,7 @@ export default function Bureau() {
             </Link>
             <div>
               <h1 className="font-heading text-xl">{t('bureau_title')} - {lang === 'fr' ? 'Gestion & Historique' : 'Management & History'}</h1>
-              <p className="text-white/80 text-sm font-body">{historique.length} {lang === 'fr' ? 'événement(s) au total' : 'total event(s)'}</p>
+              <p className="text-white/80 text-sm font-body">{(historique ?? []).length} {lang === 'fr' ? 'événement(s) au total' : 'total event(s)'}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -732,19 +732,19 @@ export default function Bureau() {
               🎯 {lang === 'fr' ? 'Interventions' : 'Interventions'} ({(allInterventionsData ?? []).filter(i => i.statut !== 'TERMINEE').length})
             </TabsTrigger>
             <TabsTrigger value="historique" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              📋 {t('historique')} ({historique.length})
+              📋 {t('historique')} ({(historique ?? []).length})
             </TabsTrigger>
             <TabsTrigger value="taches" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              ✅ {lang === 'fr' ? 'Tâches' : 'Tasks'} ({taches.filter(t => t.statut !== 'terminee').length})
+              ✅ {lang === 'fr' ? 'Tâches' : 'Tasks'} ({(taches ?? []).filter(t => t.statut !== 'terminee').length})
             </TabsTrigger>
             <TabsTrigger value="missions-direction" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              🔧 Direction ({missionsDirection.filter(m => m.statut !== 'TERMINEE').length})
+              🔧 Direction ({(missionsDirection ?? []).filter(m => m.statut !== 'TERMINEE').length})
             </TabsTrigger>
             <TabsTrigger value="suivis" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               📦 Suivis
             </TabsTrigger>
             <TabsTrigger value="collaborateurs" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              👥 Collabs ({collabsList.length})
+              👥 Collabs ({(collabsList ?? []).length})
             </TabsTrigger>
             <TabsTrigger value="statistiques" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               📊 Stats
@@ -753,7 +753,7 @@ export default function Bureau() {
               📄 PDF
             </TabsTrigger>
             <TabsTrigger value="avis" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              ⭐ Avis ({avis.length})
+              ⭐ Avis ({(avis ?? []).length})
             </TabsTrigger>
           </TabsList>
 
@@ -766,14 +766,14 @@ export default function Bureau() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {missionsDirection.length === 0 ? (
+                {(missionsDirection ?? []).length === 0 ? (
                   <div className="text-center py-12 text-gray-500">
                     <CheckCircle className="w-12 h-12 mx-auto mb-3 opacity-30" />
                     <p>{lang === 'fr' ? 'Aucune intervention Direction' : 'No direction interventions'}</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {missionsDirection.map(intervention => {
+                    {(missionsDirection ?? []).map(intervention => {
                       const tachesCompletees = intervention.taches?.filter(t => t.faite).length || 0;
                       const tachesTotal = intervention.taches?.length || 0;
                       const progress = tachesTotal > 0 ? Math.round((tachesCompletees / tachesTotal) * 100) : 0;
@@ -885,14 +885,14 @@ export default function Bureau() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {taches.length === 0 ? (
+                {(taches ?? []).length === 0 ? (
                   <div className="text-center py-12 text-gray-500">
                     <ListTodo className="w-12 h-12 mx-auto mb-3 opacity-30" />
                     <p>{lang === 'fr' ? 'Aucune tâche' : 'No tasks'}</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {taches.map(tache => (
+                    {(taches ?? []).map(tache => (
                       <Card key={tache.id} className="border rounded-xl">
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between gap-3">
@@ -1134,7 +1134,7 @@ export default function Bureau() {
               <CardHeader>
                 <CardTitle className="font-heading text-[#0077A8]">
                   📋 {lang === 'fr' ? 'Historique complet' : 'Complete history'}
-                  <span className="text-sm text-gray-500 ml-2">({allEvents.length} événements)</span>
+                  <span className="text-sm text-gray-500 ml-2">({(allEvents ?? []).length} événements)</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -1308,7 +1308,7 @@ export default function Bureau() {
                 )}
 
                 <p className="text-xs text-gray-500 font-body">
-                  {sortedIncidents.length} {lang === 'fr' ? 'résultat(s) trouvé(s)' : 'result(s) found'}
+                  {(sortedIncidents ?? []).length} {lang === 'fr' ? 'résultat(s) trouvé(s)' : 'result(s) found'}
                 </p>
               </CardContent>
             </Card>
@@ -1378,7 +1378,7 @@ export default function Bureau() {
                               className="p-1 hover:bg-[#FFA500]/20 rounded transition-colors"
                               title="Tout sélectionner"
                             >
-                              {selectedIds.length === sortedIncidents.slice(0, 100).length && selectedIds.length > 0 ? (
+                              {selectedIds.length === (sortedIncidents ?? []).slice(0, 100).length && selectedIds.length > 0 ? (
                                 <CheckSquare className="w-5 h-5 text-[#00AEEF]" />
                               ) : (
                                 <Square className="w-5 h-5 text-gray-400" />
@@ -1398,7 +1398,7 @@ export default function Bureau() {
                         </tr>
                       </thead>
                       <tbody>
-                        {sortedIncidents.slice(0, 100).map((event, index) => {
+                        {(sortedIncidents ?? []).slice(0, 100).map((event, index) => {
                           const eventIcon = {
                             'CONTROLE_INVENTAIRE_VALIDE': '📋',
                             'INTERVENTION_CLIENT_CREEE': '🆕',
@@ -1553,7 +1553,7 @@ export default function Bureau() {
               </Card>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {collabsList.map(([collab, data]) => {
+                {(collabsList ?? []).map(([collab, data]) => {
                   const total = data.enAttente.length + data.enCours.length + data.reportees.length;
                   const hasUrgent = [...data.enAttente, ...data.enCours, ...data.reportees].some(i => i.urgent);
 
@@ -1658,7 +1658,7 @@ export default function Bureau() {
                 })}
               </div>
 
-              {collabsList.length === 0 && (
+              {(collabsList ?? []).length === 0 && (
                 <Card className="border-2 border-gray-200 rounded-xl">
                   <CardContent className="py-12 text-center">
                     <p className="text-gray-500">{lang === 'fr' ? 'Aucune intervention active pour le moment' : 'No active intervention at the moment'}</p>
