@@ -12,6 +12,7 @@ import CalendrierReservations from './pages/CalendrierReservations';
 import ChoixHebergement from './pages/ChoixHebergement';
 import ChoixLangue from './pages/ChoixLangue';
 import ClientArrivee from './pages/ClientArrivee';
+import ClientArriveeFin from './pages/ClientArriveeFin';
 import ClientArriveeHebergement from './pages/ClientArriveeHebergement';
 import ClientArriveeIdentite from './pages/ClientArriveeIdentite';
 import ClientArriveeSuivi from './pages/ClientArriveeSuivi';
@@ -84,15 +85,14 @@ import Piscine from './pages/Piscine';
 import PreferencesNotifications from './pages/PreferencesNotifications';
 import RapportsInterventions from './pages/RapportsInterventions';
 import Reception from './pages/Reception';
-import Taches from './pages/Taches';
 import Reservations from './pages/Reservations';
 import SatisfactionClient from './pages/SatisfactionClient';
 import Signalement from './pages/Signalement';
 import SignalementClient from './pages/SignalementClient';
 import Statistiques from './pages/Statistiques';
 import SuiviIntervention from './pages/SuiviIntervention';
+import Taches from './pages/Taches';
 import Technique from './pages/Technique';
-import ClientArriveeFin from './pages/ClientArriveeFin';
 import __Layout from './Layout.jsx';
 
 
@@ -111,6 +111,7 @@ export const PAGES = {
     "ChoixHebergement": ChoixHebergement,
     "ChoixLangue": ChoixLangue,
     "ClientArrivee": ClientArrivee,
+    "ClientArriveeFin": ClientArriveeFin,
     "ClientArriveeHebergement": ClientArriveeHebergement,
     "ClientArriveeIdentite": ClientArriveeIdentite,
     "ClientArriveeSuivi": ClientArriveeSuivi,
@@ -183,15 +184,14 @@ export const PAGES = {
     "PreferencesNotifications": PreferencesNotifications,
     "RapportsInterventions": RapportsInterventions,
     "Reception": Reception,
-    "Taches": Taches,
     "Reservations": Reservations,
     "SatisfactionClient": SatisfactionClient,
     "Signalement": Signalement,
     "SignalementClient": SignalementClient,
     "Statistiques": Statistiques,
     "SuiviIntervention": SuiviIntervention,
+    "Taches": Taches,
     "Technique": Technique,
-    "ClientArriveeFin": ClientArriveeFin,
 }
 
 export const pagesConfig = {

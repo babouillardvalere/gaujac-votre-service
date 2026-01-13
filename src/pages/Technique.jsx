@@ -89,16 +89,16 @@ export default function Technique() {
     staleTime: 30000
   });
 
-  const { data: interventionsClients = [] } = useQuery({
-    queryKey: ['interventions-clients-technique', filter],
+  const { data: workItemsTechnique = [] } = useQuery({
+    queryKey: ['workitems-technique', filter],
     queryFn: async () => {
-      console.log('🔍 FETCH InterventionClient TECHNIQUE, filtre:', filter);
-      const result = await base44.entities.InterventionClient.filter({ 
+      console.log('🔍 FETCH WorkItems TECHNIQUE, filtre:', filter);
+      const result = await base44.entities.WorkItem.filter({ 
         service: 'TECHNIQUE'
       }, '-created_date', 250);
-      console.log('✅ InterventionClient TECHNIQUE récupérées:', result.length, 'intervention(s)');
-      result.forEach(ic => {
-        console.log(`  - ID: ${ic.id}, Statut: ${ic.statut}, Description: ${ic.description?.substring(0, 50)}`);
+      console.log('✅ WorkItems TECHNIQUE récupérés:', result.length, 'workitem(s)');
+      result.forEach(wi => {
+        console.log(`  - ID: ${wi.id}, Statut: ${wi.statut}, Type: ${wi.type}, Hébergement: ${wi.hebergement}`);
       });
       return result;
     },
@@ -121,10 +121,9 @@ export default function Technique() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data, isInterventionClient }) => {
-      if (isInterventionClient) {
-        // Mapper les champs Incident vers InterventionClient
-        const clientData = {};
+    mutationFn: ({ id, data, isWorkItem, workItemId }) => {
+      if (isWorkItem) {
+        const workItemData = {};
         if (data.statut) {
           const mapping = {
             'en_attente': 'A_FAIRE',
@@ -132,21 +131,20 @@ export default function Technique() {
             'en_attente_materiel': 'EN_ATTENTE',
             'resolu': 'TERMINEE'
           };
-          clientData.statut = mapping[data.statut] || 'A_FAIRE';
+          workItemData.statut = mapping[data.statut] || 'A_FAIRE';
         }
-        if (data.pris_par) clientData.pris_en_charge_par = data.pris_par;
-        if (data.date_debut) clientData.date_prise_en_charge = data.date_debut;
-        if (data.date_resolution) clientData.date_terminee = data.date_resolution;
-        if (data.temps_prise_en_charge !== undefined) clientData.temps_ecoule_minutes = data.temps_prise_en_charge;
-        if (data.temps_total_intervention !== undefined) clientData.temps_ecoule_minutes = data.temps_total_intervention;
+        if (data.pris_par) workItemData.collaborateur = data.pris_par;
+        if (data.date_debut) workItemData.date_prise_en_charge = data.date_debut;
+        if (data.date_resolution) workItemData.date_terminee = data.date_resolution;
+        if (data.temps_total_intervention !== undefined) workItemData.duree_minutes = data.temps_total_intervention;
         
-        return base44.entities.InterventionClient.update(id, clientData);
+        return base44.entities.WorkItem.update(workItemId, workItemData);
       }
       return base44.entities.Incident.update(id, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['incidents-technique'] });
-      queryClient.invalidateQueries({ queryKey: ['interventions-clients-technique'] });
+      queryClient.invalidateQueries({ queryKey: ['workitems-technique'] });
       toast.success(t('intervention_mise_a_jour'));
       setSelectedIncident(null);
     }
@@ -219,7 +217,8 @@ export default function Technique() {
         statut: 'en_cours',
         temps_prise_en_charge: tempsPriseEnCharge
       },
-      isInterventionClient: incident.isInterventionClient
+      isWorkItem: incident.isWorkItem,
+      workItemId: incident.workItemId
     });
 
     await pushClientEvent({
@@ -244,18 +243,6 @@ export default function Technique() {
       intervention_client_id: incident.isInterventionClient ? incident.id : null
     });
     
-    // Mettre à jour le WorkItem associé
-    const workItems = await base44.entities.WorkItem.filter({
-      intervention_client_id: incident.isInterventionClient ? incident.id : null,
-      incident_id: !incident.isInterventionClient ? incident.id : null
-    });
-    if (workItems.length > 0) {
-      await base44.entities.WorkItem.update(workItems[0].id, {
-        statut: 'EN_COURS',
-        collaborateur: collaborateurNom,
-        date_prise_en_charge: now.toISOString()
-      });
-    }
   };
 
   const handlePhotoAvantUploaded = async (photoData) => {
@@ -283,7 +270,8 @@ export default function Technique() {
         photo_avant_timestamp: photoData.timestamp,
         photo_avant_hash: photoData.hash
       },
-      isInterventionClient: incidentForPhoto.isInterventionClient
+      isWorkItem: incidentForPhoto.isWorkItem,
+      workItemId: incidentForPhoto.workItemId
     });
 
     await pushClientEvent({
@@ -334,7 +322,8 @@ export default function Technique() {
         commentaire_interne: commentaire || incident.commentaire_interne,
         temps_total_intervention: tempsTotal
       },
-      isInterventionClient: incident.isInterventionClient
+      isWorkItem: incident.isWorkItem,
+      workItemId: incident.workItemId
     });
 
     await pushClientEvent({
@@ -359,19 +348,6 @@ export default function Technique() {
       incident_id: incident.id,
       intervention_client_id: incident.isInterventionClient ? incident.id : null
     });
-    
-    // Mettre à jour le WorkItem associé
-    const workItems = await base44.entities.WorkItem.filter({
-      intervention_client_id: incident.isInterventionClient ? incident.id : null,
-      incident_id: !incident.isInterventionClient ? incident.id : null
-    });
-    if (workItems.length > 0) {
-      await base44.entities.WorkItem.update(workItems[0].id, {
-        statut: 'TERMINEE',
-        date_terminee: now.toISOString(),
-        duree_minutes: tempsTotal
-      });
-    }
     
     setCommentaire('');
   };
@@ -401,7 +377,8 @@ export default function Technique() {
         photo_apres_timestamp: photoData.timestamp,
         photo_apres_hash: photoData.hash
       },
-      isInterventionClient: incidentForPhoto.isInterventionClient
+      isWorkItem: incidentForPhoto.isWorkItem,
+      workItemId: incidentForPhoto.workItemId
     });
 
     await pushClientEvent({
@@ -435,7 +412,8 @@ export default function Technique() {
         attente_commentaire: formData.commentaire,
         attente_date: new Date().toISOString()
       },
-      isInterventionClient: incidentToWait.isInterventionClient
+      isWorkItem: incidentToWait.isWorkItem,
+      workItemId: incidentToWait.workItemId
     });
 
     await pushClientEvent({
@@ -471,7 +449,8 @@ export default function Technique() {
     updateMutation.mutate({
       id: incident.id,
       data: { statut: 'en_cours' },
-      isInterventionClient: incident.isInterventionClient
+      isWorkItem: incident.isWorkItem,
+      workItemId: incident.workItemId
     });
 
     await pushClientEvent({
@@ -500,55 +479,47 @@ export default function Technique() {
 
   const collaborateurs = [...new Set(incidents.map(i => i.pris_par).filter(Boolean))];
 
-  // Conversion des InterventionClient en format compatible Incident
-  const convertedInterventionsClients = interventionsClients
-    .filter(ic => {
-      // Mapper les statuts InterventionClient vers Incident
+  // Conversion des WorkItems en format compatible Incident
+  const convertedWorkItems = workItemsTechnique
+    .filter(wi => {
       const statutMapping = {
         'A_FAIRE': 'en_attente',
         'EN_COURS': 'en_cours',
         'EN_ATTENTE': 'en_attente_materiel',
         'TERMINEE': 'resolu'
       };
-      const mappedStatut = statutMapping[ic.statut] || 'en_attente';
-      
-      console.log(`🔄 Conversion IC ${ic.id}: ${ic.statut} → ${mappedStatut}, filtre actif: ${filter}`);
-      
-      // Filtrer par statut si nécessaire
-      if (filter !== 'tous' && mappedStatut !== filter) {
-        console.log(`  ❌ Exclu (statut ne correspond pas)`);
-        return false;
-      }
-      console.log(`  ✅ Inclus`);
+      const mappedStatut = statutMapping[wi.statut] || 'en_attente';
+      if (filter !== 'tous' && mappedStatut !== filter) return false;
       return true;
     })
-    .map(ic => ({
-      id: ic.id,
+    .map(wi => ({
+      id: wi.id,
       type: 'technique',
       categorie: 'divers_technique',
-      description: ic.description,
-      urgent: ic.priorite === 'URGENTE',
-      client_nom: ic.client_nom,
-      client_prenom: ic.client_prenom,
-      logement: ic.numero_hebergement,
+      description: wi.description,
+      urgent: wi.priorite === 'URGENTE',
+      client_nom: wi.client_nom,
+      client_prenom: wi.client_prenom,
+      logement: wi.hebergement,
       emplacement: null,
-      date_saisie: ic.created_date,
-      date_arrivee: ic.date_arrivee,
-      date_depart: ic.date_depart,
-      pris_par: ic.pris_en_charge_par,
-      date_debut: ic.date_prise_en_charge,
-      date_resolution: ic.date_terminee,
-      statut: ic.statut === 'A_FAIRE' ? 'en_attente' : 
-              ic.statut === 'EN_COURS' ? 'en_cours' :
-              ic.statut === 'EN_ATTENTE' ? 'en_attente_materiel' : 'resolu',
-      autorisation_acces: ic.autorisation_acces,
-      plage_horaire_client: ic.plages_horaires?.join(', '),
+      date_saisie: wi.created_date,
+      date_arrivee: wi.date_arrivee,
+      date_depart: wi.date_depart,
+      pris_par: wi.collaborateur,
+      date_debut: wi.date_prise_en_charge,
+      date_resolution: wi.date_terminee,
+      statut: wi.statut === 'A_FAIRE' ? 'en_attente' : 
+              wi.statut === 'EN_COURS' ? 'en_cours' :
+              wi.statut === 'EN_ATTENTE' ? 'en_attente_materiel' : 'resolu',
+      autorisation_acces: wi.autorisation_acces,
+      plage_horaire_client: wi.plages_horaires?.join(', '),
       commentaire_interne: '',
       motif_attente: '',
-      intervention_id: ic.id,
-      fiche_arrivee_id: ic.fiche_arrivee_id,
-      isInterventionClient: true,
-      taches: ic.taches || []
+      intervention_id: wi.intervention_client_id,
+      fiche_arrivee_id: wi.fiche_arrivee_id,
+      isWorkItem: true,
+      workItemId: wi.id,
+      taches: wi.taches || []
     }));
 
   // Convertir les MissionDirection en format compatible
@@ -587,8 +558,8 @@ export default function Technique() {
       missionDirectionData: m
     }));
 
-  // Combiner incidents, interventions clients et missions Direction
-  const allIncidents = [...incidents, ...convertedInterventionsClients, ...convertedMissionsDirection];
+  // Combiner incidents, WorkItems et missions Direction
+  const allIncidents = [...incidents, ...convertedWorkItems, ...convertedMissionsDirection];
 
   const filteredIncidents = allIncidents
     .filter(i => {
@@ -665,7 +636,7 @@ export default function Technique() {
 
         <ServiceTabs
           service="TECHNIQUE"
-          interventionsCount={incidents.filter(i => i.statut === 'en_attente').length}
+          interventionsCount={allIncidents.filter(i => i.statut === 'en_attente').length}
           missionsCount={missionsDirection.filter(m => m.statut === 'A_FAIRE').length}
           lang={lang}
           interventionsContent={
@@ -689,7 +660,7 @@ export default function Technique() {
               variant={filter === s ? 'default' : 'outline'}
               className={filter === s ? 'bg-[#00AEEF]' : ''}
             >
-              {t(s)} ({incidents.filter(i => i.statut === s).length})
+              {t(s)} ({allIncidents.filter(i => i.statut === s).length})
             </Button>
           ))}
         </div>
