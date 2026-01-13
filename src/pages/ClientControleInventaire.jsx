@@ -291,7 +291,7 @@ ${detailsItems}
     return interventionClient;
   };
 
-  const genererPDF = async ({ ficheId, interventions }) => {
+  const genererPDF = async ({ ficheId, workItemsParService, inventaireComplet }) => {
     try {
       const { default: jsPDF } = await import('jspdf');
       await import('jspdf-autotable');
@@ -336,41 +336,28 @@ ${detailsItems}
       doc.text(`Date validation: ${new Date().toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-US')}`, 20, y);
       y += 12;
 
-      // === NOUVELLE SECTION : INTERVENTIONS GÉNÉRÉES ===
+      // === NOUVELLE SECTION : INTERVENTIONS GÉNÉRÉES (depuis WorkItems réels) ===
       const interventionsList = [];
-      if (interventions.menage.length > 0) {
-        interventions.menage.forEach(item => {
-          interventionsList.push({
-            service: 'MENAGE',
-            objet: item.label,
-            defaut: item.problemeTechnique ? 'Défectueux' : (item.qtyManquante > 0 ? `${item.qtyManquante} Manquant(s)` : 'Autre'),
-            urgence: item.urgent ? 'OUI' : 'Non',
-            statut: 'EN ATTENTE'
+      
+      // Parcourir TOUS les WorkItems par service
+      ['TECHNIQUE', 'MENAGE', 'RECEPTION'].forEach(service => {
+        if (workItemsParService[service]?.length > 0) {
+          workItemsParService[service].forEach(wi => {
+            wi.taches?.forEach(tache => {
+              interventionsList.push({
+                service: service,
+                objet: tache.texte.split('\n')[0].replace(/[🔴⚠️]/g, '').trim(),
+                defaut: tache.texte.includes('Défectueux') ? 'Défectueux' : 
+                        tache.texte.includes('manquant') ? tache.texte.match(/(\d+)\s+manquant/)?.[1] + ' Manquant(s)' : 'Autre',
+                urgence: wi.priorite === 'URGENTE' ? 'OUI' : 'Non',
+                statut: wi.statut === 'A_FAIRE' ? 'EN ATTENTE' : 
+                        wi.statut === 'EN_COURS' ? 'EN COURS' : 
+                        wi.statut === 'TERMINEE' ? 'RÉSOLU' : wi.statut
+              });
+            });
           });
-        });
-      }
-      if (interventions.technique.length > 0) {
-        interventions.technique.forEach(item => {
-          interventionsList.push({
-            service: 'TECHNIQUE',
-            objet: item.label,
-            defaut: item.problemeTechnique ? 'Défectueux' : 'Autre',
-            urgence: item.urgent ? 'OUI' : 'Non',
-            statut: 'EN ATTENTE'
-          });
-        });
-      }
-      if (interventions.reception.length > 0) {
-        interventions.reception.forEach(item => {
-          interventionsList.push({
-            service: 'RECEPTION',
-            objet: item.label,
-            defaut: item.qtyManquante > 0 ? `${item.qtyManquante} Manquant(s)` : 'Autre',
-            urgence: item.urgent ? 'OUI' : 'Non',
-            statut: 'EN ATTENTE'
-          });
-        });
-      }
+        }
+      });
 
       if (interventionsList.length > 0) {
         doc.setFont(undefined, 'bold');
@@ -404,45 +391,39 @@ ${detailsItems}
         y = doc.lastAutoTable.finalY + 10;
       }
       
-      // === SECTION A: ÉLÉMENTS SIGNALÉS ===
+      // === SECTION A: ÉLÉMENTS SIGNALÉS (depuis WorkItems réels) ===
       const elementsSignales = [];
       const elementsConformes = [];
       
-      items.forEach(item => {
-        const declared = quantities[item.id] !== undefined ? quantities[item.id] : item.quantity;
-        const hasProblemeTechnique = problemesTechniques[item.id] || false;
-        const hasAnomaly = declared < item.quantity || hasProblemeTechnique;
-        const isUrgent = urgencies[item.id] || false;
-        const remarque = remarques[item.id] || '';
-        const photosItem = photos[item.id] || [];
+      // Créer un index des WorkItems par objet pour traçabilité
+      const workItemsIndex = {};
+      interventionsList.forEach(wi => {
+        const objetKey = wi.objet.split('-')[0].trim();
+        workItemsIndex[objetKey] = wi;
+      });
+      
+      inventaireComplet.forEach(item => {
+        const declared = item.quantity;
+        const attendu = item.expectedQuantity || item.quantity;
+        const hasAnomaly = declared < attendu;
+        const wiData = workItemsIndex[item.label];
         
-        if (hasAnomaly || isUrgent || remarque || photosItem.length > 0) {
-          const ARTICLES_TECHNIQUES = ['tv', 'refrigerateur', 'micro_ondes', 'chauffage', 'plaques_cuisson', 'plaque_cuisson', 'chauffe_eau', 'wc', 'douche', 'lavabo', 'robinet', 'feux_gaz', 'telecommande_clim', 'climatisation', 'lave_vaisselle', 'congelateur', 'evier', 'cafetiere', 'hotte', 'cumulus', 'chauffe_eau_gaz', 'seche_serviette', 'seche_cheveux', 'extincteur', 'detecteur_fumee'];
-          const ARTICLES_RECEPTION = ['cle_locatif', 'cle_locative', 'carte_barriere', 'badge', 'table_jardin', 'chaises_jardin', 'salon_jardin', 'bancs_jardin', 'table_interieur', 'chaises_interieur'];
-          
-          let serviceAssigne = 'MENAGE';
-          if (ARTICLES_TECHNIQUES.includes(item.id)) serviceAssigne = 'TECHNIQUE';
-          else if (ARTICLES_RECEPTION.includes(item.id)) serviceAssigne = 'RECEPTION';
-          
-          let typeSignalement = '';
-          if (hasProblemeTechnique) typeSignalement = 'Defectueux';
-          else if (declared < item.quantity) typeSignalement = 'Manquant';
-          
+        if (hasAnomaly || wiData) {
           elementsSignales.push({
             nom: item.label,
-            attendu: item.quantity,
+            attendu: attendu,
             present: declared,
-            ecart: item.quantity - declared,
-            type: typeSignalement,
-            urgent: isUrgent ? 'Oui' : 'Non',
-            service: serviceAssigne,
-            remarque: remarque || '-',
-            photos: photosItem.length
+            ecart: attendu - declared,
+            type: wiData?.defaut || (hasAnomaly ? 'Manquant' : '-'),
+            urgent: wiData?.urgence || 'Non',
+            service: wiData?.service || 'MENAGE',
+            remarque: item.remarque || '-',
+            photos: item.photos || 0
           });
         } else {
           elementsConformes.push({
             nom: item.label,
-            attendu: item.quantity,
+            attendu: attendu,
             present: declared
           });
         }
@@ -763,11 +744,40 @@ ${detailsItems}
         ids: createdIds
       });
 
-      // 3. Stocker résumé (pour display final)
+      // 3. RÉCUPÉRER TOUS LES WORKITEMS CRÉÉS (source de vérité)
+      const allWorkItems = await base44.entities.WorkItem.filter({ fiche_arrivee_id: fiche.id });
+      console.log('[ARRIVAL_VALIDATE] allWorkItemsRecovered', { count: allWorkItems.length });
+
+      // Regrouper par service avec règle métier LITS = TECHNIQUE
+      const workItemsParService = { TECHNIQUE: [], MENAGE: [], RECEPTION: [] };
+      
+      allWorkItems.forEach(wi => {
+        // Règle métier prioritaire : tous les lits/matelas/sommiers = TECHNIQUE
+        const isLiterie = wi.taches?.some(t => 
+          t.objet_id?.includes('lit_') || 
+          t.objet_id?.includes('lits_') || 
+          t.objet_id?.includes('matelas') || 
+          t.objet_id?.includes('sommier')
+        );
+        
+        const serviceFinal = isLiterie ? 'TECHNIQUE' : wi.service;
+        
+        if (workItemsParService[serviceFinal]) {
+          workItemsParService[serviceFinal].push(wi);
+        }
+      });
+
+      console.log('[ARRIVAL_VALIDATE] workItemsGrouped', {
+        TECHNIQUE: workItemsParService.TECHNIQUE.length,
+        MENAGE: workItemsParService.MENAGE.length,
+        RECEPTION: workItemsParService.RECEPTION.length
+      });
+
+      // 4. Stocker résumé COMPLET (basé sur WorkItems réels)
       const interventionsSummary = {
-        technique: technique.length,
-        menage: menage.length,
-        reception: reception.length
+        technique: workItemsParService.TECHNIQUE.length,
+        menage: workItemsParService.MENAGE.length,
+        reception: workItemsParService.RECEPTION.length
       };
 
       // 4. Notification RÉCEPTION (vue d'ensemble)
@@ -821,10 +831,24 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
         });
         console.log('[ARRIVAL_VALIDATE] historiqueEventCreated');
 
-        // 5. Générer PDF
+        // 5. Préparer l'inventaire complet pour le PDF
+      const inventaireComplet = items.map(item => ({
+        id: item.id,
+        label: item.label || lang === 'fr' ? item.label_fr : item.label_en,
+        quantity: quantities[item.id] !== undefined ? quantities[item.id] : item.quantity,
+        expectedQuantity: item.quantity,
+        remarque: remarques[item.id] || '',
+        photos: photos[item.id]?.length || 0
+      }));
+
+      // 6. Générer PDF avec WorkItems réels
       let urlPDF = "";
       try {
-        const pdf = await genererPDF({ ficheId: fiche.id, interventions: { menage, technique, reception } });
+        const pdf = await genererPDF({ 
+          ficheId: fiche.id, 
+          workItemsParService, 
+          inventaireComplet 
+        });
         if (pdf) {
           await base44.entities.FicheArrivee.update(fiche.id, { pdf_url: pdf });
           urlPDF = pdf;
@@ -836,7 +860,7 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
         console.error('[ARRIVAL_VALIDATE] pdfGenerated ERROR:', err);
       }
 
-      // 6. Finaliser dossier
+      // 7. Finaliser dossier
       const dossierId = sessionStorage.getItem('arrivee_dossier_id');
       if (dossierId) {
         await base44.entities.DossierArrivee.update(dossierId, {
@@ -848,7 +872,7 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
       }
       sessionStorage.setItem('fiche_arrivee_id', fiche.id);
 
-      // 7. Navigation vers la page de fin
+      // 8. Navigation vers la page de fin avec TOUS les WorkItems
       toast.dismiss('submit');
       toast.success(lang === "fr" ? "✅ Validé" : "✅ Validated");
       
@@ -859,6 +883,7 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
           ficheId: fiche.id,
           pdfUrl: urlPDF,
           interventionsSummary,
+          workItemsParService,
           categorie,
           numero,
           dateArrivee,
@@ -867,7 +892,9 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
           client_prenom: prenom,
           nom,
           prenom,
-          autorisationAcces
+          autorisationAcces,
+          evaluationProprete,
+          commentaireProprete
         }
       });
       
