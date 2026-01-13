@@ -79,16 +79,16 @@ export default function Menage() {
     staleTime: 30000
   });
 
-  const { data: interventionsClients = [] } = useQuery({
-    queryKey: ['interventions-clients-menage', filter],
+  const { data: workItemsMenage = [] } = useQuery({
+    queryKey: ['workitems-menage', filter],
     queryFn: async () => {
-      console.log('🔍 FETCH InterventionClient MENAGE, filtre:', filter);
-      const result = await base44.entities.InterventionClient.filter({ 
+      console.log('🔍 FETCH WorkItems MENAGE, filtre:', filter);
+      const result = await base44.entities.WorkItem.filter({ 
         service: 'MENAGE'
       }, '-created_date', 250);
-      console.log('✅ InterventionClient MENAGE récupérées:', result.length, 'intervention(s)');
-      result.forEach(ic => {
-        console.log(`  - ID: ${ic.id}, Statut: ${ic.statut}, Type: ${ic.type_intervention}, Hébergement: ${ic.numero_hebergement}`);
+      console.log('✅ WorkItems MENAGE récupérés:', result.length, 'workitem(s)');
+      result.forEach(wi => {
+        console.log(`  - ID: ${wi.id}, Statut: ${wi.statut}, Type: ${wi.type}, Hébergement: ${wi.hebergement}`);
       });
       return result;
     },
@@ -104,9 +104,9 @@ export default function Menage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data, isInterventionClient }) => {
-      if (isInterventionClient) {
-        const clientData = {};
+    mutationFn: ({ id, data, isWorkItem, workItemId }) => {
+      if (isWorkItem) {
+        const workItemData = {};
         if (data.statut) {
           const mapping = {
             'en_attente': 'A_FAIRE',
@@ -114,21 +114,20 @@ export default function Menage() {
             'en_attente_materiel': 'EN_ATTENTE',
             'resolu': 'TERMINEE'
           };
-          clientData.statut = mapping[data.statut] || 'A_FAIRE';
+          workItemData.statut = mapping[data.statut] || 'A_FAIRE';
         }
-        if (data.pris_par) clientData.pris_en_charge_par = data.pris_par;
-        if (data.date_debut) clientData.date_prise_en_charge = data.date_debut;
-        if (data.date_resolution) clientData.date_terminee = data.date_resolution;
-        if (data.temps_prise_en_charge !== undefined) clientData.temps_ecoule_minutes = data.temps_prise_en_charge;
-        if (data.temps_total_intervention !== undefined) clientData.temps_ecoule_minutes = data.temps_total_intervention;
+        if (data.pris_par) workItemData.collaborateur = data.pris_par;
+        if (data.date_debut) workItemData.date_prise_en_charge = data.date_debut;
+        if (data.date_resolution) workItemData.date_terminee = data.date_resolution;
+        if (data.temps_total_intervention !== undefined) workItemData.duree_minutes = data.temps_total_intervention;
         
-        return base44.entities.InterventionClient.update(id, clientData);
+        return base44.entities.WorkItem.update(workItemId, workItemData);
       }
       return base44.entities.Incident.update(id, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['incidents-menage'] });
-      queryClient.invalidateQueries({ queryKey: ['interventions-clients-menage'] });
+      queryClient.invalidateQueries({ queryKey: ['workitems-menage'] });
       toast.success(t('intervention_mise_a_jour'));
       setSelectedIncident(null);
     }
@@ -186,7 +185,8 @@ export default function Menage() {
         statut: 'en_cours',
         temps_prise_en_charge: tempsPriseEnCharge
       },
-      isInterventionClient: incident.isInterventionClient
+      isWorkItem: incident.isWorkItem,
+      workItemId: incident.workItemId
     });
 
     await pushClientEvent({
@@ -211,18 +211,7 @@ export default function Menage() {
       intervention_client_id: incident.isInterventionClient ? incident.id : null
     });
     
-    // Mettre à jour le WorkItem associé
-    const workItems = await base44.entities.WorkItem.filter({
-      intervention_client_id: incident.isInterventionClient ? incident.id : null,
-      incident_id: !incident.isInterventionClient ? incident.id : null
-    });
-    if (workItems.length > 0) {
-      await base44.entities.WorkItem.update(workItems[0].id, {
-        statut: 'EN_COURS',
-        collaborateur: collaborateurNom,
-        date_prise_en_charge: now.toISOString()
-      });
-    }
+
       toast.dismiss('prise-charge');
     } catch (error) {
       toast.dismiss('prise-charge');
@@ -255,7 +244,8 @@ export default function Menage() {
         photo_avant_timestamp: photoData.timestamp,
         photo_avant_hash: photoData.hash
       },
-      isInterventionClient: incidentForPhoto.isInterventionClient
+      isWorkItem: incidentForPhoto.isWorkItem,
+      workItemId: incidentForPhoto.workItemId
     });
 
     await pushClientEvent({
@@ -291,7 +281,8 @@ export default function Menage() {
         commentaire_interne: commentaire || incident.commentaire_interne,
         temps_total_intervention: tempsTotal
       },
-      isInterventionClient: incident.isInterventionClient
+      isWorkItem: incident.isWorkItem,
+      workItemId: incident.workItemId
     });
 
     await pushClientEvent({
@@ -317,18 +308,7 @@ export default function Menage() {
       intervention_client_id: incident.isInterventionClient ? incident.id : null
     });
     
-    // Mettre à jour le WorkItem associé
-    const workItems = await base44.entities.WorkItem.filter({
-      intervention_client_id: incident.isInterventionClient ? incident.id : null,
-      incident_id: !incident.isInterventionClient ? incident.id : null
-    });
-    if (workItems.length > 0) {
-      await base44.entities.WorkItem.update(workItems[0].id, {
-        statut: 'TERMINEE',
-        date_terminee: now.toISOString(),
-        duree_minutes: tempsTotal
-      });
-    }
+
     
       setCommentaire('');
       toast.dismiss('terminer');
@@ -363,7 +343,8 @@ export default function Menage() {
         photo_apres_timestamp: photoData.timestamp,
         photo_apres_hash: photoData.hash
       },
-      isInterventionClient: incidentForPhoto.isInterventionClient
+      isWorkItem: incidentForPhoto.isWorkItem,
+      workItemId: incidentForPhoto.workItemId
     });
 
     await pushClientEvent({
@@ -397,7 +378,8 @@ export default function Menage() {
         attente_commentaire: formData.commentaire,
         attente_date: new Date().toISOString()
       },
-      isInterventionClient: incidentToWait.isInterventionClient
+      isWorkItem: incidentToWait.isWorkItem,
+      workItemId: incidentToWait.workItemId
     });
 
     await pushClientEvent({
@@ -433,7 +415,8 @@ export default function Menage() {
     updateMutation.mutate({
       id: incident.id,
       data: { statut: 'en_cours' },
-      isInterventionClient: incident.isInterventionClient
+      isWorkItem: incident.isWorkItem,
+      workItemId: incident.workItemId
     });
 
     await pushClientEvent({
@@ -462,49 +445,50 @@ export default function Menage() {
 
   const collaborateurs = [...new Set(incidents.map(i => i.pris_par).filter(Boolean))];
 
-  // Conversion des InterventionClient en format compatible Incident
-  const convertedInterventionsClients = interventionsClients
-    .filter(ic => {
+  // Conversion des WorkItems en format compatible Incident
+  const convertedWorkItems = workItemsMenage
+    .filter(wi => {
       const statutMapping = {
         'A_FAIRE': 'en_attente',
         'EN_COURS': 'en_cours',
         'EN_ATTENTE': 'en_attente_materiel',
         'TERMINEE': 'resolu'
       };
-      const mappedStatut = statutMapping[ic.statut] || 'en_attente';
+      const mappedStatut = statutMapping[wi.statut] || 'en_attente';
       if (filter !== 'tous' && mappedStatut !== filter) return false;
       return true;
     })
-    .map(ic => ({
-      id: ic.id,
+    .map(wi => ({
+      id: wi.id,
       type: 'menage',
       categorie: 'materiel_menage',
-      description: ic.description,
-      urgent: ic.priorite === 'URGENTE',
-      client_nom: ic.client_nom,
-      client_prenom: ic.client_prenom,
-      logement: ic.numero_hebergement,
+      description: wi.description,
+      urgent: wi.priorite === 'URGENTE',
+      client_nom: wi.client_nom,
+      client_prenom: wi.client_prenom,
+      logement: wi.hebergement,
       emplacement: null,
-      date_saisie: ic.created_date,
-      date_arrivee: ic.date_arrivee,
-      date_depart: ic.date_depart,
-      pris_par: ic.pris_en_charge_par,
-      date_debut: ic.date_prise_en_charge,
-      date_resolution: ic.date_terminee,
-      statut: ic.statut === 'A_FAIRE' ? 'en_attente' : 
-              ic.statut === 'EN_COURS' ? 'en_cours' :
-              ic.statut === 'EN_ATTENTE' ? 'en_attente_materiel' : 'resolu',
-      autorisation_acces: ic.autorisation_acces,
-      plage_horaire_client: ic.plages_horaires?.join(', '),
+      date_saisie: wi.created_date,
+      date_arrivee: wi.date_arrivee,
+      date_depart: wi.date_depart,
+      pris_par: wi.collaborateur,
+      date_debut: wi.date_prise_en_charge,
+      date_resolution: wi.date_terminee,
+      statut: wi.statut === 'A_FAIRE' ? 'en_attente' : 
+              wi.statut === 'EN_COURS' ? 'en_cours' :
+              wi.statut === 'EN_ATTENTE' ? 'en_attente_materiel' : 'resolu',
+      autorisation_acces: wi.autorisation_acces,
+      plage_horaire_client: wi.plages_horaires?.join(', '),
       commentaire_interne: '',
       motif_attente: '',
-      intervention_id: ic.id,
-      fiche_arrivee_id: ic.fiche_arrivee_id,
-      isInterventionClient: true,
-      taches: ic.taches || []
+      intervention_id: wi.intervention_client_id,
+      fiche_arrivee_id: wi.fiche_arrivee_id,
+      isWorkItem: true,
+      workItemId: wi.id,
+      taches: wi.taches || []
     }));
 
-  const allIncidents = [...incidents, ...convertedInterventionsClients];
+  const allIncidents = [...incidents, ...convertedWorkItems];
 
   const filteredIncidents = allIncidents
     .filter(i => {
