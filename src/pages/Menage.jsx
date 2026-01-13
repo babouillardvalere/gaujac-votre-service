@@ -565,7 +565,7 @@ export default function Menage() {
 
         <ServiceTabs
           service="MENAGE"
-          interventionsCount={incidents.filter(i => i.statut === 'en_attente').length}
+          interventionsCount={allIncidents.filter(i => i.statut === 'en_attente').length}
           missionsCount={missions.filter(m => m.statut === 'A_FAIRE').length}
           lang={lang}
           interventionsContent={
@@ -589,7 +589,7 @@ export default function Menage() {
               variant={filter === s ? 'default' : 'outline'}
               className={filter === s ? 'bg-[#FFD700] text-[#0077A8]' : ''}
             >
-              {t(s)} ({incidents.filter(i => i.statut === s).length})
+              {t(s)} ({allIncidents.filter(i => i.statut === s).length})
             </Button>
           ))}
         </div>
