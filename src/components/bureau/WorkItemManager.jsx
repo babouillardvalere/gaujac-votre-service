@@ -37,6 +37,10 @@ export default function WorkItemManager({ lang }) {
       queryClient.invalidateQueries(['work-items']);
       toast.success(lang === 'fr' ? 'Mis à jour' : 'Updated');
       setEditingItem(null);
+    },
+    onError: (err) => {
+      console.error('[WorkItemManager] Update error:', err);
+      toast.error(lang === 'fr' ? 'Erreur lors de la mise à jour' : 'Update error');
     }
   });
 
@@ -66,6 +70,10 @@ export default function WorkItemManager({ lang }) {
       toast.success(lang === 'fr' ? 'Annulée' : 'Cancelled');
       setShowCancelDialog(null);
       setMotifAnnulation('');
+    },
+    onError: (err) => {
+      console.error('[WorkItemManager] Cancel error:', err);
+      toast.error(lang === 'fr' ? 'Erreur lors de l\'annulation' : 'Cancellation error');
     }
   });
 

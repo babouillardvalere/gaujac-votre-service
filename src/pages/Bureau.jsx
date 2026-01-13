@@ -360,7 +360,20 @@ export default function Bureau() {
 
   // Convertir WorkItems en format InterventionClient pour affichage
   const workItemsAsInterventions = useMemo(() => {
-    return workItemsBureau.map(wi => ({
+    // Créer un index des InterventionClient existantes
+    const existingInterventionIds = new Set((interventionsClients ?? []).map(ic => ic.id));
+    
+    // Filtrer les WorkItems orphelins (dont l'InterventionClient n'existe plus)
+    const validWorkItems = (workItemsBureau ?? []).filter(wi => {
+      if (!wi.intervention_client_id) return true; // WorkItem sans lien = OK
+      const exists = existingInterventionIds.has(wi.intervention_client_id);
+      if (!exists) {
+        console.warn('[BUREAU] WorkItem orphelin détecté:', wi.id, 'réf:', wi.intervention_client_id);
+      }
+      return exists;
+    });
+    
+    return validWorkItems.map(wi => ({
       id: wi.id,
       created_date: wi.created_date,
       type_intervention: wi.type === 'INTERVENTION_CLIENT' ? 'INVENTAIRE_ARRIVEE' : 
@@ -383,7 +396,7 @@ export default function Bureau() {
       isWorkItem: true,
       workItemData: wi
     }));
-  }, [workItemsBureau]);
+  }, [workItemsBureau, interventionsClients]);
 
   // Fusionner InterventionClient + WorkItems
   const allInterventionsData = useMemo(() => {
