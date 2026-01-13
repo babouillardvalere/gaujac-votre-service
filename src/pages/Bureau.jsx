@@ -398,7 +398,7 @@ export default function Bureau() {
 
   // Filtrage Interventions Clients + WorkItems
   const filteredInterventionsClients = useMemo(() => {
-    const filtered = allInterventionsData.filter(i => {
+    const filtered = (allInterventionsData ?? []).filter(i => {
       // Filtres standards
       if (filters.nom && !`${i.client_nom || ''} ${i.client_prenom || ''}`.toLowerCase().includes(filters.nom.toLowerCase())) return false;
       if (filters.logement && !(i.numero_hebergement || '').toLowerCase().includes(filters.logement.toLowerCase())) return false;
@@ -424,7 +424,7 @@ export default function Bureau() {
 
   // Transformer WorkItems + InterventionClient en format événement pour l'historique
   const interventionsAsEvents = useMemo(() => {
-    return allInterventionsData.map(inter => ({
+    return (allInterventionsData ?? []).map(inter => ({
       id: inter.id,
       _source: 'intervention_client',
       type_event: inter.statut === 'TERMINEE' ? 'INTERVENTION_CLOTUREE' : 
@@ -729,7 +729,7 @@ export default function Bureau() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-[#FFA500]/20 p-1 rounded-xl border border-[#FFA500]/30 flex-wrap h-auto">
             <TabsTrigger value="interventions" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              🎯 {lang === 'fr' ? 'Interventions' : 'Interventions'} ({allInterventionsData.filter(i => i.statut !== 'TERMINEE').length})
+              🎯 {lang === 'fr' ? 'Interventions' : 'Interventions'} ({(allInterventionsData ?? []).filter(i => i.statut !== 'TERMINEE').length})
             </TabsTrigger>
             <TabsTrigger value="historique" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               📋 {t('historique')} ({historique.length})
@@ -993,8 +993,8 @@ export default function Bureau() {
                     🎯 {lang === 'fr' ? 'Interventions Clients (Services)' : 'Client Interventions (Services)'}
                   </CardTitle>
                   <p className="text-sm text-gray-600 mt-1">
-                    {allInterventionsData.length} {lang === 'fr' ? 'intervention(s) totale(s)' : 'total intervention(s)'} •
-                    {filteredInterventionsClients.length} {lang === 'fr' ? 'après filtres' : 'after filters'}
+                    {(allInterventionsData ?? []).length} {lang === 'fr' ? 'intervention(s) totale(s)' : 'total intervention(s)'} •
+                    {(filteredInterventionsClients ?? []).length} {lang === 'fr' ? 'après filtres' : 'after filters'}
                   </p>
                 </div>
                 <WorkItemManager lang={lang} />
@@ -1004,14 +1004,14 @@ export default function Bureau() {
                   <div className="text-center py-12">
                     <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#00AEEF]" />
                   </div>
-                ) : filteredInterventionsClients.length === 0 ? (
+                ) : (filteredInterventionsClients ?? []).length === 0 ? (
                   <div className="text-center py-12 bg-gray-50 rounded-lg">
                     <AlertCircle className="w-12 h-12 mx-auto text-gray-400 mb-3" />
                     <p className="text-gray-600 font-semibold mb-2">
                       {lang === 'fr' ? 'Aucune intervention trouvée' : 'No interventions found'}
                     </p>
                     <p className="text-sm text-gray-500">
-                      {allInterventionsData.length === 0
+                      {(allInterventionsData ?? []).length === 0
                         ? (lang === 'fr' ? 'Aucune intervention dans la base' : 'No interventions in database')
                         : (lang === 'fr' ? 'Essayez de modifier les filtres' : 'Try changing filters')}
                     </p>
@@ -1035,7 +1035,7 @@ export default function Bureau() {
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredInterventionsClients.map((inter, idx) => (
+                        {(filteredInterventionsClients ?? []).map((inter, idx) => (
                           <tr
                             key={inter.id}
                             className={`border-t hover:bg-[#FFA500]/5 cursor-pointer ${
