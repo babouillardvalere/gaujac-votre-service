@@ -210,6 +210,33 @@ export default function Menage() {
       incident_id: incident.id,
       intervention_client_id: incident.isInterventionClient ? incident.id : null
     });
+
+    // Synchroniser vers SuiviInventaire (visibilité client)
+    if (incident.fiche_arrivee_id) {
+      const suivis = await base44.entities.SuiviInventaire.filter({
+        fiche_arrivee_id: incident.fiche_arrivee_id
+      });
+      
+      if (suivis.length > 0) {
+        const suivi = suivis[0];
+        const currentTimeline = suivi.timeline_menage || [];
+        
+        await base44.entities.SuiviInventaire.update(suivi.id, {
+          statut_menage: 'en_cours',
+          timeline_menage: [
+            ...currentTimeline,
+            {
+              timestamp: Date.now(),
+              status: 'prise_en_charge',
+              detail: `Prise en charge par ${collaborateurNom}`,
+              utilisateur: collaborateurNom
+            }
+          ],
+          date_derniere_maj: now.toISOString()
+        });
+        console.log('✅ SuiviInventaire synchronisé (prise en charge MENAGE)');
+      }
+    }
     
 
       toast.dismiss('prise-charge');
@@ -307,6 +334,34 @@ export default function Menage() {
       incident_id: incident.id,
       intervention_client_id: incident.isInterventionClient ? incident.id : null
     });
+
+    // Synchroniser vers SuiviInventaire (visibilité client)
+    if (incident.fiche_arrivee_id) {
+      const suivis = await base44.entities.SuiviInventaire.filter({
+        fiche_arrivee_id: incident.fiche_arrivee_id
+      });
+      
+      if (suivis.length > 0) {
+        const suivi = suivis[0];
+        const currentTimeline = suivi.timeline_menage || [];
+        
+        await base44.entities.SuiviInventaire.update(suivi.id, {
+          statut_menage: 'termine',
+          timeline_menage: [
+            ...currentTimeline,
+            {
+              timestamp: Date.now(),
+              status: 'intervention_terminee',
+              detail: 'Problème résolu',
+              utilisateur: incident.pris_par || collaborateurNom
+            }
+          ],
+          message_client: 'Votre demande ménage a été traitée avec succès !',
+          date_derniere_maj: now.toISOString()
+        });
+        console.log('✅ SuiviInventaire synchronisé (clôture MENAGE)');
+      }
+    }
     
 
     
@@ -406,6 +461,38 @@ export default function Menage() {
       incident_id: incidentToWait.id,
       intervention_client_id: incidentToWait.isInterventionClient ? incidentToWait.id : null
     });
+
+    // Synchroniser vers SuiviInventaire (visibilité client)
+    if (incidentToWait.fiche_arrivee_id) {
+      const suivis = await base44.entities.SuiviInventaire.filter({
+        fiche_arrivee_id: incidentToWait.fiche_arrivee_id
+      });
+      
+      if (suivis.length > 0) {
+        const suivi = suivis[0];
+        const currentTimeline = suivi.timeline_menage || [];
+        
+        const messageClient = formData.delai ? 
+          `Intervention reportée. Délai estimé: ${formData.delai}` : 
+          'Intervention en attente';
+        
+        await base44.entities.SuiviInventaire.update(suivi.id, {
+          statut_menage: 'en_attente_materiel',
+          timeline_menage: [
+            ...currentTimeline,
+            {
+              timestamp: Date.now(),
+              status: 'en_attente',
+              detail: `En attente: ${formData.raison}`,
+              utilisateur: incidentToWait.pris_par || ''
+            }
+          ],
+          message_client: messageClient,
+          date_derniere_maj: new Date().toISOString()
+        });
+        console.log('✅ SuiviInventaire synchronisé (mise en attente MENAGE)');
+      }
+    }
 
     setShowAttenteDialog(false);
     setIncidentToWait(null);

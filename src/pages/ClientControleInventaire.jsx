@@ -202,6 +202,7 @@ export default function ClientControleInventaire() {
       return desc;
     }).join(' • ');
 
+    const stayId = sessionStorage.getItem('stay_id');
     const interventionClient = await base44.entities.InterventionClient.create({
       type_intervention: "INVENTAIRE_ARRIVEE",
       type_hebergement: categorie,
@@ -217,7 +218,8 @@ export default function ClientControleInventaire() {
       statut: "A_FAIRE",
       autorisation_acces: autorisationAcces,
       plages_horaires: autorisationAcces === 'non' ? plagesHoraires : [],
-      fiche_arrivee_id: ficheId
+      fiche_arrivee_id: ficheId,
+      stay_id: stayId
     });
 
     console.log(`[INTERVENTION_CREATE] InterventionClient créée:`, {
@@ -231,6 +233,7 @@ export default function ClientControleInventaire() {
     });
 
     // Créer WorkItem pilotable pour le Bureau
+    const stayIdForWorkItem = sessionStorage.getItem('stay_id');
     await base44.entities.WorkItem.create({
       type: 'INTERVENTION_CLIENT',
       service,
@@ -249,7 +252,8 @@ export default function ClientControleInventaire() {
       plages_horaires: autorisationAcces === 'non' ? plagesHoraires : [],
       taches,
       intervention_client_id: interventionClient.id,
-      fiche_arrivee_id: ficheId
+      fiche_arrivee_id: ficheId,
+      stay_id: stayIdForWorkItem
     });
     console.log(`[WORKITEM_CREATE] WorkItem créé pour ${service}`);
 
@@ -715,6 +719,16 @@ ${detailsItems}
       });
       console.log('[ARRIVAL_VALIDATE] saved/locked OK - FicheArrivee ID:', fiche.id);
 
+      // 1.5. Générer stay_id unique si pas déjà fait
+      let stayId = sessionStorage.getItem('stay_id');
+      if (!stayId) {
+        const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
+        const dateKey = dateArrivee.replace(/-/g, '');
+        stayId = `ARR-${numero}-${dateKey}-${randomPart}`;
+        sessionStorage.setItem('stay_id', stayId);
+        console.log('[ARRIVAL_VALIDATE] stay_id généré:', stayId);
+      }
+
       // 2. Créer interventions
       let interventionMenage = null;
       let interventionTechnique = null;
@@ -772,6 +786,52 @@ ${detailsItems}
         MENAGE: workItemsParService.MENAGE.length,
         RECEPTION: workItemsParService.RECEPTION.length
       });
+
+      // 3.5. CRÉER SuiviInventaire pour visibilité CLIENT
+      const stayIdForSuivi = sessionStorage.getItem('stay_id');
+      const clientEmail = sessionStorage.getItem('client_email') || '';
+      
+      const suiviData = {
+        client_nom: nom,
+        client_prenom: prenom,
+        client_email: clientEmail,
+        logement: numero,
+        categorie_logement: categorie,
+        type_inventaire: 'ARRIVEE',
+        date_arrivee: dateArrivee,
+        date_depart: dateDepart,
+        items_menage: menage.map(m => ({
+          key: m.id,
+          label: m.label,
+          quantity: m.qtyManquante || 1,
+          motif: m.problemeTechnique ? 'Défectueux' : 'Manquant'
+        })),
+        items_technique: technique.map(t => ({
+          key: t.id,
+          label: t.label,
+          quantity: t.qtyManquante || 1,
+          motif: t.problemeTechnique ? 'Défectueux' : 'Manquant'
+        })),
+        statut_menage: menage.length > 0 ? 'en_attente' : 'non_requis',
+        statut_technique: technique.length > 0 ? 'en_attente' : 'non_requis',
+        timeline_menage: menage.length > 0 ? [{
+          timestamp: Date.now(),
+          status: 'demande_recue',
+          detail: 'Demande transmise au service ménage',
+          utilisateur: ''
+        }] : [],
+        timeline_technique: technique.length > 0 ? [{
+          timestamp: Date.now(),
+          status: 'demande_recue',
+          detail: 'Demande transmise au service technique',
+          utilisateur: ''
+        }] : [],
+        fiche_arrivee_id: fiche.id,
+        stay_id: stayIdForSuivi
+      };
+
+      const suiviInventaire = await base44.entities.SuiviInventaire.create(suiviData);
+      console.log('[ARRIVAL_VALIDATE] SuiviInventaire créé:', suiviInventaire.id);
 
       // 4. Stocker résumé COMPLET (basé sur WorkItems réels)
       const interventionsSummary = {
