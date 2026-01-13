@@ -21,10 +21,14 @@ export default function WorkItemManager({ lang }) {
   const [showCancelDialog, setShowCancelDialog] = useState(null);
   const [motifAnnulation, setMotifAnnulation] = useState('');
 
-  const { data: workItems = [], isLoading } = useQuery({
+  const { data: workItems = [], isLoading, error } = useQuery({
     queryKey: ['work-items'],
     queryFn: () => base44.entities.WorkItem.filter({}, 'rank', 250),
-    refetchInterval: 30000
+    refetchInterval: 30000,
+    retry: 2,
+    onError: (err) => {
+      console.error('[WorkItemManager] Error loading work items:', err);
+    }
   });
 
   const updateMutation = useMutation({
@@ -38,15 +42,18 @@ export default function WorkItemManager({ lang }) {
 
   const cancelMutation = useMutation({
     mutationFn: async ({ id, motif, user }) => {
-      await base44.entities.HistoriqueEvent.create({
-        type_event: 'INTERVENTION_ANNULEE',
-        titre: `Intervention annulee`,
-        description: motif,
-        service: workItems.find(w => w.id === id)?.service,
-        hebergement: workItems.find(w => w.id === id)?.hebergement,
-        collaborateur: user,
-        metadata: { workitem_id: id }
-      });
+      const workItem = (workItems ?? []).find(w => w.id === id);
+      if (workItem) {
+        await base44.entities.HistoriqueEvent.create({
+          type_event: 'INTERVENTION_ANNULEE',
+          titre: `Intervention annulee`,
+          description: motif,
+          service: workItem.service,
+          hebergement: workItem.hebergement,
+          collaborateur: user,
+          metadata: { workitem_id: id }
+        });
+      }
       return base44.entities.WorkItem.update(id, {
         statut: 'ANNULEE',
         motif_annulation: motif,
@@ -63,8 +70,9 @@ export default function WorkItemManager({ lang }) {
   });
 
   const moveItem = async (id, direction) => {
-    const item = workItems.find(w => w.id === id);
-    const activeItems = workItems.filter(w => w.statut !== 'ANNULEE' && w.statut !== 'TERMINEE');
+    const item = (workItems ?? []).find(w => w.id === id);
+    if (!item) return;
+    const activeItems = (workItems ?? []).filter(w => w.statut !== 'ANNULEE' && w.statut !== 'TERMINEE');
     const currentIndex = activeItems.findIndex(w => w.id === id);
     
     if (direction === 'up' && currentIndex === 0) return;
@@ -81,7 +89,7 @@ export default function WorkItemManager({ lang }) {
     queryClient.invalidateQueries(['work-items']);
   };
 
-  const activeItems = workItems.filter(w => w.statut !== 'ANNULEE');
+  const activeItems = (workItems ?? []).filter(w => w.statut !== 'ANNULEE');
 
   const statusColor = {
     'A_FAIRE': 'bg-orange-500',
@@ -101,6 +109,16 @@ export default function WorkItemManager({ lang }) {
     return (
       <div className="flex justify-center py-12">
         <Loader2 className="w-8 h-8 animate-spin text-[#FFA500]" />
+      </div>
+    );
+  }
+
+  if (error) {
+    console.error('[WorkItemManager] Render error:', error);
+    return (
+      <div className="text-center py-12 text-gray-500">
+        <AlertTriangle className="w-12 h-12 mx-auto mb-3 text-red-400" />
+        <p className="text-sm">{lang === 'fr' ? 'Erreur de chargement' : 'Loading error'}</p>
       </div>
     );
   }
