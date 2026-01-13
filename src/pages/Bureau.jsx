@@ -770,90 +770,111 @@ export default function Bureau() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Interventions Direction */}
+          {/* Missions Direction - VUE UNIFIÉE */}
           <TabsContent value="missions-direction" className="space-y-4">
             <Card className="border-2 border-purple-300 rounded-xl">
               <CardHeader>
                 <CardTitle className="font-heading text-purple-700">
-                  🔧 {lang === 'fr' ? 'Interventions Direction' : 'Direction Interventions'}
+                  🏢 {lang === 'fr' ? 'Missions Direction' : 'Management Missions'}
                 </CardTitle>
+                <p className="text-sm text-gray-600 mt-1">
+                  {missionsDirectionGlobal.length} mission(s) • Vue macro + détail WorkItems
+                </p>
               </CardHeader>
               <CardContent>
-                {(missionsDirection ?? []).length === 0 ? (
+                {missionsDirectionGlobal.length === 0 ? (
                   <div className="text-center py-12 text-gray-500">
                     <CheckCircle className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                    <p>{lang === 'fr' ? 'Aucune intervention Direction' : 'No direction interventions'}</p>
+                    <p>{lang === 'fr' ? 'Aucune mission Direction' : 'No management missions'}</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {(missionsDirection ?? []).map(intervention => {
-                      const tachesCompletees = intervention.taches?.filter(t => t.faite).length || 0;
-                      const tachesTotal = intervention.taches?.length || 0;
-                      const progress = tachesTotal > 0 ? Math.round((tachesCompletees / tachesTotal) * 100) : 0;
+                    {missionsDirectionGlobal.map(mission => {
+                      // Récupérer les WorkItems liés
+                      const workItemsLies = (workItemsBureau ?? []).filter(w => w.mission_direction_id === mission.id);
+                      const workItemsTechnique = workItemsLies.filter(w => w.service === 'TECHNIQUE');
+                      const workItemsMenage = workItemsLies.filter(w => w.service === 'MENAGE');
+                      
+                      const totalTaches = workItemsLies.length;
+                      const tachesTerminees = workItemsLies.filter(w => w.statut === 'TERMINEE').length;
+                      const tachesEnCours = workItemsLies.filter(w => w.statut === 'EN_COURS').length;
+                      const tachesEnAttente = workItemsLies.filter(w => w.statut === 'EN_ATTENTE').length;
+                      
+                      const progress = totalTaches > 0 ? Math.round((tachesTerminees / totalTaches) * 100) : 0;
 
                       return (
-                        <Card key={intervention.id} className="border rounded-xl">
+                        <Card key={mission.id} className={`border-2 ${
+                          mission.priorite === 'URGENTE' || mission.priorite === 'CRITIQUE' ? 'border-red-500' : 'border-purple-300'
+                        }`}>
                           <CardContent className="p-4">
-                            <div className="flex items-start justify-between">
+                            <div className="flex items-start justify-between mb-3">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                  <Badge className={
-                                    intervention.type_intervention === 'HIVERNAGE' ? 'bg-blue-500' : 'bg-yellow-500'
-                                  }>
-                                    {intervention.type_intervention === 'HIVERNAGE' ? '❄️ Hivernage' : '🌞 Déshivernage'}
+                                  <Badge className={mission.type_mission === 'HIVERNAGE' ? 'bg-blue-500' : 'bg-yellow-500'}>
+                                    {mission.type_mission === 'HIVERNAGE' ? '❄️ Hivernage' : '🌞 Déshivernage'}
                                   </Badge>
                                   <Badge className={
-                                    intervention.service === 'TECHNIQUE' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'
+                                    mission.statut === 'TERMINEE' ? 'bg-green-500' :
+                                    mission.statut === 'EN_COURS' ? 'bg-blue-500' :
+                                    mission.statut === 'EN_ATTENTE' ? 'bg-orange-500' :
+                                    'bg-gray-500'
                                   }>
-                                    {intervention.service === 'TECHNIQUE' ? '🧰 Technique' : '🧽 Ménage'}
+                                    {mission.statut.replace(/_/g, ' ')}
                                   </Badge>
-                                  {intervention.priorite === 'URGENTE' && (
-                                    <Badge className="bg-red-500 text-white">⚠️ Urgent</Badge>
+                                  {(mission.priorite === 'URGENTE' || mission.priorite === 'CRITIQUE') && (
+                                    <Badge className="bg-red-500">
+                                      <AlertTriangle className="w-3 h-3 mr-1" />
+                                      URGENT
+                                    </Badge>
                                   )}
-                                  <Badge className={
-                                    intervention.statut === 'TERMINEE' ? 'bg-green-500 text-white' :
-                                      intervention.statut === 'EN_COURS' ? 'bg-blue-500 text-white' :
-                                        intervention.statut === 'EN_ATTENTE' ? 'bg-orange-500 text-white' :
-                                          'bg-gray-500 text-white'
-                                  }>
-                                    {intervention.statut === 'A_FAIRE' ? (lang === 'fr' ? 'À faire' : 'To do') :
-                                      intervention.statut === 'EN_COURS' ? (lang === 'fr' ? 'En cours' : 'In progress') :
-                                        intervention.statut === 'EN_ATTENTE' ? (lang === 'fr' ? 'En attente' : 'On hold') :
-                                          (lang === 'fr' ? 'Terminée' : 'Completed')}
-                                  </Badge>
                                 </div>
 
-                                <h3 className="font-heading text-lg text-purple-700">
-                                  {intervention.type_hebergement} - {intervention.numero_hebergement}
-                                </h3>
-
-                                {intervention.description && (
-                                  <p className="text-sm text-gray-600 mt-2">{intervention.description}</p>
+                                <h3 className="font-heading text-xl text-purple-700">{mission.titre}</h3>
+                                {mission.description && (
+                                  <p className="text-sm text-gray-600 mt-1">{mission.description}</p>
                                 )}
 
-                                <div className="mt-3 space-y-1">
-                                  <p className="text-xs text-gray-600">
-                                    📋 {tachesTotal} tâche(s) - {tachesCompletees} terminée(s)
-                                  </p>
-                                  {intervention.pris_en_charge_par && (
-                                    <div className="flex items-center gap-3 text-xs text-gray-600">
-                                      <span className="flex items-center gap-1">
-                                        <User className="w-3 h-3" />
-                                        {intervention.pris_en_charge_par}
-                                      </span>
-                                      {intervention.temps_ecoule_minutes > 0 && (
-                                        <span className="flex items-center gap-1">
-                                          <Clock className="w-3 h-3" />
-                                          {intervention.temps_ecoule_minutes} min
-                                        </span>
-                                      )}
+                                {/* Détail zones */}
+                                <div className="mt-3 flex items-center gap-3 text-xs text-gray-600">
+                                  <span>📍 {mission.zones?.length || 0} zone(s)</span>
+                                  <span>👷 {totalTaches} tâche(s) opérationnelle(s)</span>
+                                  {mission.createur && (
+                                    <span className="text-purple-600">Par: {mission.createur}</span>
+                                  )}
+                                </div>
+
+                                {/* Détail par service */}
+                                <div className="mt-3 grid grid-cols-2 gap-3">
+                                  {workItemsTechnique.length > 0 && (
+                                    <div className="bg-blue-50 rounded-lg p-2 border border-blue-200">
+                                      <p className="text-xs font-bold text-blue-900 mb-1">🧰 TECHNIQUE</p>
+                                      <div className="flex gap-2 text-xs">
+                                        <Badge className="bg-green-600 text-white">{workItemsTechnique.filter(w => w.statut === 'TERMINEE').length} ✓</Badge>
+                                        <Badge className="bg-blue-600 text-white">{workItemsTechnique.filter(w => w.statut === 'EN_COURS').length} ▶</Badge>
+                                        <Badge className="bg-orange-600 text-white">{workItemsTechnique.filter(w => w.statut === 'EN_ATTENTE').length} ⏸</Badge>
+                                      </div>
+                                    </div>
+                                  )}
+                                  
+                                  {workItemsMenage.length > 0 && (
+                                    <div className="bg-yellow-50 rounded-lg p-2 border border-yellow-200">
+                                      <p className="text-xs font-bold text-yellow-900 mb-1">🧽 MÉNAGE</p>
+                                      <div className="flex gap-2 text-xs">
+                                        <Badge className="bg-green-600 text-white">{workItemsMenage.filter(w => w.statut === 'TERMINEE').length} ✓</Badge>
+                                        <Badge className="bg-blue-600 text-white">{workItemsMenage.filter(w => w.statut === 'EN_COURS').length} ▶</Badge>
+                                        <Badge className="bg-orange-600 text-white">{workItemsMenage.filter(w => w.statut === 'EN_ATTENTE').length} ⏸</Badge>
+                                      </div>
                                     </div>
                                   )}
                                 </div>
 
                                 {/* Barre de progression */}
-                                {tachesTotal > 0 && (
+                                {totalTaches > 0 && (
                                   <div className="mt-3">
+                                    <div className="flex justify-between text-xs text-gray-600 mb-1">
+                                      <span>Progression globale</span>
+                                      <span className="font-bold">{progress}%</span>
+                                    </div>
                                     <div className="w-full bg-gray-200 rounded-full h-2">
                                       <div
                                         className="bg-purple-600 h-2 rounded-full transition-all"
@@ -863,21 +884,6 @@ export default function Bureau() {
                                   </div>
                                 )}
                               </div>
-
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={async () => {
-                                  if (confirm(lang === 'fr'
-                                    ? `Supprimer l'intervention "${intervention.type_hebergement} - ${intervention.numero_hebergement}" ?`
-                                    : `Delete intervention "${intervention.type_hebergement} - ${intervention.numero_hebergement}"?`)) {
-                                    await deleteInterventionDirectionMutation.mutateAsync(intervention.id);
-                                  }
-                                }}
-                                className="text-red-500 hover:text-red-700"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
                             </div>
                           </CardContent>
                         </Card>

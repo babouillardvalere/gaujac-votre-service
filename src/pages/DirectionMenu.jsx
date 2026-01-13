@@ -24,14 +24,14 @@ export default function DirectionMenu() {
       descriptionEn: 'Complete view of Management missions'
     },
     {
-      title: '🔧 Créer intervention',
-      titleEn: '🔧 Create intervention',
+      title: '➕ Créer mission',
+      titleEn: '➕ Create mission',
       icon: Wrench,
-      href: 'DirectionInterventions',
+      href: 'DirectionCreerMission',
       color: 'bg-[#7c3aed]',
       textColor: 'text-white',
-      description: 'Créer des interventions opérationnelles',
-      descriptionEn: 'Create operational interventions'
+      description: 'Créer une mission Direction (modèle unifié)',
+      descriptionEn: 'Create a Management mission (unified model)'
     },
     {
       title: '📦 Commandes',

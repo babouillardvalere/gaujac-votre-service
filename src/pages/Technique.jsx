@@ -13,6 +13,7 @@ import PhotoInterventionCapture from '../components/PhotoInterventionCapture';
 import InterventionTimer from '../components/InterventionTimer';
 import ServiceTabs from '../components/missions/ServiceTabs';
 import MissionsDirectionService from '../components/missions/MissionsDirectionService';
+import WorkItemsServiceView from '../components/missions/WorkItemsServiceView';
 import NotificationsPanelCollab from '../components/NotificationsPanelCollab';
 
 import { Button } from '@/components/ui/button';
