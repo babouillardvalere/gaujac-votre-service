@@ -318,6 +318,10 @@ ${detailsItems}
       doc.setFontSize(18);
       doc.setTextColor(0, 119, 168);
       doc.text(lang === "fr" ? 'CONTROLE INVENTAIRE ARRIVEE' : 'ARRIVAL INVENTORY CHECK', 105, y, { align: 'center' });
+      y += 8;
+      doc.setFontSize(12);
+      doc.setTextColor(34, 197, 94); // Vert
+      doc.text(lang === "fr" ? 'STATUT : VALIDÉ DÉFINITIVEMENT' : 'STATUS: PERMANENTLY VALIDATED', 105, y, { align: 'center' });
       y += 10;
       
       // Infos client
@@ -331,6 +335,74 @@ ${detailsItems}
       y += 6;
       doc.text(`Date validation: ${new Date().toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-US')}`, 20, y);
       y += 12;
+
+      // === NOUVELLE SECTION : INTERVENTIONS GÉNÉRÉES ===
+      const interventionsList = [];
+      if (interventions.menage.length > 0) {
+        interventions.menage.forEach(item => {
+          interventionsList.push({
+            service: 'MENAGE',
+            objet: item.label,
+            defaut: item.problemeTechnique ? 'Défectueux' : (item.qtyManquante > 0 ? `${item.qtyManquante} Manquant(s)` : 'Autre'),
+            urgence: item.urgent ? 'OUI' : 'Non',
+            statut: 'EN ATTENTE'
+          });
+        });
+      }
+      if (interventions.technique.length > 0) {
+        interventions.technique.forEach(item => {
+          interventionsList.push({
+            service: 'TECHNIQUE',
+            objet: item.label,
+            defaut: item.problemeTechnique ? 'Défectueux' : 'Autre',
+            urgence: item.urgent ? 'OUI' : 'Non',
+            statut: 'EN ATTENTE'
+          });
+        });
+      }
+      if (interventions.reception.length > 0) {
+        interventions.reception.forEach(item => {
+          interventionsList.push({
+            service: 'RECEPTION',
+            objet: item.label,
+            defaut: item.qtyManquante > 0 ? `${item.qtyManquante} Manquant(s)` : 'Autre',
+            urgence: item.urgent ? 'OUI' : 'Non',
+            statut: 'EN ATTENTE'
+          });
+        });
+      }
+
+      if (interventionsList.length > 0) {
+        doc.setFont(undefined, 'bold');
+        doc.setFontSize(14);
+        doc.setTextColor(0, 119, 168);
+        doc.text(lang === "fr" ? 'INTERVENTIONS GÉNÉRÉES' : 'GENERATED INTERVENTIONS', 20, y);
+        y += 8;
+
+        doc.autoTable({
+          startY: y,
+          head: [[
+            'Service',
+            lang === 'fr' ? 'Objet' : 'Item',
+            lang === 'fr' ? 'Défaut / Motif' : 'Defect / Reason',
+            lang === 'fr' ? 'Urgent' : 'Urgent',
+            lang === 'fr' ? 'Statut' : 'Status'
+          ]],
+          body: interventionsList.map(i => [
+            i.service,
+            i.objet,
+            i.defaut,
+            i.urgence,
+            i.statut
+          ]),
+          headStyles: { fillColor: [0, 119, 168], textColor: 255, fontSize: 9 },
+          bodyStyles: { fontSize: 8 },
+          theme: 'grid',
+          margin: { left: 20, right: 20 }
+        });
+        
+        y = doc.lastAutoTable.finalY + 10;
+      }
       
       // === SECTION A: ÉLÉMENTS SIGNALÉS ===
       const elementsSignales = [];
@@ -776,34 +848,28 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
       }
       sessionStorage.setItem('fiche_arrivee_id', fiche.id);
 
-      // 7. Afficher page finale de succès
+      // 7. Navigation vers la page de fin
       toast.dismiss('submit');
       toast.success(lang === "fr" ? "✅ Validé" : "✅ Validated");
       
-      setFinalReceipt({
-        ficheId: fiche.id,
-        pdfUrl: urlPDF,
-        interventionsSummary,
-        categorie,
-        numero,
-        dateArrivee,
-        dateDepart
-      });
+      console.log('[ARRIVAL_VALIDATE] SUCCESS - Redirection vers ClientArriveeFin');
       
-      setSubmitting(false);
-      
-      console.log('[ARRIVAL_VALIDATE] SUCCESS - Navigation vers écran final');
-      console.log('========================================');
-      console.log('[ARRIVAL_VALIDATE] RÉSUMÉ FINAL:', {
-        ficheId: fiche.id,
-        dossierId: sessionStorage.getItem('arrivee_dossier_id'),
-        pdfUrl: urlPDF,
-        interventionsTech: interventionTechnique?.id || 'AUCUNE',
-        interventionsMenage: interventionMenage?.id || 'AUCUNE',
-        interventionsReception: interventionReception?.id || 'AUCUNE',
-        finalReceiptSet: true
+      navigate(createPageUrl('ClientArriveeFin'), {
+        state: {
+          ficheId: fiche.id,
+          pdfUrl: urlPDF,
+          interventionsSummary,
+          categorie,
+          numero,
+          dateArrivee,
+          dateDepart,
+          client_nom: nom,
+          client_prenom: prenom,
+          nom,
+          prenom,
+          autorisationAcces
+        }
       });
-      console.log('========================================');
       
     } catch (e) {
       console.error('[ARRIVAL_VALIDATE] ERROR GLOBAL:', e);
@@ -813,94 +879,6 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
       setShowRecap(true); // Rester sur le récap en cas d'erreur
     }
   };
-
-  // ÉCRAN FINAL DE SUCCÈS
-  if (finalReceipt) {
-    return (
-      <div className="min-h-screen max-w-2xl mx-auto px-6 py-8 flex flex-col items-center justify-center">
-        <Logo className="h-16 mb-8" />
-        
-        <Card className="w-full border-2 border-green-500 shadow-xl">
-          <CardContent className="p-8 text-center space-y-6">
-            <div className="flex justify-center mb-4">
-              <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center">
-                <CheckCircle className="w-12 h-12 text-green-600" />
-              </div>
-            </div>
-            
-            <h1 className="text-3xl font-bold text-green-700">
-              ✅ {lang === "fr" ? "Contrôle inventaire validé" : "Inventory check validated"}
-            </h1>
-            
-            <p className="text-lg text-gray-700">
-              {lang === "fr" 
-                ? "Merci. Votre contrôle a bien été enregistré."
-                : "Thank you. Your check has been recorded."}
-            </p>
-
-            <div className="bg-gray-50 p-4 rounded-lg text-left">
-              <p className="text-sm text-gray-600 mb-2">
-                <strong>{finalReceipt.categorie} {finalReceipt.numero}</strong>
-              </p>
-              <p className="text-sm text-gray-600">
-                {finalReceipt.dateArrivee} → {finalReceipt.dateDepart}
-              </p>
-              
-              {(finalReceipt.interventionsSummary.technique > 0 || 
-                finalReceipt.interventionsSummary.menage > 0 || 
-                finalReceipt.interventionsSummary.reception > 0) && (
-                <div className="mt-4 pt-4 border-t">
-                  <p className="text-sm font-semibold text-gray-700 mb-2">
-                    {lang === "fr" ? "Interventions créées:" : "Interventions created:"}
-                  </p>
-                  {finalReceipt.interventionsSummary.technique > 0 && (
-                    <p className="text-sm text-blue-700">🔧 Technique: {finalReceipt.interventionsSummary.technique}</p>
-                  )}
-                  {finalReceipt.interventionsSummary.menage > 0 && (
-                    <p className="text-sm text-yellow-700">🧹 Ménage: {finalReceipt.interventionsSummary.menage}</p>
-                  )}
-                  {finalReceipt.interventionsSummary.reception > 0 && (
-                    <p className="text-sm text-green-700">🏠 Réception: {finalReceipt.interventionsSummary.reception}</p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-3 pt-4">
-              {finalReceipt.pdfUrl ? (
-                <Button 
-                  onClick={() => {
-                    console.log('📄 Ouverture PDF:', finalReceipt.pdfUrl);
-                    window.open(finalReceipt.pdfUrl, '_blank');
-                  }}
-                  className="w-full h-14 bg-[#00AEEF] hover:bg-[#0077A8] text-lg"
-                >
-                  <Download className="mr-2 w-5 h-5" />
-                  {lang === "fr" ? "📄 Télécharger / Ouvrir le PDF" : "📄 Download / Open PDF"}
-                </Button>
-              ) : (
-                <div className="py-3 text-sm text-gray-500">
-                  {lang === "fr" ? "PDF en cours de génération..." : "PDF being generated..."}
-                </div>
-              )}
-
-              <Button 
-                onClick={() => {
-                  console.log('🏠 Retour menu principal');
-                  navigate(createPageUrl('ClientMenu'));
-                }}
-                variant="outline"
-                className="w-full h-14 text-lg font-semibold"
-              >
-                <Home className="mr-2 w-5 h-5" />
-                {lang === "fr" ? "🏠 Retour menu principal" : "🏠 Back to main menu"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen max-w-4xl mx-auto px-6 py-8">
