@@ -938,7 +938,7 @@ export default function Technique() {
             </>
           }
           missionsContent={
-            <MissionsDirectionService service="TECHNIQUE" />
+            <WorkItemsServiceView service="TECHNIQUE" />
           }
         />
       </div>
