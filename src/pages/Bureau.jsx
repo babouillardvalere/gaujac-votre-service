@@ -157,11 +157,11 @@ export default function Bureau() {
     staleTime: 45000
   });
 
-  const { data: interventionsClients = [], isLoading: loadingInterventions } = useQuery({
-    queryKey: ['bureau-interventions-clients'],
+  const { data: workItemsBureau = [], isLoading: loadingWorkItems } = useQuery({
+    queryKey: ['bureau-workitems'],
     queryFn: async () => {
-      const data = await base44.entities.InterventionClient.filter({}, '-created_date', 250);
-      console.log('[BUREAU] InterventionClient récupérées:', data.length);
+      const data = await base44.entities.WorkItem.filter({}, '-created_date', 250);
+      console.log('[BUREAU] WorkItems récupérés:', data.length);
       console.log('[BUREAU] Détail par statut:', {
         A_FAIRE: data.filter(i => i.statut === 'A_FAIRE').length,
         EN_COURS: data.filter(i => i.statut === 'EN_COURS').length,
@@ -174,7 +174,18 @@ export default function Bureau() {
     staleTime: 20000
   });
 
-  const isLoading = loadingHistorique || loadingInterventions;
+  const { data: interventionsClients = [], isLoading: loadingInterventions } = useQuery({
+    queryKey: ['bureau-interventions-clients'],
+    queryFn: async () => {
+      const data = await base44.entities.InterventionClient.filter({}, '-created_date', 250);
+      console.log('[BUREAU] InterventionClient récupérées:', data.length);
+      return data;
+    },
+    refetchInterval: 30000,
+    staleTime: 20000
+  });
+
+  const isLoading = loadingHistorique || loadingInterventions || loadingWorkItems;
 
   const { data: avis = [] } = useQuery({
     queryKey: ['bureau-avis'],
@@ -347,9 +358,47 @@ export default function Bureau() {
   //   return null;
   // };
 
-  // Filtrage Interventions Clients
+  // Convertir WorkItems en format InterventionClient pour affichage
+  const workItemsAsInterventions = useMemo(() => {
+    return workItemsBureau.map(wi => ({
+      id: wi.id,
+      created_date: wi.created_date,
+      type_intervention: wi.type === 'INTERVENTION_CLIENT' ? 'INVENTAIRE_ARRIVEE' : 
+                         wi.type === 'MISSION_DIRECTION' ? 'MISSION_DIRECTION' : 'AUTRE',
+      type_hebergement: wi.type_hebergement,
+      numero_hebergement: wi.hebergement,
+      client_nom: wi.client_nom,
+      client_prenom: wi.client_prenom,
+      date_arrivee: wi.date_arrivee,
+      date_depart: wi.date_depart,
+      service: wi.service,
+      priorite: wi.priorite,
+      description: wi.description,
+      taches: wi.taches,
+      statut: wi.statut,
+      pris_en_charge_par: wi.collaborateur,
+      date_prise_en_charge: wi.date_prise_en_charge,
+      temps_ecoule_minutes: wi.duree_minutes,
+      date_terminee: wi.date_terminee,
+      isWorkItem: true,
+      workItemData: wi
+    }));
+  }, [workItemsBureau]);
+
+  // Fusionner InterventionClient + WorkItems
+  const allInterventionsData = useMemo(() => {
+    return [...interventionsClients, ...workItemsAsInterventions];
+  }, [allInterventionsData]);
+
+  console.log('[BUREAU] Total interventions affichables:', {
+    interventionsClients: interventionsClients.length,
+    workItems: workItemsBureau.length,
+    total: allInterventionsData.length
+  });
+
+  // Filtrage Interventions Clients + WorkItems
   const filteredInterventionsClients = useMemo(() => {
-    const filtered = interventionsClients.filter(i => {
+    const filtered = allInterventionsData.filter(i => {
       // Filtres standards
       if (filters.nom && !`${i.client_nom || ''} ${i.client_prenom || ''}`.toLowerCase().includes(filters.nom.toLowerCase())) return false;
       if (filters.logement && !(i.numero_hebergement || '').toLowerCase().includes(filters.logement.toLowerCase())) return false;
@@ -371,11 +420,11 @@ export default function Bureau() {
 
     console.log('[BUREAU] Interventions après filtres:', filtered.length, 'filtres actifs:', filters);
     return filtered;
-  }, [interventionsClients, activeView, filters]);
+  }, [allInterventionsData, activeView, filters]);
 
-  // Transformer InterventionClient en format événement pour l'historique
+  // Transformer WorkItems + InterventionClient en format événement pour l'historique
   const interventionsAsEvents = useMemo(() => {
-    return interventionsClients.map(inter => ({
+    return allInterventionsData.map(inter => ({
       id: inter.id,
       _source: 'intervention_client',
       type_event: inter.statut === 'TERMINEE' ? 'INTERVENTION_CLOTUREE' : 
@@ -432,7 +481,8 @@ export default function Bureau() {
       },
       date_arrivee: null,
       date_depart: null,
-      missionDirectionData: m
+      missionDirectionData: m,
+      isWorkItem: false
     }));
   }, [missionsDirectionGlobal, lang]);
 
@@ -679,7 +729,7 @@ export default function Bureau() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-[#FFA500]/20 p-1 rounded-xl border border-[#FFA500]/30 flex-wrap h-auto">
             <TabsTrigger value="interventions" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              🎯 {lang === 'fr' ? 'Interventions' : 'Interventions'} ({interventionsClients.filter(i => i.statut !== 'TERMINEE').length})
+              🎯 {lang === 'fr' ? 'Interventions' : 'Interventions'} ({allInterventionsData.filter(i => i.statut !== 'TERMINEE').length})
             </TabsTrigger>
             <TabsTrigger value="historique" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               📋 {t('historique')} ({historique.length})
@@ -943,7 +993,7 @@ export default function Bureau() {
                     🎯 {lang === 'fr' ? 'Interventions Clients (Services)' : 'Client Interventions (Services)'}
                   </CardTitle>
                   <p className="text-sm text-gray-600 mt-1">
-                    {interventionsClients.length} {lang === 'fr' ? 'intervention(s) totale(s)' : 'total intervention(s)'} •
+                    {allInterventionsData.length} {lang === 'fr' ? 'intervention(s) totale(s)' : 'total intervention(s)'} •
                     {filteredInterventionsClients.length} {lang === 'fr' ? 'après filtres' : 'after filters'}
                   </p>
                 </div>
@@ -961,7 +1011,7 @@ export default function Bureau() {
                       {lang === 'fr' ? 'Aucune intervention trouvée' : 'No interventions found'}
                     </p>
                     <p className="text-sm text-gray-500">
-                      {interventionsClients.length === 0
+                      {allInterventionsData.length === 0
                         ? (lang === 'fr' ? 'Aucune intervention dans la base' : 'No interventions in database')
                         : (lang === 'fr' ? 'Essayez de modifier les filtres' : 'Try changing filters')}
                     </p>
