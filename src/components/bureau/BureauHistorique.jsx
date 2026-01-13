@@ -31,10 +31,26 @@ export default function BureauHistorique() {
   });
   const [selectedIncident, setSelectedIncident] = useState(null);
 
-  const { data: incidents = [], isLoading } = useQuery({
+  const { data: incidents = [], isLoading: loadingIncidents } = useQuery({
     queryKey: ['all-incidents'],
-    queryFn: () => base44.entities.Incident.filter({}, '-created_date', 1000),
-    staleTime: 60000 // Cache 60s
+    queryFn: async () => {
+      console.log('🔍 FETCH Incidents pour historique');
+      const result = await base44.entities.Incident.filter({}, '-created_date', 1000);
+      console.log('✅ Incidents récupérés:', result.length);
+      return result;
+    },
+    staleTime: 60000
+  });
+
+  const { data: workItems = [], isLoading: loadingWorkItems } = useQuery({
+    queryKey: ['all-workitems-bureau'],
+    queryFn: async () => {
+      console.log('🔍 FETCH WorkItems pour historique');
+      const result = await base44.entities.WorkItem.filter({}, '-created_date', 1000);
+      console.log('✅ WorkItems récupérés:', result.length);
+      return result;
+    },
+    staleTime: 60000
   });
 
   const { data: avis = [] } = useQuery({
@@ -42,11 +58,44 @@ export default function BureauHistorique() {
     queryFn: () => base44.entities.Avis.filter({}, '-created_date', 500)
   });
 
+  const isLoading = loadingIncidents || loadingWorkItems;
+
+  // Convertir WorkItems en format compatible Incident pour affichage
+  const convertedWorkItems = workItems.map(wi => ({
+    id: wi.id,
+    created_date: wi.created_date,
+    hebergement_numero: wi.hebergement,
+    client_nom: wi.client_nom,
+    client_prenom: wi.client_prenom,
+    date_arrivee: wi.date_arrivee,
+    date_depart: wi.date_depart,
+    categorie_probleme: wi.type === 'INTERVENTION_CLIENT' ? 'inventaire_arrivee' : 
+                        wi.type === 'MISSION_DIRECTION' ? 'mission_direction' : 'autre',
+    sous_categorie: wi.service?.toLowerCase() || 'divers',
+    statut: wi.statut === 'A_FAIRE' ? 'nouveau' :
+            wi.statut === 'EN_COURS' ? 'en_cours' :
+            wi.statut === 'EN_ATTENTE' ? 'en_attente' :
+            wi.statut === 'TERMINEE' ? 'termine' : 'nouveau',
+    probleme_urgent: wi.priorite === 'URGENTE',
+    duree_minutes: wi.duree_minutes,
+    pris_par: wi.collaborateur,
+    isWorkItem: true,
+    workItemData: wi
+  }));
+
+  // Fusionner Incidents + WorkItems convertis
+  const allInterventions = [...incidents, ...convertedWorkItems];
+  console.log('📊 Historique total:', {
+    incidents: incidents.length,
+    workItems: workItems.length,
+    total: allInterventions.length
+  });
+
   const getAvisForIncident = (incidentId) => {
     return avis.find(a => a.incident_id === incidentId);
   };
 
-  const filteredIncidents = incidents.filter(incident => {
+  const filteredIncidents = allInterventions.filter(incident => {
     if (filters.dateFrom && new Date(incident.created_date) < new Date(filters.dateFrom)) return false;
     if (filters.dateTo && new Date(incident.created_date) > new Date(filters.dateTo)) return false;
     if (filters.hebergement && !incident.hebergement_numero.includes(filters.hebergement)) return false;
@@ -206,7 +255,12 @@ export default function BureauHistorique() {
                         </td>
                         <td className="py-3">
                           <Badge variant="outline" className="text-xs">
-                            {t(incident.sous_categorie)}
+                            {incident.isWorkItem ? (
+                              incident.workItemData?.type === 'INTERVENTION_CLIENT' ? 'Arrivée' : 
+                              incident.workItemData?.service || 'Divers'
+                            ) : (
+                              t(incident.sous_categorie)
+                            )}
                           </Badge>
                         </td>
                         <td className="py-3">
@@ -284,10 +338,28 @@ export default function BureauHistorique() {
               </div>
 
               {/* Description */}
-              <div>
-                <h4 className="font-medium mb-2">Description du problème</h4>
-                <p className="text-slate-600 bg-slate-50 p-3 rounded-lg">{selectedIncident.description_probleme}</p>
-              </div>
+              {selectedIncident.isWorkItem && selectedIncident.workItemData ? (
+                <div>
+                  <h4 className="font-medium mb-2">Description</h4>
+                  <p className="text-slate-600 bg-slate-50 p-3 rounded-lg">{selectedIncident.workItemData.description || '-'}</p>
+                  {selectedIncident.workItemData.taches?.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      <h5 className="text-sm font-medium text-slate-500">Tâches :</h5>
+                      {selectedIncident.workItemData.taches.map((t, idx) => (
+                        <div key={idx} className="bg-slate-50 p-2 rounded text-sm">
+                          <span className="font-medium">#{t.numero}</span> {t.texte}
+                          {t.faite && <span className="ml-2 text-green-600">✓ Faite</span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <h4 className="font-medium mb-2">Description du problème</h4>
+                  <p className="text-slate-600 bg-slate-50 p-3 rounded-lg">{selectedIncident.description_probleme}</p>
+                </div>
+              )}
 
               {/* Photos client */}
               {selectedIncident.photo_client_url && (
