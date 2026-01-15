@@ -1120,7 +1120,9 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
       </Button>
 
       {/* Dialog Récapitulatif */}
-      <Dialog open={showRecap} onOpenChange={setShowRecap}>
+      <Dialog open={showRecap} onOpenChange={(open) => {
+        if (!submitting) setShowRecap(open);
+      }}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{lang === "fr" ? "Récapitulatif du contrôle inventaire" : "Inventory check summary"}</DialogTitle>
