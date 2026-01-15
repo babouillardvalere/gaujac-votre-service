@@ -932,31 +932,13 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
       }
       sessionStorage.setItem('fiche_arrivee_id', fiche.id);
 
-      // 8. Navigation vers la page de fin avec TOUS les WorkItems
+      // 8. Navigation vers HOME (redirection obligatoire)
       toast.dismiss('submit');
       toast.success(lang === "fr" ? "✅ Validé" : "✅ Validated");
       
-      console.log('[ARRIVAL_VALIDATE] SUCCESS - Redirection vers ClientArriveeFin');
+      console.log('[ARRIVAL_VALIDATE] SUCCESS - Redirection vers Home');
       
-      navigate(createPageUrl('ClientArriveeFin'), {
-        state: {
-          ficheId: fiche.id,
-          pdfUrl: urlPDF,
-          interventionsSummary,
-          workItemsParService,
-          categorie,
-          numero,
-          dateArrivee,
-          dateDepart,
-          client_nom: nom,
-          client_prenom: prenom,
-          nom,
-          prenom,
-          autorisationAcces,
-          evaluationProprete,
-          commentaireProprete
-        }
-      });
+      navigate(createPageUrl('Home'), { replace: true });
       
     } catch (e) {
       console.error('[ARRIVAL_VALIDATE] ERROR GLOBAL:', e);
