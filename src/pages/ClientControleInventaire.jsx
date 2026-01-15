@@ -1239,7 +1239,7 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
             <Button variant="outline" onClick={() => setShowRecap(false)} className="flex-1">
               {lang === "fr" ? "Modifier" : "Edit"}
             </Button>
-            <Button onClick={handleFinalSubmit} disabled={submitting} className="flex-1 bg-[#00AEEF]">
+            <Button type="button" onClick={handleFinalSubmit} disabled={submitting} className="flex-1 bg-[#00AEEF]">
               {submitting ? <Loader2 className="animate-spin mr-2" /> : null}
               {lang === "fr" ? "Valider définitivement" : "Confirm"}
             </Button>
