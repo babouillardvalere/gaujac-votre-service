@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -10,16 +10,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   ArrowUp, ArrowDown, Edit, Trash2, AlertTriangle, Clock, User, CheckCircle, 
-  Loader2, X, Check 
+  Loader2, X, Check, TrendingUp, Home, Wrench, Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format, subDays } from 'date-fns';
 
 export default function WorkItemManager({ lang }) {
   const queryClient = useQueryClient();
   const [editingItem, setEditingItem] = useState(null);
   const [showCancelDialog, setShowCancelDialog] = useState(null);
   const [motifAnnulation, setMotifAnnulation] = useState('');
+  const [periodeStats, setPeriodeStats] = useState('7'); // 7, 30 jours
+  const [selectedHebergement, setSelectedHebergement] = useState(null);
 
   const { data: workItems = [], isLoading, error } = useQuery({
     queryKey: ['work-items'],
@@ -99,6 +101,43 @@ export default function WorkItemManager({ lang }) {
 
   const activeItems = (workItems ?? []).filter(w => w.statut !== 'ANNULEE');
 
+  // Calcul des statistiques par hébergement
+  const dateLimit = new Date();
+  dateLimit.setDate(dateLimit.getDate() - parseInt(periodeStats));
+  
+  const workItemsPeriode = (workItems ?? []).filter(w => {
+    if (!w.created_date) return false;
+    const createdDate = new Date(w.created_date);
+    return createdDate >= dateLimit;
+  });
+
+  const statsByHebergement = {};
+  workItemsPeriode.forEach(item => {
+    const hebergement = item.hebergement || 'Non spécifié';
+    if (!statsByHebergement[hebergement]) {
+      statsByHebergement[hebergement] = {
+        hebergement,
+        type_hebergement: item.type_hebergement || 'N/A',
+        interventions: [],
+        services: new Set()
+      };
+    }
+    statsByHebergement[hebergement].interventions.push(item);
+    if (item.service) statsByHebergement[hebergement].services.add(item.service);
+  });
+
+  const statsArray = Object.values(statsByHebergement)
+    .map(stat => ({
+      ...stat,
+      count: stat.interventions.length,
+      services: Array.from(stat.services).join(', ')
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  const totalInterventions = workItemsPeriode.length;
+  const techniqueCount = workItemsPeriode.filter(w => w.service === 'TECHNIQUE').length;
+  const menageCount = workItemsPeriode.filter(w => w.service === 'MENAGE').length;
+
   const statusColor = {
     'A_FAIRE': 'bg-orange-500',
     'EN_COURS': 'bg-blue-500',
@@ -132,7 +171,144 @@ export default function WorkItemManager({ lang }) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-6">
+      {/* Statistiques par hébergement */}
+      <Card className="border-2 border-purple-300">
+        <CardHeader>
+          <CardTitle className="font-heading text-purple-700 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-6 h-6" />
+              {lang === 'fr' ? 'Statistiques par hébergement' : 'Stats by accommodation'}
+            </div>
+            <Select value={periodeStats} onValueChange={setPeriodeStats}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">7 jours</SelectItem>
+                <SelectItem value="30">30 jours</SelectItem>
+                <SelectItem value="90">90 jours</SelectItem>
+              </SelectContent>
+            </Select>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Indicateurs globaux */}
+          <div className="grid grid-cols-3 gap-4">
+            <div className="bg-blue-50 rounded-lg p-4 border-2 border-blue-200">
+              <div className="text-xs text-blue-700 mb-1">{lang === 'fr' ? 'Total interventions' : 'Total interventions'}</div>
+              <div className="text-2xl font-bold text-blue-900">{totalInterventions}</div>
+            </div>
+            <div className="bg-orange-50 rounded-lg p-4 border-2 border-orange-200">
+              <div className="flex items-center gap-1 text-xs text-orange-700 mb-1">
+                <Wrench className="w-3 h-3" />
+                Technique
+              </div>
+              <div className="text-2xl font-bold text-orange-900">{techniqueCount}</div>
+            </div>
+            <div className="bg-yellow-50 rounded-lg p-4 border-2 border-yellow-200">
+              <div className="flex items-center gap-1 text-xs text-yellow-700 mb-1">
+                <Sparkles className="w-3 h-3" />
+                Ménage
+              </div>
+              <div className="text-2xl font-bold text-yellow-900">{menageCount}</div>
+            </div>
+          </div>
+
+          {/* Classement par hébergement */}
+          {statsArray.length > 0 ? (
+            <div className="space-y-2">
+              <h3 className="font-bold text-sm text-gray-700 mb-3">
+                {lang === 'fr' ? '🏆 Classement des hébergements (par nombre d\'interventions)' : '🏆 Top accommodations (by interventions)'}
+              </h3>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {statsArray.map((stat, index) => (
+                  <div
+                    key={stat.hebergement}
+                    className={`p-3 rounded-lg border-2 transition-all cursor-pointer ${
+                      selectedHebergement?.hebergement === stat.hebergement
+                        ? 'bg-purple-100 border-purple-400'
+                        : 'bg-white border-gray-200 hover:border-purple-300'
+                    }`}
+                    onClick={() => setSelectedHebergement(selectedHebergement?.hebergement === stat.hebergement ? null : stat)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                          index === 0 ? 'bg-yellow-400 text-yellow-900' :
+                          index === 1 ? 'bg-gray-300 text-gray-700' :
+                          index === 2 ? 'bg-orange-300 text-orange-900' :
+                          'bg-blue-100 text-blue-700'
+                        }`}>
+                          {index + 1}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <Home className="w-4 h-4 text-gray-500" />
+                            <span className="font-bold text-gray-900">{stat.hebergement}</span>
+                            <Badge variant="outline" className="text-xs">{stat.type_hebergement}</Badge>
+                          </div>
+                          <div className="text-xs text-gray-600 mt-1">
+                            Services: {stat.services || 'N/A'}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-purple-700">{stat.count}</div>
+                        <div className="text-xs text-gray-500">
+                          {lang === 'fr' ? 'intervention(s)' : 'intervention(s)'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Détail des interventions */}
+                    {selectedHebergement?.hebergement === stat.hebergement && (
+                      <div className="mt-3 pt-3 border-t space-y-2">
+                        <div className="text-xs font-bold text-purple-700 mb-2">
+                          {lang === 'fr' ? 'Historique des interventions:' : 'Intervention history:'}
+                        </div>
+                        {stat.interventions.slice(0, 10).map(interv => (
+                          <div key={interv.id} className="text-xs bg-purple-50 p-2 rounded border border-purple-200">
+                            <div className="flex items-center justify-between mb-1">
+                              <Badge className={statusColor[interv.statut] + ' text-white text-xs'}>
+                                {interv.statut}
+                              </Badge>
+                              <span className="text-gray-500">
+                                {interv.created_date ? format(new Date(interv.created_date), 'dd/MM/yyyy') : 'N/A'}
+                              </span>
+                            </div>
+                            <div className="font-semibold text-gray-800">{interv.titre || 'Sans titre'}</div>
+                            <div className="text-gray-600">{interv.description?.substring(0, 80) || 'Pas de description'}</div>
+                            {interv.collaborateur && (
+                              <div className="text-gray-500 mt-1">👤 {interv.collaborateur}</div>
+                            )}
+                          </div>
+                        ))}
+                        {stat.interventions.length > 10 && (
+                          <div className="text-xs text-center text-gray-500 italic">
+                            ... et {stat.interventions.length - 10} autres
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <AlertTriangle className="w-8 h-8 mx-auto mb-2 opacity-30" />
+              <p className="text-sm">{lang === 'fr' ? 'Aucune intervention sur cette période' : 'No interventions for this period'}</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Liste des interventions actives */}
+      <div className="space-y-3">
+        <h3 className="font-heading text-xl text-[#0077A8]">
+          {lang === 'fr' ? '📋 Demandes actives' : '📋 Active requests'}
+        </h3>
       {activeItems.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
           <CheckCircle className="w-12 h-12 mx-auto mb-3 opacity-30" />
@@ -358,6 +534,7 @@ export default function WorkItemManager({ lang }) {
           </div>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }
