@@ -934,13 +934,13 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
       }
       sessionStorage.setItem('fiche_arrivee_id', fiche.id);
 
-      // 8. Navigation vers HOME (redirection obligatoire)
+      // 8. Navigation vers HOME (hard redirect navigateur - non annulable)
       toast.dismiss('submit');
       toast.success(lang === "fr" ? "✅ Validé" : "✅ Validated");
       
-      console.log('[ARRIVAL_VALIDATE] SUCCESS - Redirection vers Home');
+      console.log('[ARRIVAL_VALIDATE] SUCCESS - Redirection vers Home (hard redirect)');
       
-      navigate(createPageUrl('Home'), { replace: true });
+      window.location.replace("/");
       return;
       
     } catch (e) {
