@@ -669,7 +669,9 @@ ${detailsItems}
     }
   };
 
-  const handleFinalSubmit = async () => {
+  const handleFinalSubmit = async (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
     if (submitting) return;
     
     console.log('========================================');
