@@ -34,10 +34,15 @@ export default function BureauHistorique() {
   const { data: incidents = [], isLoading: loadingIncidents } = useQuery({
     queryKey: ['all-incidents'],
     queryFn: async () => {
-      console.log('🔍 FETCH Incidents pour historique');
-      const result = await base44.entities.Incident.filter({}, '-created_date', 1000);
-      console.log('✅ Incidents récupérés:', result.length);
-      return result;
+      try {
+        console.log('🔍 FETCH Incidents pour historique');
+        const result = await base44.entities.Incident.filter({}, '-created_date', 1000);
+        console.log('✅ Incidents récupérés:', result.length);
+        return result;
+      } catch (error) {
+        console.warn('Erreur chargement incidents:', error);
+        return [];
+      }
     },
     staleTime: 60000
   });
@@ -45,17 +50,29 @@ export default function BureauHistorique() {
   const { data: workItems = [], isLoading: loadingWorkItems } = useQuery({
     queryKey: ['all-workitems-bureau'],
     queryFn: async () => {
-      console.log('🔍 FETCH WorkItems pour historique');
-      const result = await base44.entities.WorkItem.filter({}, '-created_date', 1000);
-      console.log('✅ WorkItems récupérés:', result.length);
-      return result;
+      try {
+        console.log('🔍 FETCH WorkItems pour historique');
+        const result = await base44.entities.WorkItem.filter({}, '-created_date', 1000);
+        console.log('✅ WorkItems récupérés:', result.length);
+        return result;
+      } catch (error) {
+        console.warn('Erreur chargement workitems:', error);
+        return [];
+      }
     },
     staleTime: 60000
   });
 
   const { data: avis = [] } = useQuery({
     queryKey: ['all-avis'],
-    queryFn: () => base44.entities.Avis.filter({}, '-created_date', 500)
+    queryFn: async () => {
+      try {
+        return await base44.entities.Avis.filter({}, '-created_date', 500);
+      } catch (error) {
+        console.warn('Erreur chargement avis:', error);
+        return [];
+      }
+    }
   });
 
   const isLoading = loadingIncidents || loadingWorkItems;
