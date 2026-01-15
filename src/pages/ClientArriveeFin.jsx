@@ -151,20 +151,6 @@ export default function ClientArriveeFin() {
           </div>
 
           <div className="flex flex-col gap-3">
-            {receipt.pdfUrl ? (
-              <Button 
-                onClick={() => window.open(receipt.pdfUrl, '_blank')}
-                className="w-full h-14 bg-[#00AEEF] hover:bg-[#0077A8] text-lg shadow-md"
-              >
-                <Download className="mr-2 w-5 h-5" />
-                {lang === "fr" ? "Télécharger le récapitulatif (PDF)" : "Download summary (PDF)"}
-              </Button>
-            ) : (
-              <div className="p-3 bg-gray-100 rounded text-gray-500 italic">
-                {lang === "fr" ? "PDF en cours de génération..." : "PDF generating..."}
-              </div>
-            )}
-
             <Button 
               onClick={() => navigate(createPageUrl('ClientSuiviInventaire'))}
               variant="outline"
@@ -176,8 +162,7 @@ export default function ClientArriveeFin() {
 
             <Button 
               onClick={() => navigate(createPageUrl('ClientMenu'))}
-              variant="ghost"
-              className="w-full h-12 text-gray-600 hover:text-gray-900"
+              className="w-full h-14 bg-[#00AEEF] hover:bg-[#0077A8] text-white font-heading text-lg"
             >
               <Home className="mr-2 w-5 h-5" />
               {lang === "fr" ? "Retour à l'accueil" : "Back to home"}

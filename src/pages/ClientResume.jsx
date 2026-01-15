@@ -815,24 +815,6 @@ export default function ClientResume() {
             <ArrowLeft className="w-5 h-5 mr-2" />
             {lang === 'fr' ? 'Retour au menu principal' : 'Back to main menu'}
           </Button>
-          <Button
-            onClick={handleDownload}
-            disabled={generatingPdf}
-            variant="outline"
-            className="w-full h-14 border-2 border-[#00AEEF] text-[#0077A8] font-heading text-lg hover:bg-blue-50 disabled:opacity-50"
-          >
-            {generatingPdf ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                {lang === 'fr' ? 'Génération...' : 'Generating...'}
-              </>
-            ) : (
-              <>
-                <Download className="w-5 h-5 mr-2" />
-                {lang === 'fr' ? 'Télécharger le document' : 'Download document'}
-              </>
-            )}
-          </Button>
         </div>
       </div>
 
