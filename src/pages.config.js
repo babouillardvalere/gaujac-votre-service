@@ -60,6 +60,7 @@ import DirectionChoixHebergement from './pages/DirectionChoixHebergement';
 import DirectionChoixNumero from './pages/DirectionChoixNumero';
 import DirectionCommandes from './pages/DirectionCommandes';
 import DirectionCreerIntervention from './pages/DirectionCreerIntervention';
+import DirectionCreerMission from './pages/DirectionCreerMission';
 import DirectionInterventions from './pages/DirectionInterventions';
 import DirectionMenu from './pages/DirectionMenu';
 import DirectionRecapIntervention from './pages/DirectionRecapIntervention';
@@ -93,7 +94,6 @@ import Statistiques from './pages/Statistiques';
 import SuiviIntervention from './pages/SuiviIntervention';
 import Taches from './pages/Taches';
 import Technique from './pages/Technique';
-import DirectionCreerMission from './pages/DirectionCreerMission';
 import __Layout from './Layout.jsx';
 
 
@@ -160,6 +160,7 @@ export const PAGES = {
     "DirectionChoixNumero": DirectionChoixNumero,
     "DirectionCommandes": DirectionCommandes,
     "DirectionCreerIntervention": DirectionCreerIntervention,
+    "DirectionCreerMission": DirectionCreerMission,
     "DirectionInterventions": DirectionInterventions,
     "DirectionMenu": DirectionMenu,
     "DirectionRecapIntervention": DirectionRecapIntervention,
@@ -193,7 +194,6 @@ export const PAGES = {
     "SuiviIntervention": SuiviIntervention,
     "Taches": Taches,
     "Technique": Technique,
-    "DirectionCreerMission": DirectionCreerMission,
 }
 
 export const pagesConfig = {

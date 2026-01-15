@@ -762,8 +762,8 @@ export default function Bureau() {
             <TabsTrigger value="statistiques" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               📊 Stats
             </TabsTrigger>
-            <TabsTrigger value="fiches" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-              📄 PDF
+            <TabsTrigger value="rapports" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
+              📊 Rapports
             </TabsTrigger>
             <TabsTrigger value="avis" className="rounded-lg font-heading data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
               ⭐ Avis ({(avis ?? []).length})
@@ -1545,9 +1545,9 @@ export default function Bureau() {
             <BureauStatistiquesAvis lang={lang} />
           </TabsContent>
 
-          {/* Fiches PDF */}
-          <TabsContent value="fiches" className="space-y-6">
-            <BureauFichesPDF lang={lang} />
+          {/* Rapports */}
+          <TabsContent value="rapports" className="space-y-6">
+            <BureauRapports lang={lang} />
           </TabsContent>
 
           {/* Avis */}
