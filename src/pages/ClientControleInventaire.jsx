@@ -682,6 +682,7 @@ ${detailsItems}
     console.log('========================================');
     
     setSubmitting(true);
+    // NE PAS fermer la modale ici - elle reste ouverte pendant tout le process
     
     toast.loading(lang === "fr" ? 'Envoi...' : 'Sending...', { id: 'submit' });
     
