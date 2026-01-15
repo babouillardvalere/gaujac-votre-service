@@ -682,7 +682,6 @@ ${detailsItems}
     console.log('========================================');
     
     setSubmitting(true);
-    setShowRecap(false);
     
     toast.loading(lang === "fr" ? 'Envoi...' : 'Sending...', { id: 'submit' });
     
@@ -939,6 +938,7 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
       console.log('[ARRIVAL_VALIDATE] SUCCESS - Redirection vers Home');
       
       navigate(createPageUrl('Home'), { replace: true });
+      return;
       
     } catch (e) {
       console.error('[ARRIVAL_VALIDATE] ERROR GLOBAL:', e);
