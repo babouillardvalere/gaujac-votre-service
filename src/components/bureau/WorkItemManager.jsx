@@ -215,92 +215,303 @@ export default function WorkItemManager({ lang }) {
             </div>
           </div>
 
-          {/* Classement par hébergement */}
-          {statsArray.length > 0 ? (
-            <div className="space-y-2">
-              <h3 className="font-bold text-sm text-gray-700 mb-3">
-                {lang === 'fr' ? '🏆 Classement des hébergements (par nombre d\'interventions)' : '🏆 Top accommodations (by interventions)'}
+          {/* Graphiques de synthèse */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+            {/* Graphique barres */}
+            <div className="bg-white rounded-lg p-4 border-2 border-gray-200">
+              <h3 className="font-bold text-sm text-gray-700 mb-4">
+                📊 {lang === 'fr' ? 'Interventions par hébergement (Top 10)' : 'Interventions by accommodation (Top 10)'}
               </h3>
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {statsArray.map((stat, index) => (
-                  <div
-                    key={stat.hebergement}
-                    className={`p-3 rounded-lg border-2 transition-all cursor-pointer ${
-                      selectedHebergement?.hebergement === stat.hebergement
-                        ? 'bg-purple-100 border-purple-400'
-                        : 'bg-white border-gray-200 hover:border-purple-300'
-                    }`}
-                    onClick={() => setSelectedHebergement(selectedHebergement?.hebergement === stat.hebergement ? null : stat)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                          index === 0 ? 'bg-yellow-400 text-yellow-900' :
-                          index === 1 ? 'bg-gray-300 text-gray-700' :
-                          index === 2 ? 'bg-orange-300 text-orange-900' :
-                          'bg-blue-100 text-blue-700'
-                        }`}>
-                          {index + 1}
+              {statsArray.length > 0 ? (
+                <div className="space-y-2">
+                  {statsArray.slice(0, 10).map((stat, index) => {
+                    const techniqueCount = stat.interventions.filter(i => i.service === 'TECHNIQUE').length;
+                    const menageCount = stat.interventions.filter(i => i.service === 'MENAGE').length;
+                    const maxCount = Math.max(...statsArray.map(s => s.count));
+                    const percentage = (stat.count / maxCount) * 100;
+                    
+                    return (
+                      <div key={stat.hebergement} className="space-y-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-semibold text-gray-700 truncate max-w-[120px]">
+                            {stat.hebergement}
+                          </span>
+                          <span className="text-gray-500">{stat.count}</span>
                         </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <Home className="w-4 h-4 text-gray-500" />
-                            <span className="font-bold text-gray-900">{stat.hebergement}</span>
-                            <Badge variant="outline" className="text-xs">{stat.type_hebergement}</Badge>
-                          </div>
-                          <div className="text-xs text-gray-600 mt-1">
-                            Services: {stat.services || 'N/A'}
-                          </div>
+                        <div className="h-6 bg-gray-100 rounded-full overflow-hidden flex">
+                          {techniqueCount > 0 && (
+                            <div 
+                              className="bg-orange-500 flex items-center justify-center text-white text-xs font-bold"
+                              style={{ width: `${(techniqueCount / stat.count) * percentage}%` }}
+                              title={`Technique: ${techniqueCount}`}
+                            >
+                              {techniqueCount > 0 && techniqueCount}
+                            </div>
+                          )}
+                          {menageCount > 0 && (
+                            <div 
+                              className="bg-yellow-500 flex items-center justify-center text-white text-xs font-bold"
+                              style={{ width: `${(menageCount / stat.count) * percentage}%` }}
+                              title={`Ménage: ${menageCount}`}
+                            >
+                              {menageCount > 0 && menageCount}
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-purple-700">{stat.count}</div>
-                        <div className="text-xs text-gray-500">
-                          {lang === 'fr' ? 'intervention(s)' : 'intervention(s)'}
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-xs text-gray-500 text-center py-4">Aucune donnée</p>
+              )}
+            </div>
+
+            {/* Graphique camembert */}
+            <div className="bg-white rounded-lg p-4 border-2 border-gray-200">
+              <h3 className="font-bold text-sm text-gray-700 mb-4">
+                🥧 {lang === 'fr' ? 'Répartition par service' : 'Distribution by service'}
+              </h3>
+              {totalInterventions > 0 ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-center">
+                    <div className="relative w-40 h-40">
+                      <svg viewBox="0 0 100 100" className="transform -rotate-90">
+                        {techniqueCount > 0 && (
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r="40"
+                            fill="none"
+                            stroke="#f97316"
+                            strokeWidth="20"
+                            strokeDasharray={`${(techniqueCount / totalInterventions) * 251.2} 251.2`}
+                          />
+                        )}
+                        {menageCount > 0 && (
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r="40"
+                            fill="none"
+                            stroke="#eab308"
+                            strokeWidth="20"
+                            strokeDasharray={`${(menageCount / totalInterventions) * 251.2} 251.2`}
+                            strokeDashoffset={`-${(techniqueCount / totalInterventions) * 251.2}`}
+                          />
+                        )}
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-gray-900">{totalInterventions}</div>
+                          <div className="text-xs text-gray-500">total</div>
                         </div>
                       </div>
                     </div>
-
-                    {/* Détail des interventions */}
-                    {selectedHebergement?.hebergement === stat.hebergement && (
-                      <div className="mt-3 pt-3 border-t space-y-2">
-                        <div className="text-xs font-bold text-purple-700 mb-2">
-                          {lang === 'fr' ? 'Historique des interventions:' : 'Intervention history:'}
-                        </div>
-                        {stat.interventions.slice(0, 10).map(interv => (
-                          <div key={interv.id} className="text-xs bg-purple-50 p-2 rounded border border-purple-200">
-                            <div className="flex items-center justify-between mb-1">
-                              <Badge className={statusColor[interv.statut] + ' text-white text-xs'}>
-                                {interv.statut}
-                              </Badge>
-                              <span className="text-gray-500">
-                                {interv.created_date ? format(new Date(interv.created_date), 'dd/MM/yyyy') : 'N/A'}
-                              </span>
-                            </div>
-                            <div className="font-semibold text-gray-800">{interv.titre || 'Sans titre'}</div>
-                            <div className="text-gray-600">{interv.description?.substring(0, 80) || 'Pas de description'}</div>
-                            {interv.collaborateur && (
-                              <div className="text-gray-500 mt-1">👤 {interv.collaborateur}</div>
-                            )}
-                          </div>
-                        ))}
-                        {stat.interventions.length > 10 && (
-                          <div className="text-xs text-center text-gray-500 italic">
-                            ... et {stat.interventions.length - 10} autres
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </div>
-                ))}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-orange-500" />
+                        <span className="text-sm text-gray-700">Technique</span>
+                      </div>
+                      <span className="text-sm font-bold text-gray-900">
+                        {techniqueCount} ({Math.round((techniqueCount / totalInterventions) * 100)}%)
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                        <span className="text-sm text-gray-700">Ménage</span>
+                      </div>
+                      <span className="text-sm font-bold text-gray-900">
+                        {menageCount} ({Math.round((menageCount / totalInterventions) * 100)}%)
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-gray-500 text-center py-4">Aucune donnée</p>
+              )}
+            </div>
+          </div>
+
+          {/* Tableau principal - Interventions par hébergement */}
+          <div className="bg-white rounded-lg border-2 border-gray-200 overflow-hidden">
+            <div className="bg-purple-50 px-4 py-3 border-b-2 border-purple-200">
+              <h3 className="font-bold text-sm text-purple-900">
+                📋 {lang === 'fr' ? 'Tableau des interventions par hébergement' : 'Interventions by accommodation table'}
+              </h3>
+            </div>
+            {statsArray.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 border-b-2 border-gray-200">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-semibold text-gray-700">#</th>
+                      <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                        {lang === 'fr' ? 'Type' : 'Type'}
+                      </th>
+                      <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                        {lang === 'fr' ? 'Catégorie' : 'Category'}
+                      </th>
+                      <th className="px-4 py-3 text-left font-semibold text-gray-700">N°</th>
+                      <th className="px-4 py-3 text-center font-semibold text-gray-700">
+                        {lang === 'fr' ? 'Total' : 'Total'}
+                      </th>
+                      <th className="px-4 py-3 text-center font-semibold text-gray-700">
+                        {lang === 'fr' ? 'Technique' : 'Technical'}
+                      </th>
+                      <th className="px-4 py-3 text-center font-semibold text-gray-700">
+                        {lang === 'fr' ? 'Ménage' : 'Housekeeping'}
+                      </th>
+                      <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                        {lang === 'fr' ? 'Dernière interv.' : 'Last interv.'}
+                      </th>
+                      <th className="px-4 py-3 text-center font-semibold text-gray-700"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {statsArray.map((stat, index) => {
+                      const techniqueCount = stat.interventions.filter(i => i.service === 'TECHNIQUE').length;
+                      const menageCount = stat.interventions.filter(i => i.service === 'MENAGE').length;
+                      const lastInterv = stat.interventions.sort((a, b) => 
+                        new Date(b.created_date || 0) - new Date(a.created_date || 0)
+                      )[0];
+                      
+                      return (
+                        <React.Fragment key={stat.hebergement}>
+                          <tr 
+                            className={`border-b hover:bg-purple-50 cursor-pointer ${
+                              selectedHebergement?.hebergement === stat.hebergement ? 'bg-purple-100' : ''
+                            }`}
+                            onClick={() => setSelectedHebergement(
+                              selectedHebergement?.hebergement === stat.hebergement ? null : stat
+                            )}
+                          >
+                            <td className="px-4 py-3">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
+                                index === 0 ? 'bg-yellow-400 text-yellow-900' :
+                                index === 1 ? 'bg-gray-300 text-gray-700' :
+                                index === 2 ? 'bg-orange-300 text-orange-900' :
+                                'bg-blue-100 text-blue-700'
+                              }`}>
+                                {index + 1}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-gray-600">
+                              {stat.hebergement.startsWith('E') || stat.hebergement.startsWith('e') ? 'Emplacement' : 'Mobil-home'}
+                            </td>
+                            <td className="px-4 py-3 text-gray-900 font-medium">{stat.type_hebergement}</td>
+                            <td className="px-4 py-3 text-gray-900 font-bold">{stat.hebergement}</td>
+                            <td className="px-4 py-3 text-center">
+                              <span className="inline-block px-3 py-1 bg-purple-100 text-purple-900 rounded-full font-bold">
+                                {stat.count}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-center text-orange-700 font-semibold">{techniqueCount}</td>
+                            <td className="px-4 py-3 text-center text-yellow-700 font-semibold">{menageCount}</td>
+                            <td className="px-4 py-3 text-gray-600">
+                              {lastInterv?.created_date ? format(new Date(lastInterv.created_date), 'dd/MM/yyyy') : '-'}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <button className="text-purple-600 hover:text-purple-800 text-xs">
+                                {selectedHebergement?.hebergement === stat.hebergement ? '▼' : '▶'}
+                              </button>
+                            </td>
+                          </tr>
+                          {selectedHebergement?.hebergement === stat.hebergement && (
+                            <tr>
+                              <td colSpan="9" className="px-4 py-4 bg-purple-50">
+                                <div className="space-y-2">
+                                  <div className="text-xs font-bold text-purple-900 mb-2">
+                                    {lang === 'fr' ? 'Historique des interventions:' : 'Intervention history:'}
+                                  </div>
+                                  {stat.interventions.slice(0, 10).map(interv => (
+                                    <div key={interv.id} className="text-xs bg-white p-3 rounded border">
+                                      <div className="flex items-center justify-between mb-1">
+                                        <Badge className={statusColor[interv.statut] + ' text-white text-xs'}>
+                                          {interv.statut}
+                                        </Badge>
+                                        <span className="text-gray-500">
+                                          {interv.created_date ? format(new Date(interv.created_date), 'dd/MM/yyyy HH:mm') : 'N/A'}
+                                        </span>
+                                      </div>
+                                      <div className="font-semibold text-gray-800">{interv.titre || 'Sans titre'}</div>
+                                      <div className="text-gray-600">{interv.description || 'Pas de description'}</div>
+                                      {interv.collaborateur && (
+                                        <div className="text-gray-500 mt-1">👤 {interv.collaborateur}</div>
+                                      )}
+                                    </div>
+                                  ))}
+                                  {stat.interventions.length > 10 && (
+                                    <div className="text-xs text-center text-gray-500 italic">
+                                      ... et {stat.interventions.length - 10} autres
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
+            ) : (
+              <div className="px-4 py-8 text-center text-sm text-gray-500">
+                {lang === 'fr' ? 'Aucun hébergement avec interventions sur cette période' : 'No accommodations with interventions for this period'}
+              </div>
+            )}
+          </div>
+
+          {/* Tableau secondaire - Par service */}
+          <div className="bg-white rounded-lg border-2 border-gray-200 overflow-hidden mt-4">
+            <div className="bg-blue-50 px-4 py-3 border-b-2 border-blue-200">
+              <h3 className="font-bold text-sm text-blue-900">
+                📊 {lang === 'fr' ? 'Récapitulatif par service' : 'Summary by service'}
+              </h3>
             </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <AlertTriangle className="w-8 h-8 mx-auto mb-2 opacity-30" />
-              <p className="text-sm">{lang === 'fr' ? 'Aucune intervention sur cette période' : 'No interventions for this period'}</p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Service</th>
+                    <th className="px-4 py-3 text-center font-semibold text-gray-700">Total</th>
+                    <th className="px-4 py-3 text-center font-semibold text-gray-700">
+                      {lang === 'fr' ? 'En cours' : 'In progress'}
+                    </th>
+                    <th className="px-4 py-3 text-center font-semibold text-gray-700">
+                      {lang === 'fr' ? 'Terminées' : 'Completed'}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b hover:bg-orange-50">
+                    <td className="px-4 py-3 font-semibold text-gray-900">🔧 Technique</td>
+                    <td className="px-4 py-3 text-center font-bold text-orange-700">{techniqueCount}</td>
+                    <td className="px-4 py-3 text-center text-gray-600">
+                      {workItemsPeriode.filter(w => w.service === 'TECHNIQUE' && w.statut === 'EN_COURS').length}
+                    </td>
+                    <td className="px-4 py-3 text-center text-gray-600">
+                      {workItemsPeriode.filter(w => w.service === 'TECHNIQUE' && w.statut === 'TERMINEE').length}
+                    </td>
+                  </tr>
+                  <tr className="border-b hover:bg-yellow-50">
+                    <td className="px-4 py-3 font-semibold text-gray-900">🧹 Ménage</td>
+                    <td className="px-4 py-3 text-center font-bold text-yellow-700">{menageCount}</td>
+                    <td className="px-4 py-3 text-center text-gray-600">
+                      {workItemsPeriode.filter(w => w.service === 'MENAGE' && w.statut === 'EN_COURS').length}
+                    </td>
+                    <td className="px-4 py-3 text-center text-gray-600">
+                      {workItemsPeriode.filter(w => w.service === 'MENAGE' && w.statut === 'TERMINEE').length}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-          )}
+          </div>
         </CardContent>
       </Card>
 
