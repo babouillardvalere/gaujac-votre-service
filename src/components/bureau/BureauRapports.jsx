@@ -1,1866 +1,474 @@
-import React, { useState, useMemo } from 'react';
-import { base44 } from '@/api/base44Client';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { 
-  FileText, Calendar as CalendarIcon, Download, Mail, Loader2, Plus, Trash2,
-  Clock, CheckCircle, XCircle, Eye, Settings, Play, FileSpreadsheet,
-  Filter, Search, ChevronDown, ChevronUp, BarChart3, Users, Wrench, Star, 
-  RefreshCcw, Zap, Timer, TrendingUp
-} from 'lucide-react';
-import { format, subDays, subWeeks, subMonths, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, parseISO } from 'date-fns';
-import { fr, enUS } from 'date-fns/locale';
+import { Badge } from '@/components/ui/badge';
+import { FileText, Download, Loader2, Calendar, Filter, TrendingUp } from 'lucide-react';
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
-import RapportPreview from './RapportPreview';
-import LitigePDFGenerator from './LitigePDFGenerator';
-import RapportPDFGenerator, { generateRapportPDF } from './RapportPDFGenerator';
-import PDFRapportMensuel from './PDFRapportMensuel';
-import PDFRapportAvisClients from './PDFRapportAvisClients';
-import PDFRapportCommandes from './PDFRapportCommandes';
+import RapportPDFGenerator from './RapportPDFGenerator';
 
-const translations = {
-  fr: {
-    title: 'Rapports automatiques',
-    config: 'Configuration',
-    historique: 'Historique',
-    generer: 'Générer maintenant',
-    quotidien: 'Quotidien',
-    hebdomadaire: 'Hebdomadaire',
-    mensuel: 'Mensuel',
-    destinataires: 'Destinataires',
-    ajouter_email: 'Ajouter un email',
-    format_export: 'Format d\'export',
-    heure_envoi: 'Heure d\'envoi',
-    jour_envoi: 'Jour d\'envoi',
-    activer: 'Activer',
-    desactiver: 'Désactiver',
-    enregistrer: 'Enregistrer',
-    apercu: 'Aperçu',
-    telecharger_pdf: 'Télécharger PDF',
-    telecharger_csv: 'Télécharger CSV',
-    envoyer_maintenant: 'Envoyer maintenant',
-    derniere_generation: 'Dernière génération',
-    aucun_rapport: 'Aucun rapport généré',
-    rapport_genere: 'Rapport généré avec succès',
-    rapport_envoye: 'Rapport envoyé avec succès',
-    erreur_generation: 'Erreur lors de la génération',
-    direction: 'Direction',
-    bureau: 'Bureau',
-    maintenance: 'Maintenance',
-    menage: 'Ménage',
-    lundi: 'Lundi', mardi: 'Mardi', mercredi: 'Mercredi', jeudi: 'Jeudi',
-    vendredi: 'Vendredi', samedi: 'Samedi', dimanche: 'Dimanche',
-    periode: 'Période',
-    du: 'Du',
-    au: 'au',
-    total_interventions: 'Total interventions',
-    urgences: 'Urgences',
-    temps_moyen_reaction: 'Temps moyen réaction',
-    temps_moyen_resolution: 'Temps moyen résolution',
-    taux_non_resolu: 'Taux non résolu',
-    langue: 'Langue du rapport',
-    // New translations
-    planification: 'Planification',
-    metriques: 'Métriques incluses',
-    filtres_avances: 'Filtres avancés',
-    tous_types: 'Tous les types',
-    tous_statuts: 'Tous les statuts',
-    envoye: 'Envoyé',
-    non_envoye: 'Non envoyé',
-    rechercher: 'Rechercher...',
-    date_debut: 'Date début',
-    date_fin: 'Date fin',
-    reinitialiser: 'Réinitialiser',
-    appliquer: 'Appliquer',
-    resultats: 'résultat(s)',
-    recurrence: 'Récurrence',
-    prochaine_execution: 'Prochaine exécution',
-    configurer_metriques: 'Configurer les métriques',
-    interventions_section: 'Section Interventions',
-    temps_section: 'Section Temps',
-    categories_section: 'Section Catégories',
-    hebergements_section: 'Section Hébergements',
-    collaborateurs_section: 'Section Collaborateurs',
-    satisfaction_section: 'Section Satisfaction',
-    top_interventions: 'Top interventions longues',
-    activer_envoi_auto: 'Activer l\'envoi automatique',
-    rappel_avant: 'Rappel avant envoi',
-    aucun_rappel: 'Aucun rappel',
-    minutes_avant: 'min avant',
-    heures_avant: 'h avant',
-    nouveau_rapport: 'Nouveau rapport',
-    supprimer_rapport: 'Supprimer',
-    confirmer_suppression: 'Confirmer la suppression ?',
-    rapport_supprime: 'Rapport supprimé',
-    exporter_selection: 'Exporter la sélection',
-    // Litige
-    rapport_litige: 'Rapport de litige',
-    generer_litige: 'Générer un rapport de litige',
-    selectionner_intervention: 'Sélectionner une intervention',
-    aucune_intervention: 'Aucune intervention disponible',
-    informations_litige: 'Informations du litige',
-    telecharger_dossier: 'Télécharger le dossier complet',
-    envoyer_email_litige: 'Envoyer par email',
-    date_intervention: 'Date intervention',
-    client_info: 'Client',
-    hebergement_info: 'Hébergement',
-    collaborateur_info: 'Intervenant',
-    photos_preuves: 'Preuves photographiques',
-    photo_avant: 'Photo AVANT',
-    photo_apres: 'Photo APRÈS',
-    hash_verification: 'Hash de vérification',
-    rapport_litige_genere: 'Rapport de litige généré',
-    copier_hash: 'Copier le hash'
-  },
-  en: {
-    title: 'Automatic Reports',
-    config: 'Configuration',
-    historique: 'History',
-    generer: 'Generate now',
-    quotidien: 'Daily',
-    hebdomadaire: 'Weekly',
-    mensuel: 'Monthly',
-    destinataires: 'Recipients',
-    ajouter_email: 'Add an email',
-    format_export: 'Export format',
-    heure_envoi: 'Send time',
-    jour_envoi: 'Send day',
-    activer: 'Enable',
-    desactiver: 'Disable',
-    enregistrer: 'Save',
-    apercu: 'Preview',
-    telecharger_pdf: 'Download PDF',
-    telecharger_csv: 'Download CSV',
-    envoyer_maintenant: 'Send now',
-    derniere_generation: 'Last generation',
-    aucun_rapport: 'No report generated',
-    rapport_genere: 'Report generated successfully',
-    rapport_envoye: 'Report sent successfully',
-    erreur_generation: 'Error during generation',
-    direction: 'Management',
-    bureau: 'Office',
-    maintenance: 'Maintenance',
-    menage: 'Housekeeping',
-    lundi: 'Monday', mardi: 'Tuesday', mercredi: 'Wednesday', jeudi: 'Thursday',
-    vendredi: 'Friday', samedi: 'Saturday', dimanche: 'Sunday',
-    periode: 'Period',
-    du: 'From',
-    au: 'to',
-    total_interventions: 'Total interventions',
-    urgences: 'Emergencies',
-    temps_moyen_reaction: 'Avg reaction time',
-    temps_moyen_resolution: 'Avg resolution time',
-    taux_non_resolu: 'Unresolved rate',
-    langue: 'Report language',
-    // New translations
-    planification: 'Scheduling',
-    metriques: 'Included metrics',
-    filtres_avances: 'Advanced filters',
-    tous_types: 'All types',
-    tous_statuts: 'All statuses',
-    envoye: 'Sent',
-    non_envoye: 'Not sent',
-    rechercher: 'Search...',
-    date_debut: 'Start date',
-    date_fin: 'End date',
-    reinitialiser: 'Reset',
-    appliquer: 'Apply',
-    resultats: 'result(s)',
-    recurrence: 'Recurrence',
-    prochaine_execution: 'Next execution',
-    configurer_metriques: 'Configure metrics',
-    interventions_section: 'Interventions Section',
-    temps_section: 'Time Section',
-    categories_section: 'Categories Section',
-    hebergements_section: 'Accommodations Section',
-    collaborateurs_section: 'Collaborators Section',
-    satisfaction_section: 'Satisfaction Section',
-    top_interventions: 'Top longest interventions',
-    activer_envoi_auto: 'Enable automatic sending',
-    rappel_avant: 'Reminder before',
-    aucun_rappel: 'No reminder',
-    minutes_avant: 'min before',
-    heures_avant: 'h before',
-    nouveau_rapport: 'New report',
-    supprimer_rapport: 'Delete',
-    confirmer_suppression: 'Confirm deletion?',
-    rapport_supprime: 'Report deleted',
-    exporter_selection: 'Export selection',
-    // Litige
-    rapport_litige: 'Dispute Report',
-    generer_litige: 'Generate Dispute Report',
-    selectionner_intervention: 'Select an intervention',
-    aucune_intervention: 'No intervention available',
-    informations_litige: 'Dispute Information',
-    telecharger_dossier: 'Download Complete File',
-    envoyer_email_litige: 'Send by Email',
-    date_intervention: 'Intervention Date',
-    client_info: 'Client',
-    hebergement_info: 'Accommodation',
-    collaborateur_info: 'Technician',
-    photos_preuves: 'Photo Evidence',
-    photo_avant: 'BEFORE Photo',
-    photo_apres: 'AFTER Photo',
-    hash_verification: 'Verification Hash',
-    rapport_litige_genere: 'Dispute report generated',
-    copier_hash: 'Copy Hash'
-  }
-};
-
-const defaultMetricsConfig = {
-  interventions: true,
-  temps: true,
-  categories: true,
-  hebergements: true,
-  collaborateurs: true,
-  satisfaction: true,
-  topLongues: true
-};
-
-export default function BureauRapports({ incidents = [], avis = [] }) {
-  const lang = sessionStorage.getItem('user_language') || 'fr';
-  const t = (key) => translations[lang]?.[key] || translations['fr']?.[key] || key;
-  
+export default function BureauRapports({ lang = 'fr' }) {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState('config');
-  const [showPreview, setShowPreview] = useState(false);
-  const [previewType, setPreviewType] = useState('quotidien');
-  const [previewData, setPreviewData] = useState(null);
-  const [newEmail, setNewEmail] = useState('');
-  const [generating, setGenerating] = useState(false);
-  const [showMetricsDialog, setShowMetricsDialog] = useState(false);
-  const [editingConfigType, setEditingConfigType] = useState(null);
-  const [showFilters, setShowFilters] = useState(false);
-  const [selectedReports, setSelectedReports] = useState([]);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [reportToDelete, setReportToDelete] = useState(null);
-  const [showLitigeDialog, setShowLitigeDialog] = useState(false);
-  const [selectedIncidentForLitige, setSelectedIncidentForLitige] = useState(null);
-  const [litigeEmail, setLitigeEmail] = useState('');
-  const [litigeFilters, setLitigeFilters] = useState({
-    search: '',
-    categorie: 'all',
-    dateStart: null,
-    dateEnd: null,
-    lieu: '',
-    intervenant: 'all'
-  });
+  
+  const [periodeType, setPeriodeType] = useState('HEBDOMADAIRE');
+  const [dateDebut, setDateDebut] = useState('');
+  const [dateFin, setDateFin] = useState('');
+  const [portee, setPortee] = useState('GLOBALE');
+  const [filtreService, setFiltreService] = useState('');
+  const [filtreCollaborateur, setFiltreCollaborateur] = useState('');
+  const [filtreHebergement, setFiltreHebergement] = useState('');
+  const [rapportEnCours, setRapportEnCours] = useState(null);
 
-  // Filtres historique
-  const [historyFilters, setHistoryFilters] = useState({
-    type: 'all',
-    status: 'all',
-    search: '',
-    dateStart: null,
-    dateEnd: null
-  });
-
-  const { data: configs = [], isLoading: loadingConfigs } = useQuery({
-    queryKey: ['rapport-configs'],
-    queryFn: () => base44.entities.RapportConfig.list()
-  });
-
-  const { data: historique = [], isLoading: loadingHistorique } = useQuery({
-    queryKey: ['rapport-historique'],
-    queryFn: () => base44.entities.RapportHistorique.filter({}, '-date_generation', 100)
-  });
-
-  const createConfigMutation = useMutation({
-    mutationFn: (data) => base44.entities.RapportConfig.create(data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['rapport-configs'] })
-  });
-
-  const updateConfigMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.RapportConfig.update(id, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['rapport-configs'] })
-  });
-
-  const deleteConfigMutation = useMutation({
-    mutationFn: (id) => base44.entities.RapportConfig.delete(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['rapport-configs'] })
-  });
-
-  const createHistoriqueMutation = useMutation({
-    mutationFn: (data) => base44.entities.RapportHistorique.create(data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['rapport-historique'] })
-  });
-
-  const deleteHistoriqueMutation = useMutation({
-    mutationFn: (id) => base44.entities.RapportHistorique.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['rapport-historique'] });
-      toast.success(t('rapport_supprime'));
-    }
-  });
-
-  // Filtrage de l'historique
-  const filteredHistorique = useMemo(() => {
-    return historique.filter(rapport => {
-      // Filtre type
-      if (historyFilters.type !== 'all' && rapport.type !== historyFilters.type) return false;
-      
-      // Filtre statut
-      if (historyFilters.status === 'envoye' && !rapport.envoi_reussi) return false;
-      if (historyFilters.status === 'non_envoye' && rapport.envoi_reussi) return false;
-      
-      // Filtre recherche
-      if (historyFilters.search) {
-        const searchLower = historyFilters.search.toLowerCase();
-        const matchPeriod = `${rapport.date_debut} ${rapport.date_fin}`.toLowerCase().includes(searchLower);
-        const matchDestinataires = rapport.destinataires_envoyes?.some(d => d.toLowerCase().includes(searchLower));
-        if (!matchPeriod && !matchDestinataires) return false;
-      }
-      
-      // Filtre dates
-      if (historyFilters.dateStart && rapport.date_generation) {
-        const reportDate = new Date(rapport.date_generation);
-        if (reportDate < historyFilters.dateStart) return false;
-      }
-      if (historyFilters.dateEnd && rapport.date_generation) {
-        const reportDate = new Date(rapport.date_generation);
-        if (reportDate > historyFilters.dateEnd) return false;
-      }
-      
-      return true;
-    });
-  }, [historique, historyFilters]);
-
-  const resetFilters = () => {
-    setHistoryFilters({
-      type: 'all',
-      status: 'all',
-      search: '',
-      dateStart: null,
-      dateEnd: null
-    });
-  };
-
-  // Calcul des métriques pour une période
-  const calculateMetrics = (dateDebut, dateFin, reportLang = 'fr', metricsConfig = defaultMetricsConfig) => {
-    const start = new Date(dateDebut);
-    const end = new Date(dateFin);
-    
-    const periodIncidents = incidents.filter(i => {
-      const d = new Date(i.date_saisie);
-      return d >= start && d <= end;
-    });
-
-    const resolus = periodIncidents.filter(i => i.statut === 'resolu');
-    const urgents = periodIncidents.filter(i => i.urgent);
-    const nonResolus = periodIncidents.filter(i => i.statut !== 'resolu');
-
-    const result = {
-      periode: { debut: dateDebut, fin: dateFin },
-      langue: reportLang,
-      metricsConfig
-    };
-
-    // Section Interventions
-    if (metricsConfig.interventions) {
-      result.total = periodIncidents.length;
-      result.urgences = urgents.length;
-      result.resolus = resolus.length;
-      result.nonResolus = nonResolus.length;
-      result.tauxNonResolu = periodIncidents.length > 0 
-        ? ((nonResolus.length / periodIncidents.length) * 100).toFixed(1) 
-        : 0;
-    }
-
-    // Section Temps
-    if (metricsConfig.temps) {
-      const tempsReaction = resolus
-        .filter(i => i.temps_prise_en_charge)
-        .map(i => i.temps_prise_en_charge);
-      result.avgReaction = tempsReaction.length > 0 
-        ? Math.round(tempsReaction.reduce((a, b) => a + b, 0) / tempsReaction.length)
-        : 0;
-
-      const tempsResolution = resolus
-        .filter(i => i.temps_total_intervention)
-        .map(i => i.temps_total_intervention);
-      result.avgResolution = tempsResolution.length > 0
-        ? Math.round(tempsResolution.reduce((a, b) => a + b, 0) / tempsResolution.length)
-        : 0;
-    }
-
-    // Section Catégories
-    if (metricsConfig.categories) {
-      result.parCategorie = periodIncidents.reduce((acc, i) => {
-        acc[i.categorie] = (acc[i.categorie] || 0) + 1;
-        return acc;
-      }, {});
-    }
-
-    // Section Hébergements
-    if (metricsConfig.hebergements) {
-      result.parHebergement = periodIncidents.reduce((acc, i) => {
-        const loc = i.logement || i.emplacement || 'Inconnu';
-        acc[loc] = (acc[loc] || 0) + 1;
-        return acc;
-      }, {});
-    }
-
-    // Section Top interventions longues
-    if (metricsConfig.topLongues) {
-      result.plusLongues = [...resolus]
-        .filter(i => i.temps_total_intervention)
-        .sort((a, b) => b.temps_total_intervention - a.temps_total_intervention)
-        .slice(0, 5);
-    }
-
-    // Section Collaborateurs
-    if (metricsConfig.collaborateurs) {
-      result.parCollaborateur = resolus.reduce((acc, i) => {
-        if (i.pris_par) acc[i.pris_par] = (acc[i.pris_par] || 0) + 1;
-        return acc;
-      }, {});
-    }
-
-    // Section Satisfaction
-    if (metricsConfig.satisfaction) {
-      const periodAvis = avis.filter(a => {
-        const d = new Date(a.created_date);
-        return d >= start && d <= end;
-      });
-
-      result.avis = {
-        total: periodAvis.length,
-        avgReactivite: periodAvis.length > 0
-          ? (periodAvis.reduce((s, a) => s + (a.note_reactivite || 0), 0) / periodAvis.length).toFixed(1)
-          : 0,
-        avgAmabilite: periodAvis.length > 0
-          ? (periodAvis.reduce((s, a) => s + (a.note_amabilite || 0), 0) / periodAvis.length).toFixed(1)
-          : 0,
-        avgQualite: periodAvis.length > 0
-          ? (periodAvis.reduce((s, a) => s + (a.note_intervention || 0), 0) / periodAvis.length).toFixed(1)
-          : 0,
-        avgGlobale: periodAvis.length > 0
-          ? (periodAvis.reduce((s, a) => s + (a.note_globale || 0), 0) / periodAvis.length).toFixed(1)
-          : 0
-      };
-    }
-
-    return result;
-  };
-
-  // Obtenir les dates pour un type de rapport
-  const getPeriodDates = (type) => {
-    const now = new Date();
-    switch (type) {
-      case 'quotidien':
-        return {
-          debut: format(subDays(now, 1), 'yyyy-MM-dd'),
-          fin: format(subDays(now, 1), 'yyyy-MM-dd')
-        };
-      case 'hebdomadaire':
-        return {
-          debut: format(startOfWeek(subWeeks(now, 1), { weekStartsOn: 1 }), 'yyyy-MM-dd'),
-          fin: format(endOfWeek(subWeeks(now, 1), { weekStartsOn: 1 }), 'yyyy-MM-dd')
-        };
-      case 'mensuel':
-        return {
-          debut: format(startOfMonth(subMonths(now, 1)), 'yyyy-MM-dd'),
-          fin: format(endOfMonth(subMonths(now, 1)), 'yyyy-MM-dd')
-        };
-      default:
-        return { debut: format(now, 'yyyy-MM-dd'), fin: format(now, 'yyyy-MM-dd') };
-    }
-  };
-
-  // Calculer la prochaine exécution
-  const getNextExecution = (config) => {
-    if (!config?.actif) return null;
-    
-    const now = new Date();
-    const [hours, minutes] = (config.heure_envoi || '08:00').split(':').map(Number);
-    
-    let nextDate = new Date(now);
-    nextDate.setHours(hours, minutes, 0, 0);
-    
-    if (config.type === 'quotidien') {
-      if (nextDate <= now) nextDate.setDate(nextDate.getDate() + 1);
-    } else if (config.type === 'hebdomadaire') {
-      const targetDay = config.jour_envoi || 1;
-      const currentDay = now.getDay() || 7;
-      let daysToAdd = targetDay - currentDay;
-      if (daysToAdd < 0 || (daysToAdd === 0 && nextDate <= now)) {
-        daysToAdd += 7;
-      }
-      nextDate.setDate(now.getDate() + daysToAdd);
-    } else if (config.type === 'mensuel') {
-      const targetDay = config.jour_envoi || 1;
-      nextDate.setDate(targetDay);
-      if (nextDate <= now) {
-        nextDate.setMonth(nextDate.getMonth() + 1);
-      }
-    }
-    
-    return nextDate;
-  };
-
-  // Générer un rapport
-  const generateReport = async (type, config = null) => {
-    setGenerating(true);
-    try {
-      const reportLang = config?.langue || lang;
-      const metricsConfig = config?.metriques_config || defaultMetricsConfig;
-      const { debut, fin } = getPeriodDates(type);
-      const metriques = calculateMetrics(debut, fin, reportLang, metricsConfig);
-
-      const rapport = await createHistoriqueMutation.mutateAsync({
-        type,
-        date_debut: debut,
-        date_fin: fin,
-        date_generation: new Date().toISOString(),
-        metriques,
-        destinataires_envoyes: config?.destinataires || [],
-        envoi_reussi: false,
-        langue: reportLang
-      });
-
-      if (config) {
-        await updateConfigMutation.mutateAsync({
-          id: config.id,
-          data: { derniere_generation: new Date().toISOString() }
-        });
-      }
-
-      toast.success(t('rapport_genere'));
-      return rapport;
-    } catch (error) {
-      toast.error(t('erreur_generation'));
-    } finally {
-      setGenerating(false);
-    }
-  };
-
-  // Envoyer le rapport par email avec PDF
-  const sendReport = async (rapport, destinataires) => {
-    try {
-      const reportLang = rapport.langue || 'fr';
-      const tReport = (key) => translations[reportLang]?.[key] || key;
-      
-      // Filtrer les incidents et avis pour la période du rapport
-      const periodIncidents = incidents.filter(i => {
-        const d = new Date(i.date_saisie);
-        return d >= new Date(rapport.date_debut) && d <= new Date(rapport.date_fin + 'T23:59:59');
-      });
-      const periodAvis = avis.filter(a => {
-        const d = new Date(a.created_date);
-        return d >= new Date(rapport.date_debut) && d <= new Date(rapport.date_fin + 'T23:59:59');
-      });
-
-      // Générer le PDF
-      const doc = await generateRapportPDF(rapport.type, rapport.metriques, periodIncidents, periodAvis, reportLang);
-      const pdfBlob = doc.output('blob');
-      
-      // Uploader le PDF
-      const file = new File([pdfBlob], `rapport_${rapport.type}.pdf`, { type: 'application/pdf' });
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-
-      // Email minimaliste avec lien vers le PDF
-      const typeLabel = tReport(rapport.type);
-      const emailBody = reportLang === 'fr' 
-        ? `Bonjour,\n\nVeuillez trouver ci-joint le rapport ${typeLabel}.\n\n📎 Télécharger le rapport: ${file_url}\n\nCamping Paradis – Domaine de Gaujac\nMerci et bonne journée.`
-        : `Hello,\n\nPlease find attached the ${typeLabel} report.\n\n📎 Download report: ${file_url}\n\nCamping Paradis – Domaine de Gaujac\nThank you and have a great day.`;
-
-      for (const email of destinataires) {
-        await base44.integrations.Core.SendEmail({
-          to: email,
-          subject: `Camping Paradis - ${reportLang === 'fr' ? 'Rapport' : 'Report'} ${typeLabel}`,
-          body: emailBody
-        });
-      }
-
-      await base44.entities.RapportHistorique.update(rapport.id, {
-        envoi_reussi: true,
-        destinataires_envoyes: destinataires,
-        pdf_url: file_url
-      });
-
-      toast.success(t('rapport_envoye'));
-      queryClient.invalidateQueries({ queryKey: ['rapport-historique'] });
-    } catch (error) {
-      console.error(error);
-      toast.error('Erreur lors de l\'envoi');
-    }
-  };
-
-  // Générer le corps de l'email
-  const generateEmailBody = (metriques, reportLang = 'fr') => {
-    const tReport = (key) => translations[reportLang]?.[key] || key;
-    const mc = metriques.metricsConfig || defaultMetricsConfig;
-    
-    let body = `
-RAPPORT D'ACTIVITÉ - CAMPING PARADIS
-====================================
-
-Période: ${metriques.periode.debut} ${tReport('au')} ${metriques.periode.fin}
-`;
-
-    if (mc.interventions && metriques.total !== undefined) {
-      body += `
-INTERVENTIONS
--------------
-• ${tReport('total_interventions')}: ${metriques.total}
-• ${tReport('urgences')}: ${metriques.urgences}
-• Résolues: ${metriques.resolus}
-• Non résolues: ${metriques.nonResolus} (${metriques.tauxNonResolu}%)
-`;
-    }
-
-    if (mc.temps && metriques.avgReaction !== undefined) {
-      body += `
-TEMPS MOYENS
-------------
-• ${tReport('temps_moyen_reaction')}: ${metriques.avgReaction} min
-• ${tReport('temps_moyen_resolution')}: ${metriques.avgResolution} min
-`;
-    }
-
-    if (mc.categories && metriques.parCategorie) {
-      body += `
-PAR CATÉGORIE
--------------
-${Object.entries(metriques.parCategorie).map(([k, v]) => `• ${k}: ${v}`).join('\n')}
-`;
-    }
-
-    if (mc.satisfaction && metriques.avis) {
-      body += `
-SATISFACTION CLIENT
--------------------
-• Réactivité: ${metriques.avis.avgReactivite}/5
-• Amabilité: ${metriques.avis.avgAmabilite}/5
-• Qualité: ${metriques.avis.avgQualite}/5
-• Note globale: ${metriques.avis.avgGlobale}/5
-`;
-    }
-
-    body += `
----
-Rapport généré automatiquement par Camping Paradis`;
-
-    return body.trim();
-  };
-
-  // Générer CSV
-  const generateCSV = (metriques) => {
-    const mc = metriques.metricsConfig || defaultMetricsConfig;
-    const rows = [['Métrique', 'Valeur']];
-    
-    if (mc.interventions && metriques.total !== undefined) {
-      rows.push(
-        ['Total interventions', metriques.total],
-        ['Urgences', metriques.urgences],
-        ['Résolues', metriques.resolus],
-        ['Non résolues', metriques.nonResolus],
-        ['Taux non résolu (%)', metriques.tauxNonResolu]
-      );
-    }
-    
-    if (mc.temps && metriques.avgReaction !== undefined) {
-      rows.push(
-        ['Temps moyen réaction (min)', metriques.avgReaction],
-        ['Temps moyen résolution (min)', metriques.avgResolution]
-      );
-    }
-    
-    if (mc.categories && metriques.parCategorie) {
-      rows.push([''], ['Catégorie', 'Nombre']);
-      Object.entries(metriques.parCategorie).forEach(([k, v]) => rows.push([k, v]));
-    }
-    
-    if (mc.hebergements && metriques.parHebergement) {
-      rows.push([''], ['Hébergement', 'Nombre']);
-      Object.entries(metriques.parHebergement).forEach(([k, v]) => rows.push([k, v]));
-    }
-    
-    if (mc.satisfaction && metriques.avis) {
-      rows.push(
-        [''], ['Satisfaction', 'Note'],
-        ['Réactivité', metriques.avis.avgReactivite],
-        ['Amabilité', metriques.avis.avgAmabilite],
-        ['Qualité', metriques.avis.avgQualite],
-        ['Note globale', metriques.avis.avgGlobale]
-      );
-    }
-
-    return rows.map(r => r.join(';')).join('\n');
-  };
-
-  // Télécharger CSV
-  const downloadCSV = (rapport) => {
-    const csv = generateCSV(rapport.metriques);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `rapport_${rapport.type}_${rapport.date_debut}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  // Exporter sélection
-  const exportSelectedReports = () => {
-    const selected = filteredHistorique.filter(r => selectedReports.includes(r.id));
-    if (selected.length === 0) return;
-    
-    let allCSV = '';
-    selected.forEach((rapport, idx) => {
-      if (idx > 0) allCSV += '\n\n--- NOUVEAU RAPPORT ---\n\n';
-      allCSV += `Type: ${rapport.type}\nPériode: ${rapport.date_debut} - ${rapport.date_fin}\n\n`;
-      allCSV += generateCSV(rapport.metriques);
-    });
-    
-    const blob = new Blob([allCSV], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `rapports_selection_${format(new Date(), 'yyyy-MM-dd')}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  // Prévisualiser - génère le même PDF
-  const handlePreview = async (type) => {
-    const config = configs.find(c => c.type === type);
-    const reportLang = config?.langue || lang;
-    const metricsConfig = config?.metriques_config || defaultMetricsConfig;
-    const { debut, fin } = getPeriodDates(type);
-    const metriques = calculateMetrics(debut, fin, reportLang, metricsConfig);
-    
-    // Filtrer les incidents et avis pour la période
-    const periodIncidents = incidents.filter(i => {
-      const d = new Date(i.date_saisie);
-      return d >= new Date(debut) && d <= new Date(fin + 'T23:59:59');
-    });
-    const periodAvis = avis.filter(a => {
-      const d = new Date(a.created_date);
-      return d >= new Date(debut) && d <= new Date(fin + 'T23:59:59');
-    });
-    
-    try {
-      const doc = await generateRapportPDF(type, metriques, periodIncidents, periodAvis, reportLang);
-      const pdfBlob = doc.output('blob');
-      const url = URL.createObjectURL(pdfBlob);
-      window.open(url, '_blank');
-    } catch (error) {
-      console.error(error);
-      toast.error('Erreur lors de la génération');
-    }
-  };
-
-  const getConfig = (type) => configs.find(c => c.type === type);
-
-  // Toggle sélection rapport
-  const toggleReportSelection = (id) => {
-    setSelectedReports(prev => 
-      prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id]
-    );
-  };
-
-  // Sélectionner tous les rapports filtrés
-  const toggleSelectAll = () => {
-    if (selectedReports.length === filteredHistorique.length) {
-      setSelectedReports([]);
+  // Raccourcis de période
+  const setPeriodeCourante = () => {
+    const today = new Date();
+    if (periodeType === 'HEBDOMADAIRE') {
+      setDateDebut(format(startOfWeek(today, { locale: fr }), 'yyyy-MM-dd'));
+      setDateFin(format(endOfWeek(today, { locale: fr }), 'yyyy-MM-dd'));
     } else {
-      setSelectedReports(filteredHistorique.map(r => r.id));
+      setDateDebut(format(startOfMonth(today), 'yyyy-MM-dd'));
+      setDateFin(format(endOfMonth(today), 'yyyy-MM-dd'));
     }
   };
 
-  // Supprimer rapport
-  const handleDeleteReport = async () => {
-    if (reportToDelete) {
-      await deleteHistoriqueMutation.mutateAsync(reportToDelete);
-      setReportToDelete(null);
-      setShowDeleteConfirm(false);
+  const setPeriodePrecedente = () => {
+    const today = new Date();
+    if (periodeType === 'HEBDOMADAIRE') {
+      const prevWeek = subWeeks(today, 1);
+      setDateDebut(format(startOfWeek(prevWeek, { locale: fr }), 'yyyy-MM-dd'));
+      setDateFin(format(endOfWeek(prevWeek, { locale: fr }), 'yyyy-MM-dd'));
+    } else {
+      const prevMonth = subMonths(today, 1);
+      setDateDebut(format(startOfMonth(prevMonth), 'yyyy-MM-dd'));
+      setDateFin(format(endOfMonth(prevMonth), 'yyyy-MM-dd'));
     }
   };
 
-  const ConfigCard = ({ type }) => {
-    const config = getConfig(type);
-    const [localConfig, setLocalConfig] = useState(config || {
-      actif: false,
-      destinataires: [],
-      categories_destinataires: [],
-      format: 'pdf',
-      heure_envoi: '08:00',
-      jour_envoi: 1,
-      langue: lang,
-      metriques_config: defaultMetricsConfig,
-      rappel_avant: 0
+  // Récupérer les collaborateurs et hébergements pour les filtres
+  const { data: workItems = [] } = useQuery({
+    queryKey: ['bureau-workitems-rapports'],
+    queryFn: () => base44.entities.WorkItem.list('-created_date', 500)
+  });
+
+  const { data: incidents = [] } = useQuery({
+    queryKey: ['bureau-incidents-rapports'],
+    queryFn: () => base44.entities.Incident.list('-created_date', 500)
+  });
+
+  const collaborateurs = [...new Set([
+    ...workItems.map(w => w.collaborateur).filter(Boolean),
+    ...incidents.map(i => i.pris_par).filter(Boolean)
+  ])];
+
+  const hebergements = [...new Set([
+    ...workItems.map(w => w.hebergement).filter(Boolean),
+    ...incidents.map(i => i.logement || i.emplacement).filter(Boolean)
+  ])];
+
+  const genererRapportMutation = useMutation({
+    mutationFn: async (config) => {
+      if (!config.dateDebut || !config.dateFin) {
+        throw new Error('Période obligatoire');
+      }
+
+      // Charger toutes les données nécessaires
+      const [
+        workItemsData,
+        interventionsClientData,
+        incidentsData,
+        avisInterventionsData,
+        avisAppData
+      ] = await Promise.all([
+        base44.entities.WorkItem.filter({
+          created_date: { $gte: new Date(config.dateDebut).toISOString() }
+        }, '-created_date', 1000),
+        base44.entities.InterventionClient.filter({
+          created_date: { $gte: new Date(config.dateDebut).toISOString() }
+        }, '-created_date', 1000),
+        base44.entities.Incident.filter({
+          date_saisie: { $gte: new Date(config.dateDebut).toISOString() }
+        }, '-date_saisie', 1000),
+        base44.entities.Avis.filter({
+          created_date: { $gte: new Date(config.dateDebut).toISOString() }
+        }, '-created_date', 500),
+        base44.entities.AvisApplication.filter({
+          created_date: { $gte: new Date(config.dateDebut).toISOString() }
+        }, '-created_date', 500)
+      ]);
+
+      // Filtrer par date de fin
+      const dateFinTimestamp = new Date(config.dateFin + 'T23:59:59').getTime();
+      
+      const workItemsFiltered = workItemsData.filter(w => 
+        new Date(w.created_date).getTime() <= dateFinTimestamp
+      );
+      
+      const interventionsClientFiltered = interventionsClientData.filter(i => 
+        new Date(i.created_date).getTime() <= dateFinTimestamp
+      );
+      
+      const incidentsFiltered = incidentsData.filter(i => 
+        new Date(i.date_saisie).getTime() <= dateFinTimestamp
+      );
+
+      const avisInterventionsFiltered = avisInterventionsData.filter(a => 
+        new Date(a.created_date).getTime() <= dateFinTimestamp
+      );
+
+      const avisAppFiltered = avisAppData.filter(a => 
+        new Date(a.created_date).getTime() <= dateFinTimestamp
+      );
+
+      // Appliquer les filtres de portée
+      let workItemsFinal = workItemsFiltered;
+      let incidentsFinal = incidentsFiltered;
+      
+      if (config.portee === 'SERVICE' && config.filtreService) {
+        workItemsFinal = workItemsFinal.filter(w => w.service === config.filtreService);
+        incidentsFinal = incidentsFinal.filter(i => i.type === config.filtreService.toLowerCase());
+      }
+      
+      if (config.portee === 'COLLABORATEUR' && config.filtreCollaborateur) {
+        workItemsFinal = workItemsFinal.filter(w => w.collaborateur === config.filtreCollaborateur);
+        incidentsFinal = incidentsFinal.filter(i => i.pris_par === config.filtreCollaborateur);
+      }
+      
+      if (config.portee === 'HEBERGEMENT' && config.filtreHebergement) {
+        workItemsFinal = workItemsFinal.filter(w => w.hebergement === config.filtreHebergement);
+        incidentsFinal = incidentsFinal.filter(i => 
+          (i.logement || i.emplacement) === config.filtreHebergement
+        );
+      }
+
+      // Créer l'objet rapport
+      const rapport = {
+        config,
+        metadata: {
+          genere_le: new Date().toISOString(),
+          genere_par: 'BUREAU',
+          periode_type: config.periodeType,
+          date_debut: config.dateDebut,
+          date_fin: config.dateFin,
+          portee: config.portee
+        },
+        sections: {
+          interventions: {
+            workItems: workItemsFinal,
+            interventionsClient: interventionsClientFiltered,
+            incidents: incidentsFinal
+          },
+          temps: calculateTemps(workItemsFinal, incidentsFinal),
+          hebergements: calculateHebergements(workItemsFinal, incidentsFinal),
+          avis: {
+            interventions: avisInterventionsFiltered,
+            application: avisAppFiltered,
+            synthese: calculateAvisSynthese(avisInterventionsFiltered, avisAppFiltered)
+          },
+          synthese: calculateSyntheseDirection(
+            workItemsFinal,
+            incidentsFinal,
+            avisInterventionsFiltered,
+            avisAppFiltered
+          )
+        }
+      };
+
+      return rapport;
+    },
+    onSuccess: (rapport) => {
+      setRapportEnCours(rapport);
+      toast.success('📊 Rapport généré avec succès');
+    },
+    onError: (error) => {
+      toast.error(`Erreur: ${error.message}`);
+    }
+  });
+
+  const handleGenerer = () => {
+    genererRapportMutation.mutate({
+      periodeType,
+      dateDebut,
+      dateFin,
+      portee,
+      filtreService,
+      filtreCollaborateur,
+      filtreHebergement
     });
-
-    const nextExec = getNextExecution(localConfig.actif ? localConfig : null);
-
-    const handleSave = async () => {
-      if (config) {
-        await updateConfigMutation.mutateAsync({ id: config.id, data: localConfig });
-      } else {
-        await createConfigMutation.mutateAsync({ ...localConfig, type });
-      }
-      toast.success('Configuration enregistrée');
-    };
-
-    const addEmail = () => {
-      if (newEmail && !localConfig.destinataires?.includes(newEmail)) {
-        setLocalConfig({
-          ...localConfig,
-          destinataires: [...(localConfig.destinataires || []), newEmail]
-        });
-        setNewEmail('');
-      }
-    };
-
-    const removeEmail = (email) => {
-      setLocalConfig({
-        ...localConfig,
-        destinataires: localConfig.destinataires.filter(e => e !== email)
-      });
-    };
-
-    const toggleCategory = (cat) => {
-      const cats = localConfig.categories_destinataires || [];
-      setLocalConfig({
-        ...localConfig,
-        categories_destinataires: cats.includes(cat)
-          ? cats.filter(c => c !== cat)
-          : [...cats, cat]
-      });
-    };
-
-    const openMetricsConfig = () => {
-      setEditingConfigType(type);
-      setShowMetricsDialog(true);
-    };
-
-    const jours = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
-
-    return (
-      <Card className="border-2 border-[#FFA500]/30 rounded-xl">
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="font-heading text-[#0077A8] flex items-center gap-2">
-              <CalendarIcon className="w-5 h-5" />
-              {t(type)}
-            </CardTitle>
-            <Badge className={localConfig.actif ? 'bg-green-500' : 'bg-gray-400'}>
-              {localConfig.actif ? 'Actif' : 'Inactif'}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Activation avec switch */}
-          <div className="flex items-center justify-between">
-            <span className="font-body text-sm">{t('activer_envoi_auto')}</span>
-            <Switch
-              checked={localConfig.actif}
-              onCheckedChange={(c) => setLocalConfig({ ...localConfig, actif: c })}
-            />
-          </div>
-
-          {/* Prochaine exécution */}
-          {nextExec && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-2 text-sm">
-              <div className="flex items-center gap-2 text-green-700">
-                <RefreshCcw className="w-4 h-4" />
-                <span className="font-heading">{t('prochaine_execution')}:</span>
-                <span className="font-body">{format(nextExec, 'dd/MM/yyyy HH:mm', { locale: fr })}</span>
-              </div>
-            </div>
-          )}
-
-          {/* Langue */}
-          <div>
-            <label className="text-sm font-heading text-[#0077A8] block mb-1">{t('langue')}</label>
-            <Select
-              value={localConfig.langue || 'fr'}
-              onValueChange={(v) => setLocalConfig({ ...localConfig, langue: v })}
-            >
-              <SelectTrigger className="rounded-xl">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="fr">🇫🇷 Français</SelectItem>
-                <SelectItem value="en">🇬🇧 English</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Bouton Configurer métriques */}
-          <Button
-            variant="outline"
-            onClick={openMetricsConfig}
-            className="w-full rounded-xl border-[#00AEEF] text-[#00AEEF] hover:bg-[#00AEEF]/10"
-          >
-            <BarChart3 className="w-4 h-4 mr-2" />
-            {t('configurer_metriques')}
-          </Button>
-
-          {/* Catégories destinataires */}
-          <div>
-            <label className="text-sm font-heading text-[#0077A8] block mb-2">{t('destinataires')}</label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {['direction', 'bureau', 'maintenance', 'menage'].map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => toggleCategory(cat)}
-                  className={`px-3 py-1 rounded-lg text-sm transition-all ${
-                    localConfig.categories_destinataires?.includes(cat)
-                      ? 'bg-[#00AEEF] text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  {t(cat)}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Emails personnalisés */}
-          <div>
-            <div className="flex gap-2 mb-2">
-              <Input
-                placeholder={t('ajouter_email')}
-                value={newEmail}
-                onChange={(e) => setNewEmail(e.target.value)}
-                className="rounded-xl"
-                type="email"
-              />
-              <Button onClick={addEmail} size="icon" className="rounded-xl bg-[#00AEEF]">
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {localConfig.destinataires?.map(email => (
-                <Badge key={email} className="bg-gray-100 text-gray-700 pr-1">
-                  {email}
-                  <button onClick={() => removeEmail(email)} className="ml-1 text-red-500">×</button>
-                </Badge>
-              ))}
-            </div>
-          </div>
-
-          {/* Format */}
-          <div>
-            <label className="text-sm font-heading text-[#0077A8] block mb-1">{t('format_export')}</label>
-            <Select
-              value={localConfig.format}
-              onValueChange={(v) => setLocalConfig({ ...localConfig, format: v })}
-            >
-              <SelectTrigger className="rounded-xl">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pdf">PDF</SelectItem>
-                <SelectItem value="csv">CSV</SelectItem>
-                <SelectItem value="both">PDF + CSV</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Planification */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-sm font-heading text-[#0077A8] block mb-1">{t('heure_envoi')}</label>
-              <Input
-                type="time"
-                value={localConfig.heure_envoi}
-                onChange={(e) => setLocalConfig({ ...localConfig, heure_envoi: e.target.value })}
-                className="rounded-xl"
-              />
-            </div>
-            {type === 'hebdomadaire' && (
-              <div>
-                <label className="text-sm font-heading text-[#0077A8] block mb-1">{t('jour_envoi')}</label>
-                <Select
-                  value={String(localConfig.jour_envoi || 1)}
-                  onValueChange={(v) => setLocalConfig({ ...localConfig, jour_envoi: parseInt(v) })}
-                >
-                  <SelectTrigger className="rounded-xl">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {jours.map((j, i) => (
-                      <SelectItem key={i} value={String(i + 1)}>{t(j)}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            {type === 'mensuel' && (
-              <div>
-                <label className="text-sm font-heading text-[#0077A8] block mb-1">{t('jour_envoi')}</label>
-                <Select
-                  value={String(localConfig.jour_envoi || 1)}
-                  onValueChange={(v) => setLocalConfig({ ...localConfig, jour_envoi: parseInt(v) })}
-                >
-                  <SelectTrigger className="rounded-xl">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 28 }, (_, i) => (
-                      <SelectItem key={i} value={String(i + 1)}>{i + 1}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </div>
-
-          {/* Dernière génération */}
-          {config?.derniere_generation && (
-            <p className="text-xs text-gray-500">
-              {t('derniere_generation')}: {format(new Date(config.derniere_generation), 'dd/MM/yyyy HH:mm')}
-            </p>
-          )}
-
-          {/* Actions */}
-          <div className="flex gap-2 pt-2">
-            <Button onClick={handleSave} className="flex-1 bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl">
-              <Settings className="w-4 h-4 mr-2" />
-              {t('enregistrer')}
-            </Button>
-          </div>
-          
-          {/* Génération PDF */}
-          <div className="pt-3 border-t mt-3">
-            <RapportPDFGenerator
-              type={type}
-              metriques={(() => {
-                const reportLang = localConfig.langue || lang;
-                const metricsConfig = localConfig.metriques_config || defaultMetricsConfig;
-                const { debut, fin } = getPeriodDates(type);
-                return calculateMetrics(debut, fin, reportLang, metricsConfig);
-              })()}
-              incidents={incidents.filter(i => {
-                const { debut, fin } = getPeriodDates(type);
-                const d = new Date(i.date_saisie);
-                return d >= new Date(debut) && d <= new Date(fin + 'T23:59:59');
-              })}
-              avis={avis.filter(a => {
-                const { debut, fin } = getPeriodDates(type);
-                const d = new Date(a.created_date);
-                return d >= new Date(debut) && d <= new Date(fin + 'T23:59:59');
-              })}
-              lang={localConfig.langue || lang}
-              destinataires={localConfig.destinataires || []}
-            />
-          </div>
-        </CardContent>
-      </Card>
-    );
-  };
-
-  // Dialog de configuration des métriques
-  const MetricsConfigDialog = () => {
-    const config = editingConfigType ? getConfig(editingConfigType) : null;
-    const [localMetrics, setLocalMetrics] = useState(config?.metriques_config || defaultMetricsConfig);
-
-    const handleSaveMetrics = async () => {
-      if (config) {
-        await updateConfigMutation.mutateAsync({
-          id: config.id,
-          data: { metriques_config: localMetrics }
-        });
-      } else if (editingConfigType) {
-        await createConfigMutation.mutateAsync({
-          type: editingConfigType,
-          actif: false,
-          destinataires: [],
-          categories_destinataires: [],
-          format: 'pdf',
-          heure_envoi: '08:00',
-          jour_envoi: 1,
-          langue: lang,
-          metriques_config: localMetrics
-        });
-      }
-      toast.success('Configuration des métriques enregistrée');
-      setShowMetricsDialog(false);
-    };
-
-    const metricsOptions = [
-      { key: 'interventions', label: t('interventions_section'), icon: Wrench },
-      { key: 'temps', label: t('temps_section'), icon: Timer },
-      { key: 'categories', label: t('categories_section'), icon: BarChart3 },
-      { key: 'hebergements', label: t('hebergements_section'), icon: Users },
-      { key: 'collaborateurs', label: t('collaborateurs_section'), icon: Users },
-      { key: 'satisfaction', label: t('satisfaction_section'), icon: Star },
-      { key: 'topLongues', label: t('top_interventions'), icon: TrendingUp },
-    ];
-
-    return (
-      <Dialog open={showMetricsDialog} onOpenChange={setShowMetricsDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="font-heading text-[#0077A8]">
-              {t('configurer_metriques')} - {editingConfigType && t(editingConfigType)}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 py-4">
-            {metricsOptions.map(({ key, label, icon: Icon }) => (
-              <label key={key} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer">
-                <Checkbox
-                  checked={localMetrics[key]}
-                  onCheckedChange={(c) => setLocalMetrics({ ...localMetrics, [key]: c })}
-                />
-                <Icon className="w-5 h-5 text-[#00AEEF]" />
-                <span className="font-body">{label}</span>
-              </label>
-            ))}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowMetricsDialog(false)} className="rounded-xl">
-              {t('annuler') || 'Annuler'}
-            </Button>
-            <Button onClick={handleSaveMetrics} className="bg-[#00AEEF] rounded-xl">
-              {t('enregistrer')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    );
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <h2 className="font-heading text-2xl text-[#0077A8] flex items-center gap-2">
-          <FileText className="w-6 h-6" />
-          {t('title')}
-        </h2>
-        <Button
-          onClick={() => setShowLitigeDialog(true)}
-          className="bg-red-500 hover:bg-red-600 text-white rounded-xl"
-        >
-          <Zap className="w-4 h-4 mr-2" />
-          {t('generer_litige')}
-        </Button>
-      </div>
-
-      {/* Rapports PDF spécialisés */}
-      <div className="grid md:grid-cols-3 gap-4">
-        <PDFRapportMensuel incidents={incidents} lang={lang} />
-        <PDFRapportAvisClients avis={avis} lang={lang} />
-        <PDFRapportCommandes lang={lang} />
-      </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="bg-[#FFA500]/20 rounded-xl">
-          <TabsTrigger value="config" className="rounded-lg data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-            <Settings className="w-4 h-4 mr-2" />
-            {t('config')}
-          </TabsTrigger>
-          <TabsTrigger value="historique" className="rounded-lg data-[state=active]:bg-[#FFA500] data-[state=active]:text-white">
-            <Clock className="w-4 h-4 mr-2" />
-            {t('historique')} ({filteredHistorique.length})
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="config" className="space-y-4 mt-4">
-          <div className="grid md:grid-cols-3 gap-4">
-            <ConfigCard type="quotidien" />
-            <ConfigCard type="hebdomadaire" />
-            <ConfigCard type="mensuel" />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="historique" className="mt-4 space-y-4">
-          {/* Barre de filtres */}
-          <Card className="border-2 border-[#FFA500]/30 rounded-xl">
-            <CardContent className="p-4">
-              <div className="flex flex-wrap items-center gap-3">
-                {/* Recherche */}
-                <div className="relative flex-1 min-w-[200px]">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input
-                    placeholder={t('rechercher')}
-                    value={historyFilters.search}
-                    onChange={(e) => setHistoryFilters({ ...historyFilters, search: e.target.value })}
-                    className="pl-10 rounded-xl"
-                  />
-                </div>
-
-                {/* Filtre type */}
-                <Select
-                  value={historyFilters.type}
-                  onValueChange={(v) => setHistoryFilters({ ...historyFilters, type: v })}
-                >
-                  <SelectTrigger className="w-40 rounded-xl">
-                    <SelectValue placeholder={t('tous_types')} />
+      <Card className="border-2 border-purple-300">
+        <CardHeader>
+          <CardTitle className="font-heading text-purple-700 flex items-center gap-2">
+            <FileText className="w-6 h-6" />
+            {lang === 'fr' ? 'Génération de Rapports' : 'Generate Reports'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Sélection période */}
+          <div className="bg-purple-50 rounded-lg p-4 border-2 border-purple-200">
+            <h3 className="font-bold text-purple-900 mb-3 flex items-center gap-2">
+              <Calendar className="w-5 h-5" />
+              Périodicité et dates
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="text-sm font-bold mb-2 block">Type de période</label>
+                <Select value={periodeType} onValueChange={setPeriodeType}>
+                  <SelectTrigger>
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">{t('tous_types')}</SelectItem>
-                    <SelectItem value="quotidien">{t('quotidien')}</SelectItem>
-                    <SelectItem value="hebdomadaire">{t('hebdomadaire')}</SelectItem>
-                    <SelectItem value="mensuel">{t('mensuel')}</SelectItem>
+                    <SelectItem value="HEBDOMADAIRE">📅 Hebdomadaire</SelectItem>
+                    <SelectItem value="MENSUEL">📆 Mensuel</SelectItem>
                   </SelectContent>
                 </Select>
-
-                {/* Filtre statut */}
-                <Select
-                  value={historyFilters.status}
-                  onValueChange={(v) => setHistoryFilters({ ...historyFilters, status: v })}
-                >
-                  <SelectTrigger className="w-40 rounded-xl">
-                    <SelectValue placeholder={t('tous_statuts')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t('tous_statuts')}</SelectItem>
-                    <SelectItem value="envoye">{t('envoye')}</SelectItem>
-                    <SelectItem value="non_envoye">{t('non_envoye')}</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                {/* Bouton filtres avancés */}
-                <Button
-                  variant="outline"
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="rounded-xl"
-                >
-                  <Filter className="w-4 h-4 mr-2" />
-                  {t('filtres_avances')}
-                  {showFilters ? <ChevronUp className="w-4 h-4 ml-2" /> : <ChevronDown className="w-4 h-4 ml-2" />}
+              </div>
+              
+              <div className="flex gap-2">
+                <Button onClick={setPeriodeCourante} variant="outline" className="flex-1">
+                  Période courante
                 </Button>
-
-                {/* Réinitialiser */}
-                <Button
-                  variant="ghost"
-                  onClick={resetFilters}
-                  className="text-gray-500"
-                >
-                  <RefreshCcw className="w-4 h-4 mr-2" />
-                  {t('reinitialiser')}
+                <Button onClick={setPeriodePrecedente} variant="outline" className="flex-1">
+                  Période précédente
                 </Button>
               </div>
-
-              {/* Filtres avancés */}
-              {showFilters && (
-                <div className="mt-4 pt-4 border-t flex flex-wrap gap-4">
-                  {/* Date début */}
-                  <div>
-                    <label className="text-sm text-gray-600 mb-1 block">{t('date_debut')}</label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-40 rounded-xl justify-start">
-                          <CalendarIcon className="w-4 h-4 mr-2" />
-                          {historyFilters.dateStart ? format(historyFilters.dateStart, 'dd/MM/yyyy') : '-'}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={historyFilters.dateStart}
-                          onSelect={(date) => setHistoryFilters({ ...historyFilters, dateStart: date })}
-                          locale={fr}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  {/* Date fin */}
-                  <div>
-                    <label className="text-sm text-gray-600 mb-1 block">{t('date_fin')}</label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-40 rounded-xl justify-start">
-                          <CalendarIcon className="w-4 h-4 mr-2" />
-                          {historyFilters.dateEnd ? format(historyFilters.dateEnd, 'dd/MM/yyyy') : '-'}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={historyFilters.dateEnd}
-                          onSelect={(date) => setHistoryFilters({ ...historyFilters, dateEnd: date })}
-                          locale={fr}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                </div>
-              )}
-
-              {/* Actions de sélection */}
-              {selectedReports.length > 0 && (
-                <div className="mt-4 pt-4 border-t flex items-center gap-3">
-                  <span className="text-sm text-gray-600">
-                    {selectedReports.length} {t('resultats')} sélectionné(s)
-                  </span>
-                  <Button
-                    variant="outline"
-                    onClick={exportSelectedReports}
-                    className="rounded-xl border-[#00AEEF] text-[#00AEEF]"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    {t('exporter_selection')}
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Tableau historique */}
-          <Card className="border-2 border-[#FFA500]/30 rounded-xl">
-            <CardContent className="p-0">
-              {loadingHistorique ? (
-                <div className="flex justify-center py-12">
-                  <Loader2 className="w-8 h-8 animate-spin text-[#FFA500]" />
-                </div>
-              ) : filteredHistorique.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                  <p>{t('aucun_rapport')}</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-[#FFA500]/10">
-                      <tr className="text-left text-xs font-heading text-[#0077A8]">
-                        <th className="p-3 w-10">
-                          <Checkbox
-                            checked={selectedReports.length === filteredHistorique.length && filteredHistorique.length > 0}
-                            onCheckedChange={toggleSelectAll}
-                          />
-                        </th>
-                        <th className="p-3">Type</th>
-                        <th className="p-3">{t('periode')}</th>
-                        <th className="p-3">Généré le</th>
-                        <th className="p-3">Envoi</th>
-                        <th className="p-3">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredHistorique.map(rapport => (
-                        <tr key={rapport.id} className="border-t hover:bg-[#FFA500]/5">
-                          <td className="p-3">
-                            <Checkbox
-                              checked={selectedReports.includes(rapport.id)}
-                              onCheckedChange={() => toggleReportSelection(rapport.id)}
-                            />
-                          </td>
-                          <td className="p-3">
-                            <Badge className="bg-[#00AEEF] text-white">{t(rapport.type)}</Badge>
-                          </td>
-                          <td className="p-3 text-sm font-body">
-                            {rapport.date_debut} → {rapport.date_fin}
-                          </td>
-                          <td className="p-3 text-sm font-body">
-                            {rapport.date_generation && format(new Date(rapport.date_generation), 'dd/MM/yy HH:mm')}
-                          </td>
-                          <td className="p-3">
-                            {rapport.envoi_reussi ? (
-                              <Badge className="bg-green-500 text-white">
-                                <CheckCircle className="w-3 h-3 mr-1" />
-                                {t('envoye')}
-                              </Badge>
-                            ) : (
-                              <Badge className="bg-gray-400 text-white">
-                                <XCircle className="w-3 h-3 mr-1" />
-                                {t('non_envoye')}
-                              </Badge>
-                            )}
-                          </td>
-                          <td className="p-3">
-                            <div className="flex gap-1">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => {
-                                  setPreviewData({ type: rapport.type, metriques: rapport.metriques, langue: rapport.langue });
-                                  setShowPreview(true);
-                                }}
-                                title={t('apercu')}
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => downloadCSV(rapport)}
-                                title={t('telecharger_csv')}
-                              >
-                                <FileSpreadsheet className="w-4 h-4" />
-                              </Button>
-                              {!rapport.envoi_reussi && rapport.metriques && (
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => {
-                                    const config = getConfig(rapport.type);
-                                    if (config?.destinataires?.length > 0) {
-                                      sendReport(rapport, config.destinataires);
-                                    } else {
-                                      toast.error('Aucun destinataire configuré');
-                                    }
-                                  }}
-                                  title={t('envoyer_maintenant')}
-                                >
-                                  <Mail className="w-4 h-4" />
-                                </Button>
-                              )}
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="text-red-500 hover:text-red-700"
-                                onClick={() => {
-                                  setReportToDelete(rapport.id);
-                                  setShowDeleteConfirm(true);
-                                }}
-                                title={t('supprimer_rapport')}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-          
-          <p className="text-sm text-gray-500 text-center">
-            {filteredHistorique.length} {t('resultats')}
-          </p>
-        </TabsContent>
-      </Tabs>
-
-      {/* Preview Dialog */}
-      <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="font-heading text-[#0077A8]">
-              {t('apercu')} - {previewData && t(previewData.type)}
-            </DialogTitle>
-          </DialogHeader>
-          {previewData && <RapportPreview data={previewData} />}
-        </DialogContent>
-      </Dialog>
-
-      {/* Metrics Config Dialog */}
-      <MetricsConfigDialog />
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="font-heading text-red-600">
-              {t('confirmer_suppression')}
-            </DialogTitle>
-          </DialogHeader>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)} className="rounded-xl">
-              Annuler
-            </Button>
-            <Button onClick={handleDeleteReport} className="bg-red-500 hover:bg-red-600 rounded-xl">
-              <Trash2 className="w-4 h-4 mr-2" />
-              {t('supprimer_rapport')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog Rapport de Litige */}
-      <Dialog open={showLitigeDialog} onOpenChange={setShowLitigeDialog}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="font-heading text-red-600 flex items-center gap-2">
-              <Zap className="w-5 h-5" />
-              {t('rapport_litige')}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            {/* Filtres de recherche */}
-            <Card className="border border-gray-200 rounded-xl bg-gray-50">
-              <CardContent className="p-4 space-y-3">
-                <p className="text-sm font-heading text-[#0077A8] flex items-center gap-2">
-                  <Search className="w-4 h-4" />
-                  {lang === 'en' ? 'Search filters' : 'Filtres de recherche'}
-                </p>
-                
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {/* Recherche client */}
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">{t('client_info')}</label>
-                    <Input
-                      placeholder={lang === 'en' ? 'Name...' : 'Nom...'}
-                      value={litigeFilters.search}
-                      onChange={(e) => setLitigeFilters({ ...litigeFilters, search: e.target.value })}
-                      className="rounded-lg h-9 text-sm"
-                    />
-                  </div>
-
-                  {/* Lieu */}
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">{t('hebergement_info')}</label>
-                    <Input
-                      placeholder={lang === 'en' ? 'Location...' : 'N° hébergement...'}
-                      value={litigeFilters.lieu}
-                      onChange={(e) => setLitigeFilters({ ...litigeFilters, lieu: e.target.value })}
-                      className="rounded-lg h-9 text-sm"
-                    />
-                  </div>
-
-                  {/* Catégorie */}
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">{lang === 'en' ? 'Category' : 'Catégorie'}</label>
-                    <Select
-                      value={litigeFilters.categorie}
-                      onValueChange={(v) => setLitigeFilters({ ...litigeFilters, categorie: v })}
-                    >
-                      <SelectTrigger className="rounded-lg h-9 text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{lang === 'en' ? 'All categories' : 'Toutes catégories'}</SelectItem>
-                        <SelectItem value="gaz">🔥 Gaz</SelectItem>
-                        <SelectItem value="eau">💧 Eau</SelectItem>
-                        <SelectItem value="electricite">⚡ Électricité</SelectItem>
-                        <SelectItem value="plomberie">🔧 Plomberie</SelectItem>
-                        <SelectItem value="mobilier">🪑 Mobilier</SelectItem>
-                        <SelectItem value="nettoyage">🧹 Nettoyage</SelectItem>
-                        <SelectItem value="literie">🛏 Literie</SelectItem>
-                        <SelectItem value="divers_technique">🛠 Divers</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Intervenant */}
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">{t('collaborateur_info')}</label>
-                    <Select
-                      value={litigeFilters.intervenant}
-                      onValueChange={(v) => setLitigeFilters({ ...litigeFilters, intervenant: v })}
-                    >
-                      <SelectTrigger className="rounded-lg h-9 text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{lang === 'en' ? 'All technicians' : 'Tous intervenants'}</SelectItem>
-                        {[...new Set(incidents.filter(i => i.pris_par).map(i => i.pris_par))].map(tech => (
-                          <SelectItem key={tech} value={tech}>{tech}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Date début */}
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">{t('date_debut')}</label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full h-9 rounded-lg text-sm justify-start">
-                          <CalendarIcon className="w-3 h-3 mr-2" />
-                          {litigeFilters.dateStart ? format(litigeFilters.dateStart, 'dd/MM/yy') : '-'}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={litigeFilters.dateStart}
-                          onSelect={(date) => setLitigeFilters({ ...litigeFilters, dateStart: date })}
-                          locale={fr}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  {/* Date fin */}
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">{t('date_fin')}</label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full h-9 rounded-lg text-sm justify-start">
-                          <CalendarIcon className="w-3 h-3 mr-2" />
-                          {litigeFilters.dateEnd ? format(litigeFilters.dateEnd, 'dd/MM/yy') : '-'}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={litigeFilters.dateEnd}
-                          onSelect={(date) => setLitigeFilters({ ...litigeFilters, dateEnd: date })}
-                          locale={fr}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                </div>
-
-                {/* Bouton réinitialiser */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setLitigeFilters({ search: '', categorie: 'all', dateStart: null, dateEnd: null, lieu: '', intervenant: 'all' })}
-                  className="text-xs text-gray-500"
-                >
-                  <RefreshCcw className="w-3 h-3 mr-1" />
-                  {t('reinitialiser')}
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Sélection intervention filtrée */}
-            <div>
-              <label className="text-sm font-heading text-[#0077A8] block mb-2">
-                {t('selectionner_intervention')}
-              </label>
-              {(() => {
-                const filteredIncidents = incidents
-                  .filter(i => i.statut === 'resolu')
-                  .filter(i => {
-                    // Filtre client
-                    if (litigeFilters.search) {
-                      const searchLower = litigeFilters.search.toLowerCase();
-                      const clientMatch = `${i.client_prenom} ${i.client_nom}`.toLowerCase().includes(searchLower);
-                      if (!clientMatch) return false;
-                    }
-                    // Filtre lieu
-                    if (litigeFilters.lieu) {
-                      const lieuMatch = (i.logement || i.emplacement || '').toLowerCase().includes(litigeFilters.lieu.toLowerCase());
-                      if (!lieuMatch) return false;
-                    }
-                    // Filtre catégorie
-                    if (litigeFilters.categorie !== 'all' && i.categorie !== litigeFilters.categorie) return false;
-                    // Filtre intervenant
-                    if (litigeFilters.intervenant !== 'all' && i.pris_par !== litigeFilters.intervenant) return false;
-                    // Filtre date début
-                    if (litigeFilters.dateStart && i.date_resolution) {
-                      if (new Date(i.date_resolution) < litigeFilters.dateStart) return false;
-                    }
-                    // Filtre date fin
-                    if (litigeFilters.dateEnd && i.date_resolution) {
-                      if (new Date(i.date_resolution) > litigeFilters.dateEnd) return false;
-                    }
-                    return true;
-                  })
-                  .sort((a, b) => new Date(b.date_resolution) - new Date(a.date_resolution))
-                  .slice(0, 50);
-
-                return (
-                  <>
-                    <p className="text-xs text-gray-500 mb-2">
-                      {filteredIncidents.length} {lang === 'en' ? 'intervention(s) found' : 'intervention(s) trouvée(s)'}
-                    </p>
-                    <Select
-                      value={selectedIncidentForLitige?.id || ''}
-                      onValueChange={(v) => {
-                        const inc = incidents.find(i => i.id === v);
-                        setSelectedIncidentForLitige(inc);
-                      }}
-                    >
-                      <SelectTrigger className="rounded-xl">
-                        <SelectValue placeholder={t('selectionner_intervention')} />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-60">
-                        {filteredIncidents.length === 0 ? (
-                          <SelectItem value="none" disabled>{t('aucune_intervention')}</SelectItem>
-                        ) : (
-                          filteredIncidents.map(inc => (
-                            <SelectItem key={inc.id} value={inc.id}>
-                              <span className="flex items-center gap-2">
-                                <span>{inc.logement || inc.emplacement}</span>
-                                <span className="text-gray-400">|</span>
-                                <span>{inc.client_prenom} {inc.client_nom}</span>
-                                <span className="text-gray-400">|</span>
-                                <span className="text-xs text-gray-500">{inc.date_resolution ? format(new Date(inc.date_resolution), 'dd/MM/yy HH:mm') : '-'}</span>
-                              </span>
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </>
-                );
-              })()}
             </div>
 
-            {/* Détails de l'intervention sélectionnée */}
-            {selectedIncidentForLitige && (
-              <div className="space-y-4">
-                <Card className="border-2 border-red-200 rounded-xl bg-red-50">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="font-heading text-red-700 text-lg">
-                      {t('informations_litige')}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {/* Infos principales */}
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div className="bg-white p-3 rounded-lg">
-                        <p className="text-xs text-gray-500 font-heading">{t('date_intervention')}</p>
-                        <p className="font-body font-medium">
-                          {selectedIncidentForLitige.date_saisie && format(new Date(selectedIncidentForLitige.date_saisie), 'dd/MM/yyyy HH:mm')}
-                          {selectedIncidentForLitige.date_resolution && (
-                            <span className="text-green-600"> → {format(new Date(selectedIncidentForLitige.date_resolution), 'dd/MM/yyyy HH:mm')}</span>
-                          )}
-                        </p>
-                      </div>
-                      <div className="bg-white p-3 rounded-lg">
-                        <p className="text-xs text-gray-500 font-heading">{t('client_info')}</p>
-                        <p className="font-body font-medium">
-                          {selectedIncidentForLitige.client_prenom} {selectedIncidentForLitige.client_nom}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          Séjour: {selectedIncidentForLitige.date_arrivee} → {selectedIncidentForLitige.date_depart}
-                        </p>
-                      </div>
-                      <div className="bg-white p-3 rounded-lg">
-                        <p className="text-xs text-gray-500 font-heading">{t('hebergement_info')}</p>
-                        <p className="font-body font-medium">
-                          {selectedIncidentForLitige.logement ? '🏠 Mobil-home' : '⛺ Emplacement'} {selectedIncidentForLitige.logement || selectedIncidentForLitige.emplacement}
-                        </p>
-                      </div>
-                      <div className="bg-white p-3 rounded-lg">
-                        <p className="text-xs text-gray-500 font-heading">{t('collaborateur_info')}</p>
-                        <p className="font-body font-medium">
-                          {selectedIncidentForLitige.pris_par || '-'}
-                        </p>
-                      </div>
-                    </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-bold mb-2 block">Date début *</label>
+                <Input
+                  type="date"
+                  value={dateDebut}
+                  onChange={(e) => setDateDebut(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-bold mb-2 block">Date fin *</label>
+                <Input
+                  type="date"
+                  value={dateFin}
+                  onChange={(e) => setDateFin(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
 
-                    {/* Description */}
-                    <div className="bg-white p-3 rounded-lg">
-                      <p className="text-xs text-gray-500 font-heading mb-1">Description</p>
-                      <p className="font-body text-sm">{selectedIncidentForLitige.description}</p>
-                    </div>
+          {/* Sélection portée */}
+          <div className="bg-blue-50 rounded-lg p-4 border-2 border-blue-200">
+            <h3 className="font-bold text-blue-900 mb-3 flex items-center gap-2">
+              <Filter className="w-5 h-5" />
+              Portée du rapport
+            </h3>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+              {['GLOBALE', 'SERVICE', 'COLLABORATEUR', 'HEBERGEMENT'].map(p => (
+                <Button
+                  key={p}
+                  onClick={() => {
+                    setPortee(p);
+                    if (p === 'GLOBALE') {
+                      setFiltreService('');
+                      setFiltreCollaborateur('');
+                      setFiltreHebergement('');
+                    }
+                  }}
+                  variant={portee === p ? 'default' : 'outline'}
+                  className={portee === p ? 'bg-blue-600' : ''}
+                >
+                  {p === 'GLOBALE' ? '🌍 Globale' :
+                   p === 'SERVICE' ? '🔧 Service' :
+                   p === 'COLLABORATEUR' ? '👤 Collaborateur' :
+                   '🏠 Hébergement'}
+                </Button>
+              ))}
+            </div>
 
-                    {/* Photos preuves */}
-                    <div className="bg-white p-4 rounded-lg">
-                      <p className="text-sm font-heading text-[#0077A8] mb-3 flex items-center gap-2">
-                        📷 {t('photos_preuves')}
-                      </p>
-                      <div className="grid grid-cols-2 gap-4">
-                        {/* Photo AVANT */}
-                        <div className="space-y-2">
-                          <p className="text-xs font-heading text-orange-600">{t('photo_avant')}</p>
-                          {selectedIncidentForLitige.photo_avant_url ? (
-                            <>
-                              <img 
-                                src={selectedIncidentForLitige.photo_avant_url} 
-                                alt="Avant" 
-                                className="w-full h-40 object-cover rounded-lg border-2 border-orange-300"
-                              />
-                              <p className="text-xs text-gray-500">
-                                {selectedIncidentForLitige.photo_avant_timestamp && format(new Date(selectedIncidentForLitige.photo_avant_timestamp), 'dd/MM/yyyy HH:mm:ss')}
-                              </p>
-                              {selectedIncidentForLitige.photo_avant_hash && (
-                                <div className="flex items-center gap-1">
-                                  <p className="text-xs text-gray-400 font-mono truncate flex-1">
-                                    SHA-256: {selectedIncidentForLitige.photo_avant_hash.substring(0, 20)}...
-                                  </p>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="h-6 px-2"
-                                    onClick={() => {
-                                      navigator.clipboard.writeText(selectedIncidentForLitige.photo_avant_hash);
-                                      toast.success(t('copier_hash'));
-                                    }}
-                                  >
-                                    📋
-                                  </Button>
-                                </div>
-                              )}
-                            </>
-                          ) : (
-                            <div className="w-full h-40 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-sm">
-                              Aucune photo
-                            </div>
-                          )}
-                        </div>
+            {/* Filtres conditionnels */}
+            {portee === 'SERVICE' && (
+              <div>
+                <label className="text-sm font-bold mb-2 block">Service</label>
+                <Select value={filtreService} onValueChange={setFiltreService}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un service" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="TECHNIQUE">🧰 Technique</SelectItem>
+                    <SelectItem value="MENAGE">🧽 Ménage</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
-                        {/* Photo APRÈS */}
-                        <div className="space-y-2">
-                          <p className="text-xs font-heading text-green-600">{t('photo_apres')}</p>
-                          {selectedIncidentForLitige.photo_apres_url ? (
-                            <>
-                              <img 
-                                src={selectedIncidentForLitige.photo_apres_url} 
-                                alt="Après" 
-                                className="w-full h-40 object-cover rounded-lg border-2 border-green-300"
-                              />
-                              <p className="text-xs text-gray-500">
-                                {selectedIncidentForLitige.photo_apres_timestamp && format(new Date(selectedIncidentForLitige.photo_apres_timestamp), 'dd/MM/yyyy HH:mm:ss')}
-                              </p>
-                              {selectedIncidentForLitige.photo_apres_hash && (
-                                <div className="flex items-center gap-1">
-                                  <p className="text-xs text-gray-400 font-mono truncate flex-1">
-                                    SHA-256: {selectedIncidentForLitige.photo_apres_hash.substring(0, 20)}...
-                                  </p>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="h-6 px-2"
-                                    onClick={() => {
-                                      navigator.clipboard.writeText(selectedIncidentForLitige.photo_apres_hash);
-                                      toast.success(t('copier_hash'));
-                                    }}
-                                  >
-                                    📋
-                                  </Button>
-                                </div>
-                              )}
-                            </>
-                          ) : (
-                            <div className="w-full h-40 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-sm">
-                              Aucune photo
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+            {portee === 'COLLABORATEUR' && (
+              <div>
+                <label className="text-sm font-bold mb-2 block">Collaborateur</label>
+                <Select value={filtreCollaborateur} onValueChange={setFiltreCollaborateur}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un collaborateur" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {collaborateurs.map(c => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
-                    {/* Photo client (signalement initial) */}
-                    {selectedIncidentForLitige.photo_url && (
-                      <div className="bg-white p-3 rounded-lg">
-                        <p className="text-xs font-heading text-gray-600 mb-2">📸 Photo du signalement (client)</p>
-                        <img 
-                          src={selectedIncidentForLitige.photo_url} 
-                          alt="Signalement" 
-                          className="w-full max-w-xs h-32 object-cover rounded-lg border"
-                        />
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Générateur PDF Litige */}
-                <div className="border-t pt-4 mt-4">
-                  <h4 className="font-heading text-[#0077A8] mb-3">📄 Générer le rapport PDF</h4>
-                  <LitigePDFGenerator incident={selectedIncidentForLitige} />
-                </div>
+            {portee === 'HEBERGEMENT' && (
+              <div>
+                <label className="text-sm font-bold mb-2 block">Hébergement</label>
+                <Select value={filtreHebergement} onValueChange={setFiltreHebergement}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un hébergement" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {hebergements.map(h => (
+                      <SelectItem key={h} value={h}>{h}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             )}
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setShowLitigeDialog(false);
-              setSelectedIncidentForLitige(null);
-              setLitigeEmail('');
-            }} className="rounded-xl">
-              Fermer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          {/* Bouton génération */}
+          <Button
+            onClick={handleGenerer}
+            disabled={!dateDebut || !dateFin || genererRapportMutation.isPending}
+            className="w-full bg-purple-600 h-14 text-lg font-bold"
+          >
+            {genererRapportMutation.isPending ? (
+              <Loader2 className="w-6 h-6 animate-spin mr-2" />
+            ) : (
+              <TrendingUp className="w-6 h-6 mr-2" />
+            )}
+            Générer le rapport
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Aperçu du rapport */}
+      {rapportEnCours && (
+        <RapportPDFGenerator rapport={rapportEnCours} lang={lang} />
+      )}
     </div>
   );
+}
+
+// Fonctions de calcul
+function calculateTemps(workItems, incidents) {
+  const tempsByCollaborateur = {};
+  
+  [...workItems, ...incidents].forEach(item => {
+    const collaborateur = item.collaborateur || item.pris_par;
+    if (!collaborateur) return;
+    
+    if (!tempsByCollaborateur[collaborateur]) {
+      tempsByCollaborateur[collaborateur] = {
+        total_interventions: 0,
+        total_temps: 0
+      };
+    }
+    
+    tempsByCollaborateur[collaborateur].total_interventions++;
+    const temps = item.duree_minutes || item.temps_total_intervention || 0;
+    tempsByCollaborateur[collaborateur].total_temps += temps;
+  });
+  
+  return Object.entries(tempsByCollaborateur).map(([collaborateur, data]) => ({
+    collaborateur,
+    ...data,
+    moyenne: data.total_interventions > 0 ? 
+      Math.round(data.total_temps / data.total_interventions) : 0
+  }));
+}
+
+function calculateHebergements(workItems, incidents) {
+  const hebByHebergement = {};
+  
+  [...workItems, ...incidents].forEach(item => {
+    const hebergement = item.hebergement || item.logement || item.emplacement;
+    if (!hebergement) return;
+    
+    if (!hebByHebergement[hebergement]) {
+      hebByHebergement[hebergement] = {
+        categorie: item.type_hebergement || item.type,
+        services: new Set()
+      };
+    }
+    
+    const service = item.service || item.type;
+    if (service) hebByHebergement[hebergement].services.add(service);
+  });
+  
+  return Object.entries(hebByHebergement).map(([numero, data]) => ({
+    numero,
+    categorie: data.categorie,
+    services: Array.from(data.services).join(', ')
+  }));
+}
+
+function calculateAvisSynthese(avisInterventions, avisApp) {
+  const synthese = {
+    interventions: {
+      count: avisInterventions.length,
+      moyenne_globale: 0,
+      moyennes: {}
+    },
+    application: {
+      count: avisApp.length,
+      moyenne_globale: 0,
+      moyennes: {}
+    }
+  };
+  
+  if (avisInterventions.length > 0) {
+    const sum = avisInterventions.reduce((acc, a) => acc + (a.note_client || 0), 0);
+    synthese.interventions.moyenne_globale = (sum / avisInterventions.length).toFixed(1);
+  }
+  
+  if (avisApp.length > 0) {
+    const avgFacilite = avisApp.reduce((acc, a) => acc + (a.facilite_utilisation || 0), 0) / avisApp.length;
+    const avgSuivi = avisApp.reduce((acc, a) => acc + (a.suivi_interventions || 0), 0) / avisApp.length;
+    synthese.application.moyennes = {
+      facilite: avgFacilite.toFixed(1),
+      suivi: avgSuivi.toFixed(1)
+    };
+  }
+  
+  return synthese;
+}
+
+function calculateSyntheseDirection(workItems, incidents, avisInterventions, avisApp) {
+  const totalInterventions = workItems.length + incidents.length;
+  const totalTemps = [...workItems, ...incidents].reduce((acc, item) => 
+    acc + (item.duree_minutes || item.temps_total_intervention || 0), 0
+  );
+  
+  const servicesSollicites = {};
+  [...workItems, ...incidents].forEach(item => {
+    const service = item.service || item.type;
+    servicesSollicites[service] = (servicesSollicites[service] || 0) + 1;
+  });
+  
+  const servicePlusSollicite = Object.entries(servicesSollicites)
+    .sort((a, b) => b[1] - a[1])[0];
+  
+  return {
+    total_interventions: totalInterventions,
+    total_temps_minutes: totalTemps,
+    service_plus_sollicite: servicePlusSollicite ? servicePlusSollicite[0] : 'N/A',
+    taux_satisfaction: avisInterventions.length > 0 ? 
+      (avisInterventions.reduce((acc, a) => acc + (a.note_client || 0), 0) / avisInterventions.length).toFixed(1) : 'N/A'
+  };
 }
