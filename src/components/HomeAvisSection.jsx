@@ -14,7 +14,14 @@ export default function HomeAvisSection() {
 
   const { data: avis = [], isLoading } = useQuery({
     queryKey: ['home-avis-publics'],
-    queryFn: () => base44.entities.Avis.list('-created_date', 100)
+    queryFn: async () => {
+      try {
+        return await base44.entities.Avis.list('-created_date', 100);
+      } catch (error) {
+        console.warn('Erreur chargement avis:', error);
+        return [];
+      }
+    }
   });
 
   // Filtrer : note >= 4 et visible
