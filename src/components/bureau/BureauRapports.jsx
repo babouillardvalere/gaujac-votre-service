@@ -15,6 +15,7 @@ import RapportPDFGenerator from './RapportPDFGenerator';
 export default function BureauRapports({ lang = 'fr' }) {
   const queryClient = useQueryClient();
   
+  const [typeRapport, setTypeRapport] = useState('OPERATIONNEL');
   const [periodeType, setPeriodeType] = useState('HEBDOMADAIRE');
   const [dateDebut, setDateDebut] = useState('');
   const [dateFin, setDateFin] = useState('');
@@ -60,6 +61,21 @@ export default function BureauRapports({ lang = 'fr' }) {
     queryFn: () => base44.entities.Incident.list('-created_date', 500)
   });
 
+  const { data: litiges = [] } = useQuery({
+    queryKey: ['bureau-litiges-rapports'],
+    queryFn: () => base44.entities.Litige.list('-created_date', 500)
+  });
+
+  const { data: avisInterventions = [] } = useQuery({
+    queryKey: ['bureau-avis-interventions'],
+    queryFn: () => base44.entities.Avis.list('-created_date', 500)
+  });
+
+  const { data: avisApplication = [] } = useQuery({
+    queryKey: ['bureau-avis-application'],
+    queryFn: () => base44.entities.AvisApplication.list('-created_date', 500)
+  });
+
   const collaborateurs = [...new Set([
     ...workItems.map(w => w.collaborateur).filter(Boolean),
     ...incidents.map(i => i.pris_par).filter(Boolean)
@@ -76,52 +92,101 @@ export default function BureauRapports({ lang = 'fr' }) {
         throw new Error('Période obligatoire');
       }
 
-      // Charger toutes les données nécessaires
+      const dateDebutISO = new Date(config.dateDebut).toISOString();
+      const dateFinISO = new Date(config.dateFin + 'T23:59:59').toISOString();
+
+      // Charger selon le type de rapport
+      if (config.typeRapport === 'LITIGES') {
+        const litigesData = await base44.entities.Litige.filter({
+          date_creation: { $gte: dateDebutISO }
+        }, '-date_creation', 1000);
+
+        const litigesFiltered = litigesData.filter(l => 
+          new Date(l.date_creation).toISOString() <= dateFinISO
+        );
+
+        return {
+          type: 'LITIGES',
+          metadata: {
+            genere_le: new Date().toISOString(),
+            genere_par: 'BUREAU',
+            periode_type: config.periodeType,
+            date_debut: config.dateDebut,
+            date_fin: config.dateFin
+          },
+          sections: {
+            litiges: litigesFiltered,
+            synthese: {
+              total: litigesFiltered.length,
+              ouverts: litigesFiltered.filter(l => l.statut === 'OUVERT').length,
+              clos: litigesFiltered.filter(l => l.statut === 'CLOS').length,
+              par_service: calculateLitigesParService(litigesFiltered)
+            }
+          }
+        };
+      }
+
+      if (config.typeRapport === 'AVIS') {
+        const [avisInterv, avisApp] = await Promise.all([
+          base44.entities.Avis.filter({
+            created_date: { $gte: dateDebutISO }
+          }, '-created_date', 1000),
+          base44.entities.AvisApplication.filter({
+            created_date: { $gte: dateDebutISO }
+          }, '-created_date', 1000)
+        ]);
+
+        const avisIntervFiltered = avisInterv.filter(a => 
+          new Date(a.created_date).toISOString() <= dateFinISO
+        );
+        const avisAppFiltered = avisApp.filter(a => 
+          new Date(a.created_date).toISOString() <= dateFinISO
+        );
+
+        return {
+          type: 'AVIS',
+          metadata: {
+            genere_le: new Date().toISOString(),
+            genere_par: 'BUREAU',
+            periode_type: config.periodeType,
+            date_debut: config.dateDebut,
+            date_fin: config.dateFin
+          },
+          sections: {
+            avis_interventions: avisIntervFiltered,
+            avis_application: avisAppFiltered,
+            synthese: calculateAvisSynthese(avisIntervFiltered, avisAppFiltered)
+          }
+        };
+      }
+
+      // OPERATIONNEL (par défaut)
       const [
         workItemsData,
         interventionsClientData,
-        incidentsData,
-        avisInterventionsData,
-        avisAppData
+        incidentsData
       ] = await Promise.all([
         base44.entities.WorkItem.filter({
-          created_date: { $gte: new Date(config.dateDebut).toISOString() }
+          created_date: { $gte: dateDebutISO }
         }, '-created_date', 1000),
         base44.entities.InterventionClient.filter({
-          created_date: { $gte: new Date(config.dateDebut).toISOString() }
+          created_date: { $gte: dateDebutISO }
         }, '-created_date', 1000),
         base44.entities.Incident.filter({
-          date_saisie: { $gte: new Date(config.dateDebut).toISOString() }
-        }, '-date_saisie', 1000),
-        base44.entities.Avis.filter({
-          created_date: { $gte: new Date(config.dateDebut).toISOString() }
-        }, '-created_date', 500),
-        base44.entities.AvisApplication.filter({
-          created_date: { $gte: new Date(config.dateDebut).toISOString() }
-        }, '-created_date', 500)
+          date_saisie: { $gte: dateDebutISO }
+        }, '-date_saisie', 1000)
       ]);
 
-      // Filtrer par date de fin
-      const dateFinTimestamp = new Date(config.dateFin + 'T23:59:59').getTime();
-      
       const workItemsFiltered = workItemsData.filter(w => 
-        new Date(w.created_date).getTime() <= dateFinTimestamp
+        new Date(w.created_date).toISOString() <= dateFinISO
       );
       
       const interventionsClientFiltered = interventionsClientData.filter(i => 
-        new Date(i.created_date).getTime() <= dateFinTimestamp
+        new Date(i.created_date).toISOString() <= dateFinISO
       );
       
       const incidentsFiltered = incidentsData.filter(i => 
-        new Date(i.date_saisie).getTime() <= dateFinTimestamp
-      );
-
-      const avisInterventionsFiltered = avisInterventionsData.filter(a => 
-        new Date(a.created_date).getTime() <= dateFinTimestamp
-      );
-
-      const avisAppFiltered = avisAppData.filter(a => 
-        new Date(a.created_date).getTime() <= dateFinTimestamp
+        new Date(i.date_saisie).toISOString() <= dateFinISO
       );
 
       // Appliquer les filtres de portée
@@ -145,9 +210,8 @@ export default function BureauRapports({ lang = 'fr' }) {
         );
       }
 
-      // Créer l'objet rapport
-      const rapport = {
-        config,
+      return {
+        type: 'OPERATIONNEL',
         metadata: {
           genere_le: new Date().toISOString(),
           genere_par: 'BUREAU',
@@ -164,21 +228,9 @@ export default function BureauRapports({ lang = 'fr' }) {
           },
           temps: calculateTemps(workItemsFinal, incidentsFinal),
           hebergements: calculateHebergements(workItemsFinal, incidentsFinal),
-          avis: {
-            interventions: avisInterventionsFiltered,
-            application: avisAppFiltered,
-            synthese: calculateAvisSynthese(avisInterventionsFiltered, avisAppFiltered)
-          },
-          synthese: calculateSyntheseDirection(
-            workItemsFinal,
-            incidentsFinal,
-            avisInterventionsFiltered,
-            avisAppFiltered
-          )
+          synthese: calculateSyntheseDirection(workItemsFinal, incidentsFinal)
         }
       };
-
-      return rapport;
     },
     onSuccess: (rapport) => {
       setRapportEnCours(rapport);
@@ -191,6 +243,7 @@ export default function BureauRapports({ lang = 'fr' }) {
 
   const handleGenerer = () => {
     genererRapportMutation.mutate({
+      typeRapport,
       periodeType,
       dateDebut,
       dateFin,
@@ -211,6 +264,42 @@ export default function BureauRapports({ lang = 'fr' }) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Sélection type de rapport */}
+          <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 border-2 border-purple-300">
+            <h3 className="font-bold text-purple-900 mb-3">📋 Type de rapport</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <Button
+                onClick={() => setTypeRapport('OPERATIONNEL')}
+                variant={typeRapport === 'OPERATIONNEL' ? 'default' : 'outline'}
+                className={`h-20 flex flex-col gap-1 ${typeRapport === 'OPERATIONNEL' ? 'bg-purple-600' : ''}`}
+              >
+                <span className="text-2xl">🗂</span>
+                <span className="text-sm font-bold">Opérationnel</span>
+                <span className="text-xs opacity-80">Interventions & Temps</span>
+              </Button>
+              
+              <Button
+                onClick={() => setTypeRapport('LITIGES')}
+                variant={typeRapport === 'LITIGES' ? 'default' : 'outline'}
+                className={`h-20 flex flex-col gap-1 ${typeRapport === 'LITIGES' ? 'bg-red-600' : ''}`}
+              >
+                <span className="text-2xl">⚠️</span>
+                <span className="text-sm font-bold">Litiges</span>
+                <span className="text-xs opacity-80">Désaccords clients</span>
+              </Button>
+              
+              <Button
+                onClick={() => setTypeRapport('AVIS')}
+                variant={typeRapport === 'AVIS' ? 'default' : 'outline'}
+                className={`h-20 flex flex-col gap-1 ${typeRapport === 'AVIS' ? 'bg-yellow-600' : ''}`}
+              >
+                <span className="text-2xl">⭐</span>
+                <span className="text-sm font-bold">Avis</span>
+                <span className="text-xs opacity-80">Satisfaction clients</span>
+              </Button>
+            </div>
+          </div>
+
           {/* Sélection période */}
           <div className="bg-purple-50 rounded-lg p-4 border-2 border-purple-200">
             <h3 className="font-bold text-purple-900 mb-3 flex items-center gap-2">
@@ -262,7 +351,8 @@ export default function BureauRapports({ lang = 'fr' }) {
             </div>
           </div>
 
-          {/* Sélection portée */}
+          {/* Sélection portée (uniquement pour OPERATIONNEL) */}
+          {typeRapport === 'OPERATIONNEL' && (
           <div className="bg-blue-50 rounded-lg p-4 border-2 border-blue-200">
             <h3 className="font-bold text-blue-900 mb-3 flex items-center gap-2">
               <Filter className="w-5 h-5" />
@@ -340,6 +430,7 @@ export default function BureauRapports({ lang = 'fr' }) {
               </div>
             )}
           </div>
+          )}
 
           {/* Bouton génération */}
           <Button
@@ -449,7 +540,7 @@ function calculateAvisSynthese(avisInterventions, avisApp) {
   return synthese;
 }
 
-function calculateSyntheseDirection(workItems, incidents, avisInterventions, avisApp) {
+function calculateSyntheseDirection(workItems, incidents) {
   const totalInterventions = workItems.length + incidents.length;
   const totalTemps = [...workItems, ...incidents].reduce((acc, item) => 
     acc + (item.duree_minutes || item.temps_total_intervention || 0), 0
@@ -467,8 +558,14 @@ function calculateSyntheseDirection(workItems, incidents, avisInterventions, avi
   return {
     total_interventions: totalInterventions,
     total_temps_minutes: totalTemps,
-    service_plus_sollicite: servicePlusSollicite ? servicePlusSollicite[0] : 'N/A',
-    taux_satisfaction: avisInterventions.length > 0 ? 
-      (avisInterventions.reduce((acc, a) => acc + (a.note_client || 0), 0) / avisInterventions.length).toFixed(1) : 'N/A'
+    service_plus_sollicite: servicePlusSollicite ? servicePlusSollicite[0] : 'N/A'
   };
+}
+
+function calculateLitigesParService(litiges) {
+  const parService = {};
+  litiges.forEach(l => {
+    parService[l.service_concerne] = (parService[l.service_concerne] || 0) + 1;
+  });
+  return parService;
 }
