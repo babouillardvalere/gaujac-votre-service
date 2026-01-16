@@ -1,5 +1,6 @@
 import { base44 } from '@/api/base44Client';
 import errorLogger from './ErrorLogger';
+import { validateOperationalDescription } from '../getOperationalDescription';
 
 // Smoke tests automatisés pour les parcours critiques
 export class SmokeTests {
@@ -229,6 +230,21 @@ export class SmokeTests {
         'Data: Aucune intervention sans tâches',
         sansTaches.length === 0,
         { interventionsSansTaches: sansTaches.length }
+      );
+
+      // Vérif: Interventions sans description opérationnelle
+      const sansDescriptionOp = interventionsSansTaches.filter(i => {
+        const result = validateOperationalDescription(i);
+        return !result.valid;
+      });
+
+      this.recordTest(
+        'Data: Aucune intervention sans descriptif opérationnel',
+        sansDescriptionOp.length === 0,
+        { 
+          severity: sansDescriptionOp.length > 0 ? 'CRITICAL' : 'INFO',
+          interventionsSansDescriptionOp: sansDescriptionOp.length 
+        }
       );
 
       // Vérif: WorkItems orphelins
