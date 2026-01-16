@@ -133,8 +133,13 @@ class ErrorLogger {
   }
 
   // Log action utilisateur
-  logUserAction(action, details) {
-    return this.log('success', 'user_action', action, details);
+  logUserAction(action, details = {}) {
+    // Actions utilisateur toujours enregistrées (même hors mode QA)
+    return this.log('success', 'user_action', action, { 
+      ...details, 
+      severity: 'INFO',
+      alwaysLog: true 
+    });
   }
 
   // Récupération des logs filtrés

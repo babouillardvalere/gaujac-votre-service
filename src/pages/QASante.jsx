@@ -88,7 +88,8 @@ export default function QASante() {
     toast.info('Exécution des smoke tests...');
     
     try {
-      const results = await smokeTests.runAllTests();
+      // Exécution VOLONTAIRE uniquement
+      const results = await smokeTests.runManually();
       setTestResults(results);
       
       if (results.summary.failed === 0) {

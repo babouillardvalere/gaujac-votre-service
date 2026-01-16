@@ -10,6 +10,9 @@ export class SmokeTests {
       testWorkItemIds: [],
       testMissionIds: []
     };
+    
+    // SÉCURITÉ : smoke tests JAMAIS automatiques
+    this.isManualRun = false;
   }
 
   async runAllTests() {
