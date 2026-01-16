@@ -4,6 +4,7 @@ import NavigationBar from './components/NavigationBar';
 import VoiceAssistant from './components/VoiceAssistant';
 import RealtimeNotificationProvider from './components/RealtimeNotificationProvider';
 import ErrorBoundary from './components/ErrorBoundary';
+import QAHealthIndicator from './components/qa/QAHealthIndicator';
 import { base44 } from '@/api/base44Client';
 
 export default function Layout({ children }) {
@@ -69,6 +70,7 @@ export default function Layout({ children }) {
 
   // Déterminer le rôle utilisateur pour le provider de notifications
   const [userRole, setUserRole] = useState('client');
+  const [isAdmin, setIsAdmin] = useState(false);
   
   useEffect(() => {
     const checkUserRole = async () => {
@@ -76,9 +78,11 @@ export default function Layout({ children }) {
         const user = await base44.auth.me();
         if (user?.role === 'admin') {
           setUserRole('reception');
+          setIsAdmin(true);
         }
       } catch {
         setUserRole('client');
+        setIsAdmin(false);
       }
     };
     checkUserRole();
@@ -295,6 +299,9 @@ export default function Layout({ children }) {
         enabled={accessibilitySettings.voiceAssistant}
         onAccessibilityChange={handleAccessibilityAction}
       />
+
+      {/* Indicateur santé système (admin uniquement) */}
+      {isAdmin && <QAHealthIndicator compact={true} />}
       </div>
       </RealtimeNotificationProvider>
       </ErrorBoundary>
