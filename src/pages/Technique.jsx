@@ -1202,6 +1202,7 @@ export default function Technique() {
                 ) : (
                   <p className="font-body text-gray-700 bg-gray-50 p-3 rounded-xl mt-1">{selectedIncident.description}</p>
                 )}
+              </div>
 
               {selectedIncident.statut === 'en_attente' && (
                 <div className="space-y-3 pt-4 border-t">
