@@ -767,17 +767,6 @@ export default function Technique() {
 
   // Conversion des WorkItems en format compatible Incident
   const convertedWorkItems = safeWorkItemsTechnique
-    .filter(wi => {
-      const statutMapping = {
-        'A_FAIRE': 'en_attente',
-        'EN_COURS': 'en_cours',
-        'EN_ATTENTE': 'en_attente_materiel',
-        'TERMINEE': 'resolu'
-      };
-      const mappedStatut = statutMapping[wi.statut] || 'en_attente';
-      if (filter !== 'tous' && mappedStatut !== filter) return false;
-      return true;
-    })
     .map(wi => ({
       id: wi.id,
       type: 'technique',
@@ -852,8 +841,12 @@ export default function Technique() {
 
   const filteredIncidents = allIncidents
     .filter(i => {
-      // Filtre statut
-      if (filter !== 'tous' && i.statut !== filter) return false;
+      // Filtre statut (tous = afficher tous les statuts)
+      if (filter === 'tous') {
+        // Ok, on affiche tout
+      } else if (i.statut !== filter) {
+        return false;
+      }
       
       // Filtre catégorie
       if (filterCategorie !== 'tous' && i.categorie !== filterCategorie) return false;
