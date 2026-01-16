@@ -161,14 +161,16 @@ export default function Bureau() {
     queryKey: ['bureau-workitems'],
     queryFn: async () => {
       const data = await base44.entities.WorkItem.filter({}, '-created_date', 250);
-      console.log('[BUREAU] WorkItems récupérés:', data.length);
+      // GARDE ANTI-ORPHELINS : exclure WorkItems annulés
+      const filtered = data.filter(wi => wi.statut !== 'ANNULEE');
+      console.log('[BUREAU] WorkItems actifs:', filtered.length, '/', data.length);
       console.log('[BUREAU] Détail par statut:', {
-        A_FAIRE: data.filter(i => i.statut === 'A_FAIRE').length,
-        EN_COURS: data.filter(i => i.statut === 'EN_COURS').length,
-        EN_ATTENTE: data.filter(i => i.statut === 'EN_ATTENTE').length,
-        TERMINEE: data.filter(i => i.statut === 'TERMINEE').length
+        A_FAIRE: filtered.filter(i => i.statut === 'A_FAIRE').length,
+        EN_COURS: filtered.filter(i => i.statut === 'EN_COURS').length,
+        EN_ATTENTE: filtered.filter(i => i.statut === 'EN_ATTENTE').length,
+        TERMINEE: filtered.filter(i => i.statut === 'TERMINEE').length
       });
-      return data;
+      return filtered;
     },
     refetchInterval: 30000,
     staleTime: 20000

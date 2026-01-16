@@ -25,7 +25,11 @@ export default function WorkItemManager({ lang }) {
 
   const { data: workItems = [], isLoading, error } = useQuery({
     queryKey: ['work-items'],
-    queryFn: () => base44.entities.WorkItem.filter({}, 'rank', 250),
+    queryFn: async () => {
+      const result = await base44.entities.WorkItem.filter({}, 'rank', 250);
+      // GARDE ANTI-ORPHELINS : exclure WorkItems annulés
+      return result.filter(wi => wi.statut !== 'ANNULEE');
+    },
     refetchInterval: 30000,
     retry: 2,
     onError: (err) => {

@@ -53,8 +53,10 @@ export default function BureauHistorique() {
       try {
         console.log('🔍 FETCH WorkItems pour historique');
         const result = await base44.entities.WorkItem.filter({}, '-created_date', 1000);
-        console.log('✅ WorkItems récupérés:', result.length);
-        return result;
+        // GARDE ANTI-ORPHELINS : exclure WorkItems annulés
+        const filtered = result.filter(wi => wi.statut !== 'ANNULEE');
+        console.log('✅ WorkItems actifs pour historique:', filtered.length, '/', result.length);
+        return filtered;
       } catch (error) {
         console.warn('Erreur chargement workitems:', error);
         return [];
