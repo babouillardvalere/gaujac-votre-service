@@ -84,6 +84,7 @@ import Notifications from './pages/Notifications';
 import PaiementReservation from './pages/PaiementReservation';
 import Piscine from './pages/Piscine';
 import PreferencesNotifications from './pages/PreferencesNotifications';
+import QASante from './pages/QASante';
 import RapportsInterventions from './pages/RapportsInterventions';
 import Reception from './pages/Reception';
 import Reservations from './pages/Reservations';
@@ -94,7 +95,6 @@ import Statistiques from './pages/Statistiques';
 import SuiviIntervention from './pages/SuiviIntervention';
 import Taches from './pages/Taches';
 import Technique from './pages/Technique';
-import QASante from './pages/QASante';
 import __Layout from './Layout.jsx';
 
 
@@ -185,6 +185,7 @@ export const PAGES = {
     "PaiementReservation": PaiementReservation,
     "Piscine": Piscine,
     "PreferencesNotifications": PreferencesNotifications,
+    "QASante": QASante,
     "RapportsInterventions": RapportsInterventions,
     "Reception": Reception,
     "Reservations": Reservations,
@@ -195,7 +196,6 @@ export const PAGES = {
     "SuiviIntervention": SuiviIntervention,
     "Taches": Taches,
     "Technique": Technique,
-    "QASante": QASante,
 }
 
 export const pagesConfig = {

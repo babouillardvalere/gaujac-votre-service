@@ -31,6 +31,7 @@ import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { format, differenceInMinutes } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { getOperationalDescription } from '../components/getOperationalDescription';
 
 const categoryIcons = {
   gaz: { emoji: '🔥', label: 'gaz' },
@@ -1213,38 +1214,23 @@ export default function Technique() {
               <div>
                 <label className="text-sm font-heading text-[#0077A8] mb-2 block">📋 {t('description')}</label>
                 
-                {/* Description textuelle du problème */}
-                {selectedIncident.description && (
-                  <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded mb-3">
-                    <p className="text-xs text-blue-600 font-semibold mb-1">Problème signalé:</p>
-                    <p className="font-body text-gray-800">{selectedIncident.description}</p>
-                  </div>
-                )}
-
-                {/* Tâches détaillées */}
-                {selectedIncident.taches && selectedIncident.taches.length > 0 && (
-                  <div className="space-y-2 mt-2">
-                    <p className="text-xs text-gray-500 font-semibold">Détail des tâches:</p>
-                    {selectedIncident.taches.map((tache, idx) => (
-                      <div key={idx} className="flex items-start gap-2 bg-gray-50 p-3 rounded-xl border border-gray-200">
-                        <span className="text-lg">{tache.objet_id ? getCategoryInfo(tache.objet_id).emoji : '🔧'}</span>
-                        <div className="flex-1">
-                          <p className="font-body text-gray-700">{tache.texte}</p>
-                          {tache.faite && (
-                            <Badge className="bg-green-500 text-white text-xs mt-1">✅ Complété</Badge>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Fallback si rien n'est disponible */}
-                {!selectedIncident.description && (!selectedIncident.taches || selectedIncident.taches.length === 0) && (
-                  <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded">
-                    <p className="text-red-700 font-semibold">⚠️ Aucune description disponible</p>
-                  </div>
-                )}
+                {(() => {
+                  const descriptionOp = getOperationalDescription(selectedIncident);
+                  
+                  return descriptionOp ? (
+                    <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
+                      <p className="text-xs text-blue-600 font-semibold mb-2">Actions à réaliser:</p>
+                      <pre className="font-body text-gray-800 whitespace-pre-wrap text-sm">
+                        {descriptionOp}
+                      </pre>
+                    </div>
+                  ) : (
+                    <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded">
+                      <p className="text-red-700 font-semibold">⚠️ Intervention invalide : aucun descriptif opérationnel</p>
+                      <p className="text-xs text-red-600 mt-1">Cette intervention ne peut pas être traitée</p>
+                    </div>
+                  );
+                })()}
               </div>
 
               {selectedIncident.statut === 'en_attente' && (
