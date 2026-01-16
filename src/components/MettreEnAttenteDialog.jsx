@@ -21,15 +21,24 @@ export default function MettreEnAttenteDialog({ open, onOpenChange, onConfirm, i
   const [showError, setShowError] = useState(false);
 
   const handleConfirm = () => {
-    if (!formData.motifAttente.trim()) {
+    if (!formData.raison || !formData.motifAttente.trim()) {
       setShowError(true);
       return;
     }
     setShowError(false);
     onConfirm(formData);
+    // Réinitialiser le formulaire après validation
+    setFormData({
+      raison: '',
+      motifAttente: '',
+      materiel: false,
+      materielDetail: '',
+      delai: '',
+      commentaire: ''
+    });
   };
 
-  const isValid = formData.motifAttente.trim();
+  const isValid = formData.raison && formData.motifAttente.trim();
 
   const motifSuggestions = [
     { key: 'materiel', label: t('suggestion_attente_materiel') },
@@ -82,9 +91,11 @@ export default function MettreEnAttenteDialog({ open, onOpenChange, onConfirm, i
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-heading text-[#0077A8]">{t('raison_attente_label')}</label>
+            <label className="text-sm font-heading text-[#0077A8] flex items-center gap-1">
+              {t('raison_attente_label')} <span className="text-red-500">*</span>
+            </label>
             <Select value={formData.raison} onValueChange={(v) => setFormData({ ...formData, raison: v })}>
-              <SelectTrigger className="border-[#00AEEF]/30 rounded-xl">
+              <SelectTrigger className={`border-[#00AEEF]/30 rounded-xl ${showError && !formData.raison ? 'border-red-500' : ''}`}>
                 <SelectValue placeholder={t('selectionner_raison')} />
               </SelectTrigger>
               <SelectContent>
@@ -95,6 +106,12 @@ export default function MettreEnAttenteDialog({ open, onOpenChange, onConfirm, i
                 <SelectItem value="autre">{t('raison_autre')}</SelectItem>
               </SelectContent>
             </Select>
+            {showError && !formData.raison && (
+              <p className="text-red-500 text-xs flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" />
+                Veuillez sélectionner une raison
+              </p>
+            )}
           </div>
 
           <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
