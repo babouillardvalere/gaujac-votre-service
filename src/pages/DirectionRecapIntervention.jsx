@@ -14,121 +14,57 @@ export default function DirectionRecapIntervention() {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
-  const { intervention } = location.state || {};
+  const { interventions = [] } = location.state || {};
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [creating, setCreating] = useState(false);
 
-  const createMutation = useMutation({
-    mutationFn: async () => {
-      const newIntervention = await base44.entities.InterventionDirection.create({
-        type_intervention: intervention.typeIntervention,
-        type_hebergement: intervention.typeHebergement,
-        numero_hebergement: intervention.numeroHebergement,
-        service: intervention.service,
-        priorite: intervention.priorite,
-        description: intervention.description,
-        taches: intervention.taches.map(t => ({
-          numero: t.numero,
-          texte: t.texte,
-          faite: false
-        })),
-        statut: 'A_FAIRE'
-      });
-
-      return newIntervention;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['interventions-direction'] });
-      toast.success('Intervention créée et envoyée au service !');
-      setTimeout(() => {
-        navigate(createPageUrl('DirectionMenu'));
-      }, 1500);
-    },
-    onError: (error) => {
-      toast.error('Erreur lors de la création');
-      console.error(error);
-    }
-  });
-
-  const handleDownloadPDF = () => {
-    setIsGeneratingPDF(true);
+  const handleConfirmer = async () => {
+    setCreating(true);
     try {
-      const doc = new jsPDF();
+      console.log('[DIRECTION] Création interventions:', interventions.length);
       
-      // En-tête
-      doc.setFontSize(20);
-      doc.setTextColor(0, 119, 168);
-      doc.text('Camping Paradis - Domaine de Gaujac', 105, 20, { align: 'center' });
-      
-      doc.setFontSize(16);
-      doc.text('RECAPITULATIF INTERVENTION DIRECTION', 105, 35, { align: 'center' });
-      
-      // Corps
-      let y = 50;
-      doc.setFontSize(12);
-      doc.setTextColor(0, 0, 0);
-      
-      doc.text('Type d\'intervention:', 20, y);
-      doc.setFont(undefined, 'bold');
-      doc.text(intervention.typeIntervention === 'HIVERNAGE' ? 'HIVERNAGE' : 'DESHIVERNAGE', 80, y);
-      doc.setFont(undefined, 'normal');
-      y += 10;
-      
-      doc.text('Hebergement:', 20, y);
-      doc.setFont(undefined, 'bold');
-      doc.text(`${intervention.typeHebergement} - ${intervention.numeroHebergement}`, 80, y);
-      doc.setFont(undefined, 'normal');
-      y += 10;
-      
-      doc.text('Service assigne:', 20, y);
-      doc.setFont(undefined, 'bold');
-      doc.text(intervention.service === 'TECHNIQUE' ? 'TECHNIQUE' : 'MENAGE', 80, y);
-      doc.setFont(undefined, 'normal');
-      y += 10;
-      
-      doc.text('Priorite:', 20, y);
-      doc.setFont(undefined, 'bold');
-      doc.text(intervention.priorite, 80, y);
-      doc.setFont(undefined, 'normal');
-      y += 15;
-      
-      doc.text('Description:', 20, y);
-      y += 7;
-      const descLines = doc.splitTextToSize(intervention.description, 170);
-      doc.text(descLines, 20, y);
-      y += descLines.length * 7 + 10;
-      
-      doc.setFont(undefined, 'bold');
-      doc.text('TACHES A EFFECTUER:', 20, y);
-      doc.setFont(undefined, 'normal');
-      y += 10;
-      
-      intervention.taches.forEach(tache => {
-        const tacheLines = doc.splitTextToSize(`${tache.numero}. ${tache.texte}`, 170);
-        doc.text(tacheLines, 25, y);
-        y += tacheLines.length * 7 + 5;
-      });
-      
-      y += 15;
-      doc.setFontSize(10);
-      doc.setTextColor(100, 100, 100);
-      doc.text(`Date d'emission: ${new Date().toLocaleDateString('fr-FR')}`, 20, y);
-      
-      // Télécharger
-      doc.save(`Intervention_${intervention.numeroHebergement}_${new Date().getTime()}.pdf`);
-      toast.success('PDF téléchargé ✅');
+      for (const intervention of interventions) {
+        // Validation : Au moins une tâche doit être définie
+        if (!intervention.taches || intervention.taches.length === 0) {
+          toast.error(`Intervention ${intervention.numeroHebergement} : aucune tâche définie`);
+          setCreating(false);
+          return;
+        }
+
+        // Créer WorkItem directement (source: direction)
+        await base44.entities.WorkItem.create({
+          type: 'MISSION_DIRECTION',
+          service: intervention.service,
+          statut: 'A_FAIRE',
+          priorite: intervention.priorite,
+          titre: `${intervention.typeIntervention} - ${intervention.numeroHebergement}`,
+          description: intervention.description || `${intervention.typeIntervention} - ${intervention.taches.length} tâche(s)`,
+          hebergement: intervention.numeroHebergement,
+          type_hebergement: intervention.typeHebergement,
+          taches: intervention.taches,
+          client_nom: 'Direction',
+          client_prenom: intervention.typeIntervention,
+          rank: 0
+        });
+        
+        console.log('[DIRECTION] WorkItem créé:', intervention.numeroHebergement);
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['workitems-technique'] });
+      queryClient.invalidateQueries({ queryKey: ['workitems-menage'] });
+      toast.success(`${interventions.length} intervention(s) créée(s) avec succès !`);
+      navigate(createPageUrl('DirectionMenu'));
     } catch (error) {
-      console.error('Erreur PDF:', error);
-      toast.error('Erreur génération PDF');
+      console.error('[DIRECTION] Erreur création:', error);
+      toast.error('Erreur lors de la création');
     } finally {
-      setIsGeneratingPDF(false);
+      setCreating(false);
     }
   };
 
-  const handleValider = () => {
-    createMutation.mutate();
-  };
 
-  if (!intervention) {
+
+  if (!interventions || interventions.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="text-center">
@@ -167,100 +103,69 @@ export default function DirectionRecapIntervention() {
           </p>
         </motion.div>
 
-        <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-purple-200 space-y-4 mb-6">
-          <div>
-            <p className="text-sm text-gray-500">Type</p>
-            <p className="font-heading text-lg">
-              {intervention.typeIntervention === 'HIVERNAGE' ? '❄️ Hivernage' : '🌞 Déshivernage'}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-sm text-gray-500">Hébergement</p>
-            <p className="font-heading text-lg">{intervention.typeHebergement}</p>
-          </div>
-
-          <div>
-            <p className="text-sm text-gray-500">Numéro</p>
-            <p className="font-heading text-lg text-purple-700">{intervention.numeroHebergement}</p>
-          </div>
-
-          <div>
-            <p className="text-sm text-gray-500">Service</p>
-            <p className="font-heading text-lg">
-              {intervention.service === 'TECHNIQUE' ? '🧰 Technique' : '🧽 Ménage'}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-sm text-gray-500">Priorité</p>
-            <p className="font-heading text-lg">
-              {intervention.priorite === 'URGENTE' ? '⚠️ Urgente' : '◯ Normale'}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-sm text-gray-500">Description</p>
-            <p className="font-body text-gray-700">{intervention.description}</p>
-          </div>
-
-          <div>
-            <p className="text-sm text-gray-500 mb-2">Tâches</p>
-            <div className="space-y-2">
-              {intervention.taches.map((tache) => (
-                <div key={tache.numero} className="flex items-center gap-2 bg-purple-50 p-2 rounded">
-                  <span className="font-bold text-purple-600">{tache.numero}.</span>
-                  <span className="font-body">{tache.texte}</span>
+        <div className="space-y-4">
+          {interventions.map((intervention, idx) => (
+            <div key={idx} className="bg-white rounded-xl p-6 shadow-lg border-2 border-purple-200 space-y-4">
+              <h3 className="font-heading text-lg text-purple-700 border-b pb-2">
+                Intervention #{idx + 1} - {intervention.numeroHebergement}
+              </h3>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Type</p>
+                  <p className="font-heading text-purple-700">{intervention.typeIntervention}</p>
                 </div>
-              ))}
+                <div>
+                  <p className="text-sm text-gray-500">Date planifiée</p>
+                  <p className="font-heading text-purple-700">{intervention.datePlanifiee}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Service</p>
+                  <p className="font-heading text-purple-700">{intervention.service === 'TECHNIQUE' ? '🧰 Technique' : '🧽 Ménage'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Priorité</p>
+                  <p className="font-heading text-purple-700">{intervention.priorite === 'URGENTE' ? '⚠️ Urgente' : '◯ Normale'}</p>
+                </div>
+              </div>
+
+              {intervention.description && (
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Description</p>
+                  <p className="text-gray-700 bg-gray-50 p-3 rounded-lg text-sm">{intervention.description}</p>
+                </div>
+              )}
+
+              <div>
+                <p className="text-sm text-gray-500 mb-2">Tâches ({intervention.taches.length})</p>
+                <div className="space-y-1">
+                  {intervention.taches.map((tache) => (
+                    <div key={tache.numero} className="flex items-center gap-2 bg-purple-50 p-2 rounded">
+                      <span className="font-bold text-purple-600 text-xs">{tache.numero}️⃣</span>
+                      <span className="text-sm">{tache.texte}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <Button 
-            onClick={handleDownloadPDF} 
-            variant="outline" 
-            className="w-full h-12"
-            disabled={isGeneratingPDF}
-          >
-            {isGeneratingPDF ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Génération...
-              </>
-            ) : (
-              <>
-                <FileText className="w-5 h-5 mr-2" />
-                📄 Télécharger le PDF
-              </>
-            )}
-          </Button>
+          ))}
 
           <Button 
-            onClick={handleValider}
-            className="w-full h-12 bg-green-600 hover:bg-green-700 text-lg"
-            disabled={createMutation.isPending}
+            onClick={handleConfirmer} 
+            disabled={creating}
+            className="w-full h-12 bg-green-600 hover:bg-green-700 text-lg disabled:opacity-50"
           >
-            {createMutation.isPending ? (
+            {creating ? (
               <>
                 <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Validation...
+                Création en cours...
               </>
             ) : (
               <>
                 <CheckCircle className="w-5 h-5 mr-2" />
-                ✔️ Valider
+                ✅ Confirmer {interventions.length} intervention(s)
               </>
             )}
-          </Button>
-
-          <Button 
-            onClick={() => navigate(-1)}
-            variant="outline"
-            className="w-full h-12"
-          >
-            ↩️ Retour
           </Button>
         </div>
       </div>
