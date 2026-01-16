@@ -141,6 +141,19 @@ export default function Technique() {
         if (data.date_resolution) workItemData.date_terminee = data.date_resolution;
         if (data.temps_total_intervention !== undefined) workItemData.duree_minutes = data.temps_total_intervention;
         
+        // Synchroniser les champs d'attente pour WorkItems
+        if (data.attente_raison || data.motif_attente) {
+          if (!workItemData.metadata) workItemData.metadata = {};
+          workItemData.metadata.attente_raison = data.attente_raison;
+          workItemData.metadata.motif_attente = data.motif_attente;
+          workItemData.metadata.attente_materiel = data.attente_materiel;
+          workItemData.metadata.attente_materiel_detail = data.attente_materiel_detail;
+          workItemData.metadata.attente_delai = data.attente_delai;
+          workItemData.metadata.attente_commentaire = data.attente_commentaire;
+          workItemData.metadata.attente_date = data.attente_date;
+        }
+        
+        console.log('[TECHNIQUE] Update WorkItem:', workItemId, workItemData);
         return base44.entities.WorkItem.update(workItemId, workItemData);
       }
       return base44.entities.Incident.update(id, data);
@@ -457,6 +470,13 @@ export default function Technique() {
 
   const confirmMettreEnAttente = async (formData) => {
     if (!incidentToWait) return;
+
+    console.log('[TECHNIQUE] Mise en attente:', {
+      incident: incidentToWait.id,
+      isWorkItem: incidentToWait.isWorkItem,
+      workItemId: incidentToWait.workItemId,
+      formData
+    });
 
     updateMutation.mutate({
       id: incidentToWait.id,
@@ -1106,7 +1126,20 @@ export default function Technique() {
                           )}
                         </>
                       ) : (
-                        <p className="font-body text-gray-700 mb-3 line-clamp-2">{incident.description}</p>
+                        <>
+                          {incident.taches && incident.taches.length > 0 ? (
+                            <div className="space-y-1 mb-3">
+                              {incident.taches.map((tache, idx) => (
+                                <div key={idx} className="flex items-start gap-2 text-sm bg-gray-50 p-2 rounded">
+                                  <span className="text-base">{tache.objet_id ? getCategoryInfo(tache.objet_id).emoji : '🔧'}</span>
+                                  <p className="font-body text-gray-700 flex-1">{tache.texte}</p>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="font-body text-gray-700 mb-3 line-clamp-2">{incident.description || "⚠️ Aucune description"}</p>
+                          )}
+                        </>
                       )}
 
                       <div className="flex items-center justify-between text-xs text-gray-500 font-body mt-3">
