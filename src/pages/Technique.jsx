@@ -1185,8 +1185,23 @@ export default function Technique() {
 
               <div>
                 <label className="text-sm font-heading text-[#0077A8]">{t('description')}</label>
-                <p className="font-body text-gray-700 bg-gray-50 p-3 rounded-xl mt-1">{selectedIncident.description}</p>
-              </div>
+                {selectedIncident.taches && selectedIncident.taches.length > 0 ? (
+                  <div className="space-y-2 mt-1">
+                    {selectedIncident.taches.map((tache, idx) => (
+                      <div key={idx} className="flex items-start gap-2 bg-gray-50 p-3 rounded-xl">
+                        <span className="text-lg">{tache.objet_id ? getCategoryInfo(tache.objet_id).emoji : '🔧'}</span>
+                        <div className="flex-1">
+                          <p className="font-body text-gray-700">{tache.texte}</p>
+                          {tache.faite && (
+                            <Badge className="bg-green-500 text-white text-xs mt-1">✅ Complété</Badge>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="font-body text-gray-700 bg-gray-50 p-3 rounded-xl mt-1">{selectedIncident.description}</p>
+                )}
 
               {selectedIncident.statut === 'en_attente' && (
                 <div className="space-y-3 pt-4 border-t">
