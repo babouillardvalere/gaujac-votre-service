@@ -954,7 +954,7 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
       toast.dismiss('submit');
       toast.error(lang === "fr" ? "Erreur lors de la validation. Réessayez." : "Validation error. Try again.");
       setSubmitting(false);
-      setShowRecap(true); // Rester sur le récap en cas d'erreur
+      // NE PAS rouvrir la modale - laisser le message d'erreur toast
     }
   };
 
