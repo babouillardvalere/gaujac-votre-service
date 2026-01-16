@@ -567,6 +567,58 @@ export default function Technique() {
 
   const collaborateurs = [...new Set(incidents.map(i => i.pris_par).filter(Boolean))];
 
+  // Fonction de regroupement VISUEL des WorkItems
+  const groupWorkItems = (items) => {
+    const groups = {};
+    
+    items.forEach(item => {
+      // Clé de regroupement: service + logement + date + client + statut
+      const dateKey = item.date_saisie ? new Date(item.date_saisie).toISOString().split('T')[0] : 'no-date';
+      const groupKey = `${item.type}_${item.logement || item.emplacement}_${dateKey}_${item.client_nom}_${item.client_prenom}_${item.statut}`;
+      
+      if (!groups[groupKey]) {
+        groups[groupKey] = {
+          id: groupKey,
+          type: item.type,
+          logement: item.logement,
+          emplacement: item.emplacement,
+          client_nom: item.client_nom,
+          client_prenom: item.client_prenom,
+          date_saisie: item.date_saisie,
+          date_arrivee: item.date_arrivee,
+          date_depart: item.date_depart,
+          statut: item.statut,
+          urgent: false,
+          autorisation_acces: item.autorisation_acces,
+          plage_horaire_client: item.plage_horaire_client,
+          pris_par: item.pris_par,
+          date_debut: item.date_debut,
+          date_resolution: item.date_resolution,
+          isGrouped: true,
+          workItems: []
+        };
+      }
+      
+      // Ajouter au groupe
+      groups[groupKey].workItems.push(item);
+      
+      // Propager l'urgence si au moins 1 urgent
+      if (item.urgent) groups[groupKey].urgent = true;
+      
+      // Prendre la date de début la plus ancienne
+      if (item.date_debut && (!groups[groupKey].date_debut || item.date_debut < groups[groupKey].date_debut)) {
+        groups[groupKey].date_debut = item.date_debut;
+      }
+      
+      // Prendre le collaborateur du premier item
+      if (!groups[groupKey].pris_par && item.pris_par) {
+        groups[groupKey].pris_par = item.pris_par;
+      }
+    });
+    
+    return Object.values(groups);
+  };
+
   // Conversion des WorkItems en format compatible Incident
   const convertedWorkItems = workItemsTechnique
     .filter(wi => {
@@ -646,8 +698,11 @@ export default function Technique() {
       missionDirectionData: m
     }));
 
-  // Combiner incidents, WorkItems et missions Direction
-  const allIncidents = [...incidents, ...convertedWorkItems, ...convertedMissionsDirection];
+  // Regrouper visuellement les WorkItems
+  const groupedWorkItems = groupWorkItems(convertedWorkItems);
+  
+  // Combiner incidents, groupes WorkItems et missions Direction
+  const allIncidents = [...incidents, ...groupedWorkItems, ...convertedMissionsDirection];
 
   const filteredIncidents = allIncidents
     .filter(i => {
@@ -863,6 +918,7 @@ export default function Technique() {
             {filteredIncidents.map((incident) => {
               const catInfo = getCategoryInfo(incident.categorie);
               const priorityType = getPriorityType(incident);
+              const isGrouped = incident.isGrouped && incident.workItems?.length > 1;
 
               return (
                 <motion.div key={incident.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -870,30 +926,50 @@ export default function Technique() {
                     className={`border-2 rounded-xl cursor-pointer hover:shadow-lg transition-all ${
                       priorityType === 'urgent' ? 'border-red-500 bg-red-50' : 'border-gray-200'
                     }`}
-                    onClick={() => setSelectedIncident(incident)}
+                    onClick={() => setSelectedIncident(isGrouped ? incident.workItems[0] : incident)}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <span className="text-3xl">{catInfo.emoji}</span>
+                          <span className="text-3xl">{isGrouped ? '📦' : catInfo.emoji}</span>
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-heading text-[#0077A8]">{incident.logement || incident.emplacement}</span>
+                              {isGrouped && (
+                                <Badge className="bg-[#00AEEF] text-white text-xs">
+                                  {incident.workItems.length} interventions
+                                </Badge>
+                              )}
                               {incident.urgent && (
                                 <Badge className="bg-red-500 text-white text-xs">
                                   <AlertTriangle className="w-3 h-3 mr-1" />⚠️ Urgent
                                 </Badge>
                               )}
                             </div>
-                            <p className="text-sm font-body text-gray-600">{catInfo.label}</p>
+                            {!isGrouped && <p className="text-sm font-body text-gray-600">{catInfo.label}</p>}
                           </div>
                         </div>
                         {getStatusBadge(incident.statut)}
                       </div>
 
-                      <p className="font-body text-gray-700 mb-3 line-clamp-2">{incident.description}</p>
+                      {isGrouped ? (
+                        <div className="space-y-2">
+                          {incident.workItems.map((wi, idx) => {
+                            const tache = wi.taches?.[0];
+                            const tacheLabel = tache ? tache.texte : wi.description;
+                            return (
+                              <div key={idx} className="flex items-start gap-2 text-sm">
+                                <span className="text-lg">{tache?.objet_id ? getCategoryInfo(tache.objet_id).emoji : '🔧'}</span>
+                                <span className="font-body text-gray-700 flex-1 line-clamp-1">{tacheLabel}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="font-body text-gray-700 mb-3 line-clamp-2">{incident.description}</p>
+                      )}
 
-                      <div className="flex items-center justify-between text-xs text-gray-500 font-body">
+                      <div className="flex items-center justify-between text-xs text-gray-500 font-body mt-3">
                         <div className="flex items-center gap-1">
                           <User className="w-3 h-3" />
                           {incident.client_prenom} {incident.client_nom}
