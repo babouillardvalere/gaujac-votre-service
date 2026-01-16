@@ -739,10 +739,10 @@ export default function Technique() {
     });
   };
 
-  // GARDE ANTI-ORPHELINS : filtrer WorkItems sans lien ou supprimés
+  // GARDE ANTI-ORPHELINS : filtrer WorkItems supprimés uniquement
+  // Ne pas exiger intervention_client_id (les missions Direction n'en ont pas)
   const safeWorkItemsTechnique = workItemsTechnique.filter(wi =>
-    wi.intervention_client_id &&
-    wi.statut !== 'SUPPRIME'
+    wi.statut !== 'ANNULEE'
   );
 
   // Conversion des WorkItems en format compatible Incident
