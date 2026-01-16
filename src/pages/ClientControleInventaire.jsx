@@ -944,9 +944,9 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
           : "Inventory sent successfully"
       );
       
-      console.log('[ARRIVAL_VALIDATE] SUCCESS - Redirection vers ClientMenu (hard redirect)');
+      console.log('[ARRIVAL_VALIDATE] SUCCESS - Redirection vers Home (hard redirect)');
       
-      window.location.replace(createPageUrl("ClientMenu"));
+      window.location.replace(createPageUrl("Home"));
       return;
       
     } catch (e) {
