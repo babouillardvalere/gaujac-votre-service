@@ -13,6 +13,7 @@ import { Checkbox } from "../ui/checkbox";
 import { Send, Loader2, Smile, Meh, Frown, Download, Home, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import errorLogger from "../qa/ErrorLogger";
+import { prepareWorkItemData } from "../workItemUtils";
 
 export default function InventaireArriveeManager({ 
   inventaireData, 

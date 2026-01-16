@@ -36,7 +36,7 @@ export const QAConfig = {
       return { valid: true };
     },
 
-    // WorkItem doit avoir une origine
+    // WorkItem doit avoir une origine ET description opérationnelle
     validateWorkItem: (workItemData) => {
       const hasOrigin = workItemData.intervention_client_id || 
                         workItemData.mission_direction_id || 
@@ -49,6 +49,16 @@ export const QAConfig = {
           severity: 'CRITICAL'
         };
       }
+
+      // NOUVEAU: Description opérationnelle obligatoire
+      if (!workItemData.description_operationnelle || !workItemData.description_operationnelle.trim()) {
+        return {
+          valid: false,
+          error: '🚨 VALIDATION BLOQUANTE: Un WorkItem doit avoir une description_operationnelle (source unique de vérité)',
+          severity: 'CRITICAL'
+        };
+      }
+      
       return { valid: true };
     },
 

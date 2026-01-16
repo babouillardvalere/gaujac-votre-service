@@ -31,7 +31,7 @@ import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { format, differenceInMinutes } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { getOperationalDescription } from '../components/getOperationalDescription';
+import { getWorkItemDescription } from '../components/workItemUtils';
 
 const categoryIcons = {
   literie: { emoji: '🛏️', label: 'literie' },
@@ -729,7 +729,8 @@ export default function Menage() {
       id: wi.id,
       type: 'menage',
       categorie: 'materiel_menage',
-      description: wi.description,
+      description_operationnelle: getWorkItemDescription(wi),
+      description: getWorkItemDescription(wi),
       urgent: wi.priorite === 'URGENTE',
       client_nom: wi.client_nom,
       client_prenom: wi.client_prenom,
@@ -1116,23 +1117,19 @@ export default function Menage() {
               <div>
                 <label className="text-sm font-heading text-[#0077A8] mb-2 block">📋 {t('description')}</label>
                 
-                {(() => {
-                  const descriptionOp = getOperationalDescription(selectedIncident);
-                  
-                  return descriptionOp ? (
-                    <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 rounded">
-                      <p className="text-xs text-yellow-600 font-semibold mb-2">Actions à réaliser:</p>
-                      <pre className="font-body text-gray-800 whitespace-pre-wrap text-sm">
-                        {descriptionOp}
-                      </pre>
-                    </div>
-                  ) : (
-                    <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded">
-                      <p className="text-red-700 font-semibold">⚠️ Intervention invalide : aucun descriptif opérationnel</p>
-                      <p className="text-xs text-red-600 mt-1">Cette intervention ne peut pas être traitée</p>
-                    </div>
-                  );
-                })()}
+                {selectedIncident.description_operationnelle ? (
+                  <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 rounded">
+                    <p className="text-xs text-yellow-600 font-semibold mb-2">Actions à réaliser:</p>
+                    <pre className="font-body text-gray-800 whitespace-pre-wrap text-sm">
+                      {selectedIncident.description_operationnelle}
+                    </pre>
+                  </div>
+                ) : (
+                  <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded">
+                    <p className="text-red-700 font-semibold">⚠️ Intervention invalide : aucun descriptif opérationnel</p>
+                    <p className="text-xs text-red-600 mt-1">Cette intervention ne peut pas être traitée</p>
+                  </div>
+                )}
               </div>
 
               {selectedIncident.statut === 'en_attente' && (
