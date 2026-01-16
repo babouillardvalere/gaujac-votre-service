@@ -938,9 +938,9 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
       toast.dismiss('submit');
       toast.success(lang === "fr" ? "✅ Validé" : "✅ Validated");
       
-      console.log('[ARRIVAL_VALIDATE] SUCCESS - Redirection vers Home (hard redirect)');
+      console.log('[ARRIVAL_VALIDATE] SUCCESS - Redirection vers ClientMenu (hard redirect)');
       
-      window.location.replace("/");
+      window.location.replace(createPageUrl("ClientMenu"));
       return;
       
     } catch (e) {
