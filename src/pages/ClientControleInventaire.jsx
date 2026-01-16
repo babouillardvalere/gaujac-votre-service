@@ -842,10 +842,12 @@ ${detailsItems}
         reception: workItemsParService.RECEPTION.length
       };
 
+      // 4. Calcul anomalies AVANT le if
+      const totalAnomalies = menage.length + technique.length + reception.length;
+      const totalUrgent = [...menage, ...technique, ...reception].filter(i => i.urgent).length;
+
       // 4. Notification RÉCEPTION (vue d'ensemble)
       if (menage.length > 0 || technique.length > 0 || reception.length > 0) {
-        const totalAnomalies = menage.length + technique.length + reception.length;
-        const totalUrgent = [...menage, ...technique, ...reception].filter(i => i.urgent).length;
 
         const resumeServices = [];
         if (technique.length > 0) resumeServices.push(`🔧 ${technique.length}`);
