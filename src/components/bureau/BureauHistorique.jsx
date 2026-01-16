@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useTranslation } from '../translations';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   Search, Filter, AlertTriangle, Calendar, Clock, User, Home,
-  Star, MessageSquare, Camera, Loader2
+  Star, MessageSquare, Camera, Loader2, Trash2, X
 } from 'lucide-react';
 import Pagination from '../Pagination';
 import { format } from 'date-fns';
@@ -30,6 +31,8 @@ export default function BureauHistorique() {
     searchName: ''
   });
   const [selectedIncident, setSelectedIncident] = useState(null);
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [deletingGroup, setDeletingGroup] = useState(false);
 
   const { data: incidents = [], isLoading: loadingIncidents } = useQuery({
     queryKey: ['all-incidents'],
@@ -78,6 +81,53 @@ export default function BureauHistorique() {
   });
 
   const isLoading = loadingIncidents || loadingWorkItems;
+  const queryClient = useQueryClient();
+
+  const deleteGroupMutation = useMutation({
+    mutationFn: async (ids) => {
+      console.log('[HISTORIQUE] Suppression groupe:', ids);
+      for (const id of ids) {
+        const item = allInterventions.find(i => i.id === id);
+        if (item?.isWorkItem) {
+          await base44.entities.WorkItem.delete(id);
+        } else {
+          await base44.entities.Incident.delete(id);
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['all-incidents'] });
+      queryClient.invalidateQueries({ queryKey: ['all-workitems-bureau'] });
+      setSelectedItems([]);
+      toast.success(lang === 'fr' ? 'Éléments supprimés' : 'Items deleted');
+    },
+    onError: (err) => {
+      console.error('[HISTORIQUE] Erreur suppression:', err);
+      toast.error(lang === 'fr' ? 'Erreur de suppression' : 'Deletion error');
+    }
+  });
+
+  const handleDeleteGroup = async () => {
+    if (selectedItems.length === 0) return;
+    if (!confirm(`Supprimer ${selectedItems.length} élément(s) ?`)) return;
+    setDeletingGroup(true);
+    await deleteGroupMutation.mutateAsync(selectedItems);
+    setDeletingGroup(false);
+  };
+
+  const toggleSelection = (id) => {
+    setSelectedItems(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedItems.length === paginatedIncidents.length) {
+      setSelectedItems([]);
+    } else {
+      setSelectedItems(paginatedIncidents.map(i => i.id));
+    }
+  };
 
   // Convertir WorkItems en format compatible Incident pour affichage
   const convertedWorkItems = workItems.map(wi => ({
@@ -227,7 +277,31 @@ export default function BureauHistorique() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg">{t('historique')}</CardTitle>
-            <span className="text-sm text-slate-500">{filteredIncidents.length} résultats</span>
+            <div className="flex items-center gap-3">
+              {selectedItems.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-slate-600">{selectedItems.length} événement(s) sélectionné(s)</span>
+                  <Button 
+                    size="sm" 
+                    variant="destructive"
+                    onClick={handleDeleteGroup}
+                    disabled={deletingGroup}
+                  >
+                    {deletingGroup ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                    Supprimer groupe
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => setSelectedItems([])}
+                  >
+                    <X className="w-4 h-4" />
+                    Annuler
+                  </Button>
+                </div>
+              )}
+              <span className="text-sm text-slate-500">{filteredIncidents.length} résultats</span>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -240,63 +314,84 @@ export default function BureauHistorique() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b text-left text-sm text-slate-500">
-                    <th className="pb-3 font-medium">Date</th>
-                    <th className="pb-3 font-medium">Logement</th>
+                    <th className="pb-3 font-medium w-12">
+                      <Checkbox 
+                        checked={selectedItems.length === paginatedIncidents.length && paginatedIncidents.length > 0}
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </th>
+                    <th className="pb-3 font-medium">N°</th>
+                    <th className="pb-3 font-medium">Date / Heure</th>
                     <th className="pb-3 font-medium">Client</th>
+                    <th className="pb-3 font-medium">Hébergement</th>
                     <th className="pb-3 font-medium">Type</th>
-                    <th className="pb-3 font-medium">Statut</th>
-                    <th className="pb-3 font-medium">Durée</th>
-                    <th className="pb-3 font-medium">Avis</th>
+                    <th className="pb-3 font-medium">Urgence</th>
+                    <th className="pb-3 font-medium">Événement</th>
+                    <th className="pb-3 font-medium">Détails</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedIncidents.map((incident) => {
+                  {paginatedIncidents.map((incident, index) => {
                     const avisClient = getAvisForIncident(incident.id);
+                    const isSelected = selectedItems.includes(incident.id);
                     return (
                       <tr 
                         key={incident.id} 
-                        className="border-b hover:bg-slate-50 cursor-pointer transition-colors"
-                        onClick={() => setSelectedIncident(incident)}
+                        className={`border-b hover:bg-slate-50 transition-colors ${isSelected ? 'bg-blue-50' : ''}`}
                       >
-                        <td className="py-3 text-sm">
-                          {format(new Date(incident.created_date), 'dd/MM/yy HH:mm', { locale: fr })}
-                        </td>
                         <td className="py-3">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">#{incident.hebergement_numero}</span>
-                            {incident.probleme_urgent && (
-                              <AlertTriangle className="w-4 h-4 text-red-500" />
-                            )}
-                          </div>
+                          <Checkbox 
+                            checked={isSelected}
+                            onCheckedChange={() => toggleSelection(incident.id)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </td>
+                        <td className="py-3 text-sm font-medium">{startIndex + index + 1}</td>
+                        <td className="py-3 text-sm">
+                          <div>{format(new Date(incident.created_date), 'dd/MM/yy', { locale: fr })}</div>
+                          <div className="text-xs text-slate-500">{format(new Date(incident.created_date), 'HH:mm', { locale: fr })}</div>
                         </td>
                         <td className="py-3 text-sm">
-                          {incident.client_prenom} {incident.client_nom}
+                          {incident.client_nom} {incident.client_prenom}
                         </td>
+                        <td className="py-3 font-medium">{incident.hebergement_numero}</td>
                         <td className="py-3">
                           <Badge variant="outline" className="text-xs">
                             {incident.isWorkItem ? (
-                              incident.workItemData?.type === 'INTERVENTION_CLIENT' ? 'Arrivée' : 
-                              incident.workItemData?.service || 'Divers'
+                              <>
+                                <span className="mr-1">🆕</span>
+                                {incident.workItemData?.service || 'Divers'}
+                              </>
                             ) : (
                               t(incident.sous_categorie)
                             )}
                           </Badge>
                         </td>
                         <td className="py-3">
-                          <Badge className={getStatusColor(incident.statut)}>
-                            {t(incident.statut)}
-                          </Badge>
+                          {incident.probleme_urgent && (
+                            <AlertTriangle className="w-4 h-4 text-red-500" />
+                          )}
                         </td>
-                        <td className="py-3 text-sm text-slate-500">
-                          {incident.duree_minutes ? `${incident.duree_minutes} min` : '-'}
+                        <td className="py-3 text-sm">
+                          <div className="font-medium">
+                            {incident.isWorkItem ? (
+                              `${incident.workItemData?.service || 'Divers'} - ${incident.hebergement_numero}`
+                            ) : (
+                              `${t(incident.sous_categorie)} - ${incident.hebergement_numero}`
+                            )}
+                          </div>
                         </td>
                         <td className="py-3">
-                          {avisClient && (
-                            <div className="flex items-center gap-1">
-                              <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                              <span className="text-sm font-medium">{avisClient.note}</span>
-                            </div>
-                          )}
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            onClick={() => setSelectedIncident(incident)}
+                          >
+                            {incident.isWorkItem && incident.workItemData?.type === 'INTERVENTION_CLIENT' 
+                              ? `INVENTAIRE_ARRIVEE - ${incident.workItemData?.taches?.length || 0} tâche(s)`
+                              : incident.description_probleme?.substring(0, 30) || '-'
+                            }
+                          </Button>
                         </td>
                       </tr>
                     );
