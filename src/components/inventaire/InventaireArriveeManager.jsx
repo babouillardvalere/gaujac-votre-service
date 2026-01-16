@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Checkbox } from "../ui/checkbox";
 import { Send, Loader2, Smile, Meh, Frown, Download, Home, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
+import errorLogger from "../qa/ErrorLogger";
 
 export default function InventaireArriveeManager({ 
   inventaireData, 
@@ -118,6 +119,14 @@ export default function InventaireArriveeManager({
 
     const hasUrgent = items.some(i => i.urgent);
     const description = items.map(i => `${i.emoji} ${i.label}: ${i.qtyManquante} manquant(s)`).join('\n');
+
+    // Log action utilisateur
+    errorLogger.logUserAction('Création intervention depuis inventaire arrivée', {
+      service,
+      itemsCount: items.length,
+      hasUrgent,
+      ficheId
+    });
 
     const incident = await base44.entities.Incident.create({
       stay_id: `ARR-${mh}-${dateArrivee.replace(/-/g, '')}-${Math.random().toString(36).substring(2, 8)}`,

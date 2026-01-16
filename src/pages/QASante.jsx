@@ -11,9 +11,12 @@ import {
 import { createPageUrl } from '../utils';
 import errorLogger from '../components/qa/ErrorLogger';
 import smokeTests from '../components/qa/SmokeTests';
+import QAConfig from '../components/qa/QAConfig';
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
 import Logo from '../components/Logo';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 export default function QASante() {
   const navigate = useNavigate();
@@ -22,6 +25,7 @@ export default function QASante() {
   const [testResults, setTestResults] = useState(null);
   const [isRunningTests, setIsRunningTests] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [qaMode, setQaMode] = useState(QAConfig.isQAModeActive());
 
   // Vérification accès admin
   useEffect(() => {
@@ -129,7 +133,7 @@ export default function QASante() {
     <div className="min-h-screen px-6 py-8 max-w-7xl mx-auto">
       <Logo className="h-16 mb-4" />
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(createPageUrl('DirectionMenu'))}
@@ -142,14 +146,27 @@ export default function QASante() {
             🩺 Santé du Système
           </h1>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center flex-wrap">
+          <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+            <Switch
+              checked={qaMode}
+              onCheckedChange={(checked) => {
+                setQaMode(checked);
+                QAConfig.setQAMode(checked);
+                toast.info(checked ? 'Mode QA activé' : 'Mode QA désactivé');
+              }}
+            />
+            <Label className="cursor-pointer text-sm">
+              Mode QA {qaMode ? '(Tests actifs)' : '(Validations seules)'}
+            </Label>
+          </div>
           <Button onClick={handleExportReport} variant="outline" size="sm">
             <Download className="w-4 h-4 mr-2" />
-            Export Rapport
+            Export
           </Button>
           <Button onClick={handleClearLogs} variant="outline" size="sm">
             <Trash2 className="w-4 h-4 mr-2" />
-            Clear Logs
+            Clear
           </Button>
           <Button onClick={loadLogs} variant="outline" size="sm">
             <RefreshCw className="w-4 h-4 mr-2" />
@@ -236,16 +253,43 @@ export default function QASante() {
         </Card>
       </div>
 
-      {/* Alerte critique */}
+      {/* Alerte critique + Règle de déploiement */}
       {stats.critical > 0 && (
         <Card className="mb-6 border-2 border-red-500 bg-red-50">
           <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <XCircle className="w-6 h-6 text-red-600" />
-              <div>
+            <div className="flex items-start gap-3">
+              <XCircle className="w-6 h-6 text-red-600 mt-0.5" />
+              <div className="flex-1">
                 <p className="font-bold text-red-800">🚨 ALERTE CRITIQUE</p>
-                <p className="text-sm text-red-700">
+                <p className="text-sm text-red-700 mb-2">
                   {stats.critical} erreur(s) critique(s) détectée(s). L'application peut être non exploitable.
+                </p>
+                <div className="bg-white border-2 border-red-600 rounded-lg p-3">
+                  <p className="text-red-800 font-bold text-sm">
+                    {QAConfig.deploymentRules.getMessage(stats.critical)}
+                  </p>
+                  <p className="text-xs text-red-700 mt-1">
+                    Règle de déploiement: Si ≥ 1 CRITICAL → déploiement interdit
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Statut déploiement si OK */}
+      {stats.critical === 0 && (
+        <Card className="mb-6 border-2 border-green-500 bg-green-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="w-6 h-6 text-green-600" />
+              <div>
+                <p className="font-bold text-green-800">
+                  {QAConfig.deploymentRules.getMessage(stats.critical)}
+                </p>
+                <p className="text-sm text-green-700">
+                  Aucune erreur critique détectée
                 </p>
               </div>
             </div>
