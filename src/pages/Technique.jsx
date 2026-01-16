@@ -771,7 +771,7 @@ export default function Technique() {
       id: wi.id,
       type: 'technique',
       categorie: 'divers_technique',
-      description: wi.description,
+      description: wi.description || wi.titre || 'Intervention à traiter',
       urgent: wi.priorite === 'URGENTE',
       client_nom: wi.client_nom,
       client_prenom: wi.client_prenom,
@@ -794,6 +794,7 @@ export default function Technique() {
       fiche_arrivee_id: wi.fiche_arrivee_id,
       isWorkItem: true,
       workItemId: wi.id,
+      titre: wi.titre,
       taches: wi.taches || []
     }));
 
