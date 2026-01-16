@@ -21,6 +21,7 @@ export class SmokeTests {
     await this.testDirectionWorkflow();
     await this.testDataIntegrity();
     await this.testNotifications();
+    await this.testNegativeScenarios();
 
     await this.cleanup();
 
@@ -255,6 +256,161 @@ export class SmokeTests {
 
     } catch (error) {
       this.recordTest('Notifications: Création', false, { error: error.message });
+    }
+  }
+
+  // TEST 6: Scénarios négatifs (CRITIQUE - vérifie que les actions interdites sont bloquées)
+  async testNegativeScenarios() {
+    console.log('🚫 Test Scénarios Négatifs (tests bloquants)...');
+
+    // TEST NÉGATIF 1: Intervention SANS tâches (doit échouer)
+    try {
+      const interventionSansTaches = await base44.entities.InterventionClient.create({
+        type_intervention: 'SIGNALEMENT_SEJOUR',
+        type_hebergement: 'Test',
+        numero_hebergement: 'INVALID-01',
+        client_nom: 'Test',
+        client_prenom: 'Invalid',
+        date_arrivee: '2026-01-20',
+        date_depart: '2026-01-25',
+        service: 'TECHNIQUE',
+        taches: [] // VIDE - doit être bloqué
+      });
+
+      // Si on arrive ici, c'est un ÉCHEC car l'intervention sans tâches a été créée
+      this.recordTest(
+        '🚫 BLOQUANT: Intervention sans tâches refusée',
+        false,
+        { 
+          severity: 'CRITICAL',
+          issue: 'Intervention créée sans tâches - validation manquante!',
+          interventionId: interventionSansTaches.id 
+        }
+      );
+
+      // Cleanup
+      await base44.entities.InterventionClient.delete(interventionSansTaches.id);
+
+    } catch (error) {
+      // C'est un SUCCÈS - l'erreur prouve que la validation fonctionne
+      this.recordTest(
+        '🚫 BLOQUANT: Intervention sans tâches refusée',
+        true,
+        { 
+          severity: 'CRITICAL',
+          blockedCorrectly: true,
+          error: error.message 
+        }
+      );
+    }
+
+    // TEST NÉGATIF 2: WorkItem sans origine (orphelin - doit échouer)
+    try {
+      const workItemOrphelin = await base44.entities.WorkItem.create({
+        type: 'INTERVENTION_CLIENT',
+        service: 'TECHNIQUE',
+        titre: 'WorkItem orphelin',
+        hebergement: 'TEST-ORPHAN',
+        statut: 'A_FAIRE'
+        // Pas de intervention_client_id, mission_direction_id, incident_id
+      });
+
+      this.recordTest(
+        '🚫 BLOQUANT: WorkItem orphelin refusé',
+        false,
+        { 
+          severity: 'CRITICAL',
+          issue: 'WorkItem créé sans origine - validation manquante!',
+          workItemId: workItemOrphelin.id 
+        }
+      );
+
+      await base44.entities.WorkItem.delete(workItemOrphelin.id);
+
+    } catch (error) {
+      this.recordTest(
+        '🚫 BLOQUANT: WorkItem orphelin refusé',
+        true,
+        { 
+          severity: 'CRITICAL',
+          blockedCorrectly: true,
+          error: error.message 
+        }
+      );
+    }
+
+    // TEST NÉGATIF 3: Mission Direction sans zones (doit échouer)
+    try {
+      const missionSansZones = await base44.entities.MissionDirection.create({
+        type_mission: 'INTERVENTION',
+        titre: 'Mission sans zones',
+        zones: [], // VIDE
+        statut: 'A_FAIRE'
+      });
+
+      this.recordTest(
+        '🚫 BLOQUANT: Mission sans zones refusée',
+        false,
+        { 
+          severity: 'CRITICAL',
+          issue: 'Mission créée sans zones - validation manquante!',
+          missionId: missionSansZones.id 
+        }
+      );
+
+      await base44.entities.MissionDirection.delete(missionSansZones.id);
+
+    } catch (error) {
+      this.recordTest(
+        '🚫 BLOQUANT: Mission sans zones refusée',
+        true,
+        { 
+          severity: 'CRITICAL',
+          blockedCorrectly: true,
+          error: error.message 
+        }
+      );
+    }
+
+    // TEST NÉGATIF 4: Transition de statut invalide (en_attente → resolu direct sans passer par en_cours)
+    if (this.testData.testWorkItemIds.length > 0) {
+      try {
+        const workItemId = this.testData.testWorkItemIds[0];
+        
+        // Forcer A_FAIRE
+        await base44.entities.WorkItem.update(workItemId, { statut: 'A_FAIRE' });
+        
+        // Tenter passage direct A_FAIRE → TERMINEE (doit être valide ou non selon règles métier)
+        await base44.entities.WorkItem.update(workItemId, { statut: 'TERMINEE' });
+        
+        const workItem = (await base44.entities.WorkItem.filter({ id: workItemId }))[0];
+        
+        // Si transition autorisée sans prise en charge, c'est une anomalie
+        if (workItem.statut === 'TERMINEE' && !workItem.date_prise_en_charge) {
+          this.recordTest(
+            '🚫 WARNING: Transitions de statut validées',
+            false,
+            { 
+              severity: 'WARNING',
+              issue: 'Transition A_FAIRE → TERMINEE autorisée sans prise en charge',
+              workItemId 
+            }
+          );
+        } else {
+          this.recordTest(
+            '🚫 WARNING: Transitions de statut validées',
+            true,
+            { severity: 'WARNING' }
+          );
+        }
+
+      } catch (error) {
+        this.recordTest(
+          '🚫 WARNING: Transitions de statut validées',
+          true,
+          { severity: 'WARNING', blockedCorrectly: true }
+        );
+      }
     }
   }
 

@@ -48,7 +48,15 @@ export default function QASante() {
   }, [filter, isAdmin]);
 
   const loadLogs = () => {
-    const filtered = errorLogger.getLogs(filter.type !== 'all' ? { type: filter.type } : {});
+    let filtered = errorLogger.getLogs();
+    
+    // Filtrer par type ou severity
+    if (filter.type === 'critical') {
+      filtered = filtered.filter(l => l.severity === 'CRITICAL');
+    } else if (filter.type !== 'all') {
+      filtered = filtered.filter(l => l.type === filter.type);
+    }
+    
     setLogs(filtered);
   };
 
@@ -105,6 +113,8 @@ export default function QASante() {
 
   const stats = {
     total: logs.length,
+    critical: logs.filter(l => l.severity === 'CRITICAL').length,
+    high: logs.filter(l => l.severity === 'HIGH').length,
     errors: logs.filter(l => l.type === 'error').length,
     warnings: logs.filter(l => l.type === 'warning').length,
     apiErrors: logs.filter(l => l.category === 'api_error').length,
@@ -149,15 +159,30 @@ export default function QASante() {
       </div>
 
       {/* Stats globales */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
+        <Card className={stats.critical > 0 ? 'border-2 border-red-500 animate-pulse' : ''}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-500">🚨 CRITICAL</p>
+                <p className="text-2xl font-bold text-red-600">{stats.critical}</p>
+              </div>
+              <XCircle className="w-8 h-8 text-red-600" />
+            </div>
+            {stats.critical > 0 && (
+              <p className="text-xs text-red-600 mt-1 font-semibold">APP NON EXPLOITABLE</p>
+            )}
+          </CardContent>
+        </Card>
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-500">Total Logs</p>
-                <p className="text-2xl font-bold">{stats.total}</p>
+                <p className="text-xs text-gray-500">⚠️ High</p>
+                <p className="text-2xl font-bold text-orange-500">{stats.high}</p>
               </div>
-              <Activity className="w-8 h-8 text-blue-500" />
+              <AlertCircle className="w-8 h-8 text-orange-500" />
             </div>
           </CardContent>
         </Card>
@@ -166,10 +191,10 @@ export default function QASante() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-500">Erreurs</p>
-                <p className="text-2xl font-bold text-red-500">{stats.errors}</p>
+                <p className="text-xs text-gray-500">Total Logs</p>
+                <p className="text-2xl font-bold">{stats.total}</p>
               </div>
-              <XCircle className="w-8 h-8 text-red-500" />
+              <Activity className="w-8 h-8 text-blue-500" />
             </div>
           </CardContent>
         </Card>
@@ -211,6 +236,23 @@ export default function QASante() {
         </Card>
       </div>
 
+      {/* Alerte critique */}
+      {stats.critical > 0 && (
+        <Card className="mb-6 border-2 border-red-500 bg-red-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <XCircle className="w-6 h-6 text-red-600" />
+              <div>
+                <p className="font-bold text-red-800">🚨 ALERTE CRITIQUE</p>
+                <p className="text-sm text-red-700">
+                  {stats.critical} erreur(s) critique(s) détectée(s). L'application peut être non exploitable.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Tabs defaultValue="logs" className="space-y-4">
         <TabsList>
           <TabsTrigger value="logs">Logs Système</TabsTrigger>
@@ -226,6 +268,14 @@ export default function QASante() {
               onClick={() => setFilter({ type: 'all' })}
             >
               Tous
+            </Button>
+            <Button
+              variant={filter.type === 'critical' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setFilter({ type: 'critical' })}
+              className={stats.critical > 0 ? 'border-red-500 text-red-600' : ''}
+            >
+              🚨 Critical ({stats.critical})
             </Button>
             <Button
               variant={filter.type === 'error' ? 'default' : 'outline'}
@@ -266,13 +316,22 @@ export default function QASante() {
                 logs.map(log => (
                   <div
                     key={log.id}
-                    className="border rounded-lg p-3 hover:bg-gray-50 transition-colors"
+                    className={`border rounded-lg p-3 hover:bg-gray-50 transition-colors ${
+                      log.severity === 'CRITICAL' ? 'border-red-500 bg-red-50' :
+                      log.severity === 'HIGH' ? 'border-orange-500 bg-orange-50' : ''
+                    }`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3 flex-1">
                         {getLogIcon(log.type)}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            {log.severity === 'CRITICAL' && (
+                              <Badge className="bg-red-600 text-white text-xs">🚨 CRITICAL</Badge>
+                            )}
+                            {log.severity === 'HIGH' && (
+                              <Badge className="bg-orange-500 text-white text-xs">⚠️ HIGH</Badge>
+                            )}
                             <Badge variant="outline" className="text-xs">
                               {log.category}
                             </Badge>

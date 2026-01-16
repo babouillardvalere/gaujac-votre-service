@@ -23,10 +23,14 @@ class ErrorLogger {
   }
 
   log(type, category, message, details = {}) {
+    // Déterminer la gravité automatiquement
+    const severity = this.determineSeverity(type, category, details);
+
     const entry = {
       id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
       timestamp: new Date().toISOString(),
       type, // 'error', 'warning', 'api', 'data', 'ui', 'success'
+      severity, // 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO'
       category, // 'intervention', 'navigation', 'auth', etc.
       message,
       details,
@@ -38,12 +42,36 @@ class ErrorLogger {
     this.logs.push(entry);
     this.saveLogs();
 
-    // Log aussi en console en dev
-    if (type === 'error') {
+    // Log en console selon gravité
+    if (severity === 'CRITICAL') {
+      console.error(`🚨 [CRITICAL] ${category}:`, message, details);
+    } else if (type === 'error') {
       console.error(`[QA Logger] ${category}:`, message, details);
+    } else if (type === 'warning') {
+      console.warn(`[QA Logger] ${category}:`, message, details);
     }
 
     return entry;
+  }
+
+  determineSeverity(type, category, details) {
+    // CRITICAL: bloque l'exploitation
+    if (details.severity === 'CRITICAL') return 'CRITICAL';
+    if (category === 'data_integrity' && type === 'data') return 'CRITICAL';
+    if (category === 'runtime' && type === 'error') return 'HIGH';
+    if (category === 'api_error' && type === 'api') return 'HIGH';
+    
+    // HIGH: impact opérationnel fort
+    if (details.severity === 'HIGH') return 'HIGH';
+    if (type === 'error') return 'HIGH';
+    
+    // MEDIUM: avertissement à surveiller
+    if (details.severity === 'WARNING' || type === 'warning') return 'MEDIUM';
+    
+    // LOW/INFO: informatif
+    if (type === 'success') return 'INFO';
+    
+    return 'LOW';
   }
 
   getCurrentUser() {
