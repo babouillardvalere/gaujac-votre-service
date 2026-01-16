@@ -165,60 +165,117 @@ export default function Signalement() {
         }
       }
 
-      const isTechnique = selectedProblems.some(p => 
-        problemesTechniques.some(pt => pt.id === p) || nuisances.some(n => n.id === p)
-      );
-
-      // Logique simplifiée pour priorite_ordre
-      // Les urgents auront priorite_ordre = 1, les normaux = 999
-      // Le tri sera géré côté affichage (Bureau, Technique, Menage)
-      const nextOrdre = urgent ? 1 : 999;
-
       const stayId = getStayId();
       
-      const newIncident = await base44.entities.Incident.create({
-        stay_id: stayId,
-        type: isTechnique ? 'technique' : 'menage',
-        categorie: selectedProblems[0],
-        sous_categorie: selectedProblems.join(', '),
-        description: description,
-        urgent: urgent,
-        client_nom: userData.nom,
-        client_prenom: userData.prenom,
-        date_arrivee: userData.dateArrivee,
-        date_depart: userData.dateDepart,
-        logement: userData.hebergementType === 'Mobil-home' ? userData.hebergementNumero : null,
-        emplacement: userData.hebergementType === 'Emplacement' ? userData.hebergementNumero : null,
-        photo_url: photoUrl,
-        date_saisie: new Date().toISOString(),
-        statut: 'en_attente',
-        priorite_ordre: nextOrdre,
-        autorisation_acces: autorisationAcces,
-        plage_horaire_client: autorisationAcces === 'non' ? plageHoraire : null,
-        clause_autorisation_acceptee: autorisationAcces === 'oui',
-        origine: 'signalement'
-      });
+      // Fonction mapping catégorie → service
+      const mapCategorieToService = (categorieId) => {
+        const estTechnique = problemesTechniques.some(pt => pt.id === categorieId) || 
+                            nuisances.some(n => n.id === categorieId);
+        return estTechnique ? 'TECHNIQUE' : 'MENAGE';
+      };
 
-      // Notification bureau
+      // Fonction pour récupérer le label localisé
+      const getProblemLabel = (categorieId) => {
+        const allProblems = [...problemesTechniques, ...problemesMenage, ...nuisances];
+        const problem = allProblems.find(p => p.id === categorieId);
+        return problem ? `${problem.emoji} ${problem.label}` : categorieId;
+      };
+
+      // RÈGLE MÉTIER : 1 problème sélectionné = 1 WorkItem
+      const workItemsCreated = [];
+      
+      for (const categorieId of selectedProblems) {
+        const service = mapCategorieToService(categorieId);
+        const problemLabel = getProblemLabel(categorieId);
+        
+        // Créer WorkItem dédié
+        const workItem = await base44.entities.WorkItem.create({
+          type: 'INTERVENTION_CLIENT',
+          service,
+          statut: 'A_FAIRE',
+          priorite: urgent ? 'URGENTE' : 'NORMALE',
+          rank: 0,
+          titre: `${service} - ${userData.hebergementNumero} - ${problemLabel}`,
+          description: `${problemLabel}\n\n${description}`,
+          hebergement: userData.hebergementNumero,
+          type_hebergement: userData.hebergementCategorie,
+          client_nom: userData.nom,
+          client_prenom: userData.prenom,
+          date_arrivee: userData.dateArrivee,
+          date_depart: userData.dateDepart,
+          autorisation_acces: autorisationAcces,
+          plages_horaires: autorisationAcces === 'non' ? [plageHoraire] : [],
+          taches: [{
+            numero: 1,
+            texte: problemLabel,
+            objet_id: categorieId,
+            faite: false,
+            photo_url: photoUrl || ''
+          }],
+          stay_id: stayId
+        });
+
+        workItemsCreated.push({ service, workItem });
+
+        // Notification dédiée au service concerné
+        await base44.entities.Notification.create({
+          type: urgent ? 'INCIDENT_URGENT' : 'NOUVEAU_INCIDENT',
+          titre: `${urgent ? '🔴 URGENT - ' : ''}${service} - ${userData.hebergementNumero}`,
+          message: `📍 ${userData.hebergementCategorie} ${userData.hebergementNumero}
+👤 ${userData.prenom} ${userData.nom}
+📅 ${userData.dateArrivee} → ${userData.dateDepart}
+🔐 ${autorisationAcces === 'oui' ? '✅ Accès autorisé' : '❌ Présence requise'}
+${autorisationAcces === 'non' && plageHoraire ? `⏰ ${plageHoraire}` : ''}
+
+${problemLabel}
+💬 ${description}
+
+📄 Signalement séjour`,
+          destinataire_role: service,
+          statut: 'non_lu',
+          priorite: urgent ? 'URGENTE' : 'NORMALE'
+        });
+      }
+
+      // Notification RÉCEPTION (vue d'ensemble)
+      const servicesDistincts = [...new Set(workItemsCreated.map(w => w.service))];
+      const resumeServices = servicesDistincts.map(s => 
+        `${s === 'TECHNIQUE' ? '🔧' : '🧹'} ${workItemsCreated.filter(w => w.service === s).length}`
+      ).join(' • ');
+
       await base44.entities.Notification.create({
         type: urgent ? 'INCIDENT_URGENT' : 'NOUVEAU_INCIDENT',
-        titre: `${urgent ? '🔴 URGENT - ' : ''}Signalement ${isTechnique ? 'technique' : 'ménage'} - ${userData.nom}`,
-        message: `Séjour - ${userData.hebergementNumero} - ${selectedProblems[0]}`,
+        titre: `📋 Signalement ${userData.hebergementNumero} - ${workItemsCreated.length} interventions`,
+        message: `📋 SIGNALEMENT SÉJOUR
+📍 ${userData.hebergementCategorie} ${userData.hebergementNumero}
+👤 ${userData.prenom} ${userData.nom}
+⚠️ ${resumeServices}
+${urgent ? '🔴 URGENT' : ''}
+
+Problèmes signalés : ${selectedProblems.length}`,
         destinataire_role: 'RECEPTION',
         statut: 'non_lu'
       });
 
-      // Créer un log de création
-      await base44.entities.InterventionLog.create({
-        incident_id: newIncident.id,
-        action: 'creation',
-        horodatage: new Date().toISOString(),
-        utilisateur: `${userData.prenom} ${userData.nom}`,
-        commentaire: `Signalement créé - Autorisation: ${autorisationAcces}`
+      // Historique événement central
+      await base44.entities.HistoriqueEvent.create({
+        type_event: 'INTERVENTION_CLIENT_CREEE',
+        titre: `Signalement séjour ${userData.hebergementNumero}`,
+        description: `${userData.prenom} ${userData.nom} - ${workItemsCreated.length} intervention(s)`,
+        service: 'RECEPTION',
+        hebergement: userData.hebergementNumero,
+        type_hebergement: userData.hebergementCategorie,
+        client_nom: userData.nom,
+        client_prenom: userData.prenom,
+        urgent: urgent,
+        metadata: {
+          total_problemes: selectedProblems.length,
+          services: servicesDistincts,
+          workitems_ids: workItemsCreated.map(w => w.workItem.id)
+        }
       });
 
-      sessionStorage.setItem('last_incident_id', newIncident.id);
-      setLastIncidentId(newIncident.id);
+      sessionStorage.setItem('last_workitem_ids', JSON.stringify(workItemsCreated.map(w => w.workItem.id)));
       setIsSuccess(true);
     } catch (error) {
       toast.error(t('erreur_envoi'));
