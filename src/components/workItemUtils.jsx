@@ -29,12 +29,17 @@ export const computeDescriptionOperationnelle = (data) => {
 /**
  * Prépare les données WorkItem pour création avec description_operationnelle calculée
  * USAGE: Appeler AVANT toute création de WorkItem
+ * BLOQUE: Si impossible de calculer une description (au lieu de corriger silencieusement)
  */
 export const prepareWorkItemData = (data) => {
   const description_operationnelle = computeDescriptionOperationnelle(data);
   
   if (!description_operationnelle) {
-    throw new Error('CRITICAL: Impossible de créer un WorkItem sans description opérationnelle');
+    throw new Error(
+      'VALIDATION CRITICAL: Impossible de créer un WorkItem sans description opérationnelle. ' +
+      'Fournissez des tâches OU une description OU un titre exploitable. ' +
+      'Le système REFUSE les données invalides, il ne les corrige pas.'
+    );
   }
   
   return {

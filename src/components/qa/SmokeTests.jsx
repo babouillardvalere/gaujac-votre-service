@@ -1,6 +1,6 @@
 import { base44 } from '@/api/base44Client';
 import errorLogger from './ErrorLogger';
-import { validateOperationalDescription } from '../getOperationalDescription';
+import { computeDescriptionOperationnelle } from '../workItemUtils';
 
 // Smoke tests automatisés pour les parcours critiques
 export class SmokeTests {
@@ -234,8 +234,8 @@ export class SmokeTests {
 
       // Vérif: Interventions sans description opérationnelle
       const sansDescriptionOp = interventionsSansTaches.filter(i => {
-        const result = validateOperationalDescription(i);
-        return !result.valid;
+        const desc = computeDescriptionOperationnelle(i);
+        return !desc;
       });
 
       this.recordTest(

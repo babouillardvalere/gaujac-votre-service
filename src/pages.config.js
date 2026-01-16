@@ -95,6 +95,7 @@ import Statistiques from './pages/Statistiques';
 import SuiviIntervention from './pages/SuiviIntervention';
 import Taches from './pages/Taches';
 import Technique from './pages/Technique';
+import QAValidation from './pages/QAValidation';
 import __Layout from './Layout.jsx';
 
 
@@ -196,6 +197,7 @@ export const PAGES = {
     "SuiviIntervention": SuiviIntervention,
     "Taches": Taches,
     "Technique": Technique,
+    "QAValidation": QAValidation,
 }
 
 export const pagesConfig = {
