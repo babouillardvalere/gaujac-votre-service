@@ -551,6 +551,109 @@ export default function Technique() {
     toast.success(lang === 'fr' ? 'Intervention reprise' : 'Intervention resumed');
   };
 
+  // CLÔTURE EN CASCADE D'UNE MISSION REGROUPÉE
+  const handleCloturerMission = async (missionGroup) => {
+    if (!missionGroup.workItems || missionGroup.workItems.length === 0) return;
+    
+    const confirmText = lang === 'fr' 
+      ? `Confirmer la clôture de ${missionGroup.workItems.length} intervention(s) ?`
+      : `Confirm closure of ${missionGroup.workItems.length} intervention(s)?`;
+    
+    if (!window.confirm(confirmText)) return;
+    
+    toast.loading(lang === 'fr' ? 'Clôture en cours...' : 'Closing...', { id: 'cloture-mission' });
+    
+    try {
+      const now = new Date();
+      const intervenant = collaborateurNom || missionGroup.pris_par || 'Agent';
+      
+      // Clôturer tous les WorkItems du groupe
+      for (const wi of missionGroup.workItems) {
+        const tempsTotal = wi.date_saisie ? differenceInMinutes(now, new Date(wi.date_saisie)) : 0;
+        
+        await base44.entities.WorkItem.update(wi.workItemId, {
+          statut: 'TERMINEE',
+          date_terminee: now.toISOString(),
+          duree_minutes: tempsTotal
+        });
+        
+        await base44.entities.InterventionLog.create({
+          incident_id: wi.id,
+          action: 'resolu',
+          horodatage: now.toISOString(),
+          utilisateur: intervenant,
+          commentaire: 'Clôturé via mission regroupée'
+        });
+        
+        // Event client
+        await pushClientEvent({
+          incident: wi,
+          type: 'TERMINEE',
+          message: "Intervention technique clôturée."
+        });
+      }
+      
+      // Générer le rapport de passage
+      const interventionsDetail = missionGroup.workItems.map(wi => {
+        const tache = wi.taches?.[0];
+        const catInfo = getCategoryInfo(tache?.objet_id || wi.categorie || 'divers_technique');
+        return {
+          workitem_id: wi.workItemId,
+          categorie: tache?.objet_id || wi.categorie || 'divers_technique',
+          description: tache?.texte || wi.description,
+          urgent: wi.urgent,
+          emoji: catInfo.emoji
+        };
+      });
+      
+      const rapport = await base44.entities.ServiceReport.create({
+        service: 'TECHNIQUE',
+        logement: missionGroup.logement || missionGroup.emplacement,
+        type_hebergement: missionGroup.type_hebergement || '',
+        client_nom: missionGroup.client_nom,
+        client_prenom: missionGroup.client_prenom,
+        fiche_arrivee_id: missionGroup.fiche_arrivee_id,
+        date_intervention: now.toISOString(),
+        intervenant,
+        workitems_ids: missionGroup.workItems.map(wi => wi.workItemId),
+        interventions_detail: interventionsDetail,
+        mission_urgente: missionGroup.urgent,
+        duree_totale_minutes: missionGroup.workItems.reduce((sum, wi) => {
+          const duree = wi.date_saisie ? differenceInMinutes(now, new Date(wi.date_saisie)) : 0;
+          return sum + duree;
+        }, 0),
+        visible_client: true,
+        visible_bureau: true
+      });
+      
+      await notifyBureau(`Mission clôturée - ${missionGroup.logement} - ${missionGroup.workItems.length} intervention(s)`);
+      
+      await base44.entities.HistoriqueEvent.create({
+        type_event: 'INTERVENTION_CLOTUREE',
+        titre: `Mission technique clôturée - ${missionGroup.logement}`,
+        description: `${intervenant} - ${missionGroup.workItems.length} intervention(s)`,
+        service: 'TECHNIQUE',
+        hebergement: missionGroup.logement,
+        client_nom: missionGroup.client_nom,
+        client_prenom: missionGroup.client_prenom,
+        collaborateur: intervenant,
+        urgent: missionGroup.urgent,
+        metadata: { rapport_id: rapport.id, nb_interventions: missionGroup.workItems.length }
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['workitems-technique'] });
+      queryClient.invalidateQueries({ queryKey: ['incidents-technique'] });
+      
+      toast.dismiss('cloture-mission');
+      toast.success(lang === 'fr' ? 'Mission clôturée avec succès' : 'Mission closed successfully');
+      
+    } catch (error) {
+      toast.dismiss('cloture-mission');
+      toast.error(lang === 'fr' ? 'Erreur lors de la clôture' : 'Error closing mission');
+      console.error(error);
+    }
+  };
+
   const getPriorityType = (incident) => {
     if (incident.urgent) return 'urgent';
     if (incident.autorisation_acces === 'non' && incident.plage_horaire_client) return 'plage_horaire';
@@ -567,7 +670,7 @@ export default function Technique() {
 
   const collaborateurs = [...new Set(incidents.map(i => i.pris_par).filter(Boolean))];
 
-  // Fonction de regroupement VISUEL des WorkItems
+  // Fonction de regroupement VISUEL des WorkItems avec PRIORISATION
   const groupWorkItems = (items) => {
     const groups = {};
     
@@ -594,6 +697,8 @@ export default function Technique() {
           pris_par: item.pris_par,
           date_debut: item.date_debut,
           date_resolution: item.date_resolution,
+          fiche_arrivee_id: item.fiche_arrivee_id,
+          type_hebergement: item.type_hebergement,
           isGrouped: true,
           workItems: []
         };
@@ -614,9 +719,22 @@ export default function Technique() {
       if (!groups[groupKey].pris_par && item.pris_par) {
         groups[groupKey].pris_par = item.pris_par;
       }
+      
+      // Conserver fiche_arrivee_id et type_hebergement
+      if (!groups[groupKey].fiche_arrivee_id && item.fiche_arrivee_id) {
+        groups[groupKey].fiche_arrivee_id = item.fiche_arrivee_id;
+      }
+      if (!groups[groupKey].type_hebergement && item.type_hebergement) {
+        groups[groupKey].type_hebergement = item.type_hebergement;
+      }
     });
     
-    return Object.values(groups);
+    // PRIORISATION : urgent d'abord, puis date la plus ancienne
+    return Object.values(groups).sort((a, b) => {
+      if (a.urgent && !b.urgent) return -1;
+      if (!a.urgent && b.urgent) return 1;
+      return new Date(a.date_saisie) - new Date(b.date_saisie);
+    });
   };
 
   // Conversion des WorkItems en format compatible Incident
@@ -953,18 +1071,32 @@ export default function Technique() {
                       </div>
 
                       {isGrouped ? (
-                        <div className="space-y-2">
-                          {incident.workItems.map((wi, idx) => {
-                            const tache = wi.taches?.[0];
-                            const tacheLabel = tache ? tache.texte : wi.description;
-                            return (
-                              <div key={idx} className="flex items-start gap-2 text-sm">
-                                <span className="text-lg">{tache?.objet_id ? getCategoryInfo(tache.objet_id).emoji : '🔧'}</span>
-                                <span className="font-body text-gray-700 flex-1 line-clamp-1">{tacheLabel}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
+                        <>
+                          <div className="space-y-2 mb-3">
+                            {incident.workItems.map((wi, idx) => {
+                              const tache = wi.taches?.[0];
+                              const tacheLabel = tache ? tache.texte : wi.description;
+                              return (
+                                <div key={idx} className="flex items-start gap-2 text-sm">
+                                  <span className="text-lg">{tache?.objet_id ? getCategoryInfo(tache.objet_id).emoji : '🔧'}</span>
+                                  <span className="font-body text-gray-700 flex-1 line-clamp-1">{tacheLabel}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          {incident.statut === 'en_cours' && (
+                            <Button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCloturerMission(incident);
+                              }}
+                              className="w-full bg-green-500 hover:bg-green-600 text-white text-sm py-2"
+                            >
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              {lang === 'fr' ? 'Clôturer la mission' : 'Close mission'}
+                            </Button>
+                          )}
+                        </>
                       ) : (
                         <p className="font-body text-gray-700 mb-3 line-clamp-2">{incident.description}</p>
                       )}
