@@ -13,8 +13,14 @@ export class SmokeTests {
   }
 
   async runAllTests() {
+    // PROTECTION : uniquement exécution volontaire
+    if (!this.isManualRun) {
+      console.warn('⚠️ Tests QA ignorés (exécution automatique interdite)');
+      return { success: false, message: 'Tests QA uniquement en mode volontaire' };
+    }
+
     this.results = [];
-    console.log('🧪 Démarrage des smoke tests...');
+    console.log('🧪 Démarrage des smoke tests (VOLONTAIRE)...');
 
     await this.testBureauWorkflow();
     await this.testTechniqueWorkflow();
@@ -26,6 +32,14 @@ export class SmokeTests {
     await this.cleanup();
 
     return this.getReport();
+  }
+
+  // Méthode publique pour lancer volontairement
+  async runManually() {
+    this.isManualRun = true;
+    const report = await this.runAllTests();
+    this.isManualRun = false;
+    return report;
   }
 
   // Enregistrement résultat test

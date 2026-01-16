@@ -26,6 +26,14 @@ class ErrorLogger {
     // Déterminer la gravité automatiquement
     const severity = this.determineSeverity(type, category, details);
 
+    // FILTRE MODE QA : hors mode QA, ignorer MEDIUM/HIGH/LOW
+    const isQAMode = sessionStorage.getItem('qa_mode_active') === 'true';
+    
+    if (!isQAMode && severity !== 'CRITICAL' && category !== 'user_action') {
+      // Mode normal : uniquement CRITICAL + actions utilisateur
+      return null;
+    }
+
     const entry = {
       id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
       timestamp: new Date().toISOString(),
@@ -45,9 +53,9 @@ class ErrorLogger {
     // Log en console selon gravité
     if (severity === 'CRITICAL') {
       console.error(`🚨 [CRITICAL] ${category}:`, message, details);
-    } else if (type === 'error') {
+    } else if (isQAMode && type === 'error') {
       console.error(`[QA Logger] ${category}:`, message, details);
-    } else if (type === 'warning') {
+    } else if (isQAMode && type === 'warning') {
       console.warn(`[QA Logger] ${category}:`, message, details);
     }
 
