@@ -222,10 +222,36 @@ export default function Bureau() {
   });
 
   const deleteInterventionClientMutation = useMutation({
-    mutationFn: (id) => base44.entities.InterventionClient.delete(id),
+    mutationFn: async (id) => {
+      // SUPPRESSION EN CASCADE : WorkItems + InterventionClient
+      console.log('[BUREAU] Suppression cascade intervention:', id);
+      
+      // 1. Récupérer et supprimer les WorkItems liés
+      const workItemsLies = await base44.entities.WorkItem.filter({ 
+        intervention_client_id: id 
+      }, '-created_date', 500);
+      
+      console.log('[BUREAU] WorkItems à supprimer:', workItemsLies.length);
+      
+      for (const wi of workItemsLies) {
+        await base44.entities.WorkItem.delete(wi.id);
+        console.log('[BUREAU] WorkItem supprimé:', wi.id);
+      }
+      
+      // 2. Supprimer l'InterventionClient
+      await base44.entities.InterventionClient.delete(id);
+      console.log('[BUREAU] InterventionClient supprimée:', id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bureau-interventions-clients'] });
-      toast.success(lang === 'fr' ? 'Intervention supprimée' : 'Intervention deleted');
+      queryClient.invalidateQueries({ queryKey: ['bureau-workitems'] });
+      queryClient.invalidateQueries({ queryKey: ['workitems-technique'] });
+      queryClient.invalidateQueries({ queryKey: ['workitems-menage'] });
+      toast.success(lang === 'fr' ? 'Intervention supprimée (cascade)' : 'Intervention deleted (cascade)');
+    },
+    onError: (err) => {
+      console.error('[BUREAU] Erreur suppression cascade:', err);
+      toast.error(lang === 'fr' ? 'Erreur de suppression' : 'Deletion error');
     }
   });
 
