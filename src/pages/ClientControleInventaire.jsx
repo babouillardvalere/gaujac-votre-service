@@ -936,7 +936,11 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
 
       // 8. Navigation vers HOME (hard redirect navigateur - non annulable)
       toast.dismiss('submit');
-      toast.success(lang === "fr" ? "✅ Validé" : "✅ Validated");
+      toast.success(
+        lang === "fr"
+          ? "Inventaire envoyé avec succès"
+          : "Inventory sent successfully"
+      );
       
       console.log('[ARRIVAL_VALIDATE] SUCCESS - Redirection vers ClientMenu (hard redirect)');
       
