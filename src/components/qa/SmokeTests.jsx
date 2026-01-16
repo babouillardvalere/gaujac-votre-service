@@ -259,6 +259,20 @@ export class SmokeTests {
         { workItemsOrphelins: orphelins.length }
       );
 
+      // Vérif: WorkItems sans description opérationnelle
+      const sansDescriptionOp = workItems.filter(w => 
+        !w.description_operationnelle || !w.description_operationnelle.trim()
+      );
+
+      this.recordTest(
+        'Data: Aucun WorkItem sans description_operationnelle',
+        sansDescriptionOp.length === 0,
+        { 
+          severity: sansDescriptionOp.length > 0 ? 'CRITICAL' : 'INFO',
+          workItemsSansDescriptionOp: sansDescriptionOp.length 
+        }
+      );
+
     } catch (error) {
       this.recordTest('Data: Intégrité', false, { error: error.message });
     }

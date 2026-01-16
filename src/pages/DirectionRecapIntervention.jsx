@@ -31,6 +31,13 @@ export default function DirectionRecapIntervention() {
           return;
         }
 
+        // Préparer données avec description_operationnelle
+        const workItemDataToCreate = prepareWorkItemData({
+          taches: intervention.taches,
+          description: intervention.description,
+          titre: `${intervention.typeIntervention} - ${intervention.numeroHebergement}`
+        });
+
         // Créer WorkItem directement (source: direction)
         await base44.entities.WorkItem.create({
           type: 'MISSION_DIRECTION',
@@ -38,6 +45,7 @@ export default function DirectionRecapIntervention() {
           statut: 'A_FAIRE',
           priorite: intervention.priorite,
           titre: `${intervention.typeIntervention} - ${intervention.numeroHebergement}`,
+          description_operationnelle: workItemDataToCreate.description_operationnelle,
           description: intervention.description || `${intervention.typeIntervention} - ${intervention.taches.length} tâche(s)`,
           hebergement: intervention.numeroHebergement,
           type_hebergement: intervention.typeHebergement,
