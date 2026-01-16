@@ -1210,11 +1210,22 @@ export default function Technique() {
               </div>
 
               <div>
-                <label className="text-sm font-heading text-[#0077A8]">{t('description')}</label>
-                {selectedIncident.taches && selectedIncident.taches.length > 0 ? (
-                  <div className="space-y-2 mt-1">
+                <label className="text-sm font-heading text-[#0077A8] mb-2 block">📋 {t('description')}</label>
+                
+                {/* Description textuelle du problème */}
+                {selectedIncident.description && (
+                  <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded mb-3">
+                    <p className="text-xs text-blue-600 font-semibold mb-1">Problème signalé:</p>
+                    <p className="font-body text-gray-800">{selectedIncident.description}</p>
+                  </div>
+                )}
+
+                {/* Tâches détaillées */}
+                {selectedIncident.taches && selectedIncident.taches.length > 0 && (
+                  <div className="space-y-2 mt-2">
+                    <p className="text-xs text-gray-500 font-semibold">Détail des tâches:</p>
                     {selectedIncident.taches.map((tache, idx) => (
-                      <div key={idx} className="flex items-start gap-2 bg-gray-50 p-3 rounded-xl">
+                      <div key={idx} className="flex items-start gap-2 bg-gray-50 p-3 rounded-xl border border-gray-200">
                         <span className="text-lg">{tache.objet_id ? getCategoryInfo(tache.objet_id).emoji : '🔧'}</span>
                         <div className="flex-1">
                           <p className="font-body text-gray-700">{tache.texte}</p>
@@ -1225,8 +1236,13 @@ export default function Technique() {
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <p className="font-body text-gray-700 bg-gray-50 p-3 rounded-xl mt-1">{selectedIncident.description}</p>
+                )}
+
+                {/* Fallback si rien n'est disponible */}
+                {!selectedIncident.description && (!selectedIncident.taches || selectedIncident.taches.length === 0) && (
+                  <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded">
+                    <p className="text-red-700 font-semibold">⚠️ Aucune description disponible</p>
+                  </div>
                 )}
               </div>
 
