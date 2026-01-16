@@ -87,11 +87,13 @@ export default function Menage() {
       const result = await base44.entities.WorkItem.filter({ 
         service: 'MENAGE'
       }, '-created_date', 250);
-      console.log('✅ WorkItems MENAGE récupérés:', result.length, 'workitem(s)');
-      result.forEach(wi => {
+      // FILTRE ANTI-ORPHELINS: exclure les WorkItems annulés
+      const filtered = result.filter(wi => wi.statut !== 'ANNULEE');
+      console.log('✅ WorkItems MENAGE actifs:', filtered.length, '/', result.length, 'workitem(s)');
+      filtered.forEach(wi => {
         console.log(`  - ID: ${wi.id}, Statut: ${wi.statut}, Type: ${wi.type}, Hébergement: ${wi.hebergement}`);
       });
-      return result;
+      return filtered;
     },
     refetchInterval: 30000,
     staleTime: 15000
