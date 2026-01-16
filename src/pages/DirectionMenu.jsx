@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from '../components/translations';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Sun, Snowflake, Wrench, ArrowLeft, ShoppingCart } from 'lucide-react';
+import { Sun, Snowflake, Wrench, ArrowLeft, ShoppingCart, Activity } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import Logo from '../components/Logo';
@@ -52,6 +52,16 @@ export default function DirectionMenu() {
       textColor: 'text-white',
       description: 'Suivi Hivernage',
       descriptionEn: 'Winter Closing tracking'
+    },
+    {
+      title: '🩺 Santé Système',
+      titleEn: '🩺 System Health',
+      icon: Activity,
+      href: 'QASante',
+      color: 'bg-[#10b981]',
+      textColor: 'text-white',
+      description: 'QA: logs, tests, intégrité données',
+      descriptionEn: 'QA: logs, tests, data integrity'
     }
   ];
 
