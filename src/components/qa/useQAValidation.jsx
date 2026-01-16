@@ -2,10 +2,12 @@ import { useCallback } from 'react';
 import QAConfig from './QAConfig';
 import errorLogger from './ErrorLogger';
 import { toast } from 'sonner';
+import { validateOperationalDescription } from '../getOperationalDescription';
 
 // Hook pour validations CRITICAL (toujours actives)
 export function useQAValidation() {
   const validateIntervention = useCallback((interventionData) => {
+    // Validation 1 : tâches obligatoires
     const result = QAConfig.criticalValidations.validateIntervention(interventionData);
     
     if (!result.valid) {
@@ -16,6 +18,20 @@ export function useQAValidation() {
       });
       
       toast.error(result.error, { duration: 5000 });
+      return false;
+    }
+    
+    // Validation 2 : description opérationnelle obligatoire
+    const descResult = validateOperationalDescription(interventionData);
+    
+    if (!descResult.valid) {
+      errorLogger.log('error', 'data_integrity', descResult.error, {
+        severity: 'CRITICAL',
+        entity: 'InterventionClient',
+        data: interventionData
+      });
+      
+      toast.error(descResult.error, { duration: 5000 });
       return false;
     }
     
