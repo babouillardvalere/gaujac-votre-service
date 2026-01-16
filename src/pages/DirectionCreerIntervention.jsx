@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 export default function DirectionCreerIntervention() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { typeIntervention, typeHebergement, numeroHebergement } = location.state || {};
+  const { typeIntervention, datePlanifiee, typeHebergement, numerosHebergement = [] } = location.state || {};
 
   const [taches, setTaches] = useState([]);
   const [nouvelleTache, setNouvelleTache] = useState('');
@@ -48,17 +48,19 @@ export default function DirectionCreerIntervention() {
       return;
     }
 
-    const intervention = {
+    const interventions = numerosHebergement.map(numero => ({
       typeIntervention,
+      datePlanifiee,
       typeHebergement,
-      numeroHebergement,
+      numeroHebergement: numero,
       service,
       description: description.trim(),
       priorite,
-      taches
-    };
+      taches,
+      source: 'direction'
+    }));
 
-    navigate(createPageUrl('DirectionRecapIntervention'), { state: { intervention } });
+    navigate(createPageUrl('DirectionRecapIntervention'), { state: { interventions } });
   };
 
   return (
@@ -80,10 +82,16 @@ export default function DirectionCreerIntervention() {
           <Logo className="h-16 mb-4" />
           
           <h1 className="font-handwritten text-3xl text-[#00AEEF] text-center mb-2">
-            Créer une intervention
+            🔧 Créer une intervention
           </h1>
+          <p className="text-center text-gray-600 font-body mb-2">
+            Étape 5/5 - Configuration finale
+          </p>
           <p className="text-center text-purple-700 font-heading text-lg">
-            {numeroHebergement} ({typeHebergement})
+            {numerosHebergement.length > 1 
+              ? `${numerosHebergement.length} hébergements sélectionnés`
+              : `${numerosHebergement[0]} (${typeHebergement})`
+            }
           </p>
         </motion.div>
 

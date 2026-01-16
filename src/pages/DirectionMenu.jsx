@@ -14,24 +14,14 @@ export default function DirectionMenu() {
 
   const menuItems = [
     {
-      title: '🏢 Missions Direction',
-      titleEn: '🏢 Management Missions',
+      title: '🔧 Interventions',
+      titleEn: '🔧 Interventions',
       icon: Wrench,
-      href: 'MissionsDirection',
+      href: 'DirectionInterventions',
       color: 'bg-[#9333ea]',
       textColor: 'text-white',
-      description: 'Vue complète des missions Direction',
-      descriptionEn: 'Complete view of Management missions'
-    },
-    {
-      title: '➕ Créer mission',
-      titleEn: '➕ Create mission',
-      icon: Wrench,
-      href: 'DirectionCreerMission',
-      color: 'bg-[#7c3aed]',
-      textColor: 'text-white',
-      description: 'Créer une mission Direction (modèle unifié)',
-      descriptionEn: 'Create a Management mission (unified model)'
+      description: 'Créer des interventions opérationnelles',
+      descriptionEn: 'Create operational interventions'
     },
     {
       title: '📦 Commandes',

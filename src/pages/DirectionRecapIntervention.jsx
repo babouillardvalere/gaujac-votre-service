@@ -160,8 +160,11 @@ export default function DirectionRecapIntervention() {
           <Logo className="h-16 mb-4" />
           
           <h1 className="font-handwritten text-3xl text-[#00AEEF] text-center mb-2">
-            Récapitulatif
+            🔧 Récapitulatif
           </h1>
+          <p className="text-center text-gray-600 font-body">
+            {interventions.length} intervention(s) à créer
+          </p>
         </motion.div>
 
         <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-purple-200 space-y-4 mb-6">
