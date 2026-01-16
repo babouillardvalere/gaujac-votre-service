@@ -705,8 +705,14 @@ export default function Menage() {
     });
   };
 
+  // GARDE ANTI-ORPHELINS : filtrer WorkItems sans lien ou supprimés
+  const safeWorkItemsMenage = workItemsMenage.filter(wi =>
+    wi.intervention_client_id &&
+    wi.statut !== 'SUPPRIME'
+  );
+
   // Conversion des WorkItems en format compatible Incident
-  const convertedWorkItems = workItemsMenage
+  const convertedWorkItems = safeWorkItemsMenage
     .filter(wi => {
       const statutMapping = {
         'A_FAIRE': 'en_attente',

@@ -739,8 +739,14 @@ export default function Technique() {
     });
   };
 
+  // GARDE ANTI-ORPHELINS : filtrer WorkItems sans lien ou supprimés
+  const safeWorkItemsTechnique = workItemsTechnique.filter(wi =>
+    wi.intervention_client_id &&
+    wi.statut !== 'SUPPRIME'
+  );
+
   // Conversion des WorkItems en format compatible Incident
-  const convertedWorkItems = workItemsTechnique
+  const convertedWorkItems = safeWorkItemsTechnique
     .filter(wi => {
       const statutMapping = {
         'A_FAIRE': 'en_attente',
