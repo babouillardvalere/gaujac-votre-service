@@ -9,7 +9,7 @@ import { createPageUrl } from '../utils';
 import Logo from '../components/Logo';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
-import { prepareWorkItemData } from '../components/workItemUtils';
+import { prepareWorkItemsForMission } from '../components/workItemFactory';
 import { validateBeforeWorkItemCreation } from '../components/qa/ValidationRules';
 
 export default function DirectionRecapIntervention() {
@@ -23,50 +23,32 @@ export default function DirectionRecapIntervention() {
   const handleConfirmer = async () => {
     setCreating(true);
     try {
-      console.log('[DIRECTION] Création interventions:', interventions.length);
+      console.log('[DIRECTION] Génération WorkItems depuis interventions:', interventions.length);
       
-      for (const intervention of interventions) {
-        // Validation : Au moins une tâche doit être définie
-        if (!intervention.taches || intervention.taches.length === 0) {
-          toast.error(`❌ Intervention ${intervention.numeroHebergement} : aucune tâche définie`);
-          setCreating(false);
-          return;
-        }
+      // Utiliser le premier élément comme template (tous partagent type, date, service, etc.)
+      const template = interventions[0];
+      
+      // Génération automatique via factory : 1 zone = 1 WorkItem
+      const result = prepareWorkItemsForMission({
+        typeMission: template.typeIntervention,
+        datePlanifiee: template.datePlanifiee,
+        typeHebergement: template.typeHebergement,
+        numerosHebergement: interventions.map(i => i.numeroHebergement),
+        service: template.service,
+        priorite: template.priorite,
+        taches: template.taches,
+        description: template.description
+      });
 
-        // Préparer données avec description_operationnelle (BLOQUE si impossible)
-        let workItemDataToCreate;
-        try {
-          workItemDataToCreate = prepareWorkItemData({
-            taches: intervention.taches,
-            description: intervention.description,
-            titre: `${intervention.typeIntervention} - ${intervention.numeroHebergement}`
-          });
-        } catch (error) {
-          toast.error(`❌ Intervention ${intervention.numeroHebergement} : ${error.message}`);
-          setCreating(false);
-          return;
-        }
+      if (!result.ok) {
+        setError(result.error);
+        toast.error(`❌ ${result.error}`);
+        setCreating(false);
+        return;
+      }
 
-        // Créer WorkItem directement (source: direction)
-        const workItemData = {
-          type: 'MISSION_DIRECTION',
-          service: intervention.service,
-          statut: 'A_FAIRE',
-          priorite: intervention.priorite,
-          titre: `${intervention.typeIntervention} - ${intervention.numeroHebergement}`,
-          description_operationnelle: workItemDataToCreate.description_operationnelle,
-          description: intervention.description || `${intervention.typeIntervention} - ${intervention.taches.length} tâche(s)`,
-          hebergement: intervention.numeroHebergement,
-          type_hebergement: intervention.typeHebergement,
-          taches: intervention.taches,
-          client_nom: 'Direction',
-          client_prenom: intervention.typeIntervention,
-          rank: 0,
-          // Origine obligatoire (création manuelle Direction)
-          mission_direction_id: 'direction_manuelle_' + Date.now()
-        };
-
-        // VALIDATION QA BLOQUANTE avant création
+      // Validation QA + Création batch
+      for (const workItemData of result.workItems) {
         try {
           validateBeforeWorkItemCreation(workItemData);
         } catch (validationError) {
@@ -77,19 +59,18 @@ export default function DirectionRecapIntervention() {
         }
 
         await base44.entities.WorkItem.create(workItemData);
-        
-        console.log('[DIRECTION] WorkItem créé et validé:', intervention.numeroHebergement);
       }
+
+      console.log(`[DIRECTION] ${result.workItems.length} WorkItem(s) créé(s) et validé(s)`);
 
       queryClient.invalidateQueries({ queryKey: ['workitems-technique'] });
       queryClient.invalidateQueries({ queryKey: ['workitems-menage'] });
-      toast.success(`✅ ${interventions.length} intervention(s) créée(s) avec succès !`);
+      toast.success(`✅ ${result.workItems.length} intervention(s) créée(s) avec succès !`);
       navigate(createPageUrl('DirectionMenu'));
     } catch (error) {
       console.error('[DIRECTION] Erreur création:', error);
       setError(error.message || 'Erreur inconnue lors de la création');
       toast.error(`❌ Erreur création : ${error.message || 'Erreur inconnue'}`);
-      // ⛔ PAS DE NAVIGATION - utilisateur reste sur la page pour corriger
     } finally {
       setCreating(false);
     }
