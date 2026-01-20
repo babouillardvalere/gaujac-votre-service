@@ -76,6 +76,7 @@ const SERVICE_LABELS = {
 export default function TimelineSuiviEvent({ workItemId, preloadedEvents = null }) {
   const { t, lang } = useTranslation();
   
+  // Fetch SuiviEvent pour ce WorkItem (ou utiliser preloadedEvents si fourni)
   const { data: events = [], isLoading, error } = useQuery({
     queryKey: ['suiviEvents', workItemId],
     queryFn: async () => {
@@ -86,8 +87,9 @@ export default function TimelineSuiviEvent({ workItemId, preloadedEvents = null 
       );
       return results;
     },
-    enabled: !!workItemId,
-    refetchInterval: 5000 // Refresh toutes les 5s
+    enabled: !!workItemId && !preloadedEvents,
+    refetchInterval: preloadedEvents ? false : 5000,
+    initialData: preloadedEvents || undefined
   });
 
   if (isLoading) {
