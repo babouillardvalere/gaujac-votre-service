@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { prepareWorkItemsForMission } from '../components/workItemFactory';
-import { validateBeforeWorkItemCreation } from '../components/qa/ValidationRules';
+import { validateBeforeWorkItemCreation } from '../components/qa/ValidationRulesV2';
 import { disableQA, enableQA, shouldRunQA } from '../components/qa/QAConfig';
 import { CheckCircle, XCircle, AlertTriangle, Bug } from 'lucide-react';
 
@@ -269,10 +269,21 @@ export default function QADiagnostic() {
                             <p className="text-sm text-red-600">
                               Niveau : {result.qaResult.level}
                             </p>
-                            {result.qaResult.errors && (
-                              <pre className="bg-red-100 p-2 rounded text-xs overflow-auto">
-                                {JSON.stringify(result.qaResult.errors, null, 2)}
-                              </pre>
+                            
+                            {/* NOUVEAU: Affichage structuré V2 */}
+                            {result.qaResult.qaResult && result.qaResult.qaResult.blockingErrors.length > 0 && (
+                              <div className="space-y-2">
+                                <h5 className="text-xs font-semibold text-red-800">Erreurs bloquantes :</h5>
+                                {result.qaResult.qaResult.blockingErrors.map((err, i) => (
+                                  <div key={i} className="bg-red-100 p-2 rounded text-xs space-y-1">
+                                    <div><span className="font-semibold">Code:</span> {err.code}</div>
+                                    <div><span className="font-semibold">Message utilisateur:</span> {err.messageUser}</div>
+                                    <div><span className="font-semibold">Message dev:</span> {err.messageDev}</div>
+                                    <div><span className="font-semibold">Champ:</span> {err.field}</div>
+                                    <div><span className="font-semibold">Règle:</span> {err.rule}</div>
+                                  </div>
+                                ))}
+                              </div>
                             )}
                           </div>
                         )}

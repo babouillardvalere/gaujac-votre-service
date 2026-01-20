@@ -84,19 +84,19 @@ import Notifications from './pages/Notifications';
 import PaiementReservation from './pages/PaiementReservation';
 import Piscine from './pages/Piscine';
 import PreferencesNotifications from './pages/PreferencesNotifications';
+import QADiagnostic from './pages/QADiagnostic';
 import QASante from './pages/QASante';
 import QAValidation from './pages/QAValidation';
 import RapportsInterventions from './pages/RapportsInterventions';
 import Reception from './pages/Reception';
+import Taches from './pages/Taches';
 import Reservations from './pages/Reservations';
 import SatisfactionClient from './pages/SatisfactionClient';
 import Signalement from './pages/Signalement';
 import SignalementClient from './pages/SignalementClient';
 import Statistiques from './pages/Statistiques';
 import SuiviIntervention from './pages/SuiviIntervention';
-import Taches from './pages/Taches';
 import Technique from './pages/Technique';
-import QADiagnostic from './pages/QADiagnostic';
 import __Layout from './Layout.jsx';
 
 
@@ -187,19 +187,19 @@ export const PAGES = {
     "PaiementReservation": PaiementReservation,
     "Piscine": Piscine,
     "PreferencesNotifications": PreferencesNotifications,
+    "QADiagnostic": QADiagnostic,
     "QASante": QASante,
     "QAValidation": QAValidation,
     "RapportsInterventions": RapportsInterventions,
     "Reception": Reception,
+    "Taches": Taches,
     "Reservations": Reservations,
     "SatisfactionClient": SatisfactionClient,
     "Signalement": Signalement,
     "SignalementClient": SignalementClient,
     "Statistiques": Statistiques,
     "SuiviIntervention": SuiviIntervention,
-    "Taches": Taches,
     "Technique": Technique,
-    "QADiagnostic": QADiagnostic,
 }
 
 export const pagesConfig = {

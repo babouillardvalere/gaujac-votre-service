@@ -10,7 +10,7 @@ import Logo from '../components/Logo';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import { prepareWorkItemsForMission } from '../components/workItemFactory';
-import { validateBeforeWorkItemCreation } from '../components/qa/ValidationRules';
+import { validateBeforeWorkItemCreation } from '../components/qa/ValidationRulesV2';
 
 export default function DirectionRecapIntervention() {
   const navigate = useNavigate();
