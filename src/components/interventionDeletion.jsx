@@ -5,13 +5,15 @@
 
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import { logDeletionCascade } from './interventionDeletionAudit';
 
 /**
  * Supprimer une intervention en cascade (soft delete)
  * @param {string} interventionId - ID de l'intervention (Incident)
+ * @param {string} userId - ID/email utilisateur (optionnel, 'SYSTEM' par défaut)
  * @returns {Promise<{ deletedIncident: number, deletedWorkItems: number }>}
  */
-export const deleteInterventionCascade = async (interventionId) => {
+export const deleteInterventionCascade = async (interventionId, userId = 'SYSTEM') => {
   try {
     const now = new Date().toISOString();
     
@@ -25,19 +27,23 @@ export const deleteInterventionCascade = async (interventionId) => {
       incident_id: interventionId
     });
     
-    let deletedWorkItems = 0;
+    const deletedWorkItemIds = [];
     for (const wi of workItems) {
       await base44.entities.WorkItem.update(wi.id, {
         deleted_at: now
       });
-      deletedWorkItems++;
+      deletedWorkItemIds.push(wi.id);
     }
     
-    console.log(`✅ Suppression cascade: 1 incident + ${deletedWorkItems} workitems`);
+    // 3️⃣ Logger l'action pour audit
+    await logDeletionCascade(interventionId, deletedWorkItemIds, userId);
+    
+    console.log(`✅ Suppression cascade: 1 incident + ${deletedWorkItemIds.length} workitems`);
     
     return {
       deletedIncident: 1,
-      deletedWorkItems,
+      deletedWorkItems: deletedWorkItemIds.length,
+      workItemIds: deletedWorkItemIds,
       timestamp: now
     };
   } catch (error) {
