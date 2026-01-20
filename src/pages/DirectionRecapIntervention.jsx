@@ -52,11 +52,14 @@ export default function DirectionRecapIntervention() {
 
       // Validation QA + Création batch
       for (const workItemData of result.workItems) {
-        try {
-          validateBeforeWorkItemCreation(workItemData);
-        } catch (validationError) {
-          toast.error(`❌ Validation QA : ${validationError.message}`);
-          console.error('[DIRECTION] Validation QA échouée:', validationError);
+        const qaResult = validateBeforeWorkItemCreation(workItemData, { 
+          context: 'CREATE',
+          strict: true 
+        });
+        
+        if (!qaResult.ok) {
+          toast.error(`❌ Validation QA : ${qaResult.message}`);
+          console.error('[DIRECTION] Validation QA échouée:', qaResult);
           setCreating(false);
           return;
         }
