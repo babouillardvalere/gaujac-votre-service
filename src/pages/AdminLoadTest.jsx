@@ -45,11 +45,18 @@ export default function AdminLoadTest() {
   const [inventaireTestResult, setInventaireTestResult] = useState(null);
   const [testingMassive, setTestingMassive] = useState(false);
   const [massiveTestResult, setMassiveTestResult] = useState(null);
+  const [testingAncienIncident, setTestingAncienIncident] = useState(false);
+  const [ancienIncidentResult, setAncienIncidentResult] = useState(null);
 
   // Exposer tests dans window pour console
   React.useEffect(() => {
     window.testSurchargePDF = testSurchargePDF;
     window.testUploadMassif = testUploadMassif;
+    
+    // Exposer test ancien incident
+    import('../components/loadtesting/test-incident-ancien-systeme').then(module => {
+      window.testAncienIncident = module.default;
+    });
   }, []);
 
   const handleSeedData = async () => {
@@ -426,6 +433,25 @@ export default function AdminLoadTest() {
     }
   };
 
+  const handleTestAncienIncident = async () => {
+    setTestingAncienIncident(true);
+    setAncienIncidentResult(null);
+    
+    try {
+      const testAncienIncident = await import('../components/loadtesting/test-incident-ancien-systeme');
+      const result = await testAncienIncident.default();
+      setAncienIncidentResult(result);
+    } catch (error) {
+      setAncienIncidentResult({
+        success: false,
+        errors: [error.message],
+        etapes: []
+      });
+    } finally {
+      setTestingAncienIncident(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white p-6">
       <div className="max-w-6xl mx-auto">
@@ -555,6 +581,39 @@ export default function AdminLoadTest() {
                       <p className="text-xs text-green-700">✅ Performance dans les objectifs</p>
                     )}
                   </div>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <Button
+              onClick={handleTestAncienIncident}
+              disabled={testingAncienIncident}
+              className="w-full h-14 bg-yellow-600 hover:bg-yellow-700"
+            >
+              <AlertTriangle className="w-5 h-5 mr-2" />
+              {testingAncienIncident ? 'Test en cours...' : '🔧 Test Ancien Incident (description_probleme)'}
+            </Button>
+            
+            {ancienIncidentResult && (
+              <Alert className={ancienIncidentResult.success ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'}>
+                <AlertDescription>
+                  {ancienIncidentResult.success ? (
+                    <div className="space-y-2">
+                      <p className="font-bold text-green-800">✅ Test réussi - Ancien système compatible</p>
+                      <div className="text-xs text-green-700 space-y-1">
+                        {ancienIncidentResult.etapes.filter(e => e.verification).map((e, i) => (
+                          <p key={i}>✓ {e.verification}</p>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="font-bold text-red-800">❌ Test échoué</p>
+                      {ancienIncidentResult.errors.map((err, i) => (
+                        <p key={i} className="text-xs text-red-700">{err}</p>
+                      ))}
+                    </div>
+                  )}
                 </AlertDescription>
               </Alert>
             )}

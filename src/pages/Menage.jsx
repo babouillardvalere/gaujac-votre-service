@@ -1124,17 +1124,17 @@ export default function Menage() {
               <div>
                 <label className="text-sm font-heading text-[#0077A8] mb-2 block">📋 {t('description')}</label>
                 
-                {selectedIncident.description_operationnelle ? (
+                {selectedIncident.description_operationnelle || selectedIncident.description ? (
                   <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 rounded">
                     <p className="text-xs text-yellow-600 font-semibold mb-2">Actions à réaliser:</p>
                     <pre className="font-body text-gray-800 whitespace-pre-wrap text-sm">
-                      {selectedIncident.description_operationnelle}
+                      {selectedIncident.description_operationnelle || selectedIncident.description}
                     </pre>
                   </div>
                 ) : (
-                  <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded">
-                    <p className="text-red-700 font-semibold">⚠️ Intervention invalide : aucun descriptif opérationnel</p>
-                    <p className="text-xs text-red-600 mt-1">Cette intervention ne peut pas être traitée</p>
+                  <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 rounded">
+                    <p className="text-yellow-700 font-semibold">⚠️ Aucun détail fourni</p>
+                    <p className="text-xs text-yellow-600 mt-1">L'intervention peut être prise en charge malgré tout</p>
                   </div>
                 )}
               </div>
@@ -1155,6 +1155,11 @@ export default function Menage() {
                     <Play className="w-4 h-4 mr-2" />
                     {t('prendre_en_charge')}
                   </Button>
+                  {!selectedIncident.description_operationnelle && !selectedIncident.description && (
+                    <p className="text-xs text-yellow-600 mt-2">
+                      ℹ️ Vous pourrez ajouter des détails lors de la clôture
+                    </p>
+                  )}
                 </div>
               )}
 
