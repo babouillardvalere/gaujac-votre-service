@@ -22,14 +22,26 @@ export default function DirectionRecapIntervention() {
 
   const handleConfirmer = async () => {
     setCreating(true);
+    setError(null); // Reset erreur précédente
+    
     try {
-      console.log('[DIRECTION] Génération WorkItems depuis interventions:', interventions.length);
+      console.log('[DIRECTION] === DÉBUT CRÉATION ===');
+      console.log('[DIRECTION] Interventions reçues:', interventions);
       
-      // Utiliser le premier élément comme template (tous partagent type, date, service, etc.)
+      // Utiliser le premier élément comme template
       const template = interventions[0];
-      const numerosHebergement = interventions.map(i => i.numeroHebergement);
       
-      console.log('[DIRECTION] Zones extraites:', numerosHebergement);
+      // LOG CRITIQUE : données brutes
+      console.log('[DIRECTION] Template intervention:', {
+        type: template.typeIntervention,
+        hebergement: template.typeHebergement,
+        numero: template.numeroHebergement,
+        service: template.service,
+        taches: template.taches
+      });
+      
+      const numerosHebergement = interventions.map(i => i.numeroHebergement);
+      console.log('[DIRECTION] Zones à traiter:', numerosHebergement);
       
       // Génération automatique via factory : 1 zone = 1 WorkItem
       const result = prepareWorkItemsForMission({
@@ -43,40 +55,56 @@ export default function DirectionRecapIntervention() {
         description: template.description
       });
 
+      console.log('[DIRECTION] Résultat factory:', result);
+
       if (!result.ok) {
-        setError(result.error);
-        toast.error(`❌ ${result.error}`);
+        const errorMsg = `Génération échouée : ${result.error}`;
+        console.error('[DIRECTION] FACTORY ERROR:', errorMsg);
+        setError(errorMsg);
+        toast.error(`❌ ${result.error}`, { duration: 7000 });
         setCreating(false);
         return;
       }
 
+      console.log(`[DIRECTION] Factory OK - ${result.workItems.length} WorkItem(s) à créer`);
+
       // Validation QA + Création batch
-      for (const workItemData of result.workItems) {
+      for (let i = 0; i < result.workItems.length; i++) {
+        const workItemData = result.workItems[i];
+        
+        console.log(`[DIRECTION] WorkItem ${i + 1}/${result.workItems.length}:`, workItemData);
+        
         const qaResult = validateBeforeWorkItemCreation(workItemData, { 
           context: 'CREATE',
           strict: true 
         });
         
+        console.log(`[DIRECTION] QA Result ${i + 1}:`, qaResult);
+        
         if (!qaResult.ok) {
-          toast.error(`❌ Validation QA : ${qaResult.message}`);
-          console.error('[DIRECTION] Validation QA échouée:', qaResult);
+          const errorMsg = `WorkItem ${workItemData.hebergement || 'N/A'} : ${qaResult.message}`;
+          console.error('[DIRECTION] QA BLOQUE:', errorMsg, qaResult);
+          setError(errorMsg);
+          toast.error(`❌ ${errorMsg}`, { duration: 10000 });
           setCreating(false);
           return;
         }
 
         await base44.entities.WorkItem.create(workItemData);
+        console.log(`[DIRECTION] ✅ WorkItem ${i + 1} créé`);
       }
 
-      console.log(`[DIRECTION] ${result.workItems.length} WorkItem(s) créé(s) et validé(s)`);
+      console.log(`[DIRECTION] === FIN CRÉATION RÉUSSIE ===`);
 
       queryClient.invalidateQueries({ queryKey: ['workitems-technique'] });
       queryClient.invalidateQueries({ queryKey: ['workitems-menage'] });
       toast.success(`✅ ${result.workItems.length} intervention(s) créée(s) avec succès !`);
       navigate(createPageUrl('DirectionMenu'));
     } catch (error) {
-      console.error('[DIRECTION] Erreur création:', error);
-      setError(error.message || 'Erreur inconnue lors de la création');
-      toast.error(`❌ Erreur création : ${error.message || 'Erreur inconnue'}`);
+      const errorMsg = error.message || 'Erreur inconnue lors de la création';
+      console.error('[DIRECTION] EXCEPTION:', error);
+      setError(errorMsg);
+      toast.error(`❌ ${errorMsg}`, { duration: 10000 });
     } finally {
       setCreating(false);
     }
