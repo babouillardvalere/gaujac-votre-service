@@ -26,6 +26,7 @@ export default function WorkItemsServiceView({ service }) {
   const [commandesArticles, setCommandesArticles] = useState({});
   const [nouvelArticle, setNouvelArticle] = useState({});
   const [filterStatut, setFilterStatut] = useState('A_FAIRE');
+  const [compteRenduGlobal, setCompteRenduGlobal] = useState('');
 
   const { data: workItems = [], isLoading } = useQuery({
     queryKey: ['workitems-service', service],
@@ -86,23 +87,24 @@ export default function WorkItemsServiceView({ service }) {
   });
 
   const finalisationMutation = useMutation({
-    mutationFn: async ({ id, taches, statut, commandesACreer, metadata }) => {
-      const now = new Date().toISOString();
-      const workItem = workItems.find(w => w.id === id);
-      const dureeMinutes = workItem?.date_prise_en_charge 
-        ? Math.floor((new Date() - new Date(workItem.date_prise_en_charge)) / 60000)
-        : 0;
+   mutationFn: async ({ id, taches, statut, commandesACreer, metadata, description_operationnelle }) => {
+     const now = new Date().toISOString();
+     const workItem = workItems.find(w => w.id === id);
+     const dureeMinutes = workItem?.date_prise_en_charge 
+       ? Math.floor((new Date() - new Date(workItem.date_prise_en_charge)) / 60000)
+       : 0;
 
-      const updateData = {
-        taches,
-        statut,
-        duree_minutes: dureeMinutes,
-        metadata: { ...workItem.metadata, ...metadata }
-      };
+     const updateData = {
+       taches,
+       statut,
+       duree_minutes: dureeMinutes,
+       metadata: { ...workItem.metadata, ...metadata },
+       description_operationnelle
+     };
 
-      if (statut === 'TERMINEE') {
-        updateData.date_terminee = now;
-      }
+     if (statut === 'TERMINEE') {
+       updateData.date_terminee = now;
+     }
 
       // Créer les commandes si nécessaire
       if (commandesACreer && commandesACreer.length > 0) {
@@ -181,6 +183,7 @@ export default function WorkItemsServiceView({ service }) {
   const handlePrendreEnCharge = (workItem) => {
     setSelectedWorkItem(workItem);
     setModeTraitement(true);
+    setCompteRenduGlobal(getDescriptionOperationnelle(workItem) || '');
     
     const etat = {};
     (workItem.taches || []).forEach(t => {
@@ -244,6 +247,12 @@ export default function WorkItemsServiceView({ service }) {
   };
 
   const handleValider = () => {
+    // VALIDATION CRITIQUE 1 : Compte rendu global obligatoire
+    if (!compteRenduGlobal.trim()) {
+      toast.error('⚠️ Compte rendu de l\'intervention obligatoire');
+      return;
+    }
+
     // Validation stricte : toutes les tâches doivent avoir un statut
     const tachesUpdated = (selectedWorkItem.taches || []).map(t => ({
       ...t,
@@ -313,7 +322,8 @@ export default function WorkItemsServiceView({ service }) {
       taches: tachesUpdated,
       statut: nouveauStatut,
       commandesACreer,
-      metadata
+      metadata,
+      description_operationnelle: compteRenduGlobal.trim()
     });
   };
 
@@ -409,9 +419,28 @@ export default function WorkItemsServiceView({ service }) {
           </Card>
         )}
 
+        {/* COMPTE RENDU GLOBAL - TOUJOURS VISIBLE */}
+        <Card className="border-2 border-blue-400 bg-blue-50">
+          <CardContent className="p-4">
+            <label className="text-sm font-bold text-blue-900 mb-2 block">
+              📋 Compte rendu de l'intervention *
+            </label>
+            <Textarea
+              value={compteRenduGlobal}
+              onChange={(e) => setCompteRenduGlobal(e.target.value)}
+              placeholder="Décrivez ce qui a été réalisé ou non, et pourquoi..."
+              rows={3}
+              className="border-2 border-blue-300"
+            />
+            <p className="text-xs text-blue-600 mt-2">
+              ℹ️ Ce champ est obligatoire et sera transmis au backend
+            </p>
+          </CardContent>
+        </Card>
+
         {/* Tâches */}
-        <div className="space-y-4">
-          {(selectedWorkItem.taches || []).map(tache => {
+         <div className="space-y-4">
+           {(selectedWorkItem.taches || []).map(tache => {
             const etat = tachesEtat[tache.numero];
             const estFait = etat?.faite === true;
             const estPasFait = etat?.faite === false;
@@ -540,8 +569,13 @@ export default function WorkItemsServiceView({ service }) {
           <CardContent className="p-4">
             <Button
               onClick={handleValider}
-              disabled={finalisationMutation.isPending || !selectedWorkItem.collaborateur}
+              disabled={
+                finalisationMutation.isPending || 
+                !selectedWorkItem.collaborateur ||
+                !compteRenduGlobal.trim()
+              }
               className="w-full bg-purple-600 h-14 text-lg font-bold"
+              title={!compteRenduGlobal.trim() ? 'Remplissez le compte rendu' : ''}
             >
               {finalisationMutation.isPending ? (
                 <Loader2 className="w-6 h-6 animate-spin mr-2" />
