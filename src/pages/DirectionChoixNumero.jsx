@@ -53,7 +53,7 @@ export default function DirectionChoixNumero() {
                   state: {
                     typeIntervention,
                     typeHebergement,
-                    numeroHebergement: numero
+                    numerosHebergement: [numero]
                   }
                 })}
                 className="w-full group focus:ring-4 focus:ring-purple-500 rounded-xl"
