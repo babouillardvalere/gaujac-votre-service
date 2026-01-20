@@ -33,6 +33,16 @@ import { format, differenceInMinutes } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { getWorkItemDescription } from '../components/workItemUtils';
 
+// Fonction centrale de récupération de description opérationnelle
+function getDescriptionOperationnelle(item) {
+  return (
+    item?.description_operationnelle ||
+    item?.description_probleme ||
+    item?.description ||
+    null
+  );
+}
+
 const categoryIcons = {
   gaz: { emoji: '🔥', label: 'gaz' },
   eau: { emoji: '💧', label: 'eau_plomberie' },
@@ -1140,12 +1150,12 @@ export default function Technique() {
                               ))}
                             </div>
                           ) : (
-                            <p className="font-body text-gray-700 mb-3 line-clamp-2">{incident.description || "⚠️ Aucune description"}</p>
+                            <p className="font-body text-gray-700 mb-3 line-clamp-2">{getDescriptionOperationnelle(incident) || "⚠️ Aucune description"}</p>
                           )}
-                        </>
-                      )}
+                          </>
+                          )}
 
-                      <div className="flex items-center justify-between text-xs text-gray-500 font-body mt-3">
+                          <div className="flex items-center justify-between text-xs text-gray-500 font-body mt-3">
                         <div className="flex items-center gap-1">
                           <User className="w-3 h-3" />
                           {incident.client_prenom} {incident.client_nom}
