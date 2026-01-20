@@ -218,6 +218,11 @@ export default function Technique() {
   };
 
   const ensureDescriptionOperationnelle = async (incident) => {
+    // Si audit/test, pas d'obligation
+    if (incident.is_audit_ou_test || incident.type_source === 'AUDIT' || incident.type_source === 'TEST') {
+      return;
+    }
+
     const current = getDescriptionOperationnelle(incident);
     if (current && current.trim()) return;
 
@@ -1282,6 +1287,11 @@ export default function Technique() {
                      {getDescriptionOperationnelle(selectedIncident)}
                    </pre>
                  </div>
+               ) : selectedIncident?.is_audit_ou_test ? (
+                 <div className="bg-purple-50 border-l-4 border-purple-500 p-3 rounded">
+                   <p className="text-purple-700 font-semibold">🔬 Audit/Test</p>
+                   <p className="text-xs text-purple-600 mt-1">Description optionnelle pour ce type d'intervention</p>
+                 </div>
                ) : (
                  <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 rounded space-y-2">
                    <p className="text-yellow-700 font-semibold">⚠️ Aucune description opérationnelle</p>
@@ -1312,7 +1322,7 @@ export default function Technique() {
                    disabled={
                      !collaborateurNom.trim() ||
                      updateMutation.isPending ||
-                     (!getDescriptionOperationnelle(selectedIncident) && !descriptionOpSaisie.trim())
+                     (!selectedIncident?.is_audit_ou_test && !getDescriptionOperationnelle(selectedIncident) && !descriptionOpSaisie.trim())
                    }
                    className="w-full bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl"
                   >
