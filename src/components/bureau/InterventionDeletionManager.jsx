@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -12,6 +13,7 @@ import { toast } from 'sonner';
 import { deleteInterventionCascade } from '../interventionDeletion';
 
 export default function InterventionDeletionManager({ incidentId, onDeleted }) {
+  const queryClient = useQueryClient();
   const [showConfirm, setShowConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [cascadeInfo, setCascadeInfo] = useState(null);
@@ -40,6 +42,18 @@ export default function InterventionDeletionManager({ incidentId, onDeleted }) {
     setIsDeleting(true);
     try {
       const result = await deleteInterventionCascade(incidentId);
+      
+      // 🔄 Invalider TOUS les caches React Query
+      await queryClient.invalidateQueries({ queryKey: ['incidents-technique'] });
+      await queryClient.invalidateQueries({ queryKey: ['incidents-menage'] });
+      await queryClient.invalidateQueries({ queryKey: ['workitems-technique'] });
+      await queryClient.invalidateQueries({ queryKey: ['workitems-menage'] });
+      await queryClient.invalidateQueries({ queryKey: ['workitems-reception'] });
+      
+      // Invalider les queries génériques aussi
+      await queryClient.invalidateQueries({ queryKey: ['incidents'] });
+      await queryClient.invalidateQueries({ queryKey: ['workitems'] });
+      
       toast.success(
         `Suppression effectuée: 1 incident + ${result.deletedWorkItems} WorkItems`
       );
