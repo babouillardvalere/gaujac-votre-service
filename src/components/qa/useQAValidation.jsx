@@ -1,72 +1,110 @@
 import { useCallback } from 'react';
-import QAConfig from './QAConfig';
+import { shouldRunQA } from './QAConfig';
+import { 
+  validateBeforeWorkItemCreation,
+  validateBeforeInterventionCreation,
+  validateBeforeMissionCreation 
+} from './ValidationRules';
 import errorLogger from './ErrorLogger';
 import { toast } from 'sonner';
-import { validateOperationalDescription } from '../getOperationalDescription';
 
-// Hook pour validations CRITICAL (toujours actives)
+/**
+ * Hook QA - validation non-bloquante pour monitoring
+ * NE JAMAIS utiliser pour bloquer l'UI en contexte READ
+ * Utiliser uniquement pour logging/warnings
+ */
 export function useQAValidation() {
-  const validateIntervention = useCallback((interventionData) => {
-    // Validation 1 : tâches obligatoires
-    const result = QAConfig.criticalValidations.validateIntervention(interventionData);
-    
-    if (!result.valid) {
-      errorLogger.log('error', 'data_integrity', result.error, {
-        severity: 'CRITICAL',
-        entity: 'InterventionClient',
-        data: interventionData
-      });
-      
-      toast.error(result.error, { duration: 5000 });
-      return false;
+  /**
+   * Valide une intervention (non-bloquant en READ, bloquant en CREATE)
+   */
+  const validateIntervention = useCallback((interventionData, context = 'READ') => {
+    if (!shouldRunQA(context)) {
+      return true; // QA désactivé ou contexte READ
     }
+
+    const result = validateBeforeInterventionCreation(interventionData, { 
+      context, 
+      strict: context !== 'READ' 
+    });
     
-    // Validation 2 : description opérationnelle obligatoire
-    const descResult = validateOperationalDescription(interventionData);
-    
-    if (!descResult.valid) {
-      errorLogger.log('error', 'data_integrity', descResult.error, {
-        severity: 'CRITICAL',
+    if (!result.ok) {
+      errorLogger.log('error', 'data_integrity', result.message, {
+        severity: result.level || 'CRITICAL',
         entity: 'InterventionClient',
-        data: interventionData
+        context
       });
       
-      toast.error(descResult.error, { duration: 5000 });
-      return false;
+      if (context === 'CREATE') {
+        toast.error(result.message, { duration: 5000 });
+      } else {
+        console.warn('[QA] Intervention validation warning:', result.message);
+      }
+      
+      return context === 'READ'; // En READ, on continue quand même
     }
     
     return true;
   }, []);
 
-  const validateWorkItem = useCallback((workItemData) => {
-    const result = QAConfig.criticalValidations.validateWorkItem(workItemData);
+  /**
+   * Valide un WorkItem (non-bloquant en READ, bloquant en CREATE)
+   */
+  const validateWorkItem = useCallback((workItemData, context = 'READ') => {
+    if (!shouldRunQA(context)) {
+      return true;
+    }
+
+    const result = validateBeforeWorkItemCreation(workItemData, { 
+      context, 
+      strict: context !== 'READ' 
+    });
     
-    if (!result.valid) {
-      errorLogger.log('error', 'data_integrity', result.error, {
-        severity: 'CRITICAL',
+    if (!result.ok) {
+      errorLogger.log('error', 'data_integrity', result.message, {
+        severity: result.level || 'CRITICAL',
         entity: 'WorkItem',
-        data: workItemData
+        context
       });
       
-      toast.error(result.error, { duration: 5000 });
-      return false;
+      if (context === 'CREATE') {
+        toast.error(result.message, { duration: 5000 });
+      } else {
+        console.warn('[QA] WorkItem validation warning:', result.message);
+      }
+      
+      return context === 'READ';
     }
     
     return true;
   }, []);
 
-  const validateMission = useCallback((missionData) => {
-    const result = QAConfig.criticalValidations.validateMission(missionData);
+  /**
+   * Valide une mission (non-bloquant en READ, bloquant en CREATE)
+   */
+  const validateMission = useCallback((missionData, context = 'READ') => {
+    if (!shouldRunQA(context)) {
+      return true;
+    }
+
+    const result = validateBeforeMissionCreation(missionData, { 
+      context, 
+      strict: context !== 'READ' 
+    });
     
-    if (!result.valid) {
-      errorLogger.log('error', 'data_integrity', result.error, {
-        severity: 'CRITICAL',
+    if (!result.ok) {
+      errorLogger.log('error', 'data_integrity', result.message, {
+        severity: result.level || 'CRITICAL',
         entity: 'MissionDirection',
-        data: missionData
+        context
       });
       
-      toast.error(result.error, { duration: 5000 });
-      return false;
+      if (context === 'CREATE') {
+        toast.error(result.message, { duration: 5000 });
+      } else {
+        console.warn('[QA] Mission validation warning:', result.message);
+      }
+      
+      return context === 'READ';
     }
     
     return true;

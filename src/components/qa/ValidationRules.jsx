@@ -1,29 +1,38 @@
 /**
- * RÈGLES DE VALIDATION STRICTES - SYSTÈME REFUSE AU LIEU DE CORRIGER
+ * RÈGLES DE VALIDATION - RETOURNE DES OBJETS, JAMAIS THROW
  * 
- * PRINCIPE: Le système BLOQUE les données invalides, il ne les corrige JAMAIS automatiquement.
- * Chaque règle doit lever une erreur CRITICAL qui empêche la création/modification.
+ * PRINCIPE: Le système INFORME des problèmes, le contrôleur DÉCIDE du blocage
+ * Chaque règle retourne {ok: boolean, level?: string, message?: string}
  */
 
 import { computeDescriptionOperationnelle } from '../workItemUtils';
 
 /**
+ * Garde : détermine si QA doit s'exécuter
+ */
+function shouldRunQA(context = 'READ', config = {}) {
+  const { enabled = true } = config;
+  if (!enabled) return false;
+  return ['CREATE', 'UPDATE', 'TRANSITION'].includes(context);
+}
+
+/**
  * RÈGLE 1: WorkItem DOIT avoir une description_operationnelle
- * BLOQUE: Création de WorkItem sans source de vérité unique
  */
 export const validateWorkItemDescriptionOperationnelle = (workItemData) => {
   if (!workItemData.description_operationnelle || !workItemData.description_operationnelle.trim()) {
-    throw new Error(
-      'VALIDATION CRITICAL: Un WorkItem DOIT avoir une description_operationnelle. ' +
-      'Utilisez prepareWorkItemData() avant création.'
-    );
+    return {
+      ok: false,
+      level: 'CRITICAL',
+      field: 'description_operationnelle',
+      message: 'Un WorkItem DOIT avoir une description_operationnelle. Utilisez prepareWorkItemData().'
+    };
   }
-  return true;
+  return { ok: true };
 };
 
 /**
  * RÈGLE 2: WorkItem DOIT avoir une origine (intervention/mission/incident)
- * BLOQUE: WorkItems orphelins
  */
 export const validateWorkItemOrigine = (workItemData) => {
   const hasOrigin = 
@@ -32,95 +41,163 @@ export const validateWorkItemOrigine = (workItemData) => {
     workItemData.incident_id;
   
   if (!hasOrigin) {
-    throw new Error(
-      'VALIDATION CRITICAL: Un WorkItem DOIT avoir une origine ' +
-      '(intervention_client_id, mission_direction_id, ou incident_id).'
-    );
+    return {
+      ok: false,
+      level: 'CRITICAL',
+      field: 'origine',
+      message: 'Un WorkItem DOIT avoir une origine (intervention_client_id, mission_direction_id, ou incident_id).'
+    };
   }
-  return true;
+  return { ok: true };
 };
 
 /**
  * RÈGLE 3: InterventionClient DOIT avoir des tâches OU une description
- * BLOQUE: Interventions vides
  */
 export const validateInterventionClientContent = (interventionData) => {
   const hasTaches = interventionData.taches && interventionData.taches.length > 0;
   const hasDescription = interventionData.description && interventionData.description.trim();
   
   if (!hasTaches && !hasDescription) {
-    throw new Error(
-      'VALIDATION CRITICAL: Une InterventionClient DOIT avoir des tâches OU une description.'
-    );
+    return {
+      ok: false,
+      level: 'CRITICAL',
+      field: 'contenu',
+      message: 'Une InterventionClient DOIT avoir des tâches OU une description.'
+    };
   }
-  return true;
+  return { ok: true };
 };
 
 /**
  * RÈGLE 4: MissionDirection DOIT avoir des zones
- * BLOQUE: Missions sans périmètre
  */
 export const validateMissionDirectionZones = (missionData) => {
   if (!missionData.zones || missionData.zones.length === 0) {
-    throw new Error(
-      'VALIDATION CRITICAL: Une MissionDirection DOIT avoir au moins une zone définie.'
-    );
+    return {
+      ok: false,
+      level: 'CRITICAL',
+      field: 'zones',
+      message: 'Une MissionDirection DOIT avoir au moins une zone définie.'
+    };
   }
-  return true;
+  return { ok: true };
 };
 
 /**
  * RÈGLE 5: Description opérationnelle DOIT être calculable
- * BLOQUE: Données sans contenu exploitable
  */
 export const validateCanComputeDescription = (data) => {
   const description = computeDescriptionOperationnelle(data);
   
   if (!description) {
-    throw new Error(
-      'VALIDATION CRITICAL: Impossible de calculer une description opérationnelle. ' +
-      'Fournissez des tâches OU une description OU un titre exploitable.'
-    );
+    return {
+      ok: false,
+      level: 'CRITICAL',
+      field: 'description_operationnelle',
+      message: 'Impossible de calculer une description opérationnelle. Fournissez des tâches OU une description OU un titre exploitable.'
+    };
   }
-  return true;
+  return { ok: true };
 };
 
 /**
- * VALIDATION COMBINÉE: Applique toutes les règles pertinentes
- * Utilisez cette fonction avant TOUTE création de WorkItem
+ * VALIDATION COMBINÉE: Applique toutes les règles pertinentes pour WorkItem
+ * @returns {ok: boolean, level?: string, message?: string, errors?: array}
  */
-export const validateBeforeWorkItemCreation = (workItemData) => {
-  validateWorkItemOrigine(workItemData);
-  validateWorkItemDescriptionOperationnelle(workItemData);
-  return true;
+export const validateBeforeWorkItemCreation = (workItemData, options = {}) => {
+  const { context = 'CREATE', strict = true, enabled = true } = options;
+  
+  // Garde : QA désactivé ou contexte READ
+  if (!shouldRunQA(context, { enabled })) {
+    return { ok: true, skipped: true, reason: `Context ${context} skipped` };
+  }
+
+  const errors = [];
+
+  // Validation 1 : Origine
+  const origineResult = validateWorkItemOrigine(workItemData);
+  if (!origineResult.ok) errors.push(origineResult);
+
+  // Validation 2 : Description opérationnelle
+  const descResult = validateWorkItemDescriptionOperationnelle(workItemData);
+  if (!descResult.ok) errors.push(descResult);
+
+  // Retour structuré
+  if (errors.length > 0) {
+    const criticalErrors = errors.filter(e => e.level === 'CRITICAL');
+    
+    if (criticalErrors.length > 0 && strict) {
+      return {
+        ok: false,
+        level: 'CRITICAL',
+        message: criticalErrors.map(e => e.message).join(' | '),
+        errors: criticalErrors
+      };
+    }
+  }
+
+  return { ok: true, warnings: errors.filter(e => e.level !== 'CRITICAL') };
 };
 
 /**
  * VALIDATION COMBINÉE: Avant création InterventionClient
  */
-export const validateBeforeInterventionCreation = (interventionData) => {
-  validateInterventionClientContent(interventionData);
-  validateCanComputeDescription(interventionData);
-  return true;
+export const validateBeforeInterventionCreation = (interventionData, options = {}) => {
+  const { context = 'CREATE', strict = true, enabled = true } = options;
+  
+  if (!shouldRunQA(context, { enabled })) {
+    return { ok: true, skipped: true };
+  }
+
+  const errors = [];
+  
+  const contentResult = validateInterventionClientContent(interventionData);
+  if (!contentResult.ok) errors.push(contentResult);
+  
+  const descResult = validateCanComputeDescription(interventionData);
+  if (!descResult.ok) errors.push(descResult);
+
+  if (errors.length > 0 && strict) {
+    return {
+      ok: false,
+      level: 'CRITICAL',
+      message: errors.map(e => e.message).join(' | '),
+      errors
+    };
+  }
+
+  return { ok: true };
 };
 
 /**
  * VALIDATION COMBINÉE: Avant création MissionDirection
  */
-export const validateBeforeMissionCreation = (missionData) => {
-  validateMissionDirectionZones(missionData);
-  return true;
+export const validateBeforeMissionCreation = (missionData, options = {}) => {
+  const { context = 'CREATE', strict = true, enabled = true } = options;
+  
+  if (!shouldRunQA(context, { enabled })) {
+    return { ok: true, skipped: true };
+  }
+
+  const result = validateMissionDirectionZones(missionData);
+  
+  if (!result.ok && strict) {
+    return result;
+  }
+
+  return { ok: true };
 };
 
 /**
  * DÉTECTION: Trouve les anomalies dans les données existantes
  * NE CORRIGE PAS - rapporte uniquement pour action manuelle
+ * Context READ, donc non-bloquant
  */
 export const detectAnomalies = async (base44) => {
   const anomalies = [];
 
   try {
-    // WorkItems sans description opérationnelle
     const workItems = await base44.entities.WorkItem.filter({});
     const workItemsSansDesc = workItems.filter(w => 
       !w.description_operationnelle || !w.description_operationnelle.trim()
@@ -136,7 +213,6 @@ export const detectAnomalies = async (base44) => {
       });
     }
 
-    // WorkItems orphelins
     const orphelins = workItems.filter(w => 
       !w.intervention_client_id && !w.mission_direction_id && !w.incident_id
     );
@@ -151,7 +227,6 @@ export const detectAnomalies = async (base44) => {
       });
     }
 
-    // Interventions sans contenu
     const interventions = await base44.entities.InterventionClient.filter({});
     const interventionsSansContenu = interventions.filter(i => 
       (!i.taches || i.taches.length === 0) && (!i.description || !i.description.trim())
