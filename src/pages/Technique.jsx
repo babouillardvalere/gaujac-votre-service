@@ -71,6 +71,7 @@ export default function Technique() {
   const [selectedIncident, setSelectedIncident] = useState(null);
   const [collaborateurNom, setCollaborateurNom] = useState('');
   const [commentaire, setCommentaire] = useState('');
+  const [descriptionOpSaisie, setDescriptionOpSaisie] = useState('');
   const [filter, setFilter] = useState('en_attente');
   const [showAttenteDialog, setShowAttenteDialog] = useState(false);
   const [incidentToWait, setIncidentToWait] = useState(null);
@@ -88,6 +89,14 @@ export default function Technique() {
     const auth = sessionStorage.getItem('collaborateur_authenticated');
     if (auth !== 'true') navigate(createPageUrl('Collaborateur'));
   }, [navigate]);
+
+  useEffect(() => {
+    if (!selectedIncident) {
+      setDescriptionOpSaisie('');
+      return;
+    }
+    setDescriptionOpSaisie(getDescriptionOperationnelle(selectedIncident) || '');
+  }, [selectedIncident]);
 
   const { data: incidents = [], isLoading } = useQuery({
     queryKey: ['incidents-technique', filter],
@@ -208,9 +217,43 @@ export default function Technique() {
     });
   };
 
+  const ensureDescriptionOperationnelle = async (incident) => {
+    const current = getDescriptionOperationnelle(incident);
+    if (current && current.trim()) return;
+
+    const value = (descriptionOpSaisie || '').trim();
+    if (!value) {
+      throw new Error('DESCRIPTION_OPERATIONNELLE_MANQUANTE');
+    }
+
+    if (incident.isWorkItem) {
+      const wid = incident.workItemId || incident.id;
+      await base44.entities.WorkItem.update(wid, {
+        description_operationnelle: value,
+        description: incident.description || value
+      });
+      return;
+    }
+
+    await base44.entities.Incident.update(incident.id, {
+      description_operationnelle: value,
+      description: incident.description || value
+    });
+  };
+
   const handlePrendreEnCharge = async (incident) => {
     if (!collaborateurNom.trim()) {
       toast.error(t('champs_obligatoires'));
+      return;
+    }
+
+    try {
+      await ensureDescriptionOperationnelle(incident);
+    } catch (e) {
+      toast.error(lang === 'fr'
+        ? "Description opérationnelle obligatoire avant prise en charge."
+        : "Operational description required before taking over."
+      );
       return;
     }
 
@@ -1230,21 +1273,30 @@ export default function Technique() {
               </div>
 
               <div>
-                <label className="text-sm font-heading text-[#0077A8] mb-2 block">📋 {t('description')}</label>
-                
-                {getDescriptionOperationnelle(selectedIncident) ? (
-                  <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
-                    <p className="text-xs text-blue-600 font-semibold mb-2">Actions à réaliser:</p>
-                    <pre className="font-body text-gray-800 whitespace-pre-wrap text-sm">
-                      {getDescriptionOperationnelle(selectedIncident)}
-                    </pre>
-                  </div>
-                ) : (
-                  <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 rounded">
-                    <p className="text-yellow-700 font-semibold">⚠️ Aucune description opérationnelle</p>
-                    <p className="text-xs text-yellow-600 mt-1">Vous pourrez compléter lors de la clôture</p>
-                  </div>
-                )}
+               <label className="text-sm font-heading text-[#0077A8] mb-2 block">📋 {t('description')}</label>
+
+               {getDescriptionOperationnelle(selectedIncident) ? (
+                 <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
+                   <p className="text-xs text-blue-600 font-semibold mb-2">Actions à réaliser:</p>
+                   <pre className="font-body text-gray-800 whitespace-pre-wrap text-sm">
+                     {getDescriptionOperationnelle(selectedIncident)}
+                   </pre>
+                 </div>
+               ) : (
+                 <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 rounded space-y-2">
+                   <p className="text-yellow-700 font-semibold">⚠️ Aucune description opérationnelle</p>
+                   <p className="text-xs text-yellow-600">
+                     Renseignez une description minimale pour débloquer la prise en charge.
+                   </p>
+                   <Textarea
+                     value={descriptionOpSaisie}
+                     onChange={(e) => setDescriptionOpSaisie(e.target.value)}
+                     placeholder="Ex: Remplacer ampoule, vérifier prise, tester disjoncteur..."
+                     className="bg-white border-[#00AEEF]/30 rounded-xl"
+                     rows={3}
+                   />
+                 </div>
+               )}
               </div>
 
               {selectedIncident.statut === 'en_attente' && (
@@ -1256,12 +1308,16 @@ export default function Technique() {
                     className="border-[#00AEEF]/30 rounded-xl"
                   />
                   <Button
-                    onClick={() => handlePrendreEnCharge(selectedIncident)}
-                    disabled={!collaborateurNom.trim() || updateMutation.isPending}
-                    className="w-full bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl"
+                   onClick={() => handlePrendreEnCharge(selectedIncident)}
+                   disabled={
+                     !collaborateurNom.trim() ||
+                     updateMutation.isPending ||
+                     (!getDescriptionOperationnelle(selectedIncident) && !descriptionOpSaisie.trim())
+                   }
+                   className="w-full bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl"
                   >
-                    <Play className="w-4 h-4 mr-2" />
-                    {t('prendre_en_charge')}
+                   <Play className="w-4 h-4 mr-2" />
+                   {t('prendre_en_charge')}
                   </Button>
                   {!getDescriptionOperationnelle(selectedIncident) && (
                     <p className="text-xs text-yellow-600 mt-2">
