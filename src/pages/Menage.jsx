@@ -32,6 +32,7 @@ import { toast } from 'sonner';
 import { format, differenceInMinutes } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { getWorkItemDescription } from '../components/workItemUtils';
+import { canTakeOverIntervention, assertInterventionActionnable } from '../components/interventionValidation';
 
 // Fonction centrale de récupération de description opérationnelle
 function getDescriptionOperationnelle(item) {
@@ -188,6 +189,11 @@ export default function Menage() {
   };
 
   const ensureDescriptionOperationnelle = async (incident) => {
+    // Si audit/test, pas d'obligation
+    if (incident.is_audit_ou_test || incident.type_source === 'AUDIT' || incident.type_source === 'TEST') {
+      return;
+    }
+
     const current = getDescriptionOperationnelle(incident);
     if (current && current.trim()) return;
 
@@ -1184,6 +1190,11 @@ export default function Menage() {
                      {getDescriptionOperationnelle(selectedIncident)}
                    </pre>
                  </div>
+               ) : selectedIncident?.is_audit_ou_test ? (
+                 <div className="bg-purple-50 border-l-4 border-purple-500 p-3 rounded">
+                   <p className="text-purple-700 font-semibold">🔬 Audit/Test</p>
+                   <p className="text-xs text-purple-600 mt-1">Description optionnelle pour ce type d'intervention</p>
+                 </div>
                ) : (
                  <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 rounded space-y-2">
                    <p className="text-yellow-700 font-semibold">⚠️ Aucune description opérationnelle</p>
@@ -1214,7 +1225,7 @@ export default function Menage() {
                    disabled={
                      !collaborateurNom.trim() ||
                      updateMutation.isPending ||
-                     (!getDescriptionOperationnelle(selectedIncident) && !descriptionOpSaisie.trim())
+                     (!selectedIncident?.is_audit_ou_test && !getDescriptionOperationnelle(selectedIncident) && !descriptionOpSaisie.trim())
                    }
                    className="w-full bg-[#FFD700] hover:bg-[#FFA500] text-[#0077A8] rounded-xl"
                   >
