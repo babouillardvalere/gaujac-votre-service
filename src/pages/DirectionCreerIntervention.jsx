@@ -21,6 +21,9 @@ export default function DirectionCreerIntervention() {
   const [service, setService] = useState('TECHNIQUE');
   const [description, setDescription] = useState('');
   const [priorite, setPriorite] = useState('NORMALE');
+  const [datePlanifiee, setDatePlanifiee] = useState(
+    new Date().toISOString().split('T')[0]
+  );
 
   const handleAjouterTache = () => {
     if (!nouvelleTache.trim()) {
@@ -58,6 +61,11 @@ export default function DirectionCreerIntervention() {
       return;
     }
 
+    if (!datePlanifiee) {
+      toast.error('❌ Date planifiée obligatoire');
+      return;
+    }
+
     if (!numerosHebergement || numerosHebergement.length === 0) {
       console.error('[DIRECTION-CREER] CRITICAL: Aucune zone dans numerosHebergement');
       toast.error('❌ Aucun hébergement sélectionné. Veuillez recommencer le processus.');
@@ -67,7 +75,7 @@ export default function DirectionCreerIntervention() {
     // Génération automatique : une intervention PAR hébergement
     const interventions = numerosHebergement.map(numero => ({
       typeIntervention,
-      datePlanifiee,
+      datePlanifiee: datePlanifiee,
       typeHebergement,
       numeroHebergement: numero,
       service,
@@ -144,6 +152,18 @@ export default function DirectionCreerIntervention() {
                 <Plus className="w-5 h-5" />
               </Button>
             </div>
+          </div>
+
+          {/* Date planifiée */}
+          <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-purple-200">
+            <h2 className="font-heading text-lg text-purple-700 mb-4">Date planifiée *</h2>
+            <Input
+              type="date"
+              value={datePlanifiee}
+              onChange={(e) => setDatePlanifiee(e.target.value)}
+              className="w-full h-12"
+              min={new Date().toISOString().split('T')[0]}
+            />
           </div>
 
           {/* Service */}
