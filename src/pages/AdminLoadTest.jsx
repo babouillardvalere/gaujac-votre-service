@@ -6,7 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Zap, Database, AlertTriangle, CheckCircle, 
   TrendingUp, Activity, Download, Play, StopCircle,
-  Camera, FileText, Clock
+  Camera, FileText, Clock, GitBranch
 } from 'lucide-react';
 import { generateAllTestData } from '../components/loadtesting/seed-test-data';
 import { runAutoArchiving } from '../components/reception/ArchivageService';
@@ -39,6 +39,8 @@ export default function AdminLoadTest() {
   const [seeding, setSeeding] = useState(false);
   const [seedResult, setSeedResult] = useState(null);
   const [archiving, setArchiving] = useState(false);
+  const [testingSuivi, setTestingSuivi] = useState(false);
+  const [suiviTestResult, setSuiviTestResult] = useState(null);
 
   // Exposer tests dans window pour console
   React.useEffect(() => {
@@ -70,6 +72,134 @@ export default function AdminLoadTest() {
     setArchiving(true);
     await runAutoArchiving({ showToast: true });
     setArchiving(false);
+  };
+
+  const handleTestSuiviEvent = async () => {
+    setTestingSuivi(true);
+    setSuiviTestResult(null);
+    
+    try {
+      const { createWorkItem } = await import('../components/workItemCreator');
+      const { updateWorkItem, pauseWorkItem, resumeWorkItem, completeWorkItem } = await import('../components/workItemUpdater');
+      const { base44 } = await import('@/api/base44Client');
+      
+      const results = {
+        etapes: [],
+        success: true,
+        errors: []
+      };
+      
+      // ÉTAPE 1: Créer un WorkItem de test
+      const workItem = await createWorkItem({
+        type: 'INTERVENTION_CLIENT',
+        service: 'MENAGE',
+        statut: 'A_FAIRE',
+        priorite: 'NORMALE',
+        description_operationnelle: 'Test automatique timeline SuiviEvent',
+        hebergement: 'TEST-AUTO',
+        stay_id: `TEST-${Date.now()}`
+      });
+      
+      results.etapes.push({ action: 'CREATE', workItemId: workItem.id, timestamp: new Date() });
+      
+      // Vérifier SuiviEvent CREATION
+      await new Promise(r => setTimeout(r, 500)); // Attendre hook
+      let events = await base44.entities.SuiviEvent.filter({ workitem_id: workItem.id });
+      if (events.length !== 1 || events[0].action !== 'CREATION') {
+        results.errors.push('❌ Event CREATION manquant ou incorrect');
+        results.success = false;
+      } else {
+        results.etapes.push({ verification: 'CREATION verified', count: events.length });
+      }
+      
+      // ÉTAPE 2: Prise en charge (A_FAIRE → EN_COURS)
+      await updateWorkItem(workItem.id, { 
+        statut: 'EN_COURS', 
+        collaborateur: 'Test Auto',
+        pris_en_charge_par: 'Test Auto'
+      });
+      
+      results.etapes.push({ action: 'PRISE_EN_CHARGE', timestamp: new Date() });
+      
+      await new Promise(r => setTimeout(r, 500));
+      events = await base44.entities.SuiviEvent.filter({ workitem_id: workItem.id });
+      if (events.length !== 2 || events[0].action !== 'PRISE_EN_CHARGE') {
+        results.errors.push('❌ Event PRISE_EN_CHARGE manquant');
+        results.success = false;
+      } else {
+        results.etapes.push({ verification: 'PRISE_EN_CHARGE verified', count: events.length });
+      }
+      
+      // ÉTAPE 3: Mise en attente
+      await pauseWorkItem(workItem.id, {
+        raison_attente: 'attente_materiel',
+        motif: 'Test matériel manquant',
+        delai_estime: '1h'
+      });
+      
+      results.etapes.push({ action: 'MISE_EN_ATTENTE', timestamp: new Date() });
+      
+      await new Promise(r => setTimeout(r, 500));
+      events = await base44.entities.SuiviEvent.filter({ workitem_id: workItem.id });
+      if (events.length !== 3 || events[0].action !== 'MISE_EN_ATTENTE') {
+        results.errors.push('❌ Event MISE_EN_ATTENTE manquant');
+        results.success = false;
+      } else {
+        results.etapes.push({ verification: 'MISE_EN_ATTENTE verified', count: events.length });
+      }
+      
+      // ÉTAPE 4: Reprise
+      await resumeWorkItem(workItem.id);
+      
+      results.etapes.push({ action: 'REPRISE', timestamp: new Date() });
+      
+      await new Promise(r => setTimeout(r, 500));
+      events = await base44.entities.SuiviEvent.filter({ workitem_id: workItem.id });
+      if (events.length !== 4 || events[0].action !== 'REPRISE') {
+        results.errors.push('❌ Event REPRISE manquant');
+        results.success = false;
+      } else {
+        results.etapes.push({ verification: 'REPRISE verified', count: events.length });
+      }
+      
+      // ÉTAPE 5: Terminée
+      await completeWorkItem(workItem.id, { duree_minutes: 15 });
+      
+      results.etapes.push({ action: 'TERMINEE', timestamp: new Date() });
+      
+      await new Promise(r => setTimeout(r, 500));
+      events = await base44.entities.SuiviEvent.filter({ workitem_id: workItem.id });
+      if (events.length !== 5 || events[0].action !== 'TERMINEE') {
+        results.errors.push('❌ Event TERMINEE manquant');
+        results.success = false;
+      } else {
+        results.etapes.push({ verification: 'TERMINEE verified', count: events.length });
+      }
+      
+      // Vérifier ordre chronologique
+      const timestamps = events.map(e => new Date(e.timestamp).getTime());
+      const sorted = [...timestamps].sort((a, b) => b - a);
+      if (JSON.stringify(timestamps) !== JSON.stringify(sorted)) {
+        results.errors.push('❌ Ordre chronologique incorrect');
+        results.success = false;
+      } else {
+        results.etapes.push({ verification: 'Ordre chronologique OK' });
+      }
+      
+      results.totalEvents = events.length;
+      results.workItemId = workItem.id;
+      
+      setSuiviTestResult(results);
+      
+    } catch (error) {
+      setSuiviTestResult({
+        success: false,
+        errors: [error.message],
+        etapes: []
+      });
+    } finally {
+      setTestingSuivi(false);
+    }
   };
 
   return (
@@ -170,6 +300,40 @@ export default function AdminLoadTest() {
               <TrendingUp className="w-5 h-5 mr-2" />
               {archiving ? 'Archivage...' : '📦 Lancer archivage automatique (>30j)'}
             </Button>
+
+            <Button
+              onClick={handleTestSuiviEvent}
+              disabled={testingSuivi}
+              className="w-full h-14 bg-purple-600 hover:bg-purple-700"
+            >
+              <GitBranch className="w-5 h-5 mr-2" />
+              {testingSuivi ? 'Test en cours...' : '🧪 Test Timeline SuiviEvent (5 transitions)'}
+            </Button>
+            
+            {suiviTestResult && (
+              <Alert className={suiviTestResult.success ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'}>
+                <AlertDescription>
+                  {suiviTestResult.success ? (
+                    <div className="space-y-2">
+                      <p className="font-bold text-green-800">✅ Test réussi - {suiviTestResult.totalEvents} événements créés</p>
+                      <div className="text-xs text-green-700 space-y-1">
+                        {suiviTestResult.etapes.filter(e => e.verification).map((e, i) => (
+                          <p key={i}>✓ {e.verification} ({e.count || 'OK'})</p>
+                        ))}
+                      </div>
+                      <p className="text-xs text-gray-600 mt-2">WorkItem: {suiviTestResult.workItemId}</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="font-bold text-red-800">❌ Test échoué</p>
+                      {suiviTestResult.errors.map((err, i) => (
+                        <p key={i} className="text-xs text-red-700">{err}</p>
+                      ))}
+                    </div>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
 
             <div className="bg-purple-50 p-4 rounded-lg border-2 border-purple-300">
               <p className="text-sm font-bold text-purple-900 mb-2">🧪 Tests Complémentaires</p>
