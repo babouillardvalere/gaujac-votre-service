@@ -382,31 +382,29 @@ export default function MissionsDirectionService({ service }) {
       return;
     }
 
-    const tachesSansReponseCommande = selectedMission.taches.filter(t => {
-      const etat = tachesEtat[t.numero];
-      return !etat?.faite && etat?.commandeNecessaire === undefined;
-    });
-
-    if (tachesSansReponseCommande.length > 0) {
-      toast.error(`⚠️ Indiquez si une commande est nécessaire pour les tâches non faites (${tachesSansReponseCommande.map(t => t.numero).join(', ')})`);
-      return;
-    }
+    // Commande nécessaire est maintenant optionnel - on considère "non" si non renseigné
 
     const touteFait = tachesUpdated.every(t => t.faite);
-    const auMoinsUnePasFaite = tachesUpdated.some(t => !t.faite);
+    const tachesAvecCommande = selectedMission.taches.filter(t => {
+      const etat = tachesEtat[t.numero];
+      return !etat?.faite && etat?.commandeNecessaire === true;
+    });
 
     let nouveauStatut, motifAttente;
 
     if (touteFait) {
       nouveauStatut = 'TERMINEE';
       motifAttente = null;
-    } else if (auMoinsUnePasFaite) {
+    } else if (tachesAvecCommande.length > 0) {
+      // Des commandes sont nécessaires → EN_ATTENTE
       const tachesNonFaites = tachesUpdated.filter(t => !t.faite);
       const justifications = tachesNonFaites.map(t => `Tâche ${t.numero}: ${t.justification}`).join('\n');
       nouveauStatut = 'EN_ATTENTE';
       motifAttente = justifications;
     } else {
-      nouveauStatut = 'EN_COURS';
+      // Tâches non faites SANS commande nécessaire → TERMINEE avec échec partiel
+      nouveauStatut = 'TERMINEE';
+      motifAttente = null;
     }
 
     try {
@@ -678,7 +676,7 @@ export default function MissionsDirectionService({ service }) {
                       {/* Commande nécessaire */}
                       <div className="pl-3 bg-purple-50 rounded-lg p-3 border-2 border-purple-300">
                         <label className="text-sm font-bold text-purple-800 mb-2 block">
-                          🛒 Une commande est-elle nécessaire ? *
+                          🛒 Une commande est-elle nécessaire ? (optionnel)
                         </label>
                         <div className="flex gap-2 mb-3">
                           <Button

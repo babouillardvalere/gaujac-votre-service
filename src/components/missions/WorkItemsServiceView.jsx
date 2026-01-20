@@ -81,7 +81,7 @@ export default function WorkItemsServiceView({ service }) {
   });
 
   const finalisationMutation = useMutation({
-    mutationFn: async ({ id, taches, statut, commandesACreer }) => {
+    mutationFn: async ({ id, taches, statut, commandesACreer, metadata }) => {
       const now = new Date().toISOString();
       const workItem = workItems.find(w => w.id === id);
       const dureeMinutes = workItem?.date_prise_en_charge 
@@ -91,7 +91,8 @@ export default function WorkItemsServiceView({ service }) {
       const updateData = {
         taches,
         statut,
-        duree_minutes: dureeMinutes
+        duree_minutes: dureeMinutes,
+        metadata: { ...workItem.metadata, ...metadata }
       };
 
       if (statut === 'TERMINEE') {
@@ -161,9 +162,13 @@ export default function WorkItemsServiceView({ service }) {
       setCommandesArticles({});
       
       if (variables.statut === 'TERMINEE') {
-        toast.success('✅ Tâche terminée');
+        if (variables.metadata?.resultat === 'ECHEC_PARTIEL') {
+          toast.success('✅ Mission terminée avec des tâches non réalisées');
+        } else {
+          toast.success('✅ Mission terminée avec succès');
+        }
       } else if (variables.statut === 'EN_ATTENTE') {
-        toast.success('⏸️ Tâche mise en attente - Commande créée');
+        toast.success('⏸️ Mission en attente - Commande créée');
       }
     }
   });
@@ -252,16 +257,18 @@ export default function WorkItemsServiceView({ service }) {
 
     const tachesSansJustification = tachesUpdated.filter(t => !t.faite && !t.justification?.trim());
     if (tachesSansJustification.length > 0) {
-      toast.error(`⚠️ Justification obligatoire pour les tâches non faites`);
+      toast.error(`⚠️ Justification obligatoire pour les tâches non faites (${tachesSansJustification.map(t => `#${t.numero}`).join(', ')})`);
       return;
     }
 
     const toutFait = tachesUpdated.every(t => t.faite);
     let nouveauStatut;
     let commandesACreer = [];
+    let metadata = {};
 
     if (toutFait) {
       nouveauStatut = 'TERMINEE';
+      metadata.resultat = 'SUCCES_COMPLET';
     } else {
       // Vérifier si des commandes sont nécessaires
       const tachesAvecCommande = tachesUpdated.filter(t => {
@@ -276,7 +283,7 @@ export default function WorkItemsServiceView({ service }) {
         );
 
         if (tachesSansArticles.length > 0) {
-          toast.error(`⚠️ Ajoutez des articles pour les commandes nécessaires`);
+          toast.error(`⚠️ Ajoutez des articles pour les tâches nécessitant une commande (${tachesSansArticles.map(t => `#${t.numero}`).join(', ')})`);
           return;
         }
 
@@ -287,8 +294,16 @@ export default function WorkItemsServiceView({ service }) {
         }));
 
         nouveauStatut = 'EN_ATTENTE';
+        metadata.resultat = 'EN_ATTENTE_MATERIEL';
       } else {
+        // Tâches non faites SANS commande = mission terminée avec échec partiel
         nouveauStatut = 'TERMINEE';
+        metadata.resultat = 'ECHEC_PARTIEL';
+        metadata.taches_echouees = tachesUpdated.filter(t => !t.faite).map(t => ({
+          numero: t.numero,
+          texte: t.texte,
+          justification: t.justification
+        }));
       }
     }
 
@@ -296,7 +311,8 @@ export default function WorkItemsServiceView({ service }) {
       id: selectedWorkItem.id,
       taches: tachesUpdated,
       statut: nouveauStatut,
-      commandesACreer
+      commandesACreer,
+      metadata
     });
   };
 
@@ -453,7 +469,7 @@ export default function WorkItemsServiceView({ service }) {
 
                       <div className="pl-3 bg-purple-50 rounded-lg p-3 border-2 border-purple-300">
                         <label className="text-sm font-bold text-purple-800 mb-2 block">
-                          🛒 Commande nécessaire ? *
+                          🛒 Commande nécessaire ? (optionnel)
                         </label>
                         <div className="flex gap-2 mb-3">
                           <Button
