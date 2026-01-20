@@ -87,7 +87,9 @@ export default function DirectionRecapIntervention() {
       navigate(createPageUrl('DirectionMenu'));
     } catch (error) {
       console.error('[DIRECTION] Erreur création:', error);
+      setError(error.message || 'Erreur inconnue lors de la création');
       toast.error(`❌ Erreur création : ${error.message || 'Erreur inconnue'}`);
+      // ⛔ PAS DE NAVIGATION - utilisateur reste sur la page pour corriger
     } finally {
       setCreating(false);
     }
@@ -95,11 +97,14 @@ export default function DirectionRecapIntervention() {
 
 
 
+  const [error, setError] = useState(null);
+
   if (!interventions || interventions.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="text-center">
           <p className="text-red-500 font-heading text-xl mb-4">⚠️ Erreur: données manquantes</p>
+          <p className="text-sm text-gray-600 mb-4">Aucune intervention à créer. Veuillez recommencer le processus.</p>
           <Button onClick={() => navigate(createPageUrl('DirectionMenu'))} className="bg-purple-600">
             Retour au menu Direction
           </Button>
@@ -133,6 +138,26 @@ export default function DirectionRecapIntervention() {
             {interventions.length} intervention(s) à créer
           </p>
         </motion.div>
+
+        {/* Affichage erreur sans navigation */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-red-50 border-2 border-red-400 rounded-xl p-4 mb-4"
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 text-red-600 text-2xl">⚠️</div>
+              <div className="flex-1">
+                <h3 className="font-heading text-red-800 text-lg mb-1">Erreur de validation</h3>
+                <p className="text-red-700 text-sm mb-3">{error}</p>
+                <p className="text-xs text-red-600 bg-red-100 p-2 rounded">
+                  Corrigez les données ci-dessous ou utilisez le bouton "Retour" pour recommencer.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         <div className="space-y-4">
           {interventions.map((intervention, idx) => (
@@ -181,23 +206,35 @@ export default function DirectionRecapIntervention() {
             </div>
           ))}
 
-          <Button 
-            onClick={handleConfirmer} 
-            disabled={creating}
-            className="w-full h-12 bg-green-600 hover:bg-green-700 text-lg disabled:opacity-50"
-          >
-            {creating ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Création en cours...
-              </>
-            ) : (
-              <>
-                <CheckCircle className="w-5 h-5 mr-2" />
-                ✅ Confirmer {interventions.length} intervention(s)
-              </>
+          <div className="space-y-3">
+            <Button 
+              onClick={handleConfirmer} 
+              disabled={creating}
+              className="w-full h-12 bg-green-600 hover:bg-green-700 text-lg disabled:opacity-50"
+            >
+              {creating ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Création en cours...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-5 h-5 mr-2" />
+                  ✅ Confirmer {interventions.length} intervention(s)
+                </>
+              )}
+            </Button>
+
+            {error && (
+              <Button 
+                onClick={() => navigate(createPageUrl('DirectionMenu'))}
+                variant="outline"
+                className="w-full h-10 border-purple-400 text-purple-700 hover:bg-purple-50"
+              >
+                Retour au menu Direction
+              </Button>
             )}
-          </Button>
+          </div>
         </div>
       </div>
     </div>
