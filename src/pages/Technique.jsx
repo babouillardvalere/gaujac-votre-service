@@ -32,6 +32,7 @@ import { toast } from 'sonner';
 import { format, differenceInMinutes } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { getWorkItemDescription } from '../components/workItemUtils';
+import { filterActive } from '../components/interventionDeletion';
 
 // Fonction centrale de récupération de description opérationnelle
 function getDescriptionOperationnelle(item) {
@@ -907,7 +908,10 @@ export default function Technique() {
   // Combiner incidents, groupes WorkItems et missions Direction
   const allIncidents = [...incidents, ...groupedWorkItems, ...convertedMissionsDirection];
 
-  const filteredIncidents = allIncidents
+  // 🚫 GARDE ANTI-ORPHELIN: exclure les supprimés
+  const activeIncidents = filterActive(allIncidents);
+
+  const filteredIncidents = activeIncidents
     .filter(i => {
       // Filtre statut (tous = afficher tous les statuts)
       if (filter === 'tous') {

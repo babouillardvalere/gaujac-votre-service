@@ -33,6 +33,7 @@ import { format, differenceInMinutes } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { getWorkItemDescription } from '../components/workItemUtils';
 import { canTakeOverIntervention, assertInterventionActionnable } from '../components/interventionValidation';
+import { filterActive } from '../components/interventionDeletion';
 
 // Fonction centrale de récupération de description opérationnelle
 function getDescriptionOperationnelle(item) {
@@ -827,7 +828,10 @@ export default function Menage() {
   
   const allIncidents = [...incidents, ...groupedWorkItems];
 
-  const filteredIncidents = allIncidents
+  // 🚫 GARDE ANTI-ORPHELIN: exclure les supprimés
+  const activeIncidents = filterActive(allIncidents);
+
+  const filteredIncidents = activeIncidents
     .filter(i => {
       // Filtre statut
       if (filter !== 'tous' && i.statut !== filter) return false;
