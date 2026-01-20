@@ -586,6 +586,40 @@ export default function AdminLoadTest() {
             )}
 
             <Button
+              onClick={async () => {
+                const confirmed = window.confirm('⚠️ CORRECTION DONNÉES: Copier description_probleme → description pour tous les Incidents sans description.\n\nContinuer ?');
+                if (!confirmed) return;
+                
+                toast.loading('Correction en cours...', { id: 'fix-incidents' });
+                
+                try {
+                  const { base44 } = await import('@/api/base44Client');
+                  const incidents = await base44.entities.Incident.filter({});
+                  
+                  let fixed = 0;
+                  for (const inc of incidents) {
+                    if (!inc.description && inc.description_probleme) {
+                      await base44.entities.Incident.update(inc.id, {
+                        description: inc.description_probleme
+                      });
+                      fixed++;
+                    }
+                  }
+                  
+                  toast.dismiss('fix-incidents');
+                  toast.success(`✅ ${fixed} Incidents corrigés`);
+                } catch (error) {
+                  toast.dismiss('fix-incidents');
+                  toast.error(`Erreur: ${error.message}`);
+                }
+              }}
+              className="w-full h-14 bg-orange-600 hover:bg-orange-700"
+            >
+              <AlertTriangle className="w-5 h-5 mr-2" />
+              🔧 Corriger Incidents existants (description_probleme → description)
+            </Button>
+
+            <Button
               onClick={handleTestAncienIncident}
               disabled={testingAncienIncident}
               className="w-full h-14 bg-yellow-600 hover:bg-yellow-700"
