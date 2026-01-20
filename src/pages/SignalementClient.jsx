@@ -105,7 +105,8 @@ export default function SignalementClient() {
       date_depart: clientInfo.dateDepart,
       type_probleme: selectedType.id,
       categorie_intervention: selectedType.categorie,
-      description: description,
+      description_probleme: description, // CHAMP PRINCIPAL
+      description: description, // COMPAT
       photo_client_url: photoUrl,
       urgence: isUrgent,
       statut: 'nouveau',

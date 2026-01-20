@@ -57,10 +57,13 @@ export default function InventaireItemWithProblem({
     
     try {
       // Créer une intervention automatique
+      const descriptionProbleme = `Problème signalé sur ${item.label}: ${remarque || 'Aucun détail fourni'}`;
+      
       await base44.entities.Incident.create({
         type: service.toLowerCase(),
         categorie: 'autre',
-        description: `Problème signalé sur ${item.label}: ${remarque || 'Aucun détail fourni'}`,
+        description_probleme: descriptionProbleme, // CHAMP PRINCIPAL
+        description: descriptionProbleme, // COMPAT
         client_nom: clientInfo?.nom || '',
         client_prenom: clientInfo?.prenom || '',
         date_arrivee: clientInfo?.dateArrivee || new Date().toISOString().split('T')[0],

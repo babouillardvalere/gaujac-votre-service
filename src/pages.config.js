@@ -50,6 +50,7 @@ import ClientResume from './pages/ClientResume';
 import ClientSuiviDetail from './pages/ClientSuiviDetail';
 import ClientSuiviInventaire from './pages/ClientSuiviInventaire';
 import ClientSuiviSearch from './pages/ClientSuiviSearch';
+import ClientSuiviWorkItems from './pages/ClientSuiviWorkItems';
 import Collaborateur from './pages/Collaborateur';
 import CollaborateurMenage from './pages/CollaborateurMenage';
 import CollaborateurTechnique from './pages/CollaborateurTechnique';
@@ -97,7 +98,6 @@ import SignalementClient from './pages/SignalementClient';
 import Statistiques from './pages/Statistiques';
 import SuiviIntervention from './pages/SuiviIntervention';
 import Technique from './pages/Technique';
-import ClientSuiviWorkItems from './pages/ClientSuiviWorkItems';
 import __Layout from './Layout.jsx';
 
 
@@ -154,6 +154,7 @@ export const PAGES = {
     "ClientSuiviDetail": ClientSuiviDetail,
     "ClientSuiviInventaire": ClientSuiviInventaire,
     "ClientSuiviSearch": ClientSuiviSearch,
+    "ClientSuiviWorkItems": ClientSuiviWorkItems,
     "Collaborateur": Collaborateur,
     "CollaborateurMenage": CollaborateurMenage,
     "CollaborateurTechnique": CollaborateurTechnique,
@@ -201,7 +202,6 @@ export const PAGES = {
     "Statistiques": Statistiques,
     "SuiviIntervention": SuiviIntervention,
     "Technique": Technique,
-    "ClientSuiviWorkItems": ClientSuiviWorkItems,
 }
 
 export const pagesConfig = {

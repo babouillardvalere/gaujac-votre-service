@@ -75,7 +75,14 @@ export default function Menage() {
       const query = filter === 'resolu' 
         ? { type: 'menage', statut: 'resolu' }
         : { type: 'menage' };
-      return await base44.entities.Incident.filter(query, '-date_saisie', 250);
+      const results = await base44.entities.Incident.filter(query, '-date_saisie', 250);
+      
+      // NORMALISATION INCIDENT: compatibilité ancien système
+      return results.map(inc => ({
+        ...inc,
+        description_operationnelle: inc.description_operationnelle || inc.description_probleme || inc.description || null,
+        description: inc.description || inc.description_probleme || null
+      }));
     },
     refetchInterval: filter === 'resolu' ? 120000 : 45000,
     staleTime: 30000
