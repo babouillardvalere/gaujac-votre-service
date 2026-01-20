@@ -761,7 +761,7 @@ export default function Technique() {
   };
 
   // GARDE ANTI-ORPHELINS : filtrer WorkItems supprimés uniquement
-  // Ne pas exiger intervention_client_id (les missions Direction n'en ont pas)
+  // Les missions Direction n'ont PAS d'intervention_client_id (normal)
   const safeWorkItemsTechnique = workItemsTechnique.filter(wi =>
     wi.statut !== 'ANNULEE'
   );

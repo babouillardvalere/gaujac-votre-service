@@ -706,10 +706,10 @@ export default function Menage() {
     });
   };
 
-  // GARDE ANTI-ORPHELINS : filtrer WorkItems sans lien ou supprimés
+  // GARDE ANTI-ORPHELINS : filtrer WorkItems supprimés uniquement
+  // Les missions Direction n'ont PAS d'intervention_client_id (normal)
   const safeWorkItemsMenage = workItemsMenage.filter(wi =>
-    wi.intervention_client_id &&
-    wi.statut !== 'SUPPRIME'
+    wi.statut !== 'ANNULEE'
   );
 
   // Conversion des WorkItems en format compatible Incident

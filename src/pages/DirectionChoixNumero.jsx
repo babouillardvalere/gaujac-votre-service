@@ -10,7 +10,7 @@ import Logo from '../components/Logo';
 export default function DirectionChoixNumero() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { typeIntervention, typeHebergement } = location.state || {};
+  const { typeIntervention, datePlanifiee, typeHebergement } = location.state || {};
 
   const numeros = logements[typeHebergement] || [];
 
@@ -52,6 +52,7 @@ export default function DirectionChoixNumero() {
                 onClick={() => navigate(createPageUrl('DirectionCreerIntervention'), {
                   state: {
                     typeIntervention,
+                    datePlanifiee,
                     typeHebergement,
                     numerosHebergement: [numero]
                   }
