@@ -41,19 +41,25 @@ Cette version a passé un **audit exhaustif ligne par ligne** de l'ensemble de l
 ✅ **SuiviInventaire créé** avec timeline initiale  
 ✅ **Statuts synchronisés**: `statut_menage: "en_attente"`, `statut_technique: "en_attente"`  
 
-#### Requêtes validation
+#### Requêtes validation - RÉSULTATS RÉELS
 ```javascript
-// WorkItems TECHNIQUE
-await base44.entities.WorkItem.filter({ hebergement: "TEST01", service: "TECHNIQUE" })
-// Résultat: 1 WorkItem avec description_operationnelle ✅
+// WorkItems TEST01 (les données initiales n'ont pas été retrouvées - possible suppression auto)
+// Réexécuter: await base44.entities.WorkItem.filter({ hebergement: "TEST01", service: "TECHNIQUE" })
+// Attendu: 1 WorkItem TECHNIQUE avec description_operationnelle
 
-// WorkItems MENAGE
-await base44.entities.WorkItem.filter({ hebergement: "TEST01", service: "MENAGE" })
-// Résultat: 1 WorkItem avec description_operationnelle ✅
+// WorkItems TEST01 MENAGE
+// Réexécuter: await base44.entities.WorkItem.filter({ hebergement: "TEST01", service: "MENAGE" })
+// Attendu: 1 WorkItem MENAGE avec description_operationnelle
 
-// SuiviInventaire
+// SuiviInventaire TEST01 - ✅ VALIDÉ
 await base44.entities.SuiviInventaire.filter({ logement: "TEST01" })
-// Résultat: 1 suivi avec items_technique et items_menage ✅
+// Résultat: 1 suivi créé ✅
+// - items_menage: [{ label: "Vaisselle", quantity: 4, motif: "Manquant" }]
+// - items_technique: [{ label: "Lit double", quantity: 1, motif: "Défectueux" }]
+// - statut_menage: "en_attente"
+// - statut_technique: "en_attente"
+// - timeline_menage: [{ status: "demande_recue", detail: "Demande transmise au service ménage" }]
+// - timeline_technique: [{ status: "demande_recue", detail: "Demande transmise au service technique" }]
 ```
 
 #### Critères réussite
@@ -80,11 +86,27 @@ await base44.entities.SuiviInventaire.filter({ logement: "TEST01" })
 ✅ **Tâches correctement formatées** avec objet_id  
 ✅ **Autorisation accès respectée**: `plages_horaires: ["09h00 → 11h00"]`  
 
-#### Requêtes validation
+#### Requêtes validation - RÉSULTATS RÉELS
 ```javascript
-// WorkItem signalement séjour
+// WorkItem signalement séjour TEST02 - ✅ VALIDÉ
 await base44.entities.WorkItem.filter({ hebergement: "TEST02" })
-// Résultat: 1 WorkItem URGENT avec description_operationnelle ✅
+// Résultat ÉTAT INITIAL:
+// - id: 696f5bb8972343d6ab5e2138
+// - service: "TECHNIQUE"
+// - priorite: "URGENTE" ✅
+// - statut: "A_FAIRE"
+// - description_operationnelle: "⚡ Electricite\n\nPanne électricité totale dans le logement TEST02" ✅
+// - autorisation_acces: "non"
+// - plages_horaires: ["09h00 → 11h00"] ✅
+// - taches: [{ numero: 1, texte: "⚡ Electricite", objet_id: "electricite", faite: false }]
+
+// TEST TRANSITION STATUT - PRISE EN CHARGE
+// UPDATE: statut → EN_COURS, collaborateur: "Agent TEST", date_prise_en_charge
+// Résultat: ✅ Statut mis à jour sans erreur QA
+
+// TEST TRANSITION STATUT - CLÔTURE
+// UPDATE: statut → TERMINEE, date_terminee, duree_minutes: 30
+// Résultat: ✅ Statut final cohérent, pas de blocage QA
 ```
 
 #### Workflow complet attendu
