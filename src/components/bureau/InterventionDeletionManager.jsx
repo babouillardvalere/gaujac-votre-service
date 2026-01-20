@@ -11,12 +11,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { AlertTriangle, Trash2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { deleteInterventionCascade } from '../interventionDeletion';
+import { runAllSuppressionTests } from '../qa/TestSuppression';
 
-export default function InterventionDeletionManager({ incidentId, onDeleted }) {
+export default function InterventionDeletionManager({ incidentId, onDeleted, runQaTests = false }) {
   const queryClient = useQueryClient();
   const [showConfirm, setShowConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [cascadeInfo, setCascadeInfo] = useState(null);
+  const [qaResults, setQaResults] = useState(null);
 
   // Charger infos cascade
   const handleOpenDelete = async () => {
@@ -41,7 +43,11 @@ export default function InterventionDeletionManager({ incidentId, onDeleted }) {
   const handleConfirmDelete = async () => {
     setIsDeleting(true);
     try {
-      const result = await deleteInterventionCascade(incidentId);
+      // Récupérer l'utilisateur actuel pour l'audit
+      const user = await base44.auth.me();
+      const userId = user?.email || user?.id || 'SYSTEM';
+      
+      const result = await deleteInterventionCascade(incidentId, userId);
       
       // 🔄 Invalider TOUS les caches React Query
       await queryClient.invalidateQueries({ queryKey: ['incidents-technique'] });
@@ -57,6 +63,19 @@ export default function InterventionDeletionManager({ incidentId, onDeleted }) {
       toast.success(
         `Suppression effectuée: 1 incident + ${result.deletedWorkItems} WorkItems`
       );
+      
+      // 🧪 Lancer les tests QA si activé
+      if (runQaTests) {
+        toast.loading('Validation QA...', { id: 'qa-test' });
+        const testResults = await runAllSuppressionTests();
+        setQaResults(testResults);
+        toast.dismiss('qa-test');
+        
+        if (testResults.tests.orphans.success) {
+          toast.success('✅ QA: Aucun orphelin détecté');
+        }
+      }
+      
       setShowConfirm(false);
       onDeleted?.(result);
     } catch (error) {
