@@ -9,6 +9,8 @@ import { createPageUrl } from '../utils';
 import Logo from '../components/Logo';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
+import { prepareWorkItemData } from '../components/workItemUtils';
+import { validateBeforeWorkItemCreation } from '../components/qa/ValidationRules';
 
 export default function DirectionRecapIntervention() {
   const navigate = useNavigate();
@@ -26,20 +28,27 @@ export default function DirectionRecapIntervention() {
       for (const intervention of interventions) {
         // Validation : Au moins une tâche doit être définie
         if (!intervention.taches || intervention.taches.length === 0) {
-          toast.error(`Intervention ${intervention.numeroHebergement} : aucune tâche définie`);
+          toast.error(`❌ Intervention ${intervention.numeroHebergement} : aucune tâche définie`);
           setCreating(false);
           return;
         }
 
-        // Préparer données avec description_operationnelle
-        const workItemDataToCreate = prepareWorkItemData({
-          taches: intervention.taches,
-          description: intervention.description,
-          titre: `${intervention.typeIntervention} - ${intervention.numeroHebergement}`
-        });
+        // Préparer données avec description_operationnelle (BLOQUE si impossible)
+        let workItemDataToCreate;
+        try {
+          workItemDataToCreate = prepareWorkItemData({
+            taches: intervention.taches,
+            description: intervention.description,
+            titre: `${intervention.typeIntervention} - ${intervention.numeroHebergement}`
+          });
+        } catch (error) {
+          toast.error(`❌ Intervention ${intervention.numeroHebergement} : ${error.message}`);
+          setCreating(false);
+          return;
+        }
 
         // Créer WorkItem directement (source: direction)
-        await base44.entities.WorkItem.create({
+        const workItemData = {
           type: 'MISSION_DIRECTION',
           service: intervention.service,
           statut: 'A_FAIRE',
@@ -52,19 +61,33 @@ export default function DirectionRecapIntervention() {
           taches: intervention.taches,
           client_nom: 'Direction',
           client_prenom: intervention.typeIntervention,
-          rank: 0
-        });
+          rank: 0,
+          // Origine obligatoire (création manuelle Direction)
+          mission_direction_id: 'direction_manuelle_' + Date.now()
+        };
+
+        // VALIDATION QA BLOQUANTE avant création
+        try {
+          validateBeforeWorkItemCreation(workItemData);
+        } catch (validationError) {
+          toast.error(`❌ Validation QA : ${validationError.message}`);
+          console.error('[DIRECTION] Validation QA échouée:', validationError);
+          setCreating(false);
+          return;
+        }
+
+        await base44.entities.WorkItem.create(workItemData);
         
-        console.log('[DIRECTION] WorkItem créé:', intervention.numeroHebergement);
+        console.log('[DIRECTION] WorkItem créé et validé:', intervention.numeroHebergement);
       }
 
       queryClient.invalidateQueries({ queryKey: ['workitems-technique'] });
       queryClient.invalidateQueries({ queryKey: ['workitems-menage'] });
-      toast.success(`${interventions.length} intervention(s) créée(s) avec succès !`);
+      toast.success(`✅ ${interventions.length} intervention(s) créée(s) avec succès !`);
       navigate(createPageUrl('DirectionMenu'));
     } catch (error) {
       console.error('[DIRECTION] Erreur création:', error);
-      toast.error('Erreur lors de la création');
+      toast.error(`❌ Erreur création : ${error.message || 'Erreur inconnue'}`);
     } finally {
       setCreating(false);
     }
