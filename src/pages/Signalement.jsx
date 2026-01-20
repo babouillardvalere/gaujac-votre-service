@@ -188,6 +188,9 @@ export default function Signalement() {
         const service = mapCategorieToService(categorieId);
         const problemLabel = getProblemLabel(categorieId);
         
+        // CRITIQUE: description_operationnelle OBLIGATOIRE pour validation QA
+        const descriptionOperationnelle = `${problemLabel}\n\n${description}`;
+        
         // Créer WorkItem dédié
         const workItem = await base44.entities.WorkItem.create({
           type: 'INTERVENTION_CLIENT',
@@ -195,6 +198,7 @@ export default function Signalement() {
           statut: 'A_FAIRE',
           priorite: urgent ? 'URGENTE' : 'NORMALE',
           rank: 0,
+          description_operationnelle: descriptionOperationnelle,
           titre: `${service} - ${userData.hebergementNumero} - ${problemLabel}`,
           description: `${problemLabel}\n\n${description}`,
           hebergement: userData.hebergementNumero,

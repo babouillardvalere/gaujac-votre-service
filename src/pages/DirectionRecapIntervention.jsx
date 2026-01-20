@@ -192,7 +192,7 @@ export default function DirectionRecapIntervention() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Date planifiée</p>
-                  <p className="font-heading text-purple-700">{intervention.datePlanifiee}</p>
+                  <p className="font-heading text-purple-700">{intervention.datePlanifiee || 'Non définie'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Service</p>

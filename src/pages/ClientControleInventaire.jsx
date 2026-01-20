@@ -234,12 +234,17 @@ export default function ClientControleInventaire() {
 
     // Créer WorkItem pilotable pour le Bureau
     const stayIdForWorkItem = sessionStorage.getItem('stay_id');
+    
+    // CRITIQUE: description_operationnelle OBLIGATOIRE pour validation QA
+    const descriptionOperationnelle = taches.map((t, idx) => `${idx + 1}. ${t.texte}`).join('\n');
+    
     await base44.entities.WorkItem.create({
       type: 'INTERVENTION_CLIENT',
       service,
       statut: 'A_FAIRE',
       priorite: hasUrgent ? 'URGENTE' : 'NORMALE',
       rank: 0,
+      description_operationnelle: descriptionOperationnelle,
       titre: `${service} - ${numero} - ${items.length} element(s)`,
       description: descriptionComplete,
       hebergement: numero,
