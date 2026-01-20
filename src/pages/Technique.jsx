@@ -1222,17 +1222,17 @@ export default function Technique() {
               <div>
                 <label className="text-sm font-heading text-[#0077A8] mb-2 block">📋 {t('description')}</label>
                 
-                {selectedIncident.description_operationnelle || selectedIncident.description ? (
+                {getDescriptionOperationnelle(selectedIncident) ? (
                   <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
                     <p className="text-xs text-blue-600 font-semibold mb-2">Actions à réaliser:</p>
                     <pre className="font-body text-gray-800 whitespace-pre-wrap text-sm">
-                      {selectedIncident.description_operationnelle || selectedIncident.description}
+                      {getDescriptionOperationnelle(selectedIncident)}
                     </pre>
                   </div>
                 ) : (
                   <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 rounded">
-                    <p className="text-yellow-700 font-semibold">⚠️ Aucun détail fourni</p>
-                    <p className="text-xs text-yellow-600 mt-1">L'intervention peut être prise en charge malgré tout</p>
+                    <p className="text-yellow-700 font-semibold">⚠️ Aucune description opérationnelle</p>
+                    <p className="text-xs text-yellow-600 mt-1">Vous pourrez compléter lors de la clôture</p>
                   </div>
                 )}
               </div>
@@ -1253,7 +1253,7 @@ export default function Technique() {
                     <Play className="w-4 h-4 mr-2" />
                     {t('prendre_en_charge')}
                   </Button>
-                  {!selectedIncident.description_operationnelle && !selectedIncident.description && (
+                  {!getDescriptionOperationnelle(selectedIncident) && (
                     <p className="text-xs text-yellow-600 mt-2">
                       ℹ️ Vous pourrez ajouter des détails lors de la clôture
                     </p>
