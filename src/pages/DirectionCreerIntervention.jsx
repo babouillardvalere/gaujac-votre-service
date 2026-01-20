@@ -21,8 +21,8 @@ export default function DirectionCreerIntervention() {
   const [service, setService] = useState('TECHNIQUE');
   const [description, setDescription] = useState('');
   const [priorite, setPriorite] = useState('NORMALE');
-  const [datePlanifiee, setDatePlanifiee] = useState(
-    new Date().toISOString().split('T')[0]
+  const [dateLocale, setDateLocale] = useState(
+    datePlanifiee || new Date().toISOString().split('T')[0]
   );
 
   const handleAjouterTache = () => {
@@ -61,7 +61,7 @@ export default function DirectionCreerIntervention() {
       return;
     }
 
-    if (!datePlanifiee) {
+    if (!dateLocale) {
       toast.error('❌ Date planifiée obligatoire');
       return;
     }
@@ -75,7 +75,7 @@ export default function DirectionCreerIntervention() {
     // Génération automatique : une intervention PAR hébergement
     const interventions = numerosHebergement.map(numero => ({
       typeIntervention,
-      datePlanifiee: datePlanifiee,
+      datePlanifiee: dateLocale,
       typeHebergement,
       numeroHebergement: numero,
       service,
@@ -159,8 +159,8 @@ export default function DirectionCreerIntervention() {
             <h2 className="font-heading text-lg text-purple-700 mb-4">Date planifiée *</h2>
             <Input
               type="date"
-              value={datePlanifiee}
-              onChange={(e) => setDatePlanifiee(e.target.value)}
+              value={dateLocale}
+              onChange={(e) => setDateLocale(e.target.value)}
               className="w-full h-12"
               min={new Date().toISOString().split('T')[0]}
             />
