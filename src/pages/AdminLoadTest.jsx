@@ -47,6 +47,8 @@ export default function AdminLoadTest() {
   const [massiveTestResult, setMassiveTestResult] = useState(null);
   const [testingAncienIncident, setTestingAncienIncident] = useState(false);
   const [ancienIncidentResult, setAncienIncidentResult] = useState(null);
+  const [repairingWorkItems, setRepairingWorkItems] = useState(false);
+  const [repairResult, setRepairResult] = useState(null);
 
   // Exposer tests dans window pour console
   React.useEffect(() => {
@@ -452,6 +454,43 @@ export default function AdminLoadTest() {
     }
   };
 
+  const handleRepairWorkItems = async () => {
+    setRepairingWorkItems(true);
+    setRepairResult(null);
+    
+    try {
+      const broken = await base44.entities.WorkItem.filter({
+        description_operationnelle: null
+      });
+
+      let fixed = 0;
+      for (const wi of broken) {
+        const fallback = wi.description || wi.description_probleme;
+
+        if (!fallback) continue;
+
+        await base44.entities.WorkItem.update(wi.id, {
+          description_operationnelle: fallback
+        });
+        fixed++;
+      }
+
+      setRepairResult({
+        success: true,
+        total: broken.length,
+        fixed,
+        skipped: broken.length - fixed
+      });
+    } catch (error) {
+      setRepairResult({
+        success: false,
+        error: error.message
+      });
+    } finally {
+      setRepairingWorkItems(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white p-6">
       <div className="max-w-6xl mx-auto">
@@ -581,6 +620,34 @@ export default function AdminLoadTest() {
                       <p className="text-xs text-green-700">✅ Performance dans les objectifs</p>
                     )}
                   </div>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <Button
+              onClick={handleRepairWorkItems}
+              disabled={repairingWorkItems}
+              className="w-full h-14 bg-purple-600 hover:bg-purple-700"
+            >
+              <AlertTriangle className="w-5 h-5 mr-2" />
+              {repairingWorkItems ? 'Réparation...' : '🔧 Réparer WorkItems (description_operationnelle manquante)'}
+            </Button>
+
+            {repairResult && (
+              <Alert className={repairResult.success ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'}>
+                <AlertDescription>
+                  {repairResult.success ? (
+                    <div className="space-y-2">
+                      <p className="font-bold text-green-800">✅ Réparation terminée</p>
+                      <div className="text-xs text-green-700">
+                        <p>• Total trouvés: {repairResult.total}</p>
+                        <p>• Réparés: {repairResult.fixed}</p>
+                        <p>• Ignorés (pas de fallback): {repairResult.skipped}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-red-800">❌ Erreur: {repairResult.error}</p>
+                  )}
                 </AlertDescription>
               </Alert>
             )}
