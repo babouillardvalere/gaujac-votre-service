@@ -41,6 +41,8 @@ export default function AdminLoadTest() {
   const [archiving, setArchiving] = useState(false);
   const [testingSuivi, setTestingSuivi] = useState(false);
   const [suiviTestResult, setSuiviTestResult] = useState(null);
+  const [testingInventaire, setTestingInventaire] = useState(false);
+  const [inventaireTestResult, setInventaireTestResult] = useState(null);
 
   // Exposer tests dans window pour console
   React.useEffect(() => {
@@ -202,6 +204,146 @@ export default function AdminLoadTest() {
     }
   };
 
+  const handleTestInventaireArrivee = async () => {
+    setTestingInventaire(true);
+    setInventaireTestResult(null);
+    
+    try {
+      const { base44 } = await import('@/api/base44Client');
+      const { createWorkItem } = await import('../components/workItemCreator');
+      
+      const results = {
+        etapes: [],
+        success: true,
+        errors: []
+      };
+      
+      // ÉTAPE 1: Simuler création WorkItem TECHNIQUE depuis inventaire
+      const workItemTechnique = await createWorkItem({
+        type: 'INTERVENTION_CLIENT',
+        service: 'TECHNIQUE',
+        statut: 'A_FAIRE',
+        priorite: 'NORMALE',
+        description_operationnelle: '1. 🔧 Robinet qui fuit: 1 manquant(s)\n2. 💡 Ampoule grillée: 2 manquant(s)',
+        hebergement: 'TEST-M03',
+        type_hebergement: 'MH Premium 2ch',
+        client_nom: 'Dupont',
+        client_prenom: 'Jean',
+        date_arrivee: '2026-01-20',
+        date_depart: '2026-01-27',
+        stay_id: `TEST-ARR-${Date.now()}`,
+        autorisation_acces: 'oui'
+      });
+      
+      results.etapes.push({ action: 'CREATE TECHNIQUE', workItemId: workItemTechnique.id });
+      
+      // ÉTAPE 2: Simuler création WorkItem MENAGE depuis inventaire
+      const workItemMenage = await createWorkItem({
+        type: 'INTERVENTION_CLIENT',
+        service: 'MENAGE',
+        statut: 'A_FAIRE',
+        priorite: 'URGENTE',
+        description_operationnelle: '1. 🍽️ Assiettes cassées: 2 manquant(s)\n2. 🛏️ Draps tachés: 1 manquant(s)',
+        hebergement: 'TEST-M03',
+        type_hebergement: 'MH Premium 2ch',
+        client_nom: 'Dupont',
+        client_prenom: 'Jean',
+        date_arrivee: '2026-01-20',
+        date_depart: '2026-01-27',
+        stay_id: `TEST-ARR-${Date.now()}`,
+        autorisation_acces: 'non',
+        plages_horaires: ['09h - 12h', '17h - 19h']
+      });
+      
+      results.etapes.push({ action: 'CREATE MENAGE', workItemId: workItemMenage.id });
+      
+      // VÉRIFICATION 1: description_operationnelle non vide
+      if (!workItemTechnique.description_operationnelle || workItemTechnique.description_operationnelle.trim() === '') {
+        results.errors.push('❌ WorkItem TECHNIQUE: description_operationnelle vide');
+        results.success = false;
+      } else {
+        results.etapes.push({ verification: 'TECHNIQUE: description_operationnelle OK' });
+      }
+      
+      if (!workItemMenage.description_operationnelle || workItemMenage.description_operationnelle.trim() === '') {
+        results.errors.push('❌ WorkItem MENAGE: description_operationnelle vide');
+        results.success = false;
+      } else {
+        results.etapes.push({ verification: 'MENAGE: description_operationnelle OK' });
+      }
+      
+      // VÉRIFICATION 2: Services corrects
+      if (workItemTechnique.service !== 'TECHNIQUE') {
+        results.errors.push('❌ Service incorrect pour TECHNIQUE');
+        results.success = false;
+      }
+      if (workItemMenage.service !== 'MENAGE') {
+        results.errors.push('❌ Service incorrect pour MENAGE');
+        results.success = false;
+      }
+      
+      // VÉRIFICATION 3: SuiviEvent CREATION créés
+      await new Promise(r => setTimeout(r, 500));
+      const eventsTechnique = await base44.entities.SuiviEvent.filter({ workitem_id: workItemTechnique.id });
+      const eventsMenage = await base44.entities.SuiviEvent.filter({ workitem_id: workItemMenage.id });
+      
+      if (eventsTechnique.length === 0 || eventsTechnique[0].action !== 'CREATION') {
+        results.errors.push('❌ SuiviEvent CREATION manquant pour TECHNIQUE');
+        results.success = false;
+      } else {
+        results.etapes.push({ verification: 'SuiviEvent CREATION OK (TECHNIQUE)' });
+      }
+      
+      if (eventsMenage.length === 0 || eventsMenage[0].action !== 'CREATION') {
+        results.errors.push('❌ SuiviEvent CREATION manquant pour MENAGE');
+        results.success = false;
+      } else {
+        results.etapes.push({ verification: 'SuiviEvent CREATION OK (MENAGE)' });
+      }
+      
+      // TEST 2: Prise en charge TECHNIQUE
+      const { updateWorkItem } = await import('../components/workItemUpdater');
+      await updateWorkItem(workItemTechnique.id, {
+        statut: 'EN_COURS',
+        collaborateur: 'Marc Test',
+        date_prise_en_charge: new Date().toISOString()
+      });
+      
+      results.etapes.push({ action: 'PRISE_EN_CHARGE TECHNIQUE', timestamp: new Date() });
+      
+      await new Promise(r => setTimeout(r, 500));
+      const eventsAfterPEC = await base44.entities.SuiviEvent.filter({ workitem_id: workItemTechnique.id });
+      
+      if (eventsAfterPEC.length !== 2 || eventsAfterPEC[0].action !== 'PRISE_EN_CHARGE') {
+        results.errors.push('❌ SuiviEvent PRISE_EN_CHARGE manquant');
+        results.success = false;
+      } else {
+        results.etapes.push({ verification: 'PRISE_EN_CHARGE créé', collaborateur: eventsAfterPEC[0].collaborateur });
+      }
+      
+      // TEST 3: Timeline cliente
+      results.etapes.push({
+        info: 'TEST 3 - Chronologie visible dans ClientSuiviWorkItems',
+        hebergement: 'TEST-M03',
+        workItemIds: [workItemTechnique.id, workItemMenage.id]
+      });
+      
+      results.totalWorkItems = 2;
+      results.workItemIds = [workItemTechnique.id, workItemMenage.id];
+      
+      setInventaireTestResult(results);
+      
+    } catch (error) {
+      setInventaireTestResult({
+        success: false,
+        errors: [error.message],
+        etapes: []
+      });
+    } finally {
+      setTestingInventaire(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white p-6">
       <div className="max-w-6xl mx-auto">
@@ -300,6 +442,48 @@ export default function AdminLoadTest() {
               <TrendingUp className="w-5 h-5 mr-2" />
               {archiving ? 'Archivage...' : '📦 Lancer archivage automatique (>30j)'}
             </Button>
+
+            <Button
+              onClick={handleTestInventaireArrivee}
+              disabled={testingInventaire}
+              className="w-full h-14 bg-green-600 hover:bg-green-700"
+            >
+              <CheckCircle className="w-5 h-5 mr-2" />
+              {testingInventaire ? 'Test en cours...' : '✅ Test Inventaire Arrivée (3 tests intégrés)'}
+            </Button>
+            
+            {inventaireTestResult && (
+              <Alert className={inventaireTestResult.success ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'}>
+                <AlertDescription>
+                  {inventaireTestResult.success ? (
+                    <div className="space-y-2">
+                      <p className="font-bold text-green-800">✅ Tests réussis - {inventaireTestResult.totalWorkItems} WorkItems créés</p>
+                      <div className="text-xs text-green-700 space-y-1">
+                        {inventaireTestResult.etapes.filter(e => e.verification).map((e, i) => (
+                          <p key={i}>✓ {e.verification}</p>
+                        ))}
+                      </div>
+                      <div className="bg-white p-2 rounded border border-green-300 mt-2">
+                        <p className="text-xs font-bold text-gray-700 mb-1">🔍 Vérifier dans ClientSuiviWorkItems:</p>
+                        <p className="text-xs text-gray-600">Logement: TEST-M03</p>
+                        <div className="flex gap-2 mt-1">
+                          {inventaireTestResult.workItemIds?.map(id => (
+                            <code key={id} className="text-xs bg-gray-100 px-1 rounded">{id.substring(0, 8)}...</code>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="font-bold text-red-800">❌ Tests échoués</p>
+                      {inventaireTestResult.errors.map((err, i) => (
+                        <p key={i} className="text-xs text-red-700">{err}</p>
+                      ))}
+                    </div>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
 
             <Button
               onClick={handleTestSuiviEvent}
