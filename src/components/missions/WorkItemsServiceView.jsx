@@ -10,6 +10,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Clock, User, CheckCircle, X, Camera, Loader2, AlertTriangle, Play, ShoppingCart } from 'lucide-react';
 import { format, differenceInMinutes } from 'date-fns';
 import { toast } from 'sonner';
+import { 
+  getDescriptionOperationnelle, 
+  validateMissionClosure, 
+  getWorkItemFinalStatus 
+} from '../descriptionOperationnelleUtils';
 
 export default function WorkItemsServiceView({ service }) {
   const queryClient = useQueryClient();
@@ -239,41 +244,37 @@ export default function WorkItemsServiceView({ service }) {
   };
 
   const handleValider = () => {
-    const tachesNonRepondues = (selectedWorkItem.taches || []).filter(t => 
-      tachesEtat[t.numero] === undefined || tachesEtat[t.numero].faite === undefined
-    );
-
-    if (tachesNonRepondues.length > 0) {
-      toast.error(`⚠️ Toutes les tâches doivent être traitées (${tachesNonRepondues.length} restante(s))`);
-      return;
-    }
-
+    // Validation stricte : toutes les tâches doivent avoir un statut
     const tachesUpdated = (selectedWorkItem.taches || []).map(t => ({
       ...t,
-      faite: tachesEtat[t.numero].faite,
-      justification: tachesEtat[t.numero].justification,
-      photo_url: tachesEtat[t.numero].photo_url
+      faite: tachesEtat[t.numero]?.faite,
+      justification: tachesEtat[t.numero]?.justification || '',
+      photo_url: tachesEtat[t.numero]?.photo_url || ''
     }));
 
-    const tachesSansJustification = tachesUpdated.filter(t => !t.faite && !t.justification?.trim());
-    if (tachesSansJustification.length > 0) {
-      toast.error(`⚠️ Justification obligatoire pour les tâches non faites (${tachesSansJustification.map(t => `#${t.numero}`).join(', ')})`);
+    // Utiliser la fonction de validation centralisée
+    const validation = validateMissionClosure(tachesUpdated);
+    
+    if (!validation.valid) {
+      toast.error(`⚠️ ${validation.error}`);
       return;
     }
 
-    const toutFait = tachesUpdated.every(t => t.faite);
+    // Déterminer le statut final
     let nouveauStatut;
     let commandesACreer = [];
     let metadata = {};
 
-    if (toutFait) {
+    if (!validation.hasFailures) {
+      // Toutes les tâches sont FAIT
       nouveauStatut = 'TERMINEE';
       metadata.resultat = 'SUCCES_COMPLET';
     } else {
+      // Au moins une tâche est PAS FAIT
       // Vérifier si des commandes sont nécessaires
       const tachesAvecCommande = tachesUpdated.filter(t => {
         const etat = tachesEtat[t.numero];
-        return !etat?.faite && etat?.commandeNecessaire === true;
+        return t.faite === false && etat?.commandeNecessaire === true;
       });
 
       if (tachesAvecCommande.length > 0) {
@@ -644,7 +645,9 @@ export default function WorkItemsServiceView({ service }) {
                   {workItem.statut !== 'TERMINEE' && (
                     <Button
                       onClick={() => handlePrendreEnCharge(workItem)}
+                      disabled={!getDescriptionOperationnelle(workItem)}
                       className="w-full bg-purple-600 h-12"
+                      title={!getDescriptionOperationnelle(workItem) ? 'Description manquante' : ''}
                     >
                       {workItem.statut === 'A_FAIRE' ? 'Prendre en charge' : 'Continuer'}
                     </Button>
