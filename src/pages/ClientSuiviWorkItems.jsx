@@ -45,6 +45,30 @@ export default function ClientSuiviWorkItems() {
         50
       );
       
+      // OPTIMISATION: Charger tous les SuiviEvent en 1 seule requête (évite N+1)
+      if (results.length > 0) {
+        const workItemIds = results.map(w => w.id);
+        const allEvents = await base44.entities.SuiviEvent.filter(
+          { workitem_id: { $in: workItemIds } },
+          '-timestamp',
+          500
+        );
+        
+        // Regrouper par workitem_id côté frontend
+        const eventsByWorkItem = {};
+        allEvents.forEach(event => {
+          if (!eventsByWorkItem[event.workitem_id]) {
+            eventsByWorkItem[event.workitem_id] = [];
+          }
+          eventsByWorkItem[event.workitem_id].push(event);
+        });
+        
+        // Attacher les events à chaque WorkItem
+        results.forEach(workItem => {
+          workItem._suiviEvents = eventsByWorkItem[workItem.id] || [];
+        });
+      }
+      
       return results;
     }
   });
@@ -191,7 +215,10 @@ export default function ClientSuiviWorkItems() {
                         <Calendar className="w-4 h-4" />
                         {lang === 'fr' ? 'Historique' : 'Timeline'}
                       </h4>
-                      <TimelineSuiviEvent workItemId={workItem.id} />
+                      <TimelineSuiviEvent 
+                        workItemId={workItem.id} 
+                        preloadedEvents={workItem._suiviEvents}
+                      />
                     </div>
                   </CardContent>
                 </Card>

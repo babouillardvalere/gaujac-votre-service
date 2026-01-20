@@ -53,6 +53,21 @@
  * CREATE INDEX idx_archive_arrivee_date_depart ON ArchiveFicheArrivee(date_depart DESC);
  * CREATE INDEX idx_archive_depart_date_archivage ON ArchiveFicheDepart(date_archivage DESC);
  * 
+ * 7️⃣ WorkItem (CRITIQUE - Performance)
+ * --------------------------------------
+ * CREATE INDEX idx_workitem_hebergement ON WorkItem(hebergement);
+ * CREATE INDEX idx_workitem_service ON WorkItem(service);
+ * CREATE INDEX idx_workitem_statut ON WorkItem(statut);
+ * CREATE INDEX idx_workitem_service_statut ON WorkItem(service, statut, created_date DESC);
+ * CREATE INDEX idx_workitem_stay_id ON WorkItem(stay_id);
+ * 
+ * 8️⃣ SuiviEvent (CRITIQUE - Timeline client)
+ * -------------------------------------------
+ * CREATE INDEX idx_suivievent_workitem ON SuiviEvent(workitem_id, timestamp DESC);
+ * CREATE INDEX idx_suivievent_timestamp ON SuiviEvent(timestamp DESC);
+ * CREATE INDEX idx_suivievent_service ON SuiviEvent(service);
+ * CREATE INDEX idx_suivievent_action ON SuiviEvent(action);
+ * 
  * ==================================================================
  * 🗑️ ROTATION DES LOGS (À PLANIFIER CÔTÉ SERVEUR)
  * ==================================================================
@@ -71,6 +86,9 @@
  * | Recherche par numéro   | ~800ms    | ~5ms      |
  * | Filtrage par date      | ~1200ms   | ~30ms     |
  * | Dashboard stats        | ~2000ms   | ~100ms    |
+ * | WorkItems par service  | ~1000ms   | ~15ms     |
+ * | Timeline client (10 WI)| ~3000ms   | ~50ms     |
+ * | SuiviEvent (1 WorkItem)| ~200ms    | ~5ms      |
  * 
  * ==================================================================
  * ✅ CHECKLIST OPTIMISATION

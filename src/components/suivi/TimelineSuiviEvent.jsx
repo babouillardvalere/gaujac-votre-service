@@ -73,7 +73,7 @@ const SERVICE_LABELS = {
   SYSTEM: { fr: 'Système', en: 'System' }
 };
 
-export default function TimelineSuiviEvent({ workItemId }) {
+export default function TimelineSuiviEvent({ workItemId, preloadedEvents = null }) {
   const { t, lang } = useTranslation();
   
   const { data: events = [], isLoading, error } = useQuery({

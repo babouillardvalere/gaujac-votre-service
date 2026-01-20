@@ -43,6 +43,8 @@ export default function AdminLoadTest() {
   const [suiviTestResult, setSuiviTestResult] = useState(null);
   const [testingInventaire, setTestingInventaire] = useState(false);
   const [inventaireTestResult, setInventaireTestResult] = useState(null);
+  const [testingMassive, setTestingMassive] = useState(false);
+  const [massiveTestResult, setMassiveTestResult] = useState(null);
 
   // Exposer tests dans window pour console
   React.useEffect(() => {
@@ -344,6 +346,86 @@ export default function AdminLoadTest() {
     }
   };
 
+  const handleTestCreationMassive = async () => {
+    const count = parseInt(prompt('Nombre de WorkItems à créer (50/100/300):', '100'), 10);
+    if (!count || count < 1) return;
+    
+    const confirmed = window.confirm(
+      `⚠️ ATTENTION: Création de ${count} WorkItems.\n\nContinuer ?`
+    );
+    if (!confirmed) return;
+    
+    setTestingMassive(true);
+    setMassiveTestResult(null);
+    
+    try {
+      const { createWorkItem } = await import('../components/workItemCreator');
+      
+      const startTime = Date.now();
+      const results = {
+        etapes: [],
+        success: true,
+        errors: [],
+        count
+      };
+      
+      // Créer en batch de 20
+      const batchSize = 20;
+      const batches = Math.ceil(count / batchSize);
+      
+      for (let batch = 0; batch < batches; batch++) {
+        const batchStart = batch * batchSize;
+        const batchEnd = Math.min(batchStart + batchSize, count);
+        const batchCount = batchEnd - batchStart;
+        
+        const promises = [];
+        for (let i = 0; i < batchCount; i++) {
+          const index = batchStart + i;
+          promises.push(
+            createWorkItem({
+              type: 'INTERVENTION_CLIENT',
+              service: index % 2 === 0 ? 'TECHNIQUE' : 'MENAGE',
+              statut: 'A_FAIRE',
+              priorite: 'NORMALE',
+              description_operationnelle: `Test charge massive #${index + 1}`,
+              hebergement: `LOAD-${Math.floor(index / 5) + 1}`,
+              stay_id: `LOAD-TEST-${Date.now()}-${index}`
+            })
+          );
+        }
+        
+        await Promise.all(promises);
+        results.etapes.push({ batch: batch + 1, created: batchCount });
+      }
+      
+      const endTime = Date.now();
+      const duration = ((endTime - startTime) / 1000).toFixed(2);
+      
+      results.duration = duration;
+      results.itemsPerSecond = (count / parseFloat(duration)).toFixed(1);
+      
+      // Seuils de validation
+      if (count === 100 && parseFloat(duration) > 3) {
+        results.errors.push(`⚠️ Objectif non atteint: ${duration}s > 3s pour 100 WorkItems`);
+      } else if (count === 300 && parseFloat(duration) > 8) {
+        results.errors.push(`⚠️ Objectif non atteint: ${duration}s > 8s pour 300 WorkItems`);
+      } else {
+        results.etapes.push({ validation: `✅ Performance acceptable: ${duration}s` });
+      }
+      
+      setMassiveTestResult(results);
+      
+    } catch (error) {
+      setMassiveTestResult({
+        success: false,
+        errors: [error.message],
+        etapes: []
+      });
+    } finally {
+      setTestingMassive(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white p-6">
       <div className="max-w-6xl mx-auto">
@@ -442,6 +524,40 @@ export default function AdminLoadTest() {
               <TrendingUp className="w-5 h-5 mr-2" />
               {archiving ? 'Archivage...' : '📦 Lancer archivage automatique (>30j)'}
             </Button>
+
+            <Button
+              onClick={handleTestCreationMassive}
+              disabled={testingMassive}
+              className="w-full h-14 bg-red-600 hover:bg-red-700"
+            >
+              <Zap className="w-5 h-5 mr-2" />
+              {testingMassive ? 'Test en cours...' : '🔥 Test Création Massive (50/100/300 WorkItems)'}
+            </Button>
+            
+            {massiveTestResult && (
+              <Alert className={massiveTestResult.success && massiveTestResult.errors.length === 0 ? 'border-green-500 bg-green-50' : 'border-orange-500 bg-orange-50'}>
+                <AlertDescription>
+                  <div className="space-y-2">
+                    <p className="font-bold text-gray-800">
+                      📊 {massiveTestResult.count} WorkItems créés en {massiveTestResult.duration}s
+                    </p>
+                    <p className="text-sm text-gray-700">
+                      ⚡ Vitesse: {massiveTestResult.itemsPerSecond} WorkItems/seconde
+                    </p>
+                    {massiveTestResult.errors.length > 0 && (
+                      <div className="text-xs text-orange-700 space-y-1">
+                        {massiveTestResult.errors.map((err, i) => (
+                          <p key={i}>{err}</p>
+                        ))}
+                      </div>
+                    )}
+                    {massiveTestResult.errors.length === 0 && (
+                      <p className="text-xs text-green-700">✅ Performance dans les objectifs</p>
+                    )}
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
 
             <Button
               onClick={handleTestInventaireArrivee}
