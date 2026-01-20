@@ -94,7 +94,9 @@ export default function MissionsDirectionService({ service }) {
         ? Math.floor((new Date() - new Date(missionActuelle.date_prise_en_charge)) / 60000)
         : 0;
 
+      // PAYLOAD COMPLET pour éviter blocage QA
       const updateData = {
+        ...missionActuelle,
         taches,
         statut,
         temps_ecoule_minutes: dureeMinutes
