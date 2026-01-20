@@ -118,45 +118,44 @@ export default function InventaireArriveeManager({
   const createIntervention = async ({ service, items, ficheId }) => {
     if (!items || items.length === 0) return;
 
+    // CONSTRUCTION DESCRIPTION_OPERATIONNELLE (obligatoire)
+    const description_operationnelle = items.map((item, index) => 
+      `${index + 1}. ${item.emoji} ${item.label}: ${item.qtyManquante} manquant(s)`
+    ).join('\n');
+
     const hasUrgent = items.some(i => i.urgent);
-    const description = items.map(i => `${i.emoji} ${i.label}: ${i.qtyManquante} manquant(s)`).join('\n');
+    const stay_id = `ARR-${mh}-${dateArrivee.replace(/-/g, '')}-${Math.random().toString(36).substring(2, 8)}`;
 
     // Log action utilisateur
-    errorLogger.logUserAction('Création intervention depuis inventaire arrivée', {
+    errorLogger.logUserAction('Création WorkItem depuis inventaire arrivée', {
       service,
       itemsCount: items.length,
       hasUrgent,
       ficheId
     });
 
-    const incident = await base44.entities.Incident.create({
-      stay_id: `ARR-${mh}-${dateArrivee.replace(/-/g, '')}-${Math.random().toString(36).substring(2, 8)}`,
-      type: service === 'MENAGE' ? 'menage' : 'technique',
-      categorie: service === 'MENAGE' ? 'nettoyage' : 'divers_technique',
-      description,
-      urgent: hasUrgent,
+    // CRÉATION VIA FACTORY CENTRALISÉE
+    const { createWorkItem } = await import('../workItemCreator');
+    
+    await createWorkItem({
+      type: 'INTERVENTION_CLIENT',
+      service,
+      statut: 'A_FAIRE',
+      priorite: hasUrgent ? 'URGENTE' : 'NORMALE',
+      description_operationnelle,
+      hebergement: mh,
+      type_hebergement: categorieLogement,
       client_nom: nom,
       client_prenom: prenom,
       date_arrivee: dateArrivee,
       date_depart: dateDepart,
-      logement: mh,
-      statut: 'en_attente',
-      date_saisie: new Date().toISOString(),
-      origine: 'arrivee',
+      stay_id,
       fiche_arrivee_id: ficheId,
       autorisation_acces: autorisationAcces,
-      plage_horaire_client: autorisationAcces === 'non' ? plagesHoraires.join(', ') : null
+      plages_horaires: autorisationAcces === 'non' ? plagesHoraires : []
     });
 
-    await base44.entities.InterventionLog.create({
-      incident_id: incident.id,
-      action: 'creation',
-      horodatage: new Date().toISOString(),
-      utilisateur: `${prenom} ${nom}`,
-      utilisateur_role: 'client',
-      commentaire: `Inventaire arrivée - ${items.length} anomalie(s) détectée(s)`
-    });
-
+    // Notification
     await base44.entities.Notification.create({
       type: hasUrgent ? 'INCIDENT_URGENT' : 'NOUVEAU_INCIDENT',
       titre: `${hasUrgent ? '🔴 URGENT - ' : ''}${service} - ${categorieLogement} ${mh}`,

@@ -80,6 +80,13 @@ function validateWorkItemData(data) {
  * @throws {Error} Si validation échoue
  */
 export async function createWorkItem(data) {
+  // 🚨 BLOCAGE STRICT - description_operationnelle OBLIGATOIRE
+  if (!data.description_operationnelle || !data.description_operationnelle.trim()) {
+    const errorMessage = '❌ BLOCAGE: description_operationnelle est OBLIGATOIRE et ne peut pas être vide';
+    console.error(errorMessage, data);
+    throw new Error(errorMessage);
+  }
+
   // VALIDATION STRICTE
   const validation = validateWorkItemData(data);
   
