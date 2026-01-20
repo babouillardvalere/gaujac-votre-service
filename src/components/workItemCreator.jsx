@@ -109,6 +109,15 @@ export async function createWorkItem(data) {
   const createdWorkItem = await base44.entities.WorkItem.create(workItemData);
   
   console.log('✅ WORKITEM CRÉÉ:', createdWorkItem.id);
+  
+  // Hook automatique: Logger l'événement de création
+  try {
+    const { onWorkItemCreated } = await import('./suiviEventLogger');
+    await onWorkItemCreated(createdWorkItem);
+  } catch (error) {
+    console.warn('⚠️ Hook SuiviEvent non exécuté:', error.message);
+  }
+  
   return createdWorkItem;
 }
 
