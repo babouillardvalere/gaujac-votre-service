@@ -43,6 +43,15 @@ export default function DirectionCreerIntervention() {
   };
 
   const handleCreer = () => {
+    // LOG CRITIQUE : vérifier payload AVANT envoi
+    console.log('[DIRECTION-CREER] Payload avant génération:', {
+      type: typeIntervention,
+      zones: numerosHebergement,
+      zones_count: numerosHebergement?.length || 0,
+      taches_count: taches?.length || 0,
+      service
+    });
+
     // Validation QA stricte
     if (taches.length === 0) {
       toast.error('❌ Ajoutez au moins une tâche pour cette intervention');
@@ -50,6 +59,7 @@ export default function DirectionCreerIntervention() {
     }
 
     if (!numerosHebergement || numerosHebergement.length === 0) {
+      console.error('[DIRECTION-CREER] CRITICAL: Aucune zone dans numerosHebergement');
       toast.error('❌ Aucun hébergement sélectionné. Veuillez recommencer le processus.');
       return;
     }
@@ -67,7 +77,7 @@ export default function DirectionCreerIntervention() {
       source: 'direction'
     }));
 
-    console.log(`[DIRECTION] Génération de ${interventions.length} intervention(s) pour ${numerosHebergement.length} hébergement(s)`);
+    console.log(`[DIRECTION-CREER] ✅ ${interventions.length} intervention(s) générées pour ${numerosHebergement.length} zone(s)`);
     navigate(createPageUrl('DirectionRecapIntervention'), { state: { interventions } });
   };
 

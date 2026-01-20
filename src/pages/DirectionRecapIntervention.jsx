@@ -27,13 +27,16 @@ export default function DirectionRecapIntervention() {
       
       // Utiliser le premier élément comme template (tous partagent type, date, service, etc.)
       const template = interventions[0];
+      const numerosHebergement = interventions.map(i => i.numeroHebergement);
+      
+      console.log('[DIRECTION] Zones extraites:', numerosHebergement);
       
       // Génération automatique via factory : 1 zone = 1 WorkItem
       const result = prepareWorkItemsForMission({
         typeMission: template.typeIntervention,
         datePlanifiee: template.datePlanifiee,
         typeHebergement: template.typeHebergement,
-        numerosHebergement: interventions.map(i => i.numeroHebergement),
+        numerosHebergement,
         service: template.service,
         priorite: template.priorite,
         taches: template.taches,

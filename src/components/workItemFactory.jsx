@@ -30,15 +30,26 @@ export function prepareWorkItemsForMission(form) {
     description, // optional
   } = form;
 
+  // LOG CRITIQUE : traçabilité payload
+  console.log('[FACTORY] Input payload:', {
+    typeMission,
+    zones_count: numerosHebergement?.length || 0,
+    zones: numerosHebergement,
+    taches_count: taches?.length || 0,
+    service
+  });
+
   // Validations bloquantes QA
   if (!typeMission) return { ok: false, error: "Type de mission manquant" };
   if (!datePlanifiee) return { ok: false, error: "Date planifiée manquante" };
   if (!typeHebergement) return { ok: false, error: "Type d'hébergement manquant" };
   if (!Array.isArray(numerosHebergement) || numerosHebergement.length === 0) {
+    console.error('[FACTORY] CRITICAL: Aucune zone dans le payload');
     return { ok: false, error: "Aucune zone sélectionnée pour générer les interventions" };
   }
   if (!service) return { ok: false, error: "Service assigné manquant" };
   if (!Array.isArray(taches) || taches.length === 0) {
+    console.error('[FACTORY] CRITICAL: Aucune tâche dans le payload');
     return { ok: false, error: "Ajoutez au moins une tâche pour cette mission" };
   }
 
@@ -89,8 +100,10 @@ export function prepareWorkItemsForMission(form) {
   }).filter(Boolean);
 
   if (workItems.length === 0) {
+    console.error('[FACTORY] CRITICAL: Aucun WorkItem généré malgré validations OK');
     return { ok: false, error: "Aucune intervention valide à créer" };
   }
 
+  console.log(`[FACTORY] ✅ ${workItems.length} WorkItem(s) générés pour ${numerosHebergement.length} zone(s)`);
   return { ok: true, workItems };
 }
