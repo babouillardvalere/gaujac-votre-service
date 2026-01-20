@@ -73,10 +73,13 @@ export default function DirectionCreerMission() {
       // WorkItems TECHNIQUE
       missionData.taches_technique.forEach((tache, idx) => {
         missionData.zones.forEach(zone => {
+          const description_operationnelle = `${idx + 1}. ${tache}`;
+          
           workItemsACreer.push({
             type: 'MISSION_DIRECTION',
             service: 'TECHNIQUE',
             titre: `${missionData.type_mission} - ${tache}`,
+            description_operationnelle, // OBLIGATOIRE
             description: `Zone: ${zone.numero} (${zone.categorie})`,
             hebergement: zone.numero,
             type_hebergement: zone.categorie,
@@ -95,10 +98,13 @@ export default function DirectionCreerMission() {
       // WorkItems MENAGE
       missionData.taches_menage.forEach((tache, idx) => {
         missionData.zones.forEach(zone => {
+          const description_operationnelle = `${idx + 1}. ${tache}`;
+          
           workItemsACreer.push({
             type: 'MISSION_DIRECTION',
             service: 'MENAGE',
             titre: `${missionData.type_mission} - ${tache}`,
+            description_operationnelle, // OBLIGATOIRE
             description: `Zone: ${zone.numero} (${zone.categorie})`,
             hebergement: zone.numero,
             type_hebergement: zone.categorie,
