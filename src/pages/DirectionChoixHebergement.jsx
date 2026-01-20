@@ -9,7 +9,7 @@ import Logo from '../components/Logo';
 export default function DirectionChoixHebergement() {
   const navigate = useNavigate();
   const location = useLocation();
-  const typeIntervention = location.state?.typeIntervention || 'HIVERNAGE';
+  const { typeIntervention = 'HIVERNAGE', datePlanifiee } = location.state || {};
 
   const typesHebergement = [
     { id: 'Chalet Eco', emoji: '🏡', label: 'Chalet Eco' },
@@ -67,6 +67,7 @@ export default function DirectionChoixHebergement() {
                 onClick={() => navigate(createPageUrl('DirectionChoixNumero'), {
                   state: { 
                     typeIntervention,
+                    datePlanifiee,
                     typeHebergement: type.id
                   }
                 })}
