@@ -103,8 +103,12 @@ export default function DirectionRecapIntervention() {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="text-center">
-          <p className="text-red-500 font-heading text-xl mb-4">⚠️ Erreur: données manquantes</p>
-          <p className="text-sm text-gray-600 mb-4">Aucune intervention à créer. Veuillez recommencer le processus.</p>
+          <p className="text-red-500 font-heading text-xl mb-4">⚠️ Erreur: aucune zone sélectionnée</p>
+          <p className="text-sm text-gray-600 mb-4">
+            Aucune intervention n'a été générée.
+            <br />
+            Veuillez sélectionner au moins un hébergement pour créer les interventions.
+          </p>
           <Button onClick={() => navigate(createPageUrl('DirectionMenu'))} className="bg-purple-600">
             Retour au menu Direction
           </Button>

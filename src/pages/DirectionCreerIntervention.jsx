@@ -43,11 +43,18 @@ export default function DirectionCreerIntervention() {
   };
 
   const handleCreer = () => {
+    // Validation QA stricte
     if (taches.length === 0) {
-      toast.error('Ajoutez au moins une tâche');
+      toast.error('❌ Ajoutez au moins une tâche pour cette intervention');
       return;
     }
 
+    if (!numerosHebergement || numerosHebergement.length === 0) {
+      toast.error('❌ Aucun hébergement sélectionné. Veuillez recommencer le processus.');
+      return;
+    }
+
+    // Génération automatique : une intervention PAR hébergement
     const interventions = numerosHebergement.map(numero => ({
       typeIntervention,
       datePlanifiee,
@@ -60,6 +67,7 @@ export default function DirectionCreerIntervention() {
       source: 'direction'
     }));
 
+    console.log(`[DIRECTION] Génération de ${interventions.length} intervention(s) pour ${numerosHebergement.length} hébergement(s)`);
     navigate(createPageUrl('DirectionRecapIntervention'), { state: { interventions } });
   };
 
