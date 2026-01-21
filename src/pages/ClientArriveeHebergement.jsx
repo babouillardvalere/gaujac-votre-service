@@ -59,10 +59,10 @@ export default function ClientArriveeHebergement() {
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    if (!selectedType || !selectedNumero) {
+    if (!selectedType || !selectedCategorie || !selectedNumero) {
       toast.error(lang === 'fr' 
-        ? 'Veuillez sélectionner un hébergement'
-        : 'Please select accommodation');
+        ? 'Veuillez sélectionner un hébergement complet'
+        : 'Please select complete accommodation');
       return;
     }
 
