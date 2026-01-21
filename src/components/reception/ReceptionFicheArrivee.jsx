@@ -289,10 +289,11 @@ ${lang === 'fr' ? 'Validé le' : 'Validated on'}: ${new Date(fiche.date_validati
                   <div className="space-y-2">
                     {fiche.inventaire_objets_manquants.map((obj, i) => {
                       const objData = typeof obj === 'object' ? obj : { nom: obj };
+                      const displayName = objData.label || objData.nom || objData.objet || (typeof obj === 'string' ? obj : 'Item');
                       return (
                         <div key={i} className="flex items-center gap-2 text-sm">
                           <XCircle className="w-4 h-4 text-red-600" />
-                          <span>{objData.nom || objData.objet || obj} {objData.quantity && <strong>×{objData.quantity}</strong>}</span>
+                          <span>{displayName} {objData.qtyManquante && <strong>(manquant: {objData.qtyManquante})</strong>}</span>
                         </div>
                       );
                     })}
