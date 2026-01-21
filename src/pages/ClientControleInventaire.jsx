@@ -244,7 +244,10 @@ export default function ClientControleInventaire() {
 Détail des anomalies:
 ${taches.map((t, idx) => `${idx + 1}. ${t.texte}`).join('\n')}`;
     
-    await base44.entities.WorkItem.create({
+    // FIX #4: Utiliser createWorkItem via factory (déclenche SuiviEvent automatiquement)
+    const { createWorkItem } = await import('../components/workItemCreator');
+    
+    const workItem = await createWorkItem({
       type: 'INTERVENTION_CLIENT',
       service,
       statut: 'A_FAIRE',
@@ -266,24 +269,7 @@ ${taches.map((t, idx) => `${idx + 1}. ${t.texte}`).join('\n')}`;
       fiche_arrivee_id: ficheId,
       stay_id: stayIdForWorkItem
     });
-    console.log(`[WORKITEM_CREATE] WorkItem créé:`, workItem.id);
-    
-    // 🔔 CRÉER SuiviEvent initial pour traçabilité client
-    await base44.entities.SuiviEvent.create({
-      workitem_id: workItem.id,
-      origine: 'INVENTAIRE_ARRIVEE',
-      reference_id: stayIdForWorkItem,
-      service: 'SYSTEM',
-      action: 'CREATION',
-      message: `Demande transmise au service ${service}`,
-      timestamp: new Date().toISOString(),
-      metadata: {
-        items_count: items.length,
-        urgent: hasUrgent,
-        type_intervention: 'INVENTAIRE_ARRIVEE'
-      }
-    });
-    console.log(`[SUIVIEVENT_CREATE] Event initial créé pour WorkItem ${workItem.id}`);
+    console.log(`[WORKITEM_CREATE] WorkItem créé via factory:`, workItem.id, '(SuiviEvent auto-créé)');
 
     // NOTIFICATION DIRECTE AU SERVICE
     const serviceLabel = service === 'MENAGE' ? '🧹 Ménage' : service === 'TECHNIQUE' ? '🔧 Technique' : '🏠 Réception';

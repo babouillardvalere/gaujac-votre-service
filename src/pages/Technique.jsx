@@ -125,8 +125,8 @@ export default function Technique() {
       const result = await base44.entities.WorkItem.filter({ 
         service: 'TECHNIQUE'
       }, '-created_date', 250);
-      // FILTRE ANTI-ORPHELINS: exclure les WorkItems annulés
-      const filtered = result.filter(wi => wi.statut !== 'ANNULEE');
+      // FIX #3: FILTRE deleted_at + ANNULEE
+      const filtered = filterActive(result).filter(wi => wi.statut !== 'ANNULEE');
       console.log('✅ WorkItems TECHNIQUE actifs:', filtered.length, '/', result.length, 'workitem(s)');
       filtered.forEach(wi => {
         console.log(`  - ID: ${wi.id}, Statut: ${wi.statut}, Type: ${wi.type}, Hébergement: ${wi.hebergement}`);
@@ -863,7 +863,8 @@ export default function Technique() {
       isWorkItem: true,
       workItemId: wi.id,
       titre: wi.titre,
-      taches: wi.taches || []
+      taches: wi.taches || [],
+      deleted_at: wi.deleted_at || null // FIX #3: Propager deleted_at
     }));
 
   // Convertir les MissionDirection en format compatible

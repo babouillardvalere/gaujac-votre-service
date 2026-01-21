@@ -22,13 +22,21 @@ export const deleteInterventionCascade = async (interventionId, userId = 'SYSTEM
       deleted_at: now
     });
     
-    // 2️⃣ Trouver et soft delete tous les WorkItems liés
-    const workItems = await base44.entities.WorkItem.filter({
+    // 2️⃣ FIX: Trouver WorkItems liés par incident_id OU intervention_client_id
+    const workItemsByIncident = await base44.entities.WorkItem.filter({
       incident_id: interventionId
     });
     
+    const workItemsByIntervention = await base44.entities.WorkItem.filter({
+      intervention_client_id: interventionId
+    });
+    
+    // Fusionner et dédupliquer
+    const allWorkItems = [...workItemsByIncident, ...workItemsByIntervention];
+    const uniqueWorkItems = Array.from(new Map(allWorkItems.map(wi => [wi.id, wi])).values());
+    
     const deletedWorkItemIds = [];
-    for (const wi of workItems) {
+    for (const wi of uniqueWorkItems) {
       await base44.entities.WorkItem.update(wi.id, {
         deleted_at: now
       });
@@ -38,7 +46,7 @@ export const deleteInterventionCascade = async (interventionId, userId = 'SYSTEM
     // 3️⃣ Logger l'action pour audit
     await logDeletionCascade(interventionId, deletedWorkItemIds, userId);
     
-    console.log(`✅ Suppression cascade: 1 incident + ${deletedWorkItemIds.length} workitems`);
+    console.log(`✅ Suppression cascade: 1 incident + ${deletedWorkItemIds.length} workitems (incident_id + intervention_client_id)`);
     
     return {
       deletedIncident: 1,

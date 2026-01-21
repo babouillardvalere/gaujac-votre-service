@@ -98,43 +98,70 @@ export default function ClientControleInventaireEmplacement() {
         evaluation_proprete: "correct"
       });
 
-      // Créer intervention technique
+      // 🔧 FIX #1: CRÉER WORKITEM au lieu de Intervention/InterventionEvent
       if (selectedDemandes.length > 0) {
-        const intervention = await base44.entities.Intervention.create({
-          sejour_id: `ARR-${numero}-${dateArrivee.replace(/-/g, '')}-${Math.random().toString(36).substring(2, 8)}`,
-          type: "technique",
-          statut: "OUVERTE",
-          logement: numero,
+        const stayId = `ARR-${numero}-${dateArrivee.replace(/-/g, '')}-${Math.random().toString(36).substring(2, 8)}`;
+        
+        // Construction description opérationnelle enrichie
+        const demandesLabels = selectedDemandes.map(d => {
+          const demande = demandesTechniques.find(dt => dt.id === d);
+          return `${demande?.emoji} ${demande?.label}`;
+        }).join('\n');
+        
+        const descriptionOperationnelle = `📋 Arrivée emplacement ${numero}
+👤 ${prenom} ${nom}
+📅 Séjour: ${dateArrivee} → ${dateDepart}
+${urgentDeclaration ? '🔴 URGENT' : ''}
+
+Demandes techniques:
+${demandesLabels}
+
+${description ? `\n💬 Précisions:\n${description}` : ''}`;
+
+        // Créer WorkItem via factory
+        const { createWorkItem } = await import('../components/workItemCreator');
+        
+        const workItem = await createWorkItem({
+          type: 'INTERVENTION_CLIENT',
+          service: 'TECHNIQUE',
+          statut: 'A_FAIRE',
+          priorite: urgentDeclaration ? 'URGENTE' : 'NORMALE',
+          description_operationnelle: descriptionOperationnelle,
+          titre: `Emplacement ${numero} - ${selectedDemandes.length} demande(s)`,
+          hebergement: numero,
+          type_hebergement: typeEmplacement || 'emplacement',
           client_nom: nom,
           client_prenom: prenom,
           date_arrivee: dateArrivee,
           date_depart: dateDepart,
+          stay_id: stayId,
           fiche_arrivee_id: fiche.id,
-          contexte: "ARRIVEE",
-          origine: "ARRIVEE",
-          urgent: urgentDeclaration,
-          categorie: selectedDemandes[0],
-          description: description || `Demande emplacement: ${selectedDemandes.map(d => demandesTechniques.find(dt => dt.id === d)?.label).join(', ')}`,
-          technique_statut: "OUVERTE"
+          taches: selectedDemandes.map((d, idx) => {
+            const demande = demandesTechniques.find(dt => dt.id === d);
+            return {
+              numero: idx + 1,
+              texte: `${demande?.emoji} ${demande?.label}`,
+              objet_id: d,
+              faite: false
+            };
+          })
         });
 
-        await base44.entities.InterventionEvent.create({
-          intervention_id: intervention.id,
-          service: "TECHNIQUE",
-          type: "DEMANDE_RECUE",
-          at: new Date().toISOString(),
-          auteur: "Système",
-          message: "Votre demande a bien été enregistrée et transmise à nos équipes.",
-          visible_client: true
-        });
+        console.log('[EMPLACEMENT] WorkItem créé:', workItem.id);
 
         // Notification bureau
         await base44.entities.Notification.create({
           type: urgentDeclaration ? 'INCIDENT_URGENT' : 'NOUVEAU_INCIDENT',
-          titre: `${urgentDeclaration ? '🔴 URGENT - ' : ''}Intervention emplacement - ${nom} ${prenom}`,
-          message: `Arrivée emplacement ${numero} - ${selectedDemandes.length} demande(s)`,
-          destinataire_role: 'RECEPTION',
-          statut: 'non_lu'
+          titre: `${urgentDeclaration ? '🔴 URGENT - ' : ''}Emplacement ${numero} - TECHNIQUE`,
+          message: `📍 Emplacement ${numero}
+👤 ${prenom} ${nom}
+📅 ${dateArrivee} → ${dateDepart}
+⚠️ ${selectedDemandes.length} demande(s) technique
+
+${demandesLabels}`,
+          destinataire_role: 'TECHNIQUE',
+          statut: 'non_lu',
+          priorite: urgentDeclaration ? 'URGENTE' : 'NORMALE'
         });
       }
 
