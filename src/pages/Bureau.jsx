@@ -40,6 +40,7 @@ import { fr } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { createPageUrl } from '../utils';
 import { useQuery as useReactQuery } from '@tanstack/react-query';
+import { filterActive } from '../components/interventionDeletion';
 
 const COLORS = ['#00AEEF', '#FFD700', '#FFA500', '#10b981', '#8b5cf6', '#ec4899'];
 
@@ -161,8 +162,8 @@ export default function Bureau() {
     queryKey: ['bureau-workitems'],
     queryFn: async () => {
       const data = await base44.entities.WorkItem.filter({}, '-created_date', 250);
-      // GARDE ANTI-ORPHELINS : exclure WorkItems annulés
-      const filtered = data.filter(wi => wi.statut !== 'ANNULEE');
+      // FIX #3: GARDE deleted_at + ANNULEE
+      const filtered = filterActive(data).filter(wi => wi.statut !== 'ANNULEE');
       console.log('[BUREAU] WorkItems actifs:', filtered.length, '/', data.length);
       console.log('[BUREAU] Détail par statut:', {
         A_FAIRE: filtered.filter(i => i.statut === 'A_FAIRE').length,
@@ -415,6 +416,7 @@ export default function Bureau() {
       service: wi.service,
       priorite: wi.priorite,
       description: wi.description,
+      description_operationnelle: wi.description_operationnelle,
       taches: wi.taches,
       statut: wi.statut,
       pris_en_charge_par: wi.collaborateur,
@@ -422,7 +424,8 @@ export default function Bureau() {
       temps_ecoule_minutes: wi.duree_minutes,
       date_terminee: wi.date_terminee,
       isWorkItem: true,
-      workItemData: wi
+      workItemData: wi,
+      deleted_at: wi.deleted_at || null
     }));
   }, [workItemsBureau, interventionsClients]);
 
@@ -1868,7 +1871,9 @@ export default function Bureau() {
                     </div>
                   )}
                   <div><span className="text-gray-500">Description:</span></div>
-                  <p className="bg-white p-3 rounded-lg border">{selectedIncident.description}</p>
+                  <p className="bg-white p-3 rounded-lg border whitespace-pre-wrap">
+                    {selectedIncident.description_operationnelle || selectedIncident.description || '—'}
+                  </p>
                 </div>
               </div>
 
