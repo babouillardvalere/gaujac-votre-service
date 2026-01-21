@@ -82,18 +82,19 @@ export default function ClientArriveeIdentite() {
       return false;
     }
 
-    // RÈGLE ANTIFRAUDE : Un client ne peut pas s'enregistrer avec une date passée
-    const aujourdhui = new Date();
-    aujourdhui.setHours(0, 0, 0, 0);
+    // Vérification date d'arrivée (autoriser J-1 pour flexibilité)
+    const hier = new Date();
+    hier.setDate(hier.getDate() - 1);
+    hier.setHours(0, 0, 0, 0);
     
     const arrivee = new Date(formData.date_arrivee);
     arrivee.setHours(0, 0, 0, 0);
     
-    if (arrivee.getTime() < aujourdhui.getTime()) {
+    if (arrivee.getTime() < hier.getTime()) {
       toast.error(
         lang === 'fr' 
-          ? '⚠️ Les arrivées passées ne peuvent pas être enregistrées. Veuillez contacter l\'accueil.'
-          : '⚠️ Past arrivals cannot be registered. Please contact reception.',
+          ? '⚠️ Les arrivées trop anciennes ne peuvent pas être enregistrées. Veuillez contacter l\'accueil.'
+          : '⚠️ Arrivals too far in the past cannot be registered. Please contact reception.',
         { duration: 5000 }
       );
       return false;
