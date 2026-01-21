@@ -183,9 +183,15 @@ export default function ClientSuiviWorkItems() {
                           <h3 className="font-heading text-xl text-[#0077A8] mb-2">
                             {serviceConfig.icon} {serviceConfig.label}
                           </h3>
-                          <p className="text-sm text-gray-700">
-                            {workItem.description_operationnelle || workItem.description || workItem.titre}
-                          </p>
+                          {workItem.description_operationnelle ? (
+                            <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed bg-gray-50 p-3 rounded-lg">
+                              {workItem.description_operationnelle}
+                            </pre>
+                          ) : (
+                            <p className="text-sm text-gray-700">
+                              {workItem.description || workItem.titre || 'Aucune description disponible'}
+                            </p>
+                          )}
                         </div>
                         <Badge className={statutConfig.color}>
                           {statutConfig.label}

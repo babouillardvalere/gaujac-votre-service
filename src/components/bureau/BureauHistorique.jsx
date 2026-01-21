@@ -380,17 +380,28 @@ export default function BureauHistorique() {
                               `${t(incident.sous_categorie)} - ${incident.hebergement_numero}`
                             )}
                           </div>
+                          {incident.date_arrivee && incident.date_depart && (
+                            <div className="text-xs text-gray-500">
+                              📅 {format(new Date(incident.date_arrivee), 'dd/MM')} → {format(new Date(incident.date_depart), 'dd/MM')}
+                            </div>
+                          )}
                         </td>
                         <td className="py-3">
                           <Button 
                             size="sm" 
                             variant="ghost"
                             onClick={() => setSelectedIncident(incident)}
+                            className="text-left"
                           >
-                            {incident.isWorkItem && incident.workItemData?.type === 'INTERVENTION_CLIENT' 
-                              ? `INVENTAIRE_ARRIVEE - ${incident.workItemData?.taches?.length || 0} tâche(s)`
-                              : incident.description_probleme?.substring(0, 30) || '-'
-                            }
+                            {incident.isWorkItem && incident.workItemData?.description_operationnelle ? (
+                              <span className="line-clamp-2">
+                                {incident.workItemData.description_operationnelle.split('\n')[0]}
+                              </span>
+                            ) : incident.isWorkItem && incident.workItemData?.type === 'INTERVENTION_CLIENT' ? (
+                              `📋 Inventaire - ${incident.workItemData?.taches?.length || 0} anomalie(s)`
+                            ) : (
+                              incident.description_probleme?.substring(0, 50) || '-'
+                            )}
                           </Button>
                         </td>
                       </tr>
@@ -436,7 +447,11 @@ export default function BureauHistorique() {
                     <Calendar className="w-3 h-3" /> Séjour
                   </div>
                   <p className="font-medium text-sm">
-                    {selectedIncident.date_arrivee && format(new Date(selectedIncident.date_arrivee), 'dd/MM')} - {selectedIncident.date_depart && format(new Date(selectedIncident.date_depart), 'dd/MM/yy')}
+                    {selectedIncident.date_arrivee && selectedIncident.date_depart ? (
+                      `${format(new Date(selectedIncident.date_arrivee), 'dd/MM/yyyy')} → ${format(new Date(selectedIncident.date_depart), 'dd/MM/yyyy')}`
+                    ) : (
+                      '—'
+                    )}
                   </p>
                 </div>
                 <div className="bg-slate-50 rounded-lg p-3">
@@ -454,18 +469,29 @@ export default function BureauHistorique() {
               {/* Description */}
               {selectedIncident.isWorkItem && selectedIncident.workItemData ? (
                 <div>
-                  <h4 className="font-medium mb-2">Description</h4>
-                  <p className="text-slate-600 bg-slate-50 p-3 rounded-lg">{selectedIncident.workItemData.description || '-'}</p>
-                  {selectedIncident.workItemData.taches?.length > 0 && (
-                    <div className="mt-3 space-y-2">
-                      <h5 className="text-sm font-medium text-slate-500">Tâches :</h5>
-                      {selectedIncident.workItemData.taches.map((t, idx) => (
-                        <div key={idx} className="bg-slate-50 p-2 rounded text-sm">
-                          <span className="font-medium">#{t.numero}</span> {t.texte}
-                          {t.faite && <span className="ml-2 text-green-600">✓ Faite</span>}
+                  <h4 className="font-medium mb-2">Description complète</h4>
+                  {selectedIncident.workItemData.description_operationnelle ? (
+                    <pre className="text-slate-700 bg-slate-50 p-4 rounded-lg whitespace-pre-wrap font-sans text-sm leading-relaxed">
+                      {selectedIncident.workItemData.description_operationnelle}
+                    </pre>
+                  ) : (
+                    <>
+                      <p className="text-slate-600 bg-slate-50 p-3 rounded-lg">{selectedIncident.workItemData.description || '-'}</p>
+                      {selectedIncident.workItemData.taches?.length > 0 && (
+                        <div className="mt-3 space-y-2">
+                          <h5 className="text-sm font-medium text-slate-500">Tâches détaillées :</h5>
+                          {selectedIncident.workItemData.taches.map((t, idx) => (
+                            <div key={idx} className="bg-slate-50 p-3 rounded border-l-4 border-blue-400">
+                              <div className="font-medium text-sm mb-1">#{t.numero} - {t.texte.split('\n')[0]}</div>
+                              {t.texte.includes('\n') && (
+                                <div className="text-xs text-gray-600 mt-1 pl-2">{t.texte.split('\n').slice(1).join('\n')}</div>
+                              )}
+                              {t.faite && <span className="inline-block mt-2 px-2 py-1 bg-green-100 text-green-700 text-xs rounded">✓ Terminée</span>}
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      )}
+                    </>
                   )}
                 </div>
               ) : (

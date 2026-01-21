@@ -235,8 +235,14 @@ export default function ClientControleInventaire() {
     // Créer WorkItem pilotable pour le Bureau
     const stayIdForWorkItem = sessionStorage.getItem('stay_id');
     
-    // CRITIQUE: description_operationnelle OBLIGATOIRE pour validation QA
-    const descriptionOperationnelle = taches.map((t, idx) => `${idx + 1}. ${t.texte}`).join('\n');
+    // CRITIQUE: description_operationnelle ENRICHIE pour visibilité claire
+    const descriptionOperationnelle = `📋 Contrôle inventaire ${categorie} ${numero}
+👤 ${prenom} ${nom}
+📅 Séjour: ${dateArrivee} → ${dateDepart}
+⚠️ ${items.length} anomalie(s) - Service ${service}
+
+Détail des anomalies:
+${taches.map((t, idx) => `${idx + 1}. ${t.texte}`).join('\n')}`;
     
     await base44.entities.WorkItem.create({
       type: 'INTERVENTION_CLIENT',
@@ -260,7 +266,24 @@ export default function ClientControleInventaire() {
       fiche_arrivee_id: ficheId,
       stay_id: stayIdForWorkItem
     });
-    console.log(`[WORKITEM_CREATE] WorkItem créé pour ${service}`);
+    console.log(`[WORKITEM_CREATE] WorkItem créé:`, workItem.id);
+    
+    // 🔔 CRÉER SuiviEvent initial pour traçabilité client
+    await base44.entities.SuiviEvent.create({
+      workitem_id: workItem.id,
+      origine: 'INVENTAIRE_ARRIVEE',
+      reference_id: stayIdForWorkItem,
+      service: 'SYSTEM',
+      action: 'CREATION',
+      message: `Demande transmise au service ${service}`,
+      timestamp: new Date().toISOString(),
+      metadata: {
+        items_count: items.length,
+        urgent: hasUrgent,
+        type_intervention: 'INVENTAIRE_ARRIVEE'
+      }
+    });
+    console.log(`[SUIVIEVENT_CREATE] Event initial créé pour WorkItem ${workItem.id}`);
 
     // NOTIFICATION DIRECTE AU SERVICE
     const serviceLabel = service === 'MENAGE' ? '🧹 Ménage' : service === 'TECHNIQUE' ? '🔧 Technique' : '🏠 Réception';
@@ -882,7 +905,7 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
         await base44.entities.HistoriqueEvent.create({
         type_event: 'CONTROLE_INVENTAIRE_VALIDE',
         titre: `Controle inventaire ${numero}`,
-        description: `${prenom} ${nom} - ${totalAnomalies} anomalie(s) detectee(s)`,
+        description: `${prenom} ${nom} - Séjour ${dateArrivee} → ${dateDepart} - ${totalAnomalies} anomalie(s): ${technique.length} technique, ${menage.length} ménage, ${reception.length} réception`,
         service: 'RECEPTION',
         hebergement: numero,
         type_hebergement: categorie,
