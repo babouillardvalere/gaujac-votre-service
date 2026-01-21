@@ -202,7 +202,7 @@ export default function MissionsDirection() {
 
       {/* Dialog détail */}
       <Dialog open={!!selectedMission} onOpenChange={() => setSelectedMission(null)}>
-        <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto">
+        <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto" aria-describedby="mission-detail-description">
           <DialogHeader>
             <DialogTitle className="font-heading text-purple-700 text-2xl">
               {selectedMission && (
@@ -212,6 +212,9 @@ export default function MissionsDirection() {
               )}
             </DialogTitle>
           </DialogHeader>
+          <div id="mission-detail-description" className="sr-only">
+            {lang === 'fr' ? 'Détails complets de la mission direction' : 'Complete mission details'}
+          </div>
 
           {selectedMission && (
             <MissionDirectionFiche 
