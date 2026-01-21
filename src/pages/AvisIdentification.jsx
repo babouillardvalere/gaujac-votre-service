@@ -71,6 +71,8 @@ export default function AvisIdentification() {
       clientPrenom.trim() !== '' &&
       dateArrivee !== '' &&
       dateDepart !== '' &&
+      hebergementType !== '' &&
+      hebergementCategorie !== '' &&
       hebergementNumero !== ''
     );
   };
