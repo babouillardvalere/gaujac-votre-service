@@ -689,6 +689,27 @@ ${detailsItems}
     e?.stopPropagation?.();
     if (submitting) return;
     
+    // Validations
+    if (!evaluationProprete) {
+      toast.error(lang === "fr" ? "Veuillez évaluer la propreté" : "Please rate cleanliness");
+      return;
+    }
+
+    if (!autorisationAcces) {
+      toast.error(lang === "fr" ? "Veuillez indiquer l'autorisation d'accès" : "Please indicate access authorization");
+      return;
+    }
+
+    if (autorisationAcces === "non" && plagesHoraires.length === 0) {
+      toast.error(lang === "fr" ? "Veuillez sélectionner au moins une plage horaire" : "Please select at least one time slot");
+      return;
+    }
+    
+    if (!signature) {
+      toast.error(lang === "fr" ? "Veuillez signer le document" : "Please sign the document");
+      return;
+    }
+    
     console.log('========================================');
     console.log('[ARRIVAL_VALIDATE] start', {
       inventoryId: sessionStorage.getItem('arrivee_dossier_id'),
@@ -699,7 +720,6 @@ ${detailsItems}
     console.log('========================================');
     
     setSubmitting(true);
-    // NE PAS fermer la modale ici - elle reste ouverte pendant tout le process
     
     toast.loading(lang === "fr" ? 'Envoi...' : 'Sending...', { id: 'submit' });
     
@@ -1131,142 +1151,13 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
       <SignaturePad onSave={setSignature} disabled={submitting} lang={lang} />
 
       <Button 
-        onClick={() => {
-          console.log('🔘 BOUTON CLIQUÉ - Lancement validation');
-          handlePrepareSubmit();
-        }} 
+        onClick={handleFinalSubmit} 
         className="w-full h-14 bg-[#00AEEF] hover:bg-[#0077A8] mt-6 text-lg font-semibold" 
         disabled={submitting}
       >
-        <Send className="mr-2" />
+        {submitting ? <Loader2 className="animate-spin mr-2" /> : <Send className="mr-2" />}
         {lang === "fr" ? "Valider le contrôle inventaire" : "Confirm inventory check"}
       </Button>
-
-      {/* Dialog Récapitulatif */}
-      <Dialog open={showRecap} onOpenChange={(open) => {
-        if (!submitting) setShowRecap(open);
-      }}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{lang === "fr" ? "Récapitulatif du contrôle inventaire" : "Inventory check summary"}</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p><strong>{lang === "fr" ? "Hébergement" : "Accommodation"}:</strong> {categorie} {numero}</p>
-              <p><strong>{lang === "fr" ? "Client" : "Guest"}:</strong> {prenom} {nom}</p>
-              <p><strong>{lang === "fr" ? "Arrivée" : "Arrival"}:</strong> {dateArrivee} → {dateDepart}</p>
-            </div>
-
-            {(() => {
-              const { menage, technique, reception } = analyzeAnomalies();
-              const renderItems = (items, bgColor) => items.map(m => (
-                <div key={m.id} className={`text-sm p-3 ${bgColor} rounded mb-2 border`}>
-                  <p className="font-semibold">
-                    {m.emoji} {m.label}
-                    {m.urgent && <span className="ml-2 text-red-600 font-bold">🔴 URGENT</span>}
-                  </p>
-                  {m.problemeTechnique && (
-                    <p className="text-xs text-orange-600 mt-1">⚠️ {lang === "fr" ? "Équipement défectueux" : "Defective equipment"}</p>
-                  )}
-                  {m.qtyManquante > 0 && (
-                    <p className="text-xs text-red-600 mt-1">
-                      {lang === "fr" ? "Manquant" : "Missing"}: {m.qtyManquante}
-                    </p>
-                  )}
-                  {m.remarque && (
-                    <p className="text-xs text-gray-700 mt-2 italic bg-white/50 p-2 rounded">
-                      💬 {m.remarque}
-                    </p>
-                  )}
-                  {m.photos?.length > 0 && (
-                    <div className="flex gap-2 mt-2">
-                      {m.photos.map((p, idx) => (
-                        <img key={idx} src={p} alt={`Photo ${idx + 1}`} className="w-16 h-16 object-cover rounded border-2 border-white" />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ));
-
-              return (
-                <>
-                  {technique.length > 0 && (
-                    <div>
-                      <h3 className="font-semibold mb-2 text-blue-700">🔧 {lang === "fr" ? "Interventions Technique" : "Technical"} ({technique.length})</h3>
-                      {renderItems(technique, 'bg-blue-50')}
-                    </div>
-                  )}
-
-                  {menage.length > 0 && (
-                    <div>
-                      <h3 className="font-semibold mb-2 text-yellow-700">🧹 {lang === "fr" ? "Interventions Ménage" : "Housekeeping"} ({menage.length})</h3>
-                      {renderItems(menage, 'bg-yellow-50')}
-                    </div>
-                  )}
-
-                  {reception.length > 0 && (
-                    <div>
-                      <h3 className="font-semibold mb-2 text-green-700">🏠 {lang === "fr" ? "Réception / Logistique" : "Reception / Logistics"} ({reception.length})</h3>
-                      {renderItems(reception, 'bg-green-50')}
-                    </div>
-                  )}
-
-                  {menage.length === 0 && technique.length === 0 && reception.length === 0 && (
-                    <p className="text-center text-green-600">✅ {lang === "fr" ? "Aucune anomalie signalée" : "No anomalies reported"}</p>
-                  )}
-                </>
-              );
-            })()}
-
-            <div className="bg-orange-50 p-4 rounded-lg border-2 border-orange-400">
-              <p className="font-bold text-orange-800">
-                🔐 {lang === "fr" ? "Autorisation d'accès" : "Access authorization"}: {autorisationAcces === 'oui' ? '✅ Oui' : '❌ Non'}
-              </p>
-              {autorisationAcces === 'non' && plagesHoraires.length > 0 && (
-                <div className="mt-2">
-                  <p className="text-xs text-orange-700 font-semibold mb-1">
-                    {lang === "fr" ? "Plages horaires demandées:" : "Requested time slots:"}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {plagesHoraires.map(plage => (
-                      <span key={plage} className="px-2 py-1 bg-orange-200 text-orange-900 text-xs rounded">
-                        {plage}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p><strong>{lang === "fr" ? "Appréciation globale" : "Overall rating"}:</strong> {
-                evaluationProprete === "pas_satisfaisant" ? "😠 Insatisfaisant" :
-                evaluationProprete === "correct" ? "😐 Correct" :
-                evaluationProprete === "tres_propre" ? "😄 Très propre" : ""
-              }</p>
-              {commentaireProprete && <p className="text-sm text-gray-600 mt-2">{commentaireProprete}</p>}
-            </div>
-
-            {signature && (
-              <div>
-                <p className="font-semibold mb-2">{lang === "fr" ? "Signature" : "Signature"}:</p>
-                <img src={signature} alt="Signature" className="border rounded max-h-32" />
-              </div>
-            )}
-          </div>
-
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setShowRecap(false)} className="flex-1">
-              {lang === "fr" ? "Modifier" : "Edit"}
-            </Button>
-            <Button type="button" onClick={handleFinalSubmit} disabled={submitting} className="flex-1 bg-[#00AEEF]">
-              {submitting ? <Loader2 className="animate-spin mr-2" /> : null}
-              {lang === "fr" ? "Valider définitivement" : "Confirm"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
