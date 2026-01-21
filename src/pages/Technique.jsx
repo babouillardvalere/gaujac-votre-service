@@ -906,8 +906,9 @@ export default function Technique() {
   // Regrouper visuellement les WorkItems
   const groupedWorkItems = groupWorkItems(convertedWorkItems);
   
-  // Combiner incidents, groupes WorkItems et missions Direction
-  const allIncidents = [...incidents, ...groupedWorkItems, ...convertedMissionsDirection];
+  // 🔒 PROTECTION: WorkItems UNIQUEMENT pour les contrôles inventaire
+  // Les Incidents legacy peuvent exister pour signalements directs uniquement
+  const allIncidents = [...groupedWorkItems, ...convertedMissionsDirection];
 
   // 🚫 GARDE ANTI-ORPHELIN: exclure les supprimés
   const activeIncidents = filterActive(allIncidents);

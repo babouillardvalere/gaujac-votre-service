@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Smile, Meh, Frown, Send, Loader2, Home, Download, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { uploadFileWithRetry } from "../components/useRetry";
+import '../components/inventoryProtection'; // 🔒 Activer la protection anti-legacy
 
 export default function ClientControleInventaire() {
   const { lang } = useTranslation();

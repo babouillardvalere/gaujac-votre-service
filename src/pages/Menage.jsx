@@ -827,7 +827,9 @@ export default function Menage() {
   // Regrouper visuellement les WorkItems
   const groupedWorkItems = groupWorkItems(convertedWorkItems);
   
-  const allIncidents = [...incidents, ...groupedWorkItems];
+  // 🔒 PROTECTION: WorkItems UNIQUEMENT pour les contrôles inventaire
+  // Les Incidents legacy peuvent exister pour signalements directs uniquement
+  const allIncidents = [...groupedWorkItems];
 
   // 🚫 GARDE ANTI-ORPHELIN: exclure les supprimés
   const activeIncidents = filterActive(allIncidents);
