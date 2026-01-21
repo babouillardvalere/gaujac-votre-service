@@ -1763,13 +1763,16 @@ export default function Bureau() {
 
       {/* Dialog détail */}
       <Dialog open={!!selectedIncident} onOpenChange={() => setSelectedIncident(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby="intervention-detail-description">
           <DialogHeader>
             <DialogTitle className="font-heading text-[#0077A8] flex items-center gap-2">
               <span className="text-xl">{selectedIncident && categoryEmojis[selectedIncident.categorie]}</span>
               {lang === 'fr' ? 'Fiche intervention' : 'Intervention details'} #{selectedIncident?.hebergement || selectedIncident?.numero_hebergement}
             </DialogTitle>
           </DialogHeader>
+          <div id="intervention-detail-description" className="sr-only">
+            {lang === 'fr' ? 'Détails complets de l\'intervention' : 'Complete intervention details'}
+          </div>
           {selectedIncident && (
             <div className="space-y-4">
               {/* Client */}
