@@ -1170,11 +1170,11 @@ export default function Technique() {
                           <div className="space-y-2 mb-3">
                             {incident.workItems.map((wi, idx) => {
                               const tache = wi.taches?.[0];
-                              const tacheLabel = tache ? tache.texte : wi.description;
+                              const tacheLabel = tache ? tache.texte : getWorkItemDescription(wi);
                               return (
                                 <div key={idx} className="flex items-start gap-2 text-sm">
                                   <span className="text-lg">{tache?.objet_id ? getCategoryInfo(tache.objet_id).emoji : '🔧'}</span>
-                                  <span className="font-body text-gray-700 flex-1 line-clamp-1">{tacheLabel}</span>
+                                  <span className="font-body text-gray-700 flex-1 line-clamp-2">{tacheLabel}</span>
                                 </div>
                               );
                             })}
