@@ -455,13 +455,21 @@ export default function Technique() {
     const now = new Date();
     const tempsTotal = incident.date_saisie ? differenceInMinutes(now, new Date(incident.date_saisie)) : 0;
 
-    await base44.entities.InterventionLog.create({
-      incident_id: incident.id,
-      action: 'resolu',
-      horodatage: now.toISOString(),
-      utilisateur: incident.pris_par || collaborateurNom,
-      commentaire: 'Intervention résolue'
+    // ✅ 1 SEUL ÉVÉNEMENT CENTRALISÉ
+    const event = createCleanEvent('TERMINEE', incident, {
+      origine: 'INVENTAIRE_ARRIVEE',
+      reference_id: incident.stay_id || incident.fiche_arrivee_id || incident.id,
+      service: incident.service || 'TECHNIQUE',
+      collaborateur: incident.pris_par || collaborateurNom,
+      message: `Intervention clôturée`,
+      metadata: {
+        duree_minutes: tempsTotal,
+        commentaire: commentaire || incident.commentaire_interne,
+        hebergement: incident.logement || incident.emplacement
+      }
     });
+
+    await base44.entities.SuiviEvent.create(event);
 
     updateMutation.mutate({
       id: incident.id,
@@ -473,29 +481,6 @@ export default function Technique() {
       },
       isWorkItem: incident.isWorkItem,
       workItemId: incident.workItemId
-    });
-
-    await pushClientEvent({
-      incident,
-      type: 'TERMINEE',
-      message: "Intervention technique clôturée."
-    });
-
-    await notifyBureau(`Intervention clôturée (${incident.logement || incident.emplacement})`);
-    
-    await base44.entities.HistoriqueEvent.create({
-      type_event: 'INTERVENTION_CLOTUREE',
-      titre: `Intervention cloturee - ${incident.logement || incident.emplacement}`,
-      description: `${incident.pris_par || collaborateurNom} - ${incident.categorie} - ${tempsTotal}min`,
-      service: 'TECHNIQUE',
-      hebergement: incident.logement || incident.emplacement,
-      client_nom: incident.client_nom,
-      client_prenom: incident.client_prenom,
-      collaborateur: incident.pris_par || collaborateurNom,
-      urgent: incident.urgent,
-      metadata: { duree_minutes: tempsTotal },
-      incident_id: incident.id,
-      intervention_client_id: incident.isInterventionClient ? incident.id : null
     });
 
     // Synchroniser vers SuiviInventaire (visibilité client)
