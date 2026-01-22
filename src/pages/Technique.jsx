@@ -314,13 +314,20 @@ export default function Technique() {
     const now = new Date();
     const tempsPriseEnCharge = incident.date_saisie ? differenceInMinutes(now, new Date(incident.date_saisie)) : 0;
 
-    await base44.entities.InterventionLog.create({
-      incident_id: incident.id,
-      action: 'prise_en_charge',
-      horodatage: now.toISOString(),
-      utilisateur: collaborateurNom,
-      commentaire: 'Intervention prise en charge'
+    // ✅ 1 SEUL ÉVÉNEMENT CENTRALISÉ
+    const event = createCleanEvent('PRISE_EN_CHARGE', incident, {
+      origine: 'INVENTAIRE_ARRIVEE',
+      reference_id: incident.stay_id || incident.fiche_arrivee_id || incident.id,
+      service: incident.service || 'TECHNIQUE',
+      collaborateur: collaborateurNom,
+      message: `Prise en charge par ${collaborateurNom}`,
+      metadata: {
+        temps_prise_en_charge: tempsPriseEnCharge,
+        hebergement: incident.logement || incident.emplacement
+      }
     });
+
+    await base44.entities.SuiviEvent.create(event);
 
     updateMutation.mutate({
       id: incident.id,
@@ -332,28 +339,6 @@ export default function Technique() {
       },
       isWorkItem: incident.isWorkItem,
       workItemId: incident.workItemId
-    });
-
-    await pushClientEvent({
-      incident,
-      type: 'PRISE_EN_CHARGE',
-      message: "L'intervention technique a commencé."
-    });
-
-    await notifyBureau(`Intervention technique prise en charge par ${collaborateurNom} - ${incident.logement || incident.emplacement}`);
-    
-    await base44.entities.HistoriqueEvent.create({
-      type_event: 'INTERVENTION_PRISE_EN_CHARGE',
-      titre: `Intervention prise en charge - ${incident.logement || incident.emplacement}`,
-      description: `${collaborateurNom} - ${incident.categorie}`,
-      service: 'TECHNIQUE',
-      hebergement: incident.logement || incident.emplacement,
-      client_nom: incident.client_nom,
-      client_prenom: incident.client_prenom,
-      collaborateur: collaborateurNom,
-      urgent: incident.urgent,
-      incident_id: incident.id,
-      intervention_client_id: incident.isInterventionClient ? incident.id : null
     });
 
     // Synchroniser vers SuiviInventaire (visibilité client)
