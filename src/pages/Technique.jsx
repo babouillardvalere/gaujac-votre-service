@@ -600,7 +600,8 @@ export default function Technique() {
         attente_date: new Date().toISOString()
       },
       isWorkItem: incidentToWait.isWorkItem,
-      workItemId: incidentToWait.workItemId
+      workItemId: incidentToWait.workItemId,
+      closeIncidentModal: true // Signal pour fermer la modale principale
     });
 
     await pushClientEvent({
