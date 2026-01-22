@@ -792,11 +792,14 @@ export default function Menage() {
       if (filter !== 'tous' && mappedStatut !== filter) return false;
       return true;
     })
-    .map(wi => ({
+    .map(wi => {
+      const descOp = wi.description_operationnelle || getWorkItemDescription(wi);
+      console.log('[MENAGE_CONVERT] WorkItem', wi.hebergement, 'description_operationnelle:', descOp?.substring(0, 50));
+      return {
       id: wi.id,
       type: 'menage',
       categorie: 'materiel_menage',
-      description_operationnelle: wi.description_operationnelle || getWorkItemDescription(wi),
+      description_operationnelle: descOp,
       description: wi.description || getWorkItemDescription(wi),
       urgent: wi.priorite === 'URGENTE',
       client_nom: wi.client_nom,
@@ -824,7 +827,8 @@ export default function Menage() {
       taches: wi.taches || [],
       type_hebergement: wi.type_hebergement,
       deleted_at: wi.deleted_at || null
-    }));
+    };
+    });
 
   // Regrouper visuellement les WorkItems
   const groupedWorkItems = groupWorkItems(convertedWorkItems);
@@ -1113,7 +1117,11 @@ export default function Menage() {
                         </>
                       ) : (
                         <div className="mb-3">
-                          {incident.description_operationnelle ? (
+                          {(() => {
+                            console.log('[MENAGE_RENDER] Incident', incident.logement, 'desc_op:', incident.description_operationnelle?.substring(0, 50), 'taches:', incident.taches?.length);
+                            return null;
+                          })()}
+                          {incident.description_operationnelle && incident.description_operationnelle.trim() ? (
                             <pre className="font-body text-gray-700 whitespace-pre-wrap text-sm bg-blue-50 p-3 rounded border-l-4 border-blue-500">
                               {incident.description_operationnelle}
                             </pre>

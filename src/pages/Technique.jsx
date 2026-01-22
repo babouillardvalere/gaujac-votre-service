@@ -834,11 +834,14 @@ export default function Technique() {
 
   // Conversion des WorkItems en format compatible Incident
   const convertedWorkItems = safeWorkItemsTechnique
-    .map(wi => ({
+    .map(wi => {
+      const descOp = wi.description_operationnelle || getWorkItemDescription(wi);
+      console.log('[TECH_CONVERT] WorkItem', wi.hebergement, 'description_operationnelle:', descOp?.substring(0, 50));
+      return {
       id: wi.id,
       type: 'technique',
       categorie: 'divers_technique',
-      description_operationnelle: wi.description_operationnelle || getWorkItemDescription(wi),
+      description_operationnelle: descOp,
       description: wi.description || getWorkItemDescription(wi),
       urgent: wi.priorite === 'URGENTE',
       client_nom: wi.client_nom,
@@ -866,7 +869,8 @@ export default function Technique() {
       taches: wi.taches || [],
       type_hebergement: wi.type_hebergement,
       deleted_at: wi.deleted_at || null
-    }));
+    };
+    });
 
   // Convertir les MissionDirection en format compatible
   const convertedMissionsDirection = missionsDirectionGlobal
@@ -1195,7 +1199,11 @@ export default function Technique() {
                         </>
                       ) : (
                         <div className="mb-3">
-                          {incident.description_operationnelle ? (
+                          {(() => {
+                            console.log('[TECH_RENDER] Incident', incident.logement, 'desc_op:', incident.description_operationnelle?.substring(0, 50), 'taches:', incident.taches?.length);
+                            return null;
+                          })()}
+                          {incident.description_operationnelle && incident.description_operationnelle.trim() ? (
                             <pre className="font-body text-gray-700 whitespace-pre-wrap text-sm bg-blue-50 p-3 rounded border-l-4 border-blue-500">
                               {incident.description_operationnelle}
                             </pre>
