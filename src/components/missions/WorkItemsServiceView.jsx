@@ -392,7 +392,7 @@ export default function WorkItemsServiceView({ service }) {
           </CardContent>
         </Card>
 
-        {!selectedWorkItem.collaborateur && (
+        {!selectedWorkItem.collaborateur ? (
           <Card className="border-2 border-yellow-400 bg-yellow-50">
             <CardContent className="p-4 space-y-3">
               <h3 className="font-heading text-lg text-yellow-900">📝 Identification requise</h3>
@@ -417,9 +417,9 @@ export default function WorkItemsServiceView({ service }) {
               </Button>
             </CardContent>
           </Card>
-        )}
-
-        {/* COMPTE RENDU GLOBAL - TOUJOURS VISIBLE */}
+        ) : (
+          <>
+        {/* COMPTE RENDU GLOBAL */}
         <Card className="border-2 border-blue-400 bg-blue-50">
           <CardContent className="p-4">
             <label className="text-sm font-bold text-blue-900 mb-2 block">
@@ -586,6 +586,8 @@ export default function WorkItemsServiceView({ service }) {
             </Button>
           </CardContent>
         </Card>
+          </>
+        )}
       </div>
     );
   }
