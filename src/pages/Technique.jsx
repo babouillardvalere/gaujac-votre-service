@@ -572,6 +572,26 @@ export default function Technique() {
       formData
     });
 
+    // ✅ 1 SEUL ÉVÉNEMENT CENTRALISÉ
+    const event = createCleanEvent('MISE_EN_ATTENTE', incidentToWait, {
+      origine: 'INVENTAIRE_ARRIVEE',
+      reference_id: incidentToWait.stay_id || incidentToWait.fiche_arrivee_id || incidentToWait.id,
+      service: incidentToWait.service || 'TECHNIQUE',
+      collaborateur: incidentToWait.pris_par,
+      message: `Mise en attente: ${formData.raison}`,
+      metadata: {
+        raison_attente: formData.raison,
+        motif_attente: formData.motifAttente,
+        materiel: formData.materiel,
+        materiel_detail: formData.materielDetail,
+        delai: formData.delai,
+        commentaire: formData.commentaire,
+        hebergement: incidentToWait.logement || incidentToWait.emplacement
+      }
+    });
+
+    await base44.entities.SuiviEvent.create(event);
+
     // Fermer le dialog attente IMMÉDIATEMENT
     setShowAttenteDialog(false);
 
@@ -591,31 +611,6 @@ export default function Technique() {
       workItemId: incidentToWait.workItemId,
       closeIncidentModal: true,
       switchToAttenteTab: true
-    });
-
-    await pushClientEvent({
-      incident: incidentToWait,
-      type: 'EN_ATTENTE',
-      message: "Intervention temporairement en attente.",
-      attenteRaison: formData.raison,
-      delaiEstime: formData.delai
-    });
-
-    await notifyBureau(`Intervention en attente - ${formData.raison} (${incidentToWait.logement})`);
-    
-    await base44.entities.HistoriqueEvent.create({
-      type_event: 'INTERVENTION_MISE_EN_ATTENTE',
-      titre: `Intervention mise en attente - ${incidentToWait.logement || incidentToWait.emplacement}`,
-      description: `${formData.raison} - ${formData.motifAttente}`,
-      service: 'TECHNIQUE',
-      hebergement: incidentToWait.logement || incidentToWait.emplacement,
-      client_nom: incidentToWait.client_nom,
-      client_prenom: incidentToWait.client_prenom,
-      collaborateur: incidentToWait.pris_par,
-      urgent: incidentToWait.urgent,
-      metadata: { raison: formData.raison, delai: formData.delai },
-      incident_id: incidentToWait.id,
-      intervention_client_id: incidentToWait.isInterventionClient ? incidentToWait.id : null
     });
 
     // Synchroniser vers SuiviInventaire (visibilité client)
@@ -650,7 +645,6 @@ export default function Technique() {
       }
     }
 
-    setShowAttenteDialog(false);
     setIncidentToWait(null);
   };
 
