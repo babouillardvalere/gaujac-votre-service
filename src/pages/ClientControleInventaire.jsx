@@ -8,6 +8,7 @@ import SignaturePad from "../components/SignaturePad";
 import ArriveeProgressBar from "../components/ArriveeProgressBar";
 import { getInventaireParCategorie } from "../components/categoryCodeMapping";
 import InventaireItemRow from "../components/InventaireItemRow";
+import InventaireAffichageCategories from "../components/inventaire/InventaireAffichageCategories";
 import { ConfigurationLiterie, isLiterieTechnique } from "../components/literieConfig";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
@@ -1013,27 +1014,21 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
       {/* Configuration literie */}
       <ConfigurationLiterie categorie={categorie} lang={lang} />
 
-      <Card className="mb-6">
-        <CardContent className="p-6 space-y-3">
-          {items.map(item => (
-            <InventaireItemRow
-              key={item.id}
-              item={{ ...item, emoji: item.icon, qty: item.quantity }}
-              quantity={quantities[item.id]}
-              photos={photos[item.id] || []}
-              remarque={remarques[item.id] || ''}
-              onQuantityChange={handleQuantityChange}
-              onPhotosChange={handlePhotosChange}
-              onRemarqueChange={handleRemarqueChange}
-              onUrgencyChange={handleUrgencyChange}
-              onProblemeTechnique={handleProblemeTechnique}
-              urgent={urgencies[item.id]}
-              problemeTechniqueSignale={problemesTechniques[item.id]}
-              lang={lang}
-            />
-          ))}
-        </CardContent>
-      </Card>
+      {/* Affichage catégorisé de l'inventaire */}
+      <InventaireAffichageCategories
+        items={items}
+        quantities={quantities}
+        photos={photos}
+        remarques={remarques}
+        urgencies={urgencies}
+        problemesTechniques={problemesTechniques}
+        onQuantityChange={handleQuantityChange}
+        onPhotosChange={handlePhotosChange}
+        onRemarqueChange={handleRemarqueChange}
+        onUrgencyChange={handleUrgencyChange}
+        onProblemeTechnique={handleProblemeTechnique}
+        lang={lang}
+      />
 
       {/* Autorisation d'accès */}
       <Card className="mb-6 border-2 border-[#FFA500]">
