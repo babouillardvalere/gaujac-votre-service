@@ -975,13 +975,12 @@ export default function Technique() {
       missionDirectionData: m
     }));
 
-  // Regrouper visuellement les WorkItems
-  const groupedWorkItems = groupWorkItems(convertedWorkItems);
+  // 🎯 NOUVEAU: Regroupement par logement/séjour unifié (SERVICE-AGNOSTIQUE)
+  // Fusionne Technique + Ménage dans une seule structure par logement
+  const logementGroups = groupByLogement(convertedWorkItems);
   
-  // 🔒 PROTECTION: WorkItems UNIQUEMENT pour les contrôles inventaire
-  // Les Incidents legacy peuvent exister pour signalements directs uniquement
-  // PRIORITÉ 1: Séparation stricte - Interventions Clients UNIQUEMENT
-  const allIncidents = [...groupedWorkItems];
+  // 🔒 PROTECTION: Afficher le regroupement unifié avec marqueurs de service
+  const allIncidents = [...logementGroups];
 
   // 🚫 GARDE ANTI-ORPHELIN: exclure les supprimés
   const activeIncidents = filterActive(allIncidents);
