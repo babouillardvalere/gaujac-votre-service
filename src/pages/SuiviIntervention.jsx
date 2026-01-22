@@ -251,8 +251,7 @@ export default function SuiviIntervention() {
               {resolvedIncidents.map(incident => (
                 <Card key={incident.id} className="mb-3">
                   <CardContent className="p-4">
-                    <CheckCircle className="text-green-500 mb-2" />
-                    {t('resolu')}
+                    <InterventionTimeline incident={incident} />
                   </CardContent>
                 </Card>
               ))}
