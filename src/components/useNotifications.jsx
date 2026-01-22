@@ -4,11 +4,12 @@ import { differenceInMinutes } from 'date-fns';
 import { getNotificationPriority, PRIORITY_LEVELS } from './notificationBatching';
 
 export function useNotifications() {
-  // Interventions en attente (nouvelles) - polling à 30s au lieu de 10s
+  // Interventions en attente (nouvelles) - polling réduit + limit
   const { data: pendingIncidents = [] } = useQuery({
     queryKey: ['notif-pending'],
-    queryFn: () => base44.entities.Incident.filter({ statut: 'en_attente' }, '-date_saisie', 100),
-    refetchInterval: 30000 // 30 secondes au lieu de 10
+    queryFn: () => base44.entities.Incident.filter({ statut: 'en_attente', deleted_at: null }, '-date_saisie', 50),
+    refetchInterval: 45000, // 45 secondes
+    staleTime: 40000,
   });
 
   // InterventionClient en attente (contrôles inventaire) - polling à 30s
@@ -18,11 +19,12 @@ export function useNotifications() {
     refetchInterval: 30000
   });
 
-  // Interventions urgentes - polling à 15s (plus rapide pour les urgences)
+  // Interventions urgentes - polling réduit
   const { data: urgentIncidents = [] } = useQuery({
     queryKey: ['notif-urgent'],
-    queryFn: () => base44.entities.Incident.filter({ urgent: true, statut: 'en_attente' }, '-date_saisie', 50),
-    refetchInterval: 15000 // 15 secondes pour les urgences
+    queryFn: () => base44.entities.Incident.filter({ urgent: true, statut: 'en_attente', deleted_at: null }, '-date_saisie', 30),
+    refetchInterval: 20000, // 20 secondes
+    staleTime: 18000,
   });
 
   // InterventionClient urgentes
@@ -32,48 +34,52 @@ export function useNotifications() {
     refetchInterval: 15000
   });
 
-  // Interventions en attente matériel - polling à 60s (moins urgent)
+  // Interventions en attente matériel - polling très réduit
   const { data: waitingIncidents = [] } = useQuery({
     queryKey: ['notif-waiting'],
-    queryFn: () => base44.entities.Incident.filter({ statut: 'en_attente_materiel' }, '-attente_date', 50),
-    refetchInterval: 60000 // 60 secondes
+    queryFn: () => base44.entities.Incident.filter({ statut: 'en_attente_materiel', deleted_at: null }, '-attente_date', 30),
+    refetchInterval: 90000, // 90 secondes
+    staleTime: 85000,
   });
 
-  // Interventions récemment résolues (moins de 30 min) - polling à 60s
+  // Interventions récemment résolues (moins de 30 min) - polling très réduit
   const { data: recentlyResolved = [] } = useQuery({
     queryKey: ['notif-resolved'],
     queryFn: async () => {
-      const resolved = await base44.entities.Incident.filter({ statut: 'resolu' }, '-date_resolution', 20);
+      const resolved = await base44.entities.Incident.filter({ statut: 'resolu', deleted_at: null }, '-date_resolution', 15);
       return resolved.filter(i => i.date_resolution && differenceInMinutes(new Date(), new Date(i.date_resolution)) < 30);
     },
-    refetchInterval: 60000 // 60 secondes
+    refetchInterval: 120000, // 2 minutes
+    staleTime: 110000,
   });
 
-  // Nouveaux avis (moins de 30 min) - polling à 60s
+  // Nouveaux avis (moins de 30 min) - polling très réduit
   const { data: recentAvis = [] } = useQuery({
     queryKey: ['notif-avis'],
     queryFn: async () => {
-      const avis = await base44.entities.Avis.list('-created_date', 20);
+      const avis = await base44.entities.Avis.list('-created_date', 15);
       return avis.filter(a => a.created_date && differenceInMinutes(new Date(), new Date(a.created_date)) < 30);
     },
-    refetchInterval: 60000 // 60 secondes
+    refetchInterval: 120000, // 2 minutes
+    staleTime: 110000,
   });
 
-  // Alertes stock - polling à 120s (peu urgent)
+  // Alertes stock - polling très réduit
   const { data: stockAlerts = [] } = useQuery({
     queryKey: ['notif-stock'],
     queryFn: async () => {
-      const stock = await base44.entities.Stock.list();
+      const stock = await base44.entities.Stock.list('-updated_date', 50);
       return stock.filter(s => s.quantite <= s.seuil_alerte);
     },
-    refetchInterval: 120000 // 120 secondes (2 minutes)
+    refetchInterval: 180000, // 3 minutes
+    staleTime: 170000,
   });
 
-  // Tâches urgentes ou en retard - polling à 60s
+  // Tâches urgentes ou en retard - polling très réduit
   const { data: urgentTaches = [] } = useQuery({
     queryKey: ['notif-taches'],
     queryFn: async () => {
-      const taches = await base44.entities.Tache.filter({ statut: 'a_faire' }, '-date_echeance', 50);
+      const taches = await base44.entities.Tache.filter({ statut: 'a_faire' }, '-date_echeance', 30);
       const now = new Date();
       return taches.filter(t => {
         if (t.priorite === 'urgente') return true;
@@ -82,7 +88,8 @@ export function useNotifications() {
         return false;
       });
     },
-    refetchInterval: 60000 // 60 secondes
+    refetchInterval: 120000, // 2 minutes
+    staleTime: 110000,
   });
 
   // Trier les incidents par priorité (urgences critiques en haut)
