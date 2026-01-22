@@ -880,44 +880,51 @@ export default function Technique() {
   );
 
   // Conversion des WorkItems en format compatible Incident
-  const convertedWorkItems = safeWorkItemsTechnique
-    .map(wi => {
-      const descOp = wi.description_operationnelle || getWorkItemDescription(wi);
-      console.log('[TECH_CONVERT] WorkItem', wi.hebergement, 'description_operationnelle:', descOp?.substring(0, 50));
-      return {
-      id: wi.id,
-      type: 'technique',
-      categorie: 'divers_technique',
-      description_operationnelle: descOp,
-      description: wi.description || getWorkItemDescription(wi),
-      urgent: wi.priorite === 'URGENTE',
-      client_nom: wi.client_nom,
-      client_prenom: wi.client_prenom,
-      logement: wi.hebergement,
-      emplacement: null,
-      date_saisie: wi.created_date,
-      date_arrivee: wi.date_arrivee,
-      date_depart: wi.date_depart,
-      pris_par: wi.collaborateur,
-      date_debut: wi.date_prise_en_charge,
-      date_resolution: wi.date_terminee,
-      statut: wi.statut === 'A_FAIRE' ? 'en_attente' : 
-              wi.statut === 'EN_COURS' ? 'en_cours' :
-              wi.statut === 'EN_ATTENTE' ? 'en_attente_materiel' : 'resolu',
-      autorisation_acces: wi.autorisation_acces,
-      plage_horaire_client: wi.plages_horaires?.join(', '),
-      commentaire_interne: '',
-      motif_attente: '',
-      intervention_id: wi.intervention_client_id,
-      fiche_arrivee_id: wi.fiche_arrivee_id,
-      isWorkItem: true,
-      workItemId: wi.id,
-      titre: wi.titre,
-      taches: wi.taches || [],
-      type_hebergement: wi.type_hebergement,
-      deleted_at: wi.deleted_at || null
-    };
-    });
+   const convertedWorkItems = safeWorkItemsTechnique
+     .map(wi => {
+       const descOp = wi.description_operationnelle || getWorkItemDescription(wi);
+       console.log('[TECH_CONVERT] WorkItem', wi.hebergement, 'description_operationnelle:', descOp?.substring(0, 50));
+       // Récupérer les champs d'attente depuis metadata s'ils existent
+       const attenteData = wi.metadata || {};
+       return {
+       id: wi.id,
+       workItemId: wi.id, // ✅ CRUCIAL: disponible immédiatement
+       isWorkItem: true,  // ✅ CRUCIAL: marqué comme WorkItem
+       type: 'technique',
+       categorie: 'divers_technique',
+       description_operationnelle: descOp,
+       description: wi.description || getWorkItemDescription(wi),
+       urgent: wi.priorite === 'URGENTE',
+       client_nom: wi.client_nom,
+       client_prenom: wi.client_prenom,
+       logement: wi.hebergement,
+       emplacement: null,
+       date_saisie: wi.created_date,
+       date_arrivee: wi.date_arrivee,
+       date_depart: wi.date_depart,
+       pris_par: wi.collaborateur,
+       date_debut: wi.date_prise_en_charge,
+       date_resolution: wi.date_terminee,
+       statut: wi.statut === 'A_FAIRE' ? 'en_attente' : 
+               wi.statut === 'EN_COURS' ? 'en_cours' :
+               wi.statut === 'EN_ATTENTE' ? 'en_attente_materiel' : 'resolu',
+       autorisation_acces: wi.autorisation_acces,
+       plage_horaire_client: wi.plages_horaires?.join(', '),
+       commentaire_interne: '',
+       motif_attente: attenteData.motif_attente || '',
+       attente_raison: attenteData.attente_raison,
+       attente_materiel: attenteData.attente_materiel,
+       attente_materiel_detail: attenteData.attente_materiel_detail,
+       attente_delai: attenteData.attente_delai,
+       attente_commentaire: attenteData.attente_commentaire,
+       intervention_id: wi.intervention_client_id,
+       fiche_arrivee_id: wi.fiche_arrivee_id,
+       titre: wi.titre,
+       taches: wi.taches || [],
+       type_hebergement: wi.type_hebergement,
+       deleted_at: wi.deleted_at || null
+     };
+     });
 
   // Convertir les MissionDirection en format compatible
   const convertedMissionsDirection = missionsDirectionGlobal
