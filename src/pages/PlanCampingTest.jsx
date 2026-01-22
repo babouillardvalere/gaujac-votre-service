@@ -7,6 +7,7 @@ import { ArrowLeft, MapPin, CheckCircle, Home, Tent } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import Logo from '../components/Logo';
+import { base44 } from '@/api/base44Client';
 
 // CODE COULEUR PAR CATÉGORIE
 const COULEURS_CATEGORIES = {
@@ -57,14 +58,39 @@ export default function PlanCampingTest() {
     setShowConfirmModal(true);
   };
 
-  const handleConfirmSelection = () => {
-    // Enregistrer la sélection en session
-    sessionStorage.setItem('arrivee_type', selectedZone.type_locatif === 'emplacement' ? 'emplacement' : 'mobilhome');
-    sessionStorage.setItem('arrivee_categorie', selectedZone.categorie);
-    sessionStorage.setItem('arrivee_numero', selectedZone.numero);
-    
-    // Transition automatique vers contrôle inventaire
-    navigate(createPageUrl('ClientControleInventaire'));
+  const handleConfirmSelection = async () => {
+    try {
+      // Enregistrer la sélection en session
+      const typeLogement = selectedZone.type_locatif === 'emplacement' ? 'emplacement' : 'mobilhome';
+      sessionStorage.setItem('arrivee_type_logement', typeLogement);
+      sessionStorage.setItem('arrivee_categorie', selectedZone.categorie);
+      sessionStorage.setItem('arrivee_numero', selectedZone.numero);
+      
+      // Mettre à jour stay_id avec le vrai numéro
+      const dateArrivee = sessionStorage.getItem('arrivee_date_arrivee') || new Date().toISOString().split('T')[0];
+      const dateFormatted = dateArrivee.replace(/-/g, '');
+      const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const stayId = `ARR-${selectedZone.numero}-${dateFormatted}-${random}`;
+      sessionStorage.setItem('stay_id', stayId);
+
+      // Mettre à jour le dossier arrivée
+      const dossierId = sessionStorage.getItem('arrivee_dossier_id');
+      if (dossierId) {
+        await base44.entities.DossierArrivee.update(dossierId, {
+          type_logement: typeLogement,
+          categorie_logement: selectedZone.categorie,
+          numero_logement: selectedZone.numero,
+          etape_3_terminee: true,
+          etape_actuelle: 4
+        });
+      }
+      
+      // Transition automatique vers contrôle inventaire
+      navigate(createPageUrl('ClientControleInventaire'));
+    } catch (error) {
+      console.error('Erreur sélection plan:', error);
+      navigate(createPageUrl('ClientControleInventaire'));
+    }
   };
 
   const handleModifySelection = () => {
