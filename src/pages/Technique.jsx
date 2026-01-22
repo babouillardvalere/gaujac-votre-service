@@ -521,13 +521,22 @@ export default function Technique() {
     const now = new Date();
     const tempsTotal = incidentForPhoto.date_saisie ? differenceInMinutes(now, new Date(incidentForPhoto.date_saisie)) : 0;
 
-    await base44.entities.InterventionLog.create({
-      incident_id: incidentForPhoto.id,
-      action: 'resolu',
-      horodatage: now.toISOString(),
-      utilisateur: incidentForPhoto.pris_par || collaborateurNom,
-      commentaire: 'Intervention résolue avec photo APRES'
+    // ✅ 1 SEUL ÉVÉNEMENT CENTRALISÉ
+    const event = createCleanEvent('TERMINEE', incidentForPhoto, {
+      origine: 'INVENTAIRE_ARRIVEE',
+      reference_id: incidentForPhoto.stay_id || incidentForPhoto.fiche_arrivee_id || incidentForPhoto.id,
+      service: incidentForPhoto.service || 'TECHNIQUE',
+      collaborateur: incidentForPhoto.pris_par || collaborateurNom,
+      message: `Intervention clôturée avec photo APRÈS`,
+      metadata: {
+        duree_minutes: tempsTotal,
+        photo_apres_url: photoData.url,
+        commentaire: commentaire || incidentForPhoto.commentaire_interne,
+        hebergement: incidentForPhoto.logement || incidentForPhoto.emplacement
+      }
     });
+
+    await base44.entities.SuiviEvent.create(event);
 
     updateMutation.mutate({
       id: incidentForPhoto.id,
@@ -544,13 +553,6 @@ export default function Technique() {
       workItemId: incidentForPhoto.workItemId
     });
 
-    await pushClientEvent({
-      incident: incidentForPhoto,
-      type: 'TERMINEE',
-      message: "Intervention technique clôturée."
-    });
-
-    await notifyBureau(`Intervention clôturée avec photo (${incidentForPhoto.logement || incidentForPhoto.emplacement})`);
     setIncidentForPhoto(null);
     setCommentaire('');
   };
