@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CATEGORIES_INVENTAIRE, getLabelObjet } from './InventaireCategoriesReferentiel';
+import { CATEGORIES_INVENTAIRE } from './InventaireCategoriesReferentiel';
 import InventaireItemRow from '../InventaireItemRow';
 
 /**

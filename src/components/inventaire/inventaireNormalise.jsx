@@ -3,7 +3,7 @@
  * Structure unique pour tous les hébergements - seules les quantités varient
  */
 
-import { CATEGORIES_INVENTAIRE, OBJETS_LABELS } from './InventaireCategoriesReferentiel';
+import { CATEGORIES_INVENTAIRE, OBJETS_LABELS, getCategorieObjet } from './InventaireCategoriesReferentiel';
 
 /**
  * RÉFÉRENTIEL DES QUANTITÉS PAR TYPE D'HÉBERGEMENT
