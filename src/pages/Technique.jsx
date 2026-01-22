@@ -168,7 +168,7 @@ export default function Technique() {
         if (data.date_debut) workItemData.date_prise_en_charge = data.date_debut;
         if (data.date_resolution) workItemData.date_terminee = data.date_resolution;
         if (data.temps_total_intervention !== undefined) workItemData.duree_minutes = data.temps_total_intervention;
-        
+
         // Synchroniser les champs d'attente pour WorkItems
         if (data.attente_raison || data.motif_attente) {
           if (!workItemData.metadata) workItemData.metadata = {};
@@ -180,17 +180,20 @@ export default function Technique() {
           workItemData.metadata.attente_commentaire = data.attente_commentaire;
           workItemData.metadata.attente_date = data.attente_date;
         }
-        
+
         console.log('[TECHNIQUE] Update WorkItem:', workItemId, workItemData);
         return base44.entities.WorkItem.update(workItemId, workItemData);
       }
       return base44.entities.Incident.update(id, data);
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['incidents-technique'] });
       queryClient.invalidateQueries({ queryKey: ['workitems-technique'] });
       toast.success(t('intervention_mise_a_jour'));
-      setSelectedIncident(null);
+      // Fermer la modale d'intervention si mise en attente
+      if (variables.closeIncidentModal) {
+        setSelectedIncident(null);
+      }
     }
   });
 
