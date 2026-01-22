@@ -596,6 +596,9 @@ export default function Technique() {
       formData
     });
 
+    // Fermer le dialog attente IMMÉDIATEMENT
+    setShowAttenteDialog(false);
+
     updateMutation.mutate({
       id: incidentToWait.id,
       data: {
@@ -610,8 +613,8 @@ export default function Technique() {
       },
       isWorkItem: incidentToWait.isWorkItem,
       workItemId: incidentToWait.workItemId,
-      closeIncidentModal: true, // Signal pour fermer la modale principale
-      switchToAttenteTab: true // Signal pour changer l'onglet vers attente
+      closeIncidentModal: true,
+      switchToAttenteTab: true
     });
 
     await pushClientEvent({
