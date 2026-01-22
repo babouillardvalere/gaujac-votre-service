@@ -6,7 +6,8 @@ import { useTranslation } from "../components/translations";
 import Logo from "../components/Logo";
 import SignaturePad from "../components/SignaturePad";
 import ArriveeProgressBar from "../components/ArriveeProgressBar";
-import { getInventaireParCategorie } from "../components/categoryCodeMapping";
+import { getInventaireParCategorie, getCodeFromCategory } from "../components/categoryCodeMapping";
+import { getInventaireNormalise } from "../components/inventaire/inventaireNormalise";
 import InventaireItemRow from "../components/InventaireItemRow";
 import InventaireAffichageCategories from "../components/inventaire/InventaireAffichageCategories";
 import { ConfigurationLiterie, isLiterieTechnique } from "../components/literieConfig";
@@ -46,7 +47,13 @@ export default function ClientControleInventaire() {
   const [showRecap, setShowRecap] = useState(false);
   const [finalReceipt, setFinalReceipt] = useState(null);
 
-  const inventaire = useMemo(() => getInventaireParCategorie(categorie, lang), [categorie, lang]);
+  // Utiliser le nouvel inventaire normalisé par catégories
+  const inventaire = useMemo(() => {
+    const code = getCodeFromCategory(categorie);
+    if (!code) return null;
+    return getInventaireNormalise(code, lang);
+  }, [categorie, lang]);
+  
   const items = inventaire?.objets || [];
 
   useEffect(() => {
@@ -1004,12 +1011,28 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
         </CardContent>
       </Card>
 
-      <h1 className="text-2xl font-bold text-center mb-2">
-        {lang === "fr" ? "Contrôle inventaire" : "Inventory check"}
-      </h1>
-      <p className="text-center text-gray-600 mb-6">
-        {categorie} {numero} • {nom} {prenom}
-      </p>
+      {/* EN-TÊTE STANDARDISÉ */}
+      <Card className="mb-6 border-2 border-blue-500 bg-blue-50">
+        <CardContent className="p-6">
+          <h1 className="text-2xl font-bold text-blue-900 mb-4">
+            📋 {lang === "fr" ? "Contrôle inventaire" : "Inventory check"}
+          </h1>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <p className="text-gray-600">{lang === "fr" ? "Nom du client" : "Guest name"}</p>
+              <p className="font-bold text-lg">{prenom} {nom}</p>
+            </div>
+            <div>
+              <p className="text-gray-600">{lang === "fr" ? "Période de séjour" : "Stay period"}</p>
+              <p className="font-bold text-lg">{dateArrivee} → {dateDepart}</p>
+            </div>
+            <div className="md:col-span-2">
+              <p className="text-gray-600">{lang === "fr" ? "Type d'hébergement" : "Accommodation type"}</p>
+              <p className="font-bold text-lg text-blue-700">{categorie} {numero}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Configuration literie */}
       <ConfigurationLiterie categorie={categorie} lang={lang} />
