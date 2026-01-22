@@ -1110,7 +1110,24 @@ export default function Menage() {
                           )}
                         </>
                       ) : (
-                        <p className="font-body text-gray-700 mb-3 line-clamp-2">{getDescriptionOperationnelle(incident) || "⚠️ Aucune description"}</p>
+                        <>
+                          {incident.taches && incident.taches.length > 0 ? (
+                            <div className="space-y-1 mb-3">
+                              {incident.taches.map((tache, idx) => (
+                                <div key={idx} className="flex items-start gap-2 text-sm bg-gray-50 p-2 rounded">
+                                  <span className="text-base">{tache.objet_id ? getCategoryInfo(tache.objet_id).emoji : '🧹'}</span>
+                                  <p className="font-body text-gray-700 flex-1">{tache.texte}</p>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="mb-3">
+                              <pre className="font-body text-gray-700 whitespace-pre-wrap text-sm bg-yellow-50 p-3 rounded border-l-4 border-yellow-500">
+                                {incident.isWorkItem ? getWorkItemDescription(incident) : (getDescriptionOperationnelle(incident) || "⚠️ Aucune description")}
+                              </pre>
+                            </div>
+                          )}
+                        </>
                       )}
 
                       <div className="flex items-center justify-between text-xs text-gray-500 font-body mt-3">
@@ -1190,7 +1207,27 @@ export default function Menage() {
               <div>
                <label className="text-sm font-heading text-[#0077A8] mb-2 block">📋 {t('description')}</label>
 
-               {getDescriptionOperationnelle(selectedIncident) ? (
+               {/* Afficher les tâches si présentes */}
+               {selectedIncident.taches && selectedIncident.taches.length > 0 ? (
+                 <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 rounded">
+                   <p className="text-xs text-yellow-600 font-semibold mb-2">Actions à réaliser:</p>
+                   <div className="space-y-2">
+                     {selectedIncident.taches.map((tache, idx) => (
+                       <div key={idx} className="flex items-start gap-2 bg-white p-2 rounded">
+                         <span className="text-lg">{tache.objet_id ? getCategoryInfo(tache.objet_id).emoji : '🧹'}</span>
+                         <p className="font-body text-gray-800 text-sm flex-1">{tache.texte}</p>
+                       </div>
+                     ))}
+                   </div>
+                 </div>
+               ) : selectedIncident.isWorkItem && selectedIncident.description_operationnelle ? (
+                 <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 rounded">
+                   <p className="text-xs text-yellow-600 font-semibold mb-2">Actions à réaliser:</p>
+                   <pre className="font-body text-gray-800 whitespace-pre-wrap text-sm">
+                     {selectedIncident.description_operationnelle}
+                   </pre>
+                 </div>
+               ) : getDescriptionOperationnelle(selectedIncident) ? (
                  <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 rounded">
                    <p className="text-xs text-yellow-600 font-semibold mb-2">Actions à réaliser:</p>
                    <pre className="font-body text-gray-800 whitespace-pre-wrap text-sm">
@@ -1211,8 +1248,8 @@ export default function Menage() {
                    <Textarea
                      value={descriptionOpSaisie}
                      onChange={(e) => setDescriptionOpSaisie(e.target.value)}
-                     placeholder="Ex: Laver les sols, faire les lits, vidanger poubelles..."
-                     className="bg-white border-[#FFD700]/50 rounded-xl"
+                     placeholder="Ex: Remplacer ampoule, vérifier prise, tester disjoncteur..."
+                     className="bg-white border-[#00AEEF]/30 rounded-xl"
                      rows={3}
                    />
                  </div>
