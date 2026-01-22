@@ -238,12 +238,12 @@ export default function ClientControleInventaire() {
     
     // CRITIQUE: description_operationnelle ENRICHIE pour visibilité claire
     const descriptionOperationnelle = `📋 Contrôle inventaire ${categorie} ${numero}
-👤 ${prenom} ${nom}
-📅 Séjour: ${dateArrivee} → ${dateDepart}
-⚠️ ${items.length} anomalie(s) - Service ${service}
+    👤 ${prenom} ${nom}
+    📅 Séjour: ${dateArrivee} → ${dateDepart}
+    ⚠️ ${items.length} anomalie(s) - Service ${service}
 
-Détail des anomalies:
-${taches.map((t, idx) => `${idx + 1}. ${t.texte}`).join('\n')}`;
+    📋 TÂCHES À RÉALISER:
+    ${taches.map((t, idx) => `${idx + 1}. ${t.texte}`).join('\n')}`;
     
     // FIX #4: Utiliser createWorkItem via factory (déclenche SuiviEvent automatiquement)
     const { createWorkItem } = await import('../components/workItemCreator');
