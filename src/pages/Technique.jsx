@@ -1195,9 +1195,24 @@ export default function Technique() {
                         </>
                       ) : (
                         <div className="mb-3">
-                          <pre className="font-body text-gray-700 whitespace-pre-wrap text-sm bg-blue-50 p-3 rounded border-l-4 border-blue-500">
-                            {incident.description_operationnelle || getDescriptionOperationnelle(incident) || "⚠️ Aucune description"}
-                          </pre>
+                          {incident.description_operationnelle ? (
+                            <pre className="font-body text-gray-700 whitespace-pre-wrap text-sm bg-blue-50 p-3 rounded border-l-4 border-blue-500">
+                              {incident.description_operationnelle}
+                            </pre>
+                          ) : incident.taches && incident.taches.length > 0 ? (
+                            <div className="space-y-1">
+                              {incident.taches.map((tache, idx) => (
+                                <div key={idx} className="flex items-start gap-2 text-sm bg-gray-50 p-2 rounded">
+                                  <span className="text-base">{tache.objet_id ? getCategoryInfo(tache.objet_id).emoji : '🔧'}</span>
+                                  <p className="font-body text-gray-700 flex-1">{tache.texte}</p>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <pre className="font-body text-gray-700 whitespace-pre-wrap text-sm bg-blue-50 p-3 rounded border-l-4 border-blue-500">
+                              {getDescriptionOperationnelle(incident) || "⚠️ Aucune description"}
+                            </pre>
+                          )}
                         </div>
                       )}
 
