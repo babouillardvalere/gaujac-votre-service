@@ -77,7 +77,7 @@ export default function WorkItemsServiceView({ service }) {
       const etat = {};
       (data.taches || []).forEach(t => {
         etat[t.numero] = {
-          faite: t.faite || false,
+          faite: t.faite !== undefined ? t.faite : undefined,
           justification: t.justification || '',
           photo_url: t.photo_url || ''
         };
@@ -188,7 +188,7 @@ export default function WorkItemsServiceView({ service }) {
     const etat = {};
     (workItem.taches || []).forEach(t => {
       etat[t.numero] = {
-        faite: t.faite || false,
+        faite: t.faite !== undefined ? t.faite : undefined,
         justification: t.justification || '',
         photo_url: t.photo_url || ''
       };
