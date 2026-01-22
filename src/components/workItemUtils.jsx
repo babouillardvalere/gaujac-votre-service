@@ -54,12 +54,21 @@ export const prepareWorkItemData = (data) => {
  */
 export const getWorkItemDescription = (workItem) => {
   // Source unique: description_operationnelle
-  if (workItem.description_operationnelle) {
+  if (workItem.description_operationnelle && workItem.description_operationnelle.trim()) {
     return workItem.description_operationnelle;
   }
   
+  // Fallback: construire depuis tâches si disponibles
+  if (workItem.taches && workItem.taches.length > 0) {
+    const description = workItem.taches
+      .map((t, idx) => `${idx + 1}. ${t.texte || 'Tâche'}`)
+      .join('\n');
+    console.log('📋 Description construite depuis tâches pour WorkItem', workItem.id);
+    return description;
+  }
+  
   // Fallback temporaire (données anciennes sans description_operationnelle)
-  return computeDescriptionOperationnelle(workItem) || '⚠️ Description manquante';
+  return computeDescriptionOperationnelle(workItem) || '⚠️ Description manquante - contactez le bureau';
 };
 
 /**
