@@ -53,15 +53,18 @@ export default function PlanCampingTest() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const handleZoneClick = (zone) => {
-    if (zone.statut === 'libre') {
-      setSelectedZone(zone);
-      setShowConfirmModal(true);
-    }
+    setSelectedZone(zone);
+    setShowConfirmModal(true);
   };
 
   const handleConfirmSelection = () => {
-    setConfirmedSelection(selectedZone);
-    setShowConfirmModal(false);
+    // Enregistrer la sélection en session
+    sessionStorage.setItem('arrivee_type', selectedZone.type_locatif === 'emplacement' ? 'emplacement' : 'mobilhome');
+    sessionStorage.setItem('arrivee_categorie', selectedZone.categorie);
+    sessionStorage.setItem('arrivee_numero', selectedZone.numero);
+    
+    // Transition automatique vers contrôle inventaire
+    navigate(createPageUrl('ClientControleInventaire'));
   };
 
   const handleModifySelection = () => {
@@ -70,41 +73,23 @@ export default function PlanCampingTest() {
   };
 
   const getZoneColor = (zone) => {
-    if (confirmedSelection && zone.zone_id === confirmedSelection.zone_id) {
-      return 'rgba(34, 197, 94, 0.5)'; // Vert pour sélection confirmée
-    }
+    const couleur = COULEURS_CATEGORIES[zone.categorie];
+    if (!couleur) return 'rgba(200, 200, 200, 0.3)';
+    
     if (hoveredZone === zone.zone_id) {
-      return 'rgba(59, 130, 246, 0.4)'; // Bleu pour hover
+      return couleur.fill.replace('0.4', '0.6'); // Plus opaque au hover
     }
-    if (zone.statut === 'libre') {
-      return 'rgba(0, 174, 239, 0.2)'; // Bleu clair pour libre
-    }
-    if (zone.statut === 'occupe') {
-      return 'rgba(239, 68, 68, 0.3)'; // Rouge pour occupé
-    }
-    return 'rgba(156, 163, 175, 0.3)'; // Gris pour indisponible
+    return couleur.fill;
   };
 
   const getZoneStroke = (zone) => {
-    if (confirmedSelection && zone.zone_id === confirmedSelection.zone_id) {
-      return '#22c55e';
-    }
+    const couleur = COULEURS_CATEGORIES[zone.categorie];
+    if (!couleur) return '#999';
+    
     if (hoveredZone === zone.zone_id) {
-      return '#3b82f6';
+      return couleur.stroke;
     }
-    if (zone.statut === 'libre') {
-      return '#00AEEF';
-    }
-    if (zone.statut === 'occupe') {
-      return '#ef4444';
-    }
-    return '#9ca3af';
-  };
-
-  const getStatutBadge = (statut) => {
-    if (statut === 'libre') return <Badge className="bg-green-500">✓ Disponible</Badge>;
-    if (statut === 'occupe') return <Badge className="bg-red-500">✗ Occupé</Badge>;
-    return <Badge className="bg-gray-500">✗ Indisponible</Badge>;
+    return couleur.stroke;
   };
 
   if (confirmedSelection) {
@@ -200,26 +185,23 @@ export default function PlanCampingTest() {
         </div>
       </div>
 
-      {/* Légende */}
+      {/* Légende par catégorie */}
       <div className="bg-white border-b p-4">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center gap-6 flex-wrap">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-blue-200 border-2 border-blue-500 rounded"></div>
-              <span className="text-sm">Disponible</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-red-200 border-2 border-red-500 rounded"></div>
-              <span className="text-sm">Occupé</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-gray-200 border-2 border-gray-500 rounded"></div>
-              <span className="text-sm">Indisponible</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-green-400 border-2 border-green-600 rounded"></div>
-              <span className="text-sm font-semibold">Sélectionné</span>
-            </div>
+          <p className="text-center text-sm text-gray-600 mb-3">Cliquez sur votre emplacement ou hébergement</p>
+          <div className="flex items-center justify-center gap-4 flex-wrap">
+            {Object.entries(COULEURS_CATEGORIES).map(([key, couleur]) => (
+              <div key={key} className="flex items-center gap-2">
+                <div 
+                  className="w-6 h-6 rounded border-2" 
+                  style={{ 
+                    backgroundColor: couleur.fill, 
+                    borderColor: couleur.stroke 
+                  }}
+                ></div>
+                <span className="text-xs">{couleur.name}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -249,9 +231,9 @@ export default function PlanCampingTest() {
                     fill={getZoneColor(zone)}
                     stroke={getZoneStroke(zone)}
                     strokeWidth="2"
-                    className={zone.statut === 'libre' ? 'cursor-pointer transition-all' : 'cursor-not-allowed'}
+                    className="cursor-pointer transition-all hover:opacity-80"
                     onClick={() => handleZoneClick(zone)}
-                    onMouseEnter={() => zone.statut === 'libre' && setHoveredZone(zone.zone_id)}
+                    onMouseEnter={() => setHoveredZone(zone.zone_id)}
                     onMouseLeave={() => setHoveredZone(null)}
                   />
                 ))}
@@ -334,20 +316,7 @@ export default function PlanCampingTest() {
                     <p className="font-semibold">{selectedZone.numero}</p>
                   </div>
                 </div>
-
-                <div>
-                  <p className="text-sm text-gray-600">Statut</p>
-                  {getStatutBadge(selectedZone.statut)}
-                </div>
               </div>
-
-              {selectedZone.statut !== 'libre' && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                  <p className="text-sm text-red-700 font-semibold">
-                    ⚠️ Ce locatif n'est pas disponible
-                  </p>
-                </div>
-              )}
             </div>
           )}
           
@@ -355,11 +324,9 @@ export default function PlanCampingTest() {
             <Button onClick={() => setShowConfirmModal(false)} variant="outline">
               ❌ Annuler
             </Button>
-            {selectedZone?.statut === 'libre' && (
-              <Button onClick={handleConfirmSelection} className="bg-[#00AEEF] hover:bg-[#0077A8]">
-                ✅ Sélectionner ce locatif
-              </Button>
-            )}
+            <Button onClick={handleConfirmSelection} className="bg-[#00AEEF] hover:bg-[#0077A8]">
+              ✅ Sélectionner ce locatif
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
