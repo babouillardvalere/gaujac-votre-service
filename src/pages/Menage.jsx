@@ -796,8 +796,8 @@ export default function Menage() {
       id: wi.id,
       type: 'menage',
       categorie: 'materiel_menage',
-      description_operationnelle: getWorkItemDescription(wi),
-      description: getWorkItemDescription(wi),
+      description_operationnelle: wi.description_operationnelle || getWorkItemDescription(wi),
+      description: wi.description || getWorkItemDescription(wi),
       urgent: wi.priorite === 'URGENTE',
       client_nom: wi.client_nom,
       client_prenom: wi.client_prenom,
@@ -820,8 +820,10 @@ export default function Menage() {
       fiche_arrivee_id: wi.fiche_arrivee_id,
       isWorkItem: true,
       workItemId: wi.id,
+      titre: wi.titre,
       taches: wi.taches || [],
-      deleted_at: wi.deleted_at || null // FIX #3: Propager deleted_at
+      type_hebergement: wi.type_hebergement,
+      deleted_at: wi.deleted_at || null
     }));
 
   // Regrouper visuellement les WorkItems
