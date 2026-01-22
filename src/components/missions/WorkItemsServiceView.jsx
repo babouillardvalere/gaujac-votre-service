@@ -70,7 +70,7 @@ export default function WorkItemsServiceView({ service }) {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['workitems-service', service] });
       toast.success('Tâche prise en charge ⏱️');
-      setSelectedWorkItem({ ...selectedWorkItem, ...data });
+      setSelectedWorkItem(data);
       setModeTraitement(true);
       setPrenomAgent('');
       
