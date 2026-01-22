@@ -12,11 +12,11 @@ export function useNotifications() {
     staleTime: 40000,
   });
 
-  // InterventionClient en attente (contrôles inventaire) - polling à 30s
+  // InterventionClient en attente (contrôles inventaire) - DÉSACTIVÉ temporairement
   const { data: pendingInterventionsClient = [] } = useQuery({
     queryKey: ['notif-pending-client'],
-    queryFn: () => base44.entities.InterventionClient.filter({ statut: 'A_FAIRE' }, '-created_date', 100),
-    refetchInterval: 30000
+    queryFn: () => Promise.resolve([]),
+    enabled: false
   });
 
   // Interventions urgentes - polling réduit
@@ -27,11 +27,11 @@ export function useNotifications() {
     staleTime: 18000,
   });
 
-  // InterventionClient urgentes
+  // InterventionClient urgentes - DÉSACTIVÉ temporairement
   const { data: urgentInterventionsClient = [] } = useQuery({
     queryKey: ['notif-urgent-client'],
-    queryFn: () => base44.entities.InterventionClient.filter({ priorite: 'URGENTE', statut: 'A_FAIRE' }, '-created_date', 50),
-    refetchInterval: 15000
+    queryFn: () => Promise.resolve([]),
+    enabled: false
   });
 
   // Interventions en attente matériel - polling très réduit
