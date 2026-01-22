@@ -236,12 +236,8 @@ export default function SuiviIntervention() {
               {activeIncidents.map(incident => (
                 <Card key={incident.id} className="mb-4">
                   <CardContent className="p-4">
-                    <Badge className={getStatusConfig(incident.statut).color}>
-                      {getStatusConfig(incident.statut).label}
-                    </Badge>
-
+                    <InterventionTimeline incident={incident} />
                     <ETAEstimation incident={incident} />
-
                     <ClientInterventionChat
                       incident={incident}
                       clientNom={`${userData.prenom} ${userData.nom}`}
