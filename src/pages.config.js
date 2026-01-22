@@ -98,6 +98,7 @@ import SignalementClient from './pages/SignalementClient';
 import Statistiques from './pages/Statistiques';
 import SuiviIntervention from './pages/SuiviIntervention';
 import Technique from './pages/Technique';
+import PlanCampingTest from './pages/PlanCampingTest';
 import __Layout from './Layout.jsx';
 
 
@@ -202,6 +203,7 @@ export const PAGES = {
     "Statistiques": Statistiques,
     "SuiviIntervention": SuiviIntervention,
     "Technique": Technique,
+    "PlanCampingTest": PlanCampingTest,
 }
 
 export const pagesConfig = {
