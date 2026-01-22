@@ -24,6 +24,7 @@ export default function InventaireAffichageCategories({
 }) {
   // Organiser les items par catégorie
   const itemsParCategorie = {};
+  const itemsSansCategorie = [];
   
   items.forEach(item => {
     const categorie = CATEGORIES_INVENTAIRE.find(c => c.objets.includes(item.id));
@@ -32,6 +33,8 @@ export default function InventaireAffichageCategories({
         itemsParCategorie[categorie.id] = [];
       }
       itemsParCategorie[categorie.id].push(item);
+    } else {
+      itemsSansCategorie.push(item);
     }
   });
 
@@ -98,6 +101,34 @@ export default function InventaireAffichageCategories({
           </Card>
         );
       })}
+
+      {/* Afficher les items sans catégorie */}
+      {itemsSansCategorie.length > 0 && (
+        <Card className="border-2 border-gray-300 bg-gray-50">
+          <CardHeader className="pb-3">
+            <CardTitle className="font-heading text-xl">Autres</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {itemsSansCategorie.map(item => (
+              <InventaireItemRow
+                key={item.id}
+                item={{ ...item, emoji: item.icon, qty: item.quantity }}
+                quantity={quantities[item.id]}
+                photos={photos[item.id] || []}
+                remarque={remarques[item.id] || ''}
+                onQuantityChange={onQuantityChange}
+                onPhotosChange={onPhotosChange}
+                onRemarqueChange={onRemarqueChange}
+                onUrgencyChange={onUrgencyChange}
+                onProblemeTechnique={onProblemeTechnique}
+                urgent={urgencies[item.id]}
+                problemeTechniqueSignale={problemesTechniques[item.id]}
+                lang={lang}
+              />
+            ))}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
