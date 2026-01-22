@@ -413,6 +413,30 @@ export default function Technique() {
   };
 
   const handleTerminer = async (incident) => {
+    // Si c'est un groupe de WorkItems, traiter chacun d'eux
+    if (incident.isGrouped && incident.workItems?.length > 0) {
+      const confirmText = lang === 'fr' 
+        ? `Confirmer la clôture de ${incident.workItems.length} intervention(s) ?`
+        : `Confirm closure of ${incident.workItems.length} intervention(s)?`;
+
+      if (!window.confirm(confirmText)) return;
+
+      toast.loading(lang === 'fr' ? 'Clôture en cours...' : 'Closing...', { id: 'terminer' });
+
+      try {
+        for (const wi of incident.workItems) {
+          await terminerSansPhoto(wi);
+        }
+        toast.dismiss('terminer');
+        toast.success(lang === 'fr' ? 'Toutes les interventions clôturées' : 'All interventions closed');
+        setSelectedIncident(null);
+      } catch (error) {
+        toast.dismiss('terminer');
+        toast.error(lang === 'fr' ? 'Erreur de clôture' : 'Closing error');
+      }
+      return;
+    }
+
     if (isPhotoRequired(incident.categorie)) {
       setIncidentForPhoto(incident);
       setShowPhotoApres(true);
@@ -420,7 +444,7 @@ export default function Technique() {
     }
 
     toast.loading(lang === 'fr' ? 'Clôture...' : 'Closing...', { id: 'terminer' });
-    
+
     try {
       await terminerSansPhoto(incident);
       toast.dismiss('terminer');
