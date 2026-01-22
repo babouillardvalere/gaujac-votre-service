@@ -649,6 +649,20 @@ export default function Technique() {
   };
 
   const handleReprendre = async (incident) => {
+    // ✅ 1 SEUL ÉVÉNEMENT CENTRALISÉ
+    const event = createCleanEvent('REPRISE', incident, {
+      origine: 'INVENTAIRE_ARRIVEE',
+      reference_id: incident.stay_id || incident.fiche_arrivee_id || incident.id,
+      service: incident.service || 'TECHNIQUE',
+      collaborateur: incident.pris_par || collaborateurNom,
+      message: `Intervention reprise`,
+      metadata: {
+        hebergement: incident.logement || incident.emplacement
+      }
+    });
+
+    await base44.entities.SuiviEvent.create(event);
+
     updateMutation.mutate({
       id: incident.id,
       data: { statut: 'en_cours' },
@@ -656,13 +670,6 @@ export default function Technique() {
       workItemId: incident.workItemId
     });
 
-    await pushClientEvent({
-      incident,
-      type: 'REPRISE',
-      message: "L'intervention a repris."
-    });
-
-    await notifyBureau(`Intervention reprise (${incident.logement || incident.emplacement})`);
     toast.success(lang === 'fr' ? 'Intervention reprise' : 'Intervention resumed');
   };
 
