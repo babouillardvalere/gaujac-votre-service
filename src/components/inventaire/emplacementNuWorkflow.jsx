@@ -58,7 +58,7 @@ export async function createEmplacementNuMissions({
   base44
 }) {
   const createdMissions = [];
-  const { createWorkItem } = await import('./workItemCreator');
+  const { createWorkItem } = await import('../workItemCreator');
 
   // Grouper problèmes par service
   const problemesByService = {};
