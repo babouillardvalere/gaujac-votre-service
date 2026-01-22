@@ -1,17 +1,18 @@
 /**
  * Regroupement par logement/séjour
- * Fusionne tous les WorkItems du même logement dans une seule entité
+ * Fusionne TOUS les WorkItems (Technique + Ménage) du même logement dans une seule entité
+ * 1 logement = 1 carte unifiée contenant les deux services
  */
 
 /**
- * Regroupe les WorkItems par logement + date + client
- * Crée une structure unifiée où 1 logement = 1 carte
+ * Regroupe les WorkItems par logement + séjour
+ * Crée une structure unifiée service-agnostique
  */
 export function groupByLogement(workItems = []) {
   const groups = {};
 
   workItems.forEach(item => {
-    // Clé unique : logement + séjour (stay_id ou date_arrivee)
+    // Clé unique : logement + séjour (stay_id ou dates)
     const logement = item.hebergement || item.logement || 'unknown';
     const stayKey = item.stay_id || 
                     `${item.date_arrivee}-${item.date_depart}` || 
@@ -37,7 +38,7 @@ export function groupByLogement(workItems = []) {
         // État du groupe (le plus grave)
         statut: item.statut,
         
-        // Priorité
+        // Propriétés d'urgence
         urgent: false,
         autorisation_acces: item.autorisation_acces,
         plage_horaire_client: item.plages_horaires?.join(', '),
@@ -53,31 +54,23 @@ export function groupByLogement(workItems = []) {
         // Métadonnées
         fiche_arrivee_id: item.fiche_arrivee_id,
         
-        // WorkItems dans ce groupe
+        // WorkItems dans ce groupe - TOUS les services fusionnés
         workItems: [],
         
-        // Agrégation
-        hasTehnique: false,
-        hasMenage: false,
-        totalTasks: 0,
-        completedTasks: 0
+        // Indicateurs de service présent
+        hasTechnique: false,
+        hasMenage: false
       };
     }
 
     const group = groups[groupKey];
     
-    // Ajouter le WorkItem au groupe
+    // Ajouter le WorkItem au groupe (Technique + Ménage ensemble)
     group.workItems.push(item);
     
     // Marquer le service présent
     if (item.service === 'TECHNIQUE') group.hasTechnique = true;
     if (item.service === 'MENAGE') group.hasMenage = true;
-    
-    // Compter les tâches
-    if (item.taches) {
-      group.totalTasks += item.taches.length;
-      group.completedTasks += item.taches.filter(t => t.faite).length;
-    }
     
     // Propager l'urgence
     if (item.priorite === 'URGENTE') {
