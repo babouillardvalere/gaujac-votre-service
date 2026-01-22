@@ -194,6 +194,10 @@ export default function Technique() {
       if (variables.closeIncidentModal) {
         setSelectedIncident(null);
       }
+      // Changer vers l'onglet attente si demandé
+      if (variables.switchToAttenteTab) {
+        setFilter('en_attente_materiel');
+      }
     }
   });
 
