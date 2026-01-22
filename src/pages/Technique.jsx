@@ -33,6 +33,9 @@ import { format, differenceInMinutes } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { getWorkItemDescription } from '../components/workItemUtils';
 import { filterActive } from '../components/interventionDeletion';
+import { canTransition, getAvailableActions, createCleanEvent, areAllTasksResolved } from '../components/workflowStateService';
+import { groupByLogement, getGroupServices } from '../components/missions/LogementGrouper';
+import StateActionButtons from '../components/missions/StateActionButtons';
 
 // Fonction centrale de récupération de description opérationnelle
 function getDescriptionOperationnelle(item) {
