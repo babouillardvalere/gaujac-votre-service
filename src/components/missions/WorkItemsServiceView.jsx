@@ -254,12 +254,23 @@ export default function WorkItemsServiceView({ service }) {
     }
 
     // Validation stricte : toutes les tâches doivent avoir un statut
-    const tachesUpdated = (selectedWorkItem.taches || []).map(t => ({
-      ...t,
-      faite: tachesEtat[t.numero]?.faite,
-      justification: tachesEtat[t.numero]?.justification || '',
-      photo_url: tachesEtat[t.numero]?.photo_url || ''
-    }));
+    const tachesUpdated = (selectedWorkItem.taches || []).map(t => {
+      const etat = tachesEtat[t.numero];
+      return {
+        ...t,
+        faite: etat?.faite,
+        statut: etat?.faite === true ? 'FAIT' : etat?.faite === false ? 'NON_FAIT' : undefined,
+        justification: etat?.justification || '',
+        photo_url: etat?.photo_url || ''
+      };
+    });
+
+    // Vérifier que toutes les tâches ont un statut
+    const tachesSansStatut = tachesUpdated.filter(t => t.statut === undefined);
+    if (tachesSansStatut.length > 0) {
+      toast.error(`⚠️ ${tachesSansStatut.length} tâche(s) doivent être marquées Fait ou Pas fait`);
+      return;
+    }
 
     // Utiliser la fonction de validation centralisée
     const validation = validateMissionClosure(tachesUpdated);
