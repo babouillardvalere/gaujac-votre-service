@@ -818,73 +818,8 @@ export default function Technique() {
 
   const collaborateurs = [...new Set(incidents.map(i => i.pris_par).filter(Boolean))];
 
-  // Fonction de regroupement VISUEL des WorkItems avec PRIORISATION
-  const groupWorkItems = (items) => {
-    const groups = {};
-    
-    items.forEach(item => {
-      // Clé de regroupement: service + logement + date + client + statut
-      const dateKey = item.date_saisie ? new Date(item.date_saisie).toISOString().split('T')[0] : 'no-date';
-      const groupKey = `${item.type}_${item.logement || item.emplacement}_${dateKey}_${item.client_nom}_${item.client_prenom}_${item.statut}`;
-      
-      if (!groups[groupKey]) {
-        groups[groupKey] = {
-          id: groupKey,
-          type: item.type,
-          logement: item.logement,
-          emplacement: item.emplacement,
-          client_nom: item.client_nom,
-          client_prenom: item.client_prenom,
-          date_saisie: item.date_saisie,
-          date_arrivee: item.date_arrivee,
-          date_depart: item.date_depart,
-          statut: item.statut,
-          urgent: false,
-          autorisation_acces: item.autorisation_acces,
-          plage_horaire_client: item.plage_horaire_client,
-          pris_par: item.pris_par,
-          date_debut: item.date_debut,
-          date_resolution: item.date_resolution,
-          fiche_arrivee_id: item.fiche_arrivee_id,
-          type_hebergement: item.type_hebergement,
-          description_operationnelle: item.description_operationnelle,
-          isGrouped: true,
-          workItems: []
-        };
-      }
-      
-      // Ajouter au groupe
-      groups[groupKey].workItems.push(item);
-      
-      // Propager l'urgence si au moins 1 urgent
-      if (item.urgent) groups[groupKey].urgent = true;
-      
-      // Prendre la date de début la plus ancienne
-      if (item.date_debut && (!groups[groupKey].date_debut || item.date_debut < groups[groupKey].date_debut)) {
-        groups[groupKey].date_debut = item.date_debut;
-      }
-      
-      // Prendre le collaborateur du premier item
-      if (!groups[groupKey].pris_par && item.pris_par) {
-        groups[groupKey].pris_par = item.pris_par;
-      }
-      
-      // Conserver fiche_arrivee_id et type_hebergement
-      if (!groups[groupKey].fiche_arrivee_id && item.fiche_arrivee_id) {
-        groups[groupKey].fiche_arrivee_id = item.fiche_arrivee_id;
-      }
-      if (!groups[groupKey].type_hebergement && item.type_hebergement) {
-        groups[groupKey].type_hebergement = item.type_hebergement;
-      }
-    });
-    
-    // PRIORISATION : urgent d'abord, puis date la plus ancienne
-    return Object.values(groups).sort((a, b) => {
-      if (a.urgent && !b.urgent) return -1;
-      if (!a.urgent && b.urgent) return 1;
-      return new Date(a.date_saisie) - new Date(b.date_saisie);
-    });
-  };
+  // 📌 Ancien regroupement conservé pour compatibilité (à supprimer après migration)
+  // Remplacé par groupByLogement() qui fusionne les services
 
   // GARDE ANTI-ORPHELINS : filtrer WorkItems supprimés uniquement
   // Les missions Direction n'ont PAS d'intervention_client_id (normal)
