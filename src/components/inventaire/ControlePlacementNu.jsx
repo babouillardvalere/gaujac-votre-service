@@ -5,6 +5,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Loader2, Send } from 'lucide-react';
+import SignaturePad from '../SignaturePad';
+import { toast } from 'sonner';
+import { shouldCreateMissions, createEmplacementNuMissions, getProblemLabel } from './emplacementNuWorkflow';
+import { base44 } from '@/api/base44Client';
 
 /**
  * CONTRÔLE D'ÉTAT POUR EMPLACEMENTS NUS
@@ -18,13 +23,16 @@ export default function ControlePlacementNu({
   clientPrenom,
   dateArrivee,
   dateDepart,
-  lang
+  lang,
+  onSubmitSuccess
 }) {
   const [autorisationAcces, setAutorisationAcces] = useState('');
   const [problemes, setProblemes] = useState({});
   const [urgences, setUrgences] = useState({});
   const [appreciationEtat, setAppreciationEtat] = useState('');
   const [commentaire, setCommentaire] = useState('');
+  const [signature, setSignature] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const CATEGORIES_PROBLEMES = {
     technique: [
@@ -65,6 +73,136 @@ export default function ControlePlacementNu({
   };
 
   const problemeSelectiones = Object.keys(problemes).filter(k => problemes[k]);
+
+  const handleSubmit = async () => {
+    // VALIDATION
+    if (!autorisationAcces) {
+      toast.error(lang === 'fr' ? 'Veuillez indiquer l\'autorisation d\'accès' : 'Please indicate access authorization');
+      return;
+    }
+
+    if (!signature) {
+      toast.error(lang === 'fr' ? 'Veuillez signer le document' : 'Please sign the document');
+      return;
+    }
+
+    const willCreateMissions = shouldCreateMissions(problemes, appreciationEtat);
+
+    if (willCreateMissions && appreciationEtat === '') {
+      toast.error(lang === 'fr' ? 'Veuillez évaluer l\'état global de l\'emplacement' : 'Please rate overall pitch condition');
+      return;
+    }
+
+    setSubmitting(true);
+    toast.loading(lang === 'fr' ? 'Traitement...' : 'Processing...', { id: 'submit' });
+
+    try {
+      // 1. Créer enregistrement contrôle
+      const controle = await base44.entities.DossierArrivee.create({
+        code_dossier: `CTRL-${numero}-${dateArrivee.replace(/-/g, '')}`,
+        client_nom: clientNom,
+        client_prenom: clientPrenom,
+        date_arrivee: dateArrivee,
+        date_depart: dateDepart,
+        numero_logement: numero,
+        categorie_logement: categorie,
+        type_logement: 'emplacement',
+        etape_actuelle: 4,
+        etape_1_terminee: true,
+        etape_2_terminee: true,
+        etape_3_terminee: true,
+        etape_4_terminee: true,
+        inventaire_json: {
+          type: 'emplacement_nu',
+          problemes: Object.keys(problemes).filter(k => problemes[k]),
+          urgences: Object.keys(urgences).filter(k => urgences[k]),
+          appreciation: appreciationEtat,
+          commentaire
+        },
+        signature,
+        evaluation_proprete: appreciationEtat,
+        remarques: commentaire,
+        statut: 'termine',
+        horodatage_creation: new Date().toISOString()
+      });
+
+      console.log('[EMP_NU_CONTROL] Contrôle créé:', controle.id);
+
+      // 2. Créer missions SI nécessaire
+      if (willCreateMissions) {
+        const missions = await createEmplacementNuMissions({
+          numero,
+          categorie,
+          clientNom,
+          clientPrenom,
+          dateArrivee,
+          dateDepart,
+          problemes,
+          urgences,
+          appreciationEtat,
+          commentaire,
+          autorisationAcces,
+          lang,
+          base44
+        });
+
+        console.log('[EMP_NU_MISSIONS] Créées:', missions.length);
+
+        // 3. Créer historique
+        await base44.entities.HistoriqueEvent.create({
+          type_event: 'CONTROLE_INVENTAIRE_VALIDE',
+          titre: `Contrôle emplacement nu ${numero}`,
+          description: `${clientPrenom} ${clientNom} - ${categorie} N°${numero} - ${missions.length} mission(s) créée(s)`,
+          service: 'RECEPTION',
+          hebergement: numero,
+          type_hebergement: `Emplacement nu - ${categorie}`,
+          client_nom: clientNom,
+          client_prenom: clientPrenom,
+          urgent: missions.some(m => m.hasUrgent),
+          metadata: {
+            type: 'emplacement_nu',
+            missions_count: missions.length,
+            problemes_count: problemeSelectiones.length,
+            appreciation: appreciationEtat
+          }
+        });
+      } else {
+        // Contrôle conforme, pas de mission
+        await base44.entities.HistoriqueEvent.create({
+          type_event: 'CONTROLE_INVENTAIRE_VALIDE',
+          titre: `Contrôle emplacement nu ${numero} - CONFORME`,
+          description: `${clientPrenom} ${clientNom} - Emplacement en bon état, aucune mission créée`,
+          service: 'RECEPTION',
+          hebergement: numero,
+          type_hebergement: `Emplacement nu - ${categorie}`,
+          client_nom: clientNom,
+          client_prenom: clientPrenom,
+          urgent: false,
+          metadata: {
+            type: 'emplacement_nu',
+            status: 'conforme'
+          }
+        });
+      }
+
+      toast.dismiss('submit');
+      toast.success(
+        lang === 'fr'
+          ? 'Contrôle validé avec succès'
+          : 'Control validated successfully'
+      );
+
+      if (onSubmitSuccess) {
+        onSubmitSuccess();
+      }
+    } catch (err) {
+      console.error('[EMP_NU_SUBMIT] ERROR:', err);
+      toast.dismiss('submit');
+      toast.error(lang === 'fr' ? 'Erreur lors de la validation' : 'Validation error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -242,12 +380,37 @@ export default function ControlePlacementNu({
         <CardContent className="p-4 text-sm">
           <p className="font-semibold mb-2">{lang === "fr" ? "Résumé :" : "Summary:"}</p>
           <ul className="space-y-1 text-gray-700">
-            <li>✓ {lang === "fr" ? "Autorisation d'accès :" : "Access authorization:"} <strong>{autorisationAcces || lang === 'fr' ? 'Non défini' : 'Not set'}</strong></li>
+            <li>✓ {lang === "fr" ? "Autorisation d'accès :" : "Access authorization:"} <strong>{autorisationAcces === 'oui' ? '✔ Oui' : autorisationAcces === 'non' ? '✖ Non' : lang === 'fr' ? 'Non défini' : 'Not set'}</strong></li>
             <li>✓ {lang === "fr" ? "Problèmes signalés :" : "Reported problems:"} <strong>{problemeSelectiones.length || 'Aucun'}</strong></li>
-            <li>✓ {lang === "fr" ? "État global :" : "Overall condition:"} <strong>{appreciationEtat || lang === 'fr' ? 'Non défini' : 'Not set'}</strong></li>
+            {problemeSelectiones.length > 0 && (
+              <li className="ml-4 text-xs text-gray-600">
+                {problemeSelectiones.map(p => (
+                  <div key={p}>• {getProblemLabel(p, lang)} {urgences[p] ? '🔴' : ''}</div>
+                ))}
+              </li>
+            )}
+            <li>✓ {lang === "fr" ? "État global :" : "Overall condition:"} <strong>{appreciationEtat ? (appreciationEtat === 'insatisfaisant' ? '😠' : appreciationEtat === 'correct' ? '😐' : '😄') : lang === 'fr' ? 'Non défini' : 'Not set'}</strong></li>
+            {shouldCreateMissions(problemes, appreciationEtat) && (
+              <li className="mt-2 p-2 bg-orange-100 rounded text-orange-900">
+                ⚠️ {lang === 'fr' ? 'Des missions seront créées à la validation' : 'Missions will be created upon validation'}
+              </li>
+            )}
           </ul>
         </CardContent>
       </Card>
+
+      {/* Signature */}
+      <SignaturePad onSave={setSignature} disabled={submitting} lang={lang} />
+
+      {/* Bouton validation */}
+      <Button
+        onClick={handleSubmit}
+        className="w-full h-14 bg-[#00AEEF] hover:bg-[#0077A8] mt-6 text-lg font-semibold"
+        disabled={submitting}
+      >
+        {submitting ? <Loader2 className="animate-spin mr-2" /> : <Send className="mr-2" />}
+        {lang === "fr" ? "Valider le contrôle" : "Confirm control"}
+      </Button>
     </div>
   );
 }
