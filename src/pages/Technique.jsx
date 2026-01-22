@@ -253,6 +253,24 @@ export default function Technique() {
       return;
     }
 
+    // Si c'est un groupe, prendre en charge tous les WorkItems
+    if (incident.isGrouped && incident.workItems?.length > 0) {
+      toast.loading(lang === 'fr' ? 'Prise en charge de tous les WorkItems...' : 'Taking over all WorkItems...', { id: 'prise-charge' });
+      
+      try {
+        for (const wi of incident.workItems) {
+          await prendreEnChargeSansPhoto(wi);
+        }
+        toast.dismiss('prise-charge');
+        toast.success(lang === 'fr' ? `${incident.workItems.length} interventions prises en charge` : `${incident.workItems.length} interventions taken over`);
+        setSelectedIncident(null);
+      } catch (error) {
+        toast.dismiss('prise-charge');
+        toast.error(lang === 'fr' ? 'Erreur de prise en charge' : 'Take over error');
+      }
+      return;
+    }
+
     try {
       await ensureDescriptionOperationnelle(incident);
     } catch (e) {
@@ -1145,7 +1163,7 @@ export default function Technique() {
                     className={`border-2 rounded-xl cursor-pointer hover:shadow-lg transition-all ${
                       priorityType === 'urgent' ? 'border-red-500 bg-red-50' : 'border-gray-200'
                     }`}
-                    onClick={() => setSelectedIncident(isGrouped ? incident.workItems[0] : incident)}
+                    onClick={() => setSelectedIncident(incident)}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-3">
@@ -1286,24 +1304,72 @@ export default function Technique() {
 
           {selectedIncident && (
             <div className="space-y-4">
-              <div className="bg-[#e6f7ff] rounded-xl p-4 space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-[#0077A8]/70 font-body">{t('client_label')}</span>
-                  <span className="font-heading text-[#0077A8]">{selectedIncident.client_prenom} {selectedIncident.client_nom}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#0077A8]/70 font-body">{t('date_signalement')}</span>
-                  <span className="font-body text-[#0077A8]">
-                    {selectedIncident.date_saisie && format(new Date(selectedIncident.date_saisie), 'dd/MM/yyyy HH:mm', { locale: fr })}
-                  </span>
-                </div>
-              </div>
+              {/* Si c'est un groupe, afficher tous les WorkItems */}
+              {selectedIncident.isGrouped && selectedIncident.workItems?.length > 0 ? (
+                <>
+                  <div className="bg-[#e6f7ff] rounded-xl p-4 space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-[#0077A8]/70 font-body">{t('client_label')}</span>
+                      <span className="font-heading text-[#0077A8]">{selectedIncident.client_prenom} {selectedIncident.client_nom}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#0077A8]/70 font-body">Logement</span>
+                      <span className="font-body text-[#0077A8]">{selectedIncident.logement}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#0077A8]/70 font-body">Interventions</span>
+                      <Badge className="bg-[#00AEEF] text-white">{selectedIncident.workItems.length}</Badge>
+                    </div>
+                  </div>
 
-              <div>
-              <label className="text-sm font-heading text-[#0077A8] mb-2 block">📋 {t('description')}</label>
+                  <div>
+                    <label className="text-sm font-heading text-[#0077A8] mb-2 block">📋 Liste des interventions</label>
+                    <div className="space-y-3">
+                      {selectedIncident.workItems.map((wi, idx) => {
+                        const descOp = wi.description_operationnelle || getWorkItemDescription(wi);
+                        return (
+                          <div key={idx} className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
+                            <p className="text-xs text-blue-600 font-semibold mb-2">Intervention {idx + 1}:</p>
+                            {wi.taches && wi.taches.length > 0 ? (
+                              <div className="space-y-1">
+                                {wi.taches.map((tache, tidx) => (
+                                  <div key={tidx} className="flex items-start gap-2 bg-white p-2 rounded">
+                                    <span className="text-lg">🔧</span>
+                                    <p className="font-body text-gray-800 text-sm flex-1">{tache.texte}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <pre className="font-body text-gray-800 whitespace-pre-wrap text-sm">
+                                {descOp}
+                              </pre>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="bg-[#e6f7ff] rounded-xl p-4 space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-[#0077A8]/70 font-body">{t('client_label')}</span>
+                      <span className="font-heading text-[#0077A8]">{selectedIncident.client_prenom} {selectedIncident.client_nom}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#0077A8]/70 font-body">{t('date_signalement')}</span>
+                      <span className="font-body text-[#0077A8]">
+                        {selectedIncident.date_saisie && format(new Date(selectedIncident.date_saisie), 'dd/MM/yyyy HH:mm', { locale: fr })}
+                      </span>
+                    </div>
+                  </div>
 
-              {/* Afficher les tâches si présentes */}
-              {selectedIncident.taches && selectedIncident.taches.length > 0 ? (
+                  <div>
+                    <label className="text-sm font-heading text-[#0077A8] mb-2 block">📋 {t('description')}</label>
+
+                    {/* Afficher les tâches si présentes */}
+                    {selectedIncident.taches && selectedIncident.taches.length > 0 ? (
                 <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
                   <p className="text-xs text-blue-600 font-semibold mb-2">Actions à réaliser:</p>
                   <div className="space-y-2">
