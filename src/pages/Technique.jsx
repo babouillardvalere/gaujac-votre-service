@@ -1170,12 +1170,12 @@ export default function Technique() {
                         <>
                           <div className="space-y-2 mb-3">
                             {incident.workItems.map((wi, idx) => {
-                              const tache = wi.taches?.[0];
-                              const tacheLabel = tache ? tache.texte : getWorkItemDescription(wi);
+                              const desc = wi.description_operationnelle || getWorkItemDescription(wi);
                               return (
-                                <div key={idx} className="flex items-start gap-2 text-sm">
-                                  <span className="text-lg">{tache?.objet_id ? getCategoryInfo(tache.objet_id).emoji : '🔧'}</span>
-                                  <span className="font-body text-gray-700 flex-1 line-clamp-2">{tacheLabel}</span>
+                                <div key={idx} className="text-sm bg-gray-50 p-2 rounded">
+                                  <pre className="font-body text-gray-700 whitespace-pre-wrap text-xs">
+                                    {desc}
+                                  </pre>
                                 </div>
                               );
                             })}
@@ -1194,25 +1194,12 @@ export default function Technique() {
                           )}
                         </>
                       ) : (
-                        <>
-                         {incident.taches && incident.taches.length > 0 ? (
-                           <div className="space-y-1 mb-3">
-                             {incident.taches.map((tache, idx) => (
-                               <div key={idx} className="flex items-start gap-2 text-sm bg-gray-50 p-2 rounded">
-                                 <span className="text-base">{tache.objet_id ? getCategoryInfo(tache.objet_id).emoji : '🔧'}</span>
-                                 <p className="font-body text-gray-700 flex-1">{tache.texte}</p>
-                               </div>
-                             ))}
-                           </div>
-                         ) : (
-                           <div className="mb-3">
-                             <pre className="font-body text-gray-700 whitespace-pre-wrap text-sm bg-blue-50 p-3 rounded border-l-4 border-blue-500">
-                               {incident.isWorkItem ? getWorkItemDescription(incident) : (getDescriptionOperationnelle(incident) || "⚠️ Aucune description")}
-                             </pre>
-                           </div>
-                         )}
-                         </>
-                          )}
+                        <div className="mb-3">
+                          <pre className="font-body text-gray-700 whitespace-pre-wrap text-sm bg-blue-50 p-3 rounded border-l-4 border-blue-500">
+                            {incident.description_operationnelle || getDescriptionOperationnelle(incident) || "⚠️ Aucune description"}
+                          </pre>
+                        </div>
+                      )}
 
                           <div className="flex items-center justify-between text-xs text-gray-500 font-body mt-3">
                         <div className="flex items-center gap-1">
