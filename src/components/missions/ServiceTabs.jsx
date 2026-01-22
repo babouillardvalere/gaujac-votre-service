@@ -15,38 +15,38 @@ export default function ServiceTabs({
 
   return (
     <Tabs defaultValue="interventions" className="w-full" onValueChange={setActiveTab}>
-      <TabsList className="grid w-full grid-cols-2 mb-6 bg-slate-100">
-        {/* PRIORITÉ 3: Onglet Interventions Clients - Couleur verte */}
-        <TabsTrigger 
-          value="interventions" 
-          className={`flex items-center gap-2 transition-all ${
-            activeTab === 'interventions'
-              ? 'bg-green-500 text-white shadow-md'
-              : 'bg-slate-100 text-slate-700 hover:bg-green-50'
-          }`}
-        >
-          <Users className="w-4 h-4" />
-          {lang === 'fr' ? 'Interventions Clients' : 'Client Interventions'}
-          {interventionsCount > 0 && (
-            <Badge className="ml-1 bg-green-700 text-white">{interventionsCount}</Badge>
-          )}
-        </TabsTrigger>
-        {/* PRIORITÉ 3: Onglet Missions Direction - Couleur bleue */}
-        <TabsTrigger 
-          value="missions" 
-          className={`flex items-center gap-2 transition-all ${
-            activeTab === 'missions'
-              ? 'bg-blue-600 text-white shadow-md'
-              : 'bg-slate-100 text-slate-700 hover:bg-blue-50'
-          }`}
-        >
-          <Briefcase className="w-4 h-4" />
-          {lang === 'fr' ? 'Missions Direction' : 'Management Missions'}
-          {missionsCount > 0 && (
-            <Badge className="ml-1 bg-blue-700 text-white">{missionsCount}</Badge>
-          )}
-        </TabsTrigger>
-      </TabsList>
+      <TabsList className="grid w-full grid-cols-2 mb-6 gap-2 bg-transparent p-0">
+         {/* PRIORITÉ 3: Onglet Interventions Clients - TOUJOURS VERT */}
+         <TabsTrigger 
+           value="interventions" 
+           className={`flex items-center justify-center gap-2 transition-all font-semibold border-2 rounded-lg py-3 ${
+             activeTab === 'interventions'
+               ? 'bg-green-500 text-white border-green-600 shadow-lg scale-105'
+               : 'bg-green-100 text-green-700 border-green-400 hover:bg-green-200'
+           }`}
+         >
+           <Users className="w-5 h-5" />
+           <span>{lang === 'fr' ? 'Interventions Clients' : 'Client Interventions'}</span>
+           {interventionsCount > 0 && (
+             <Badge className="ml-1 bg-green-700 text-white font-bold">{interventionsCount}</Badge>
+           )}
+         </TabsTrigger>
+         {/* PRIORITÉ 3: Onglet Missions Direction - TOUJOURS BLEU */}
+         <TabsTrigger 
+           value="missions" 
+           className={`flex items-center justify-center gap-2 transition-all font-semibold border-2 rounded-lg py-3 ${
+             activeTab === 'missions'
+               ? 'bg-blue-600 text-white border-blue-700 shadow-lg scale-105'
+               : 'bg-blue-100 text-blue-700 border-blue-400 hover:bg-blue-200'
+           }`}
+         >
+           <Briefcase className="w-5 h-5" />
+           <span>{lang === 'fr' ? 'Missions Direction' : 'Management Missions'}</span>
+           {missionsCount > 0 && (
+             <Badge className="ml-1 bg-blue-700 text-white font-bold">{missionsCount}</Badge>
+           )}
+         </TabsTrigger>
+       </TabsList>
 
       <TabsContent value="interventions" className="mt-6">
         {/* PRIORITÉ 3: Fond vert clair pour Interventions Clients */}
