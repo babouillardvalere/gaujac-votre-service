@@ -693,25 +693,25 @@ export default function Technique() {
       for (const wi of missionGroup.workItems) {
         const tempsTotal = wi.date_saisie ? differenceInMinutes(now, new Date(wi.date_saisie)) : 0;
         
+        // ✅ 1 SEUL ÉVÉNEMENT CENTRALISÉ PAR WORKITEM
+        const event = createCleanEvent('TERMINEE', wi, {
+          origine: 'INVENTAIRE_ARRIVEE',
+          reference_id: wi.stay_id || wi.fiche_arrivee_id || wi.id,
+          service: wi.service || 'TECHNIQUE',
+          collaborateur: intervenant,
+          message: `Clôture en cascade de mission regroupée`,
+          metadata: {
+            duree_minutes: tempsTotal,
+            hebergement: missionGroup.logement || missionGroup.emplacement
+          }
+        });
+
+        await base44.entities.SuiviEvent.create(event);
+        
         await base44.entities.WorkItem.update(wi.workItemId, {
           statut: 'TERMINEE',
           date_terminee: now.toISOString(),
           duree_minutes: tempsTotal
-        });
-        
-        await base44.entities.InterventionLog.create({
-          incident_id: wi.id,
-          action: 'resolu',
-          horodatage: now.toISOString(),
-          utilisateur: intervenant,
-          commentaire: 'Clôturé via mission regroupée'
-        });
-        
-        // Event client
-        await pushClientEvent({
-          incident: wi,
-          type: 'TERMINEE',
-          message: "Intervention technique clôturée."
         });
       }
       
@@ -748,26 +748,12 @@ export default function Technique() {
         visible_bureau: true
       });
       
-      await notifyBureau(`Mission clôturée - ${missionGroup.logement} - ${missionGroup.workItems.length} intervention(s)`);
-      
-      await base44.entities.HistoriqueEvent.create({
-        type_event: 'INTERVENTION_CLOTUREE',
-        titre: `Mission technique clôturée - ${missionGroup.logement}`,
-        description: `${intervenant} - ${missionGroup.workItems.length} intervention(s)`,
-        service: 'TECHNIQUE',
-        hebergement: missionGroup.logement,
-        client_nom: missionGroup.client_nom,
-        client_prenom: missionGroup.client_prenom,
-        collaborateur: intervenant,
-        urgent: missionGroup.urgent,
-        metadata: { rapport_id: rapport.id, nb_interventions: missionGroup.workItems.length }
-      });
-      
       queryClient.invalidateQueries({ queryKey: ['workitems-technique'] });
       queryClient.invalidateQueries({ queryKey: ['incidents-technique'] });
       
       toast.dismiss('cloture-mission');
       toast.success(lang === 'fr' ? 'Mission clôturée avec succès' : 'Mission closed successfully');
+      setSelectedIncident(null);
       
     } catch (error) {
       toast.dismiss('cloture-mission');
