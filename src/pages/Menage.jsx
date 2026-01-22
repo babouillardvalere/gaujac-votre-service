@@ -735,6 +735,7 @@ export default function Menage() {
           date_resolution: item.date_resolution,
           fiche_arrivee_id: item.fiche_arrivee_id,
           type_hebergement: item.type_hebergement,
+          description_operationnelle: item.description_operationnelle,
           isGrouped: true,
           workItems: []
         };
