@@ -51,6 +51,13 @@ function validateWorkItemData(data) {
     errors.push(`priorite doit être l'un de: ${validPriorites.join(', ')}`);
   }
 
+  // CHAMP OPTIONNEL #7: type_source (PRIORITÉ 2 - provenance explicite)
+  // Valeurs: INTERVENTION_REELLE, AUDIT, TEST (par défaut: INTERVENTION_REELLE)
+  const validTypeSources = ['INTERVENTION_REELLE', 'AUDIT', 'TEST'];
+  if (data.type_source && !validTypeSources.includes(data.type_source)) {
+    errors.push(`type_source doit être l'un de: ${validTypeSources.join(', ')}`);
+  }
+
   // VALIDATION MÉTIER: Autorisation accès
   if (data.autorisation_acces === 'non' && (!data.plages_horaires || data.plages_horaires.length === 0)) {
     errors.push('plages_horaires OBLIGATOIRE si autorisation_acces = "non"');
@@ -102,6 +109,7 @@ export async function createWorkItem(data) {
     plages_horaires: [],
     taches: [],
     attachments: [],
+    type_source: data.type_source || 'INTERVENTION_REELLE',
     ...data
   };
 
