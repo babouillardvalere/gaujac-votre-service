@@ -932,7 +932,8 @@ export default function Technique() {
   
   // 🔒 PROTECTION: WorkItems UNIQUEMENT pour les contrôles inventaire
   // Les Incidents legacy peuvent exister pour signalements directs uniquement
-  const allIncidents = [...groupedWorkItems, ...convertedMissionsDirection];
+  // PRIORITÉ 1: Séparation stricte - Interventions Clients UNIQUEMENT
+  const allIncidents = [...groupedWorkItems];
 
   // 🚫 GARDE ANTI-ORPHELIN: exclure les supprimés
   const activeIncidents = filterActive(allIncidents);
@@ -1288,7 +1289,10 @@ export default function Technique() {
             </>
           }
           missionsContent={
-            <WorkItemsServiceView service="TECHNIQUE" />
+            <>
+              <WorkItemsServiceView service="TECHNIQUE" />
+              {/* PRIORITÉ 1: Les MissionDirection apparaissent UNIQUEMENT ici, jamais dans interventionsContent */}
+            </>
           }
         />
       </div>
