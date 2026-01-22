@@ -376,13 +376,21 @@ export default function Technique() {
     const now = new Date();
     const tempsPriseEnCharge = incidentForPhoto.date_saisie ? differenceInMinutes(now, new Date(incidentForPhoto.date_saisie)) : 0;
 
-    await base44.entities.InterventionLog.create({
-      incident_id: incidentForPhoto.id,
-      action: 'prise_en_charge',
-      horodatage: now.toISOString(),
-      utilisateur: collaborateurNom,
-      commentaire: 'Intervention prise en charge avec photo AVANT'
+    // ✅ 1 SEUL ÉVÉNEMENT CENTRALISÉ
+    const event = createCleanEvent('PRISE_EN_CHARGE', incidentForPhoto, {
+      origine: 'INVENTAIRE_ARRIVEE',
+      reference_id: incidentForPhoto.stay_id || incidentForPhoto.fiche_arrivee_id || incidentForPhoto.id,
+      service: incidentForPhoto.service || 'TECHNIQUE',
+      collaborateur: collaborateurNom,
+      message: `Prise en charge avec photo AVANT`,
+      metadata: {
+        temps_prise_en_charge: tempsPriseEnCharge,
+        photo_avant_url: photoData.url,
+        hebergement: incidentForPhoto.logement || incidentForPhoto.emplacement
+      }
     });
+
+    await base44.entities.SuiviEvent.create(event);
 
     updateMutation.mutate({
       id: incidentForPhoto.id,
@@ -399,13 +407,6 @@ export default function Technique() {
       workItemId: incidentForPhoto.workItemId
     });
 
-    await pushClientEvent({
-      incident: incidentForPhoto,
-      type: 'PRISE_EN_CHARGE',
-      message: "L'intervention technique a commencé."
-    });
-
-    await notifyBureau(`Intervention prise en charge par ${collaborateurNom} (avec photo)`);
     setIncidentForPhoto(null);
   };
 
