@@ -8,26 +8,41 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import Logo from '../components/Logo';
 
-// ZONES CLIQUABLES - Définies manuellement
-// Coordonnées approximatives basées sur l'image du plan
+// CODE COULEUR PAR CATÉGORIE
+const COULEURS_CATEGORIES = {
+  // Emplacements
+  '6A': { fill: 'rgba(74, 222, 128, 0.4)', stroke: '#22c55e', name: 'Emplacement 6A' },
+  '10A': { fill: 'rgba(96, 165, 250, 0.4)', stroke: '#3b82f6', name: 'Emplacement 10A' },
+  'Eau + 10A': { fill: 'rgba(34, 211, 238, 0.4)', stroke: '#06b6d4', name: 'Eau + 10A' },
+  // Hébergements
+  'Eco': { fill: 'rgba(250, 204, 21, 0.4)', stroke: '#eab308', name: 'Mobil-home Eco' },
+  'Eco Clim': { fill: 'rgba(251, 191, 36, 0.4)', stroke: '#f59e0b', name: 'Mobil-home Eco Clim' },
+  'Confort+ 2ch': { fill: 'rgba(251, 146, 60, 0.4)', stroke: '#f97316', name: 'Confort+ 2ch' },
+  'Confort+ 3ch': { fill: 'rgba(251, 146, 60, 0.4)', stroke: '#f97316', name: 'Confort+ 3ch' },
+  'Premium 2ch': { fill: 'rgba(192, 132, 252, 0.4)', stroke: '#a855f7', name: 'Premium 2ch' },
+  'Premium 3ch': { fill: 'rgba(192, 132, 252, 0.4)', stroke: '#a855f7', name: 'Premium 3ch' },
+  'Cottage Premium': { fill: 'rgba(168, 85, 247, 0.4)', stroke: '#9333ea', name: 'Cottage Premium' }
+};
+
+// ZONES CLIQUABLES - Définies manuellement (sans statut)
 const ZONES_CAMPING = [
-  // Emplacements zone gauche (exemples)
-  { zone_id: 'EMPL_6A_089', type_locatif: 'emplacement', categorie: '6A', numero: '89', statut: 'libre', coords: [80, 340, 110, 340, 110, 360, 80, 360] },
-  { zone_id: 'EMPL_6A_090', type_locatif: 'emplacement', categorie: '6A', numero: '90', statut: 'libre', coords: [80, 365, 110, 365, 110, 385, 80, 385] },
-  { zone_id: 'EMPL_10A_091', type_locatif: 'emplacement', categorie: '10A', numero: '91', statut: 'occupe', coords: [80, 390, 110, 390, 110, 410, 80, 410] },
+  // Emplacements zone gauche
+  { zone_id: 'EMPL_6A_089', type_locatif: 'emplacement', categorie: '6A', numero: '89', coords: [80, 340, 110, 340, 110, 360, 80, 360] },
+  { zone_id: 'EMPL_6A_090', type_locatif: 'emplacement', categorie: '6A', numero: '90', coords: [80, 365, 110, 365, 110, 385, 80, 385] },
+  { zone_id: 'EMPL_10A_091', type_locatif: 'emplacement', categorie: '10A', numero: '91', coords: [80, 390, 110, 390, 110, 410, 80, 410] },
   
-  // Hébergements zone centre-droit (exemples)
-  { zone_id: 'MH_PREM_R12', type_locatif: 'hebergement', categorie: 'Premium 2ch', numero: 'R12', statut: 'libre', coords: [750, 180, 790, 180, 790, 210, 750, 210] },
-  { zone_id: 'MH_PREM_R13', type_locatif: 'hebergement', categorie: 'Premium 3ch', numero: 'R13', statut: 'libre', coords: [800, 180, 840, 180, 840, 210, 800, 210] },
-  { zone_id: 'MH_CONF_T06', type_locatif: 'hebergement', categorie: 'Confort+ 3ch', numero: 'T06', statut: 'libre', coords: [870, 160, 910, 160, 910, 190, 870, 190] },
+  // Hébergements zone centre-droit
+  { zone_id: 'MH_PREM_R12', type_locatif: 'hebergement', categorie: 'Premium 2ch', numero: 'R12', coords: [750, 180, 790, 180, 790, 210, 750, 210] },
+  { zone_id: 'MH_PREM_R13', type_locatif: 'hebergement', categorie: 'Premium 3ch', numero: 'R13', coords: [800, 180, 840, 180, 840, 210, 800, 210] },
+  { zone_id: 'MH_CONF_T06', type_locatif: 'hebergement', categorie: 'Confort+ 3ch', numero: 'T06', coords: [870, 160, 910, 160, 910, 190, 870, 190] },
   
-  // Hébergements zone bas (exemples)
-  { zone_id: 'MH_ECO_P04', type_locatif: 'hebergement', categorie: 'Eco', numero: 'P04', statut: 'indisponible', coords: [340, 420, 370, 420, 370, 445, 340, 445] },
-  { zone_id: 'COTTAGE_J08', type_locatif: 'hebergement', categorie: 'Cottage Premium', numero: 'J08', statut: 'libre', coords: [520, 280, 560, 280, 560, 310, 520, 310] },
+  // Hébergements zone bas
+  { zone_id: 'MH_ECO_P04', type_locatif: 'hebergement', categorie: 'Eco', numero: 'P04', coords: [340, 420, 370, 420, 370, 445, 340, 445] },
+  { zone_id: 'COTTAGE_J08', type_locatif: 'hebergement', categorie: 'Cottage Premium', numero: 'J08', coords: [520, 280, 560, 280, 560, 310, 520, 310] },
   
-  // Emplacements zone centre (exemples)
-  { zone_id: 'EMPL_10A_120', type_locatif: 'emplacement', categorie: '10A', numero: '120', statut: 'libre', coords: [430, 220, 460, 220, 460, 240, 430, 240] },
-  { zone_id: 'EMPL_10A_121', type_locatif: 'emplacement', categorie: '10A', numero: '121', statut: 'libre', coords: [430, 245, 460, 245, 460, 265, 430, 265] },
+  // Emplacements zone centre
+  { zone_id: 'EMPL_10A_120', type_locatif: 'emplacement', categorie: '10A', numero: '120', coords: [430, 220, 460, 220, 460, 240, 430, 240] },
+  { zone_id: 'EMPL_10A_121', type_locatif: 'emplacement', categorie: '10A', numero: '121', coords: [430, 245, 460, 245, 460, 265, 430, 265] },
 ];
 
 export default function PlanCampingTest() {
