@@ -1416,6 +1416,8 @@ export default function Technique() {
                 </div>
               )}
               </div>
+              </>
+              )}
 
               {selectedIncident.statut === 'en_attente' && (
                 <div className="space-y-3 pt-4 border-t">
