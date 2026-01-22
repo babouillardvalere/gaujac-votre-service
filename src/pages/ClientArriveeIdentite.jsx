@@ -465,14 +465,6 @@ export default function ClientArriveeIdentite() {
                 </>
               )}
             </Button>
-
-            <Button
-              onClick={() => navigate(createPageUrl('PlanCampingTest'))}
-              variant="outline"
-              className="w-full h-12 border-2 border-[#00AEEF] text-[#00AEEF] hover:bg-[#00AEEF] hover:text-white rounded-xl font-heading"
-            >
-              🗺️ {lang === 'fr' ? 'Ou sélectionner sur le plan' : 'Or select on map'}
-            </Button>
           </div>
         </motion.div>
       </div>

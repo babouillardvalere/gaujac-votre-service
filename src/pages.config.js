@@ -89,8 +89,8 @@ import QADiagnostic from './pages/QADiagnostic';
 import QASante from './pages/QASante';
 import QAValidation from './pages/QAValidation';
 import RapportsInterventions from './pages/RapportsInterventions';
-import Taches from './pages/Taches';
 import Reception from './pages/Reception';
+import Taches from './pages/Taches';
 import Reservations from './pages/Reservations';
 import SatisfactionClient from './pages/SatisfactionClient';
 import Signalement from './pages/Signalement';
@@ -193,8 +193,8 @@ export const PAGES = {
     "QASante": QASante,
     "QAValidation": QAValidation,
     "RapportsInterventions": RapportsInterventions,
-    "Taches": Taches,
     "Reception": Reception,
+    "Taches": Taches,
     "Reservations": Reservations,
     "SatisfactionClient": SatisfactionClient,
     "Signalement": Signalement,
