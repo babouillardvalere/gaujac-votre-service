@@ -9,7 +9,9 @@ import ArriveeProgressBar from "../components/ArriveeProgressBar";
 import { getInventaireParCategorie } from "../components/categoryCodeMapping";
 import InventaireItemRow from "../components/InventaireItemRow";
 import InventaireAffichageCategories from "../components/inventaire/InventaireAffichageCategories";
+import ControlePlacementNu from "../components/inventaire/ControlePlacementNu";
 import { ConfigurationLiterie, isLiterieTechnique } from "../components/literieConfig";
+import { emplacements } from "../components/accommodationData";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Textarea } from "../components/ui/textarea";
@@ -31,6 +33,9 @@ export default function ClientControleInventaire() {
   const dateDepart = sessionStorage.getItem("arrivee_date_depart");
   const categorie = sessionStorage.getItem("arrivee_categorie");
   const numero = sessionStorage.getItem("arrivee_numero");
+
+  // Détecter si c'est un emplacement nu
+  const isEmplacementNu = Object.keys(emplacements).some(cat => emplacements[cat].includes(numero));
 
   const [quantities, setQuantities] = useState({});
   const [photos, setPhotos] = useState({});
@@ -1005,8 +1010,21 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
         </CardContent>
       </Card>
 
-      {/* EN-TÊTE STANDARDISÉ */}
-      <Card className="mb-6 border-2 border-blue-500 bg-blue-50">
+      {/* STRUCTURE DIFFÉRENTE SELON LE TYPE D'HÉBERGEMENT */}
+      {isEmplacementNu ? (
+        <ControlePlacementNu
+          numero={numero}
+          categorie={categorie}
+          clientNom={nom}
+          clientPrenom={prenom}
+          dateArrivee={dateArrivee}
+          dateDepart={dateDepart}
+          lang={lang}
+        />
+      ) : (
+        <>
+          {/* EN-TÊTE STANDARDISÉ */}
+          <Card className="mb-6 border-2 border-blue-500 bg-blue-50">
         <CardContent className="p-6">
           <h1 className="text-2xl font-bold text-blue-900 mb-4">
             📋 {lang === "fr" ? "Contrôle inventaire" : "Inventory check"}
@@ -1170,6 +1188,8 @@ ${totalUrgent > 0 ? `🔴 ${totalUrgent} URGENT(S)` : ''}`,
         {submitting ? <Loader2 className="animate-spin mr-2" /> : <Send className="mr-2" />}
         {lang === "fr" ? "Valider le contrôle inventaire" : "Confirm inventory check"}
       </Button>
+        </>
+      )}
     </div>
   );
 }
