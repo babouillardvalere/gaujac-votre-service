@@ -910,6 +910,7 @@ export default function Menage() {
   
   // 🔒 PROTECTION: WorkItems UNIQUEMENT pour les contrôles inventaire
   // Les Incidents legacy peuvent exister pour signalements directs uniquement
+  // PRIORITÉ 1: Séparation stricte - Interventions Clients UNIQUEMENT
   const allIncidents = [...groupedWorkItems];
 
   // 🚫 GARDE ANTI-ORPHELIN: exclure les supprimés
@@ -1262,7 +1263,10 @@ export default function Menage() {
             </>
           }
           missionsContent={
-            <MissionsDirectionService service="MENAGE" />
+            <>
+              <MissionsDirectionService service="MENAGE" />
+              {/* PRIORITÉ 1: Les MissionDirection apparaissent UNIQUEMENT ici, jamais dans interventionsContent */}
+            </>
           }
         />
       </div>
