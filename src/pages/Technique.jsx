@@ -1439,6 +1439,7 @@ export default function Technique() {
                      (!selectedIncident?.is_audit_ou_test && !getDescriptionOperationnelle(selectedIncident) && !descriptionOpSaisie.trim())
                    }
                    className="w-full bg-[#00AEEF] hover:bg-[#0077A8] rounded-xl"
+                   title={!collaborateurNom.trim() ? 'Remplissez votre nom' : !getDescriptionOperationnelle(selectedIncident) && !descriptionOpSaisie.trim() ? 'Remplissez la description' : ''}
                   >
                    <Play className="w-4 h-4 mr-2" />
                    {t('prendre_en_charge')}
