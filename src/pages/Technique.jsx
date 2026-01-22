@@ -128,7 +128,7 @@ export default function Technique() {
       const result = await base44.entities.WorkItem.filter({ 
         service: 'TECHNIQUE'
       }, '-created_date', 250);
-      // FIX #3: FILTRE deleted_at + ANNULEE
+      // FIX #3: FILTRE deleted_at + ANNULEE + protection contre références cassées
       const filtered = filterActive(result).filter(wi => wi.statut !== 'ANNULEE');
       console.log('✅ WorkItems TECHNIQUE actifs:', filtered.length, '/', result.length, 'workitem(s)');
       filtered.forEach(wi => {
