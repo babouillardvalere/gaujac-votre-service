@@ -45,6 +45,7 @@ import { createPageUrl } from '../utils';
 import { emplacements, logements } from '../components/accommodationData';
 import ClientInterventionChat from '../components/ClientInterventionChat';
 import ETAEstimation from '../components/ETAEstimation';
+import InterventionTimeline from '../components/suivi/InterventionTimeline';
 
 const categoryEmojis = {
   gaz: '🔥',
