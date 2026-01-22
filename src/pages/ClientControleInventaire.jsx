@@ -6,8 +6,7 @@ import { useTranslation } from "../components/translations";
 import Logo from "../components/Logo";
 import SignaturePad from "../components/SignaturePad";
 import ArriveeProgressBar from "../components/ArriveeProgressBar";
-import { getInventaireParCategorie, getCodeFromCategory } from "../components/categoryCodeMapping";
-import { getInventaireNormalise } from "../components/inventaire/inventaireNormalise";
+import { getInventaireParCategorie } from "../components/categoryCodeMapping";
 import InventaireItemRow from "../components/InventaireItemRow";
 import InventaireAffichageCategories from "../components/inventaire/InventaireAffichageCategories";
 import { ConfigurationLiterie, isLiterieTechnique } from "../components/literieConfig";
@@ -47,13 +46,8 @@ export default function ClientControleInventaire() {
   const [showRecap, setShowRecap] = useState(false);
   const [finalReceipt, setFinalReceipt] = useState(null);
 
-  // Utiliser le nouvel inventaire normalisé par catégories
-  const inventaire = useMemo(() => {
-    const code = getCodeFromCategory(categorie);
-    if (!code) return null;
-    return getInventaireNormalise(code, lang);
-  }, [categorie, lang]);
-  
+  // Inventaire standard
+  const inventaire = useMemo(() => getInventaireParCategorie(categorie, lang), [categorie, lang]);
   const items = inventaire?.objets || [];
 
   useEffect(() => {
