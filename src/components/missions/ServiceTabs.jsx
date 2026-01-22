@@ -48,12 +48,30 @@ export default function ServiceTabs({
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="interventions">
-        {interventionsContent}
+      <TabsContent value="interventions" className="mt-6">
+        {/* PRIORITÉ 3: Fond vert clair pour Interventions Clients */}
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-4 border-green-500 rounded-lg p-6 shadow-sm">
+          <div className="flex items-center gap-2 mb-4 pb-3 border-b-2 border-green-300">
+            <div className="w-2 h-6 bg-green-500 rounded-full" />
+            <h2 className="text-lg font-semibold text-green-700">
+              {lang === 'fr' ? '🏠 Interventions Clients' : '🏠 Client Interventions'}
+            </h2>
+          </div>
+          {interventionsContent}
+        </div>
       </TabsContent>
 
-      <TabsContent value="missions">
-        {missionsContent}
+      <TabsContent value="missions" className="mt-6">
+        {/* PRIORITÉ 3: Fond bleu clair pour Missions Direction */}
+        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border-4 border-blue-600 rounded-lg p-6 shadow-sm">
+          <div className="flex items-center gap-2 mb-4 pb-3 border-b-2 border-blue-300">
+            <div className="w-2 h-6 bg-blue-600 rounded-full" />
+            <h2 className="text-lg font-semibold text-blue-700">
+              {lang === 'fr' ? '📋 Missions Direction' : '📋 Management Missions'}
+            </h2>
+          </div>
+          {missionsContent}
+        </div>
       </TabsContent>
     </Tabs>
   );
