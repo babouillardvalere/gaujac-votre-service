@@ -84,7 +84,6 @@ import NotificationPreferences from './pages/NotificationPreferences';
 import Notifications from './pages/Notifications';
 import PaiementReservation from './pages/PaiementReservation';
 import Piscine from './pages/Piscine';
-import PlanCampingTest from './pages/PlanCampingTest';
 import PreferencesNotifications from './pages/PreferencesNotifications';
 import QADiagnostic from './pages/QADiagnostic';
 import QASante from './pages/QASante';
@@ -189,7 +188,6 @@ export const PAGES = {
     "Notifications": Notifications,
     "PaiementReservation": PaiementReservation,
     "Piscine": Piscine,
-    "PlanCampingTest": PlanCampingTest,
     "PreferencesNotifications": PreferencesNotifications,
     "QADiagnostic": QADiagnostic,
     "QASante": QASante,
