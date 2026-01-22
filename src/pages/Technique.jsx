@@ -604,7 +604,8 @@ export default function Technique() {
       },
       isWorkItem: incidentToWait.isWorkItem,
       workItemId: incidentToWait.workItemId,
-      closeIncidentModal: true // Signal pour fermer la modale principale
+      closeIncidentModal: true, // Signal pour fermer la modale principale
+      switchToAttenteTab: true // Signal pour changer l'onglet vers attente
     });
 
     await pushClientEvent({
