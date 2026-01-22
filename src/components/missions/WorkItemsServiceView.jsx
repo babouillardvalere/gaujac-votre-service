@@ -577,26 +577,31 @@ export default function WorkItemsServiceView({ service }) {
         </div>
 
         <Card className="border-2 border-purple-400 bg-purple-50 sticky bottom-4">
-          <CardContent className="p-4">
-            <Button
-              onClick={handleValider}
-              disabled={
-                finalisationMutation.isPending || 
-                !selectedWorkItem.collaborateur ||
-                !compteRenduGlobal.trim()
-              }
-              className="w-full bg-purple-600 h-14 text-lg font-bold"
-              title={!compteRenduGlobal.trim() ? 'Remplissez le compte rendu' : ''}
-            >
-              {finalisationMutation.isPending ? (
-                <Loader2 className="w-6 h-6 animate-spin mr-2" />
-              ) : (
-                <CheckCircle className="w-6 h-6 mr-2" />
-              )}
-              Valider
-            </Button>
-          </CardContent>
-        </Card>
+           <CardContent className="p-4 space-y-3">
+             {!compteRenduGlobal.trim() && (
+               <div className="bg-red-100 border-l-4 border-red-500 p-3 rounded text-red-700 text-sm font-semibold">
+                 ⚠️ Remplissez le compte rendu (champ obligatoire) pour pouvoir valider
+               </div>
+             )}
+             <Button
+               onClick={handleValider}
+               disabled={
+                 finalisationMutation.isPending || 
+                 !selectedWorkItem.collaborateur ||
+                 !compteRenduGlobal.trim()
+               }
+               className="w-full bg-purple-600 h-14 text-lg font-bold"
+               title={!compteRenduGlobal.trim() ? 'Remplissez le compte rendu' : ''}
+             >
+               {finalisationMutation.isPending ? (
+                 <Loader2 className="w-6 h-6 animate-spin mr-2" />
+               ) : (
+                 <CheckCircle className="w-6 h-6 mr-2" />
+               )}
+               Valider
+             </Button>
+           </CardContent>
+         </Card>
           </>
         )}
       </div>
