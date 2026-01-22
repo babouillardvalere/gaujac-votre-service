@@ -1177,10 +1177,15 @@ export default function Technique() {
                           <div className="space-y-2 mb-3">
                             {incident.workItems.map((wi, idx) => {
                               const desc = wi.description_operationnelle || getWorkItemDescription(wi);
+                              const serviceLabel = wi.service === 'TECHNIQUE' ? '🔧' : '🧹';
                               return (
-                                <div key={idx} className="text-sm bg-gray-50 p-2 rounded">
+                                <div key={idx} className="text-sm bg-gray-50 p-2 rounded border-l-4 border-[#00AEEF]">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span>{serviceLabel}</span>
+                                    <span className="text-xs font-semibold text-gray-600">{wi.service || 'TECHNIQUE'}</span>
+                                  </div>
                                   <pre className="font-body text-gray-700 whitespace-pre-wrap text-xs">
-                                    {desc}
+                                    {desc || '(Pas de description)'}
                                   </pre>
                                 </div>
                               );
