@@ -447,23 +447,33 @@ export default function ClientArriveeIdentite() {
             </CardContent>
           </Card>
 
-          <Button
-            onClick={handleSubmit}
-            disabled={submitting || !formData.nom || !formData.prenom || !formData.date_arrivee || !formData.date_depart || formData.nb_adultes < 1}
-            className="w-full h-12 bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl font-heading disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {submitting ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                {lang === 'fr' ? 'Enregistrement...' : 'Saving...'}
-              </>
-            ) : (
-              <>
-                {lang === 'fr' ? 'Continuer' : 'Continue'}
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </>
-            )}
-          </Button>
+          <div className="space-y-3">
+            <Button
+              onClick={handleSubmit}
+              disabled={submitting || !formData.nom || !formData.prenom || !formData.date_arrivee || !formData.date_depart || formData.nb_adultes < 1}
+              className="w-full h-12 bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl font-heading disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  {lang === 'fr' ? 'Enregistrement...' : 'Saving...'}
+                </>
+              ) : (
+                <>
+                  {lang === 'fr' ? 'Continuer' : 'Continue'}
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </>
+              )}
+            </Button>
+
+            <Button
+              onClick={() => navigate(createPageUrl('PlanCampingTest'))}
+              variant="outline"
+              className="w-full h-12 border-2 border-[#00AEEF] text-[#00AEEF] hover:bg-[#00AEEF] hover:text-white rounded-xl font-heading"
+            >
+              🗺️ {lang === 'fr' ? 'Ou sélectionner sur le plan' : 'Or select on map'}
+            </Button>
+          </div>
         </motion.div>
       </div>
     </div>
