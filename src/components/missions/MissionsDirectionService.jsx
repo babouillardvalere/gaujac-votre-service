@@ -95,7 +95,7 @@ export default function MissionsDirectionService({ service }) {
         date_debut_reelle: mission.date_debut_reelle || new Date().toISOString()
       });
     },
-    onSuccess: (data) => {
+    onSuccess: async (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['interventions-direction', service] });
       toast.success('Mission prise en charge ⏱️');
       const missionUpdated = { ...selectedMission, ...data };
@@ -113,10 +113,10 @@ export default function MissionsDirectionService({ service }) {
       setPrenomAgent('');
       
       // Notification: Mission prise en charge
-      await base44.entities.Notification.create({
+      base44.entities.Notification.create({
         type: 'MISSION_CREATED',
         titre: `🚀 Mission ${data.type_mission} prise en charge`,
-        message: `${prenom} a pris en charge la mission pour ${data.zones?.[0]?.numero || 'zone inconnue'}`,
+        message: `${variables.prenom} a pris en charge la mission pour ${data.zones?.[0]?.numero || 'zone inconnue'}`,
         destinataire_role: 'DIRECTION',
         priorite: data.priorite === 'URGENTE' || data.priorite === 'CRITIQUE' ? 'URGENTE' : 'NORMALE',
         metadata: { mission_id: data.id, service }

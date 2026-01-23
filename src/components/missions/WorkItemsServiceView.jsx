@@ -67,7 +67,7 @@ export default function WorkItemsServiceView({ service }) {
         date_prise_en_charge: new Date().toISOString()
       });
     },
-    onSuccess: (data) => {
+    onSuccess: async (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['workitems-service', service] });
       toast.success('Tâche prise en charge ⏱️');
       setSelectedWorkItem(data);
@@ -88,7 +88,7 @@ export default function WorkItemsServiceView({ service }) {
       base44.entities.Notification.create({
         type: 'MISSION_CREATED',
         titre: `🚀 Tâche ${data.hebergement} prise en charge`,
-        message: `${prenom} a pris en charge la tâche ${service} pour ${data.hebergement}`,
+        message: `${variables.prenom} a pris en charge la tâche ${service} pour ${data.hebergement}`,
         destinataire_role: 'DIRECTION',
         priorite: data.priorite === 'URGENTE' || data.priorite === 'CRITIQUE' ? 'URGENTE' : 'NORMALE',
         metadata: { workitem_id: data.id, service }
