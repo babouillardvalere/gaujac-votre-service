@@ -9,8 +9,7 @@ import { createPageUrl } from '../utils';
 import Logo from '../components/Logo';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
-import { prepareWorkItemsForMission } from '../components/workItemFactory';
-import { validateBeforeWorkItemCreation } from '../components/qa/ValidationRulesV2';
+
 
 export default function DirectionRecapIntervention() {
   const navigate = useNavigate();
@@ -22,83 +21,89 @@ export default function DirectionRecapIntervention() {
 
   const handleConfirmer = async () => {
     setCreating(true);
-    setError(null); // Reset erreur précédente
+    setError(null);
     
     try {
-      console.log('[DIRECTION] === DÉBUT CRÉATION ===');
+      console.log('[DIRECTION] === DÉBUT CRÉATION MISSIONDIRECTION ===');
       console.log('[DIRECTION] Interventions reçues:', interventions);
       
-      // Utiliser le premier élément comme template
       const template = interventions[0];
       
-      // LOG CRITIQUE : données brutes
-      console.log('[DIRECTION] Template intervention:', {
-        type: template.typeIntervention,
-        hebergement: template.typeHebergement,
-        numero: template.numeroHebergement,
-        service: template.service,
-        taches: template.taches
-      });
+      if (!template) {
+        throw new Error('Aucune intervention à créer');
+      }
       
-      const numerosHebergement = interventions.map(i => i.numeroHebergement);
+      // Validation des champs requis
+      if (!template.typeIntervention || !['HIVERNAGE', 'DESHIVERNAGE'].includes(template.typeIntervention)) {
+        throw new Error('Type de mission invalide (HIVERNAGE ou DESHIVERNAGE requis)');
+      }
+      
+      if (!template.service) {
+        throw new Error('Service requis');
+      }
+      
+      if (!template.datePlanifiee) {
+        throw new Error('Date planifiée requise');
+      }
+      
+      if (!template.taches || template.taches.length === 0) {
+        throw new Error('Au moins une tâche requise');
+      }
+      
+      const numerosHebergement = interventions.map(i => i.numeroHebergement).filter(Boolean);
+      
+      if (numerosHebergement.length === 0) {
+        throw new Error('Aucun hébergement sélectionné');
+      }
+      
       console.log('[DIRECTION] Zones à traiter:', numerosHebergement);
+      console.log('[DIRECTION] Type mission:', template.typeIntervention);
       
-      // Génération automatique via factory : 1 zone = 1 WorkItem
-      const result = prepareWorkItemsForMission({
-        typeMission: template.typeIntervention,
-        datePlanifiee: template.datePlanifiee,
-        typeHebergement: template.typeHebergement,
-        numerosHebergement,
-        service: template.service,
-        priorite: template.priorite,
-        taches: template.taches,
-        description: template.description
-      });
-
-      console.log('[DIRECTION] Résultat factory:', result);
-
-      if (!result.ok) {
-        const errorMsg = `Génération échouée : ${result.error}`;
-        console.error('[DIRECTION] FACTORY ERROR:', errorMsg);
-        setError(errorMsg);
-        toast.error(`❌ ${result.error}`, { duration: 7000 });
-        setCreating(false);
-        return;
+      // Créer UNE MissionDirection par hébergement
+      const missionsCreated = [];
+      
+      for (const numeroHebergement of numerosHebergement) {
+        const missionData = {
+          type_mission: template.typeIntervention,
+          titre: `${template.typeIntervention} - ${numeroHebergement}`,
+          description: template.description || '',
+          objectif: template.description || `Mission ${template.typeIntervention} pour ${numeroHebergement}`,
+          zones: [{
+            type_zone: 'hebergement',
+            numero: numeroHebergement,
+            categorie: template.typeHebergement
+          }],
+          services_intervenants: [{
+            service: template.service,
+            agent: '',
+            zone_perimetre: numeroHebergement
+          }],
+          actions_prevues: template.taches.map(t => ({
+            action: t.texte,
+            effectuee: false
+          })),
+          statut: 'A_FAIRE',
+          priorite: template.priorite || 'NORMALE',
+          date_planifiee: template.datePlanifiee,
+          createur: 'Direction',
+          mission_direction: true
+        };
+        
+        console.log(`[DIRECTION] Création MissionDirection pour ${numeroHebergement}:`, missionData);
+        
+        const created = await base44.entities.MissionDirection.create(missionData);
+        missionsCreated.push(created);
+        
+        console.log(`[DIRECTION] ✅ MissionDirection créée: ${created.id}`);
       }
 
-      console.log(`[DIRECTION] Factory OK - ${result.workItems.length} WorkItem(s) à créer`);
+      console.log(`[DIRECTION] === FIN CRÉATION RÉUSSIE - ${missionsCreated.length} mission(s) ===`);
 
-      // Validation QA + Création batch
-      for (let i = 0; i < result.workItems.length; i++) {
-        const workItemData = result.workItems[i];
-        
-        console.log(`[DIRECTION] WorkItem ${i + 1}/${result.workItems.length}:`, workItemData);
-        
-        const qaResult = validateBeforeWorkItemCreation(workItemData, { 
-          context: 'CREATE',
-          strict: true 
-        });
-        
-        console.log(`[DIRECTION] QA Result ${i + 1}:`, qaResult);
-        
-        if (!qaResult.ok) {
-          const errorMsg = `WorkItem ${workItemData.hebergement || 'N/A'} : ${qaResult.message}`;
-          console.error('[DIRECTION] QA BLOQUE:', errorMsg, qaResult);
-          setError(errorMsg);
-          toast.error(`❌ ${errorMsg}`, { duration: 10000 });
-          setCreating(false);
-          return;
-        }
-
-        await base44.entities.WorkItem.create(workItemData);
-        console.log(`[DIRECTION] ✅ WorkItem ${i + 1} créé`);
-      }
-
-      console.log(`[DIRECTION] === FIN CRÉATION RÉUSSIE ===`);
-
-      queryClient.invalidateQueries({ queryKey: ['workitems-technique'] });
-      queryClient.invalidateQueries({ queryKey: ['workitems-menage'] });
-      toast.success(`✅ ${result.workItems.length} intervention(s) créée(s) avec succès !`);
+      queryClient.invalidateQueries({ queryKey: ['suivi-hivernage'] });
+      queryClient.invalidateQueries({ queryKey: ['suivi-deshivernage'] });
+      queryClient.invalidateQueries({ queryKey: ['interventions-direction'] });
+      
+      toast.success(`✅ ${missionsCreated.length} mission(s) ${template.typeIntervention} créée(s) !`);
       navigate(createPageUrl('DirectionMenu'));
     } catch (error) {
       const errorMsg = error.message || 'Erreur inconnue lors de la création';
