@@ -33,13 +33,22 @@ export default function DirectionRecapIntervention() {
         throw new Error('Aucune intervention à créer');
       }
       
-      // Validation des champs requis
-      if (!template.typeIntervention || !['HIVERNAGE', 'DESHIVERNAGE'].includes(template.typeIntervention)) {
-        throw new Error('Type de mission invalide (HIVERNAGE ou DESHIVERNAGE requis)');
+      console.log('[DIRECTION] Template complet:', template);
+      console.log('[DIRECTION] template.typeIntervention =', template.typeIntervention);
+      console.log('[DIRECTION] template.service =', template.service);
+      console.log('[DIRECTION] template.taches =', template.taches);
+      
+      // Validation stricte
+      if (!template.typeIntervention) {
+        throw new Error('typeIntervention manquant dans le template');
+      }
+      
+      if (!['HIVERNAGE', 'DESHIVERNAGE', 'INTERVENTION'].includes(template.typeIntervention)) {
+        throw new Error(`Type de mission invalide: ${template.typeIntervention} (attendu: HIVERNAGE, DESHIVERNAGE ou INTERVENTION)`);
       }
       
       if (!template.service) {
-        throw new Error('Service requis');
+        throw new Error('Service requis (TECHNIQUE ou MENAGE)');
       }
       
       if (!template.datePlanifiee) {
@@ -56,15 +65,16 @@ export default function DirectionRecapIntervention() {
         throw new Error('Aucun hébergement sélectionné');
       }
       
+      console.log('[DIRECTION] ✅ Validation réussie');
       console.log('[DIRECTION] Zones à traiter:', numerosHebergement);
-      console.log('[DIRECTION] Type mission:', template.typeIntervention);
+      console.log('[DIRECTION] Type mission EXACT:', template.typeIntervention);
       
       // Créer UNE MissionDirection par hébergement
       const missionsCreated = [];
       
       for (const numeroHebergement of numerosHebergement) {
         const missionData = {
-          type_mission: template.typeIntervention,
+          type_mission: template.typeIntervention, // CRITIQUE: doit être HIVERNAGE ou DESHIVERNAGE
           titre: `${template.typeIntervention} - ${numeroHebergement}`,
           description: template.description || '',
           objectif: template.description || `Mission ${template.typeIntervention} pour ${numeroHebergement}`,
@@ -89,25 +99,37 @@ export default function DirectionRecapIntervention() {
           mission_direction: true
         };
         
-        console.log(`[DIRECTION] Création MissionDirection pour ${numeroHebergement}:`, missionData);
+        console.log(`[DIRECTION] 🚀 Payload MissionDirection pour ${numeroHebergement}:`);
+        console.log(JSON.stringify(missionData, null, 2));
         
         const created = await base44.entities.MissionDirection.create(missionData);
         missionsCreated.push(created);
         
-        console.log(`[DIRECTION] ✅ MissionDirection créée: ${created.id}`);
+        console.log(`[DIRECTION] ✅ MissionDirection créée ID=${created.id} type_mission=${created.type_mission}`);
+        console.log('[DIRECTION] Objet créé complet:', created);
       }
 
-      console.log(`[DIRECTION] === FIN CRÉATION RÉUSSIE - ${missionsCreated.length} mission(s) ===`);
+      console.log(`[DIRECTION] === 🎉 FIN CRÉATION RÉUSSIE - ${missionsCreated.length} mission(s) ===`);
+      console.log('[DIRECTION] IDs créés:', missionsCreated.map(m => m.id));
 
       queryClient.invalidateQueries({ queryKey: ['suivi-hivernage'] });
       queryClient.invalidateQueries({ queryKey: ['suivi-deshivernage'] });
       queryClient.invalidateQueries({ queryKey: ['interventions-direction'] });
       
-      toast.success(`✅ ${missionsCreated.length} mission(s) ${template.typeIntervention} créée(s) !`);
-      navigate(createPageUrl('DirectionMenu'));
+      toast.success(`✅ ${missionsCreated.length} mission(s) ${template.typeIntervention} créée(s) !`, { duration: 5000 });
+      
+      // Rediriger vers la page de suivi correspondante pour vérifier immédiatement
+      if (template.typeIntervention === 'DESHIVERNAGE') {
+        setTimeout(() => navigate(createPageUrl('DirectionSuiviDeshivernage')), 1000);
+      } else if (template.typeIntervention === 'HIVERNAGE') {
+        setTimeout(() => navigate(createPageUrl('DirectionSuiviHivernage')), 1000);
+      } else {
+        navigate(createPageUrl('DirectionMenu'));
+      }
     } catch (error) {
       const errorMsg = error.message || 'Erreur inconnue lors de la création';
-      console.error('[DIRECTION] EXCEPTION:', error);
+      console.error('[DIRECTION] ❌ EXCEPTION:', error);
+      console.error('[DIRECTION] Stack:', error.stack);
       setError(errorMsg);
       toast.error(`❌ ${errorMsg}`, { duration: 10000 });
     } finally {
