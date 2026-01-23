@@ -17,8 +17,8 @@ export default function DirectionSuiviHivernage() {
 
   const { data: missions = [], isLoading } = useQuery({
     queryKey: ['suivi-hivernage'],
-    queryFn: () => base44.entities.InterventionDirection.filter(
-      { type_intervention: 'HIVERNAGE' },
+    queryFn: () => base44.entities.MissionDirection.filter(
+      { type_mission: 'HIVERNAGE' },
       '-created_date',
       200
     ),
@@ -26,15 +26,15 @@ export default function DirectionSuiviHivernage() {
   });
 
   const filtered = missions.filter(m => {
-    if (filterService !== 'tous' && m.service !== filterService) return false;
+    if (filterService !== 'tous' && !m.services_intervenants?.some(s => s.service === filterService)) return false;
     if (filterStatut !== 'tous' && m.statut !== filterStatut) return false;
     return true;
   });
 
   const stats = {
     total: missions.length,
-    technique: missions.filter(m => m.service === 'TECHNIQUE').length,
-    menage: missions.filter(m => m.service === 'MENAGE').length,
+    technique: missions.filter(m => m.services_intervenants?.some(s => s.service === 'TECHNIQUE')).length,
+    menage: missions.filter(m => m.services_intervenants?.some(s => s.service === 'MENAGE')).length,
     termine: missions.filter(m => m.statut === 'TERMINEE').length,
     enCours: missions.filter(m => m.statut === 'EN_COURS').length,
     aFaire: missions.filter(m => m.statut === 'A_FAIRE').length
@@ -169,18 +169,23 @@ export default function DirectionSuiviHivernage() {
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge className={mission.service === 'TECHNIQUE' ? 'bg-blue-500' : 'bg-yellow-500'}>
-                        {mission.service === 'TECHNIQUE' ? '🧰 Technique' : '🧽 Ménage'}
-                      </Badge>
-                      {mission.priorite === 'URGENTE' && (
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      {mission.services_intervenants?.map((si, idx) => (
+                        <Badge key={idx} className={si.service === 'TECHNIQUE' ? 'bg-blue-500' : 'bg-yellow-500'}>
+                          {si.service === 'TECHNIQUE' ? '🧰 Technique' : '🧽 Ménage'} - {si.agent || 'Non assigné'}
+                        </Badge>
+                      ))}
+                      {(mission.priorite === 'URGENTE' || mission.priorite === 'CRITIQUE') && (
                         <Badge className="bg-red-500">⚠️ Urgent</Badge>
                       )}
                     </div>
                     <h3 className="font-heading text-lg">
-                      {mission.type_hebergement} - {mission.numero_hebergement}
+                      {mission.zones?.map(z => `${z.categorie || z.type_zone} ${z.numero}`).join(', ') || 'Multi-zones'}
                     </h3>
-                    <p className="text-sm text-gray-600">{mission.description}</p>
+                    <p className="text-sm text-gray-600">{mission.titre}</p>
+                    {mission.objectif && (
+                      <p className="text-xs text-gray-500 mt-1">{mission.objectif}</p>
+                    )}
                   </div>
                   
                   <Badge variant={mission.statut === 'TERMINEE' ? 'default' : 'outline'}>
@@ -191,20 +196,13 @@ export default function DirectionSuiviHivernage() {
                 </div>
 
                 <div className="text-sm text-gray-600 space-y-1">
-                  <p>📋 {mission.taches?.length || 0} tâche(s)</p>
-                  {mission.pris_en_charge_par && (
-                    <div className="flex items-center gap-3">
-                      <span className="flex items-center gap-1">
-                        <User className="w-4 h-4" />
-                        {mission.pris_en_charge_par}
-                      </span>
-                      {mission.temps_ecoule_minutes > 0 && (
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          {mission.temps_ecoule_minutes} min
-                        </span>
-                      )}
-                    </div>
+                  <p>📋 {mission.actions_prevues?.length || 0} action(s)</p>
+                  <p>🏢 {mission.zones?.length || 0} zone(s)</p>
+                  {mission.temps_reel_minutes > 0 && (
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-4 h-4" />
+                      {mission.temps_reel_minutes} min
+                    </span>
                   )}
                 </div>
               </CardContent>
