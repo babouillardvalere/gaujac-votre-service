@@ -33,12 +33,24 @@ export default function MissionsDirectionService({ service }) {
   const { data: missions = [], isLoading, error } = useQuery({
     queryKey: ['interventions-direction', service, filterStatut],
     queryFn: async () => {
-      const query = { service };
+      // Récupérer toutes les MissionDirection qui concernent ce service
+      const allMissions = await base44.entities.MissionDirection.filter(
+        { mission_direction: true },
+        '-created_date',
+        250
+      );
+      
+      // Filtrer côté client pour garder uniquement celles qui ont ce service
+      const missionsFiltered = allMissions.filter(m => 
+        m.services_intervenants?.some(s => s.service === service)
+      );
+      
+      // Filtrer par statut si nécessaire
       if (filterStatut !== 'TERMINEE') {
-        query.statut = { $in: ['A_FAIRE', 'EN_COURS', 'EN_ATTENTE'] };
+        return missionsFiltered.filter(m => ['A_FAIRE', 'EN_COURS', 'EN_ATTENTE'].includes(m.statut));
       }
-      const allMissions = await base44.entities.InterventionDirection.filter(query, '-created_date', 250);
-      return allMissions;
+      
+      return missionsFiltered;
     },
     refetchInterval: filterStatut === 'TERMINEE' ? 120000 : 45000,
     staleTime: 30000
