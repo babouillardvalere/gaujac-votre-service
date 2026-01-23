@@ -111,6 +111,16 @@ export default function MissionsDirectionService({ service }) {
       setTachesEtat(etat);
       setModeTraitement(true);
       setPrenomAgent('');
+      
+      // Notification: Mission prise en charge
+      await base44.entities.Notification.create({
+        type: 'MISSION_CREATED',
+        titre: `🚀 Mission ${data.type_mission} prise en charge`,
+        message: `${prenom} a pris en charge la mission pour ${data.zones?.[0]?.numero || 'zone inconnue'}`,
+        destinataire_role: 'DIRECTION',
+        priorite: data.priorite === 'URGENTE' || data.priorite === 'CRITIQUE' ? 'URGENTE' : 'NORMALE',
+        metadata: { mission_id: data.id, service }
+      }).catch(err => console.error('Erreur notification:', err));
     }
   });
 
@@ -158,9 +168,29 @@ export default function MissionsDirectionService({ service }) {
       setNouvelArticle({});
       
       if (variables.statut === 'TERMINEE') {
-        toast.success('✅ Mission terminée - PDF généré');
+        toast.success('✅ Mission terminée');
+        
+        // Notification: Mission terminée
+        base44.entities.Notification.create({
+          type: 'MISSION_COMPLETE',
+          titre: `✅ Mission ${data.type_mission} terminée`,
+          message: `Mission ${data.zones?.[0]?.numero || 'zone'} terminée avec résultat: ${variables.resultats}`,
+          destinataire_role: 'DIRECTION',
+          priorite: 'NORMALE',
+          metadata: { mission_id: data.id, service: variables.service, resultat: variables.resultats }
+        }).catch(err => console.error('Erreur notification:', err));
       } else if (variables.statut === 'EN_ATTENTE') {
         toast.success('⏸️ Mission mise en attente');
+        
+        // Notification: Mission en attente
+        base44.entities.Notification.create({
+          type: 'MISSION_REACTIVATED',
+          titre: `⏸️ Mission ${data.type_mission} en attente`,
+          message: `Mission ${data.zones?.[0]?.numero || 'zone'} mise en attente par ${variables.service}`,
+          destinataire_role: 'DIRECTION',
+          priorite: 'URGENTE',
+          metadata: { mission_id: data.id, service: variables.service }
+        }).catch(err => console.error('Erreur notification:', err));
       }
     }
   });
