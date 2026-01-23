@@ -58,9 +58,9 @@ export default function MissionsDirectionService({ service }) {
 
   // Timer temps réel
   useEffect(() => {
-    if (modeTraitement && selectedMission?.date_prise_en_charge) {
+    if (modeTraitement && selectedMission?.date_debut_reelle) {
       const calculerTemps = () => {
-        const minutes = differenceInMinutes(new Date(), new Date(selectedMission.date_prise_en_charge));
+        const minutes = differenceInMinutes(new Date(), new Date(selectedMission.date_debut_reelle));
         setTempsEcoule(minutes);
       };
       
@@ -71,12 +71,28 @@ export default function MissionsDirectionService({ service }) {
   }, [selectedMission, modeTraitement]);
 
   const priseEnChargeMutation = useMutation({
-    mutationFn: async ({ id, prenom }) => {
-      return await base44.entities.InterventionDirection.update(id, {
+    mutationFn: async ({ id, prenom, service }) => {
+      // Mettre à jour la MissionDirection avec l'agent dans services_intervenants
+      const mission = missions.find(m => m.id === id);
+      const servicesIntervenants = mission.services_intervenants || [];
+      
+      // Ajouter ou mettre à jour l'intervenant pour ce service
+      const existingIndex = servicesIntervenants.findIndex(s => s.service === service);
+      if (existingIndex >= 0) {
+        servicesIntervenants[existingIndex].agent = prenom;
+        servicesIntervenants[existingIndex].date_intervention = new Date().toISOString();
+      } else {
+        servicesIntervenants.push({
+          service,
+          agent: prenom,
+          date_intervention: new Date().toISOString()
+        });
+      }
+      
+      return await base44.entities.MissionDirection.update(id, {
         statut: 'EN_COURS',
-        pris_en_charge_par: prenom,
-        date_prise_en_charge: new Date().toISOString(),
-        temps_ecoule_minutes: 0
+        services_intervenants: servicesIntervenants,
+        date_debut_reelle: mission.date_debut_reelle || new Date().toISOString()
       });
     },
     onSuccess: (data) => {
@@ -99,46 +115,39 @@ export default function MissionsDirectionService({ service }) {
   });
 
   const finalisationMutation = useMutation({
-    mutationFn: async ({ id, taches, statut, motifAttente }) => {
+    mutationFn: async ({ id, service, statut, resultats, tempsMinutes }) => {
       const now = new Date().toISOString();
       const missionActuelle = missions.find(m => m.id === id);
-      const dureeMinutes = missionActuelle?.date_prise_en_charge 
-        ? Math.floor((new Date() - new Date(missionActuelle.date_prise_en_charge)) / 60000)
-        : 0;
+      
+      // Mettre à jour services_intervenants avec les résultats
+      const servicesIntervenants = [...(missionActuelle.services_intervenants || [])];
+      const existingIndex = servicesIntervenants.findIndex(s => s.service === service);
+      
+      if (existingIndex >= 0) {
+        servicesIntervenants[existingIndex].resultat = resultats;
+        servicesIntervenants[existingIndex].temps_minutes = tempsMinutes;
+      }
+      
+      // Mettre à jour actions_prevues avec les états
+      const actionsPrevues = [...(missionActuelle.actions_prevues || [])];
+      Object.keys(tachesEtat).forEach(idx => {
+        if (actionsPrevues[idx]) {
+          actionsPrevues[idx].effectuee = tachesEtat[idx].effectuee;
+        }
+      });
 
-      // PAYLOAD COMPLET pour éviter blocage QA
       const updateData = {
-        ...missionActuelle,
-        taches,
         statut,
-        temps_ecoule_minutes: dureeMinutes
+        services_intervenants: servicesIntervenants,
+        actions_prevues: actionsPrevues,
+        temps_reel_minutes: (missionActuelle.temps_reel_minutes || 0) + tempsMinutes
       };
 
       if (statut === 'TERMINEE') {
-        updateData.date_terminee = now;
-        
-        // Générer le PDF automatiquement
-        try {
-          const pdfBlob = await genererPDFIntervention({
-            mission: { ...missionActuelle, taches },
-            service,
-            tempsTotal: dureeMinutes
-          });
-
-          const pdfFile = new File([pdfBlob], `intervention_${id}.pdf`, { type: 'application/pdf' });
-          const { file_url } = await base44.integrations.Core.UploadFile({ file: pdfFile });
-
-          updateData.pdf_url = file_url;
-          toast.success('PDF généré automatiquement ✅');
-        } catch (error) {
-          console.error('Erreur génération PDF:', error);
-          toast.error('Mission validée mais erreur PDF');
-        }
-      } else if (statut === 'EN_ATTENTE') {
-        updateData.description = motifAttente ? `${missionActuelle.description}\n\n⚠️ En attente: ${motifAttente}` : missionActuelle.description;
+        updateData.date_fin_reelle = now;
       }
 
-      return await base44.entities.InterventionDirection.update(id, updateData);
+      return await base44.entities.MissionDirection.update(id, updateData);
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['interventions-direction', service] });
@@ -253,11 +262,10 @@ export default function MissionsDirectionService({ service }) {
   const handlePrendreEnCharge = (mission) => {
     setSelectedMission(mission);
     const etat = {};
-    mission.taches.forEach(t => {
-      etat[t.numero] = {
-        faite: t.faite !== undefined ? t.faite : undefined,
-        justification: t.justification || '',
-        photo_url: t.photo_url || ''
+    const actions = mission.actions_prevues || [];
+    actions.forEach((action, idx) => {
+      etat[idx] = {
+        effectuee: action.effectuee || false
       };
     });
     setTachesEtat(etat);
@@ -278,26 +286,16 @@ export default function MissionsDirectionService({ service }) {
       toast.error('Prénom obligatoire');
       return;
     }
-    priseEnChargeMutation.mutate({ id: selectedMission.id, prenom: prenomAgent.trim() });
+    priseEnChargeMutation.mutate({ id: selectedMission.id, prenom: prenomAgent.trim(), service });
   };
 
-  const handleToggleTache = (numero, newStatus) => {
+  const handleToggleTache = (idx, effectuee) => {
     setTachesEtat({
       ...tachesEtat,
-      [numero]: {
-        ...tachesEtat[numero],
-        faite: newStatus,
-        justification: newStatus ? '' : tachesEtat[numero]?.justification || '',
-        commandeNecessaire: newStatus ? undefined : tachesEtat[numero]?.commandeNecessaire
+      [idx]: {
+        effectuee
       }
     });
-    
-    // Réinitialiser les articles si on repasse à "fait"
-    if (newStatus && commandesArticles[numero]) {
-      const newCommandes = { ...commandesArticles };
-      delete newCommandes[numero];
-      setCommandesArticles(newCommandes);
-    }
   };
 
   const handleToggleCommande = (numero, necessaire) => {
@@ -361,98 +359,35 @@ export default function MissionsDirectionService({ service }) {
   };
 
   const handleValiderTraitement = async () => {
-    const tachesNonRepondues = selectedMission.taches.filter(t => 
-      tachesEtat[t.numero] === undefined || 
-      (tachesEtat[t.numero].faite === undefined)
-    );
-
-    if (tachesNonRepondues.length > 0) {
-      toast.error(`⚠️ Veuillez traiter toutes les tâches (${tachesNonRepondues.length} restante(s))`);
+    const actionsPrevu = selectedMission.actions_prevues || [];
+    
+    if (actionsPrevu.length === 0) {
+      toast.error('⚠️ Aucune action définie dans cette mission');
       return;
     }
-
-    const tachesUpdated = selectedMission.taches.map(t => ({
-      ...t,
-      faite: tachesEtat[t.numero].faite,
-      justification: tachesEtat[t.numero].justification,
-      photo_url: tachesEtat[t.numero].photo_url
-    }));
-
-    const tachesSansJustification = tachesUpdated.filter(t => !t.faite && !t.justification?.trim());
-    if (tachesSansJustification.length > 0) {
-      toast.error(`⚠️ Justification obligatoire pour les tâches non faites (${tachesSansJustification.map(t => t.numero).join(', ')})`);
-      return;
-    }
-
-    const tachesSansArticles = selectedMission.taches.filter(t => {
-      const etat = tachesEtat[t.numero];
-      return !etat?.faite && etat?.commandeNecessaire === true && (!commandesArticles[t.numero] || commandesArticles[t.numero].length === 0);
-    });
-
-    if (tachesSansArticles.length > 0) {
-      toast.error(`⚠️ Ajoutez au moins un article pour les commandes nécessaires (tâche(s) ${tachesSansArticles.map(t => t.numero).join(', ')})`);
-      return;
-    }
-
-    // Commande nécessaire est maintenant optionnel - on considère "non" si non renseigné
-
-    const touteFait = tachesUpdated.every(t => t.faite);
-    const tachesAvecCommande = selectedMission.taches.filter(t => {
-      const etat = tachesEtat[t.numero];
-      return !etat?.faite && etat?.commandeNecessaire === true;
-    });
-
-    let nouveauStatut, motifAttente;
-
-    if (touteFait) {
-      nouveauStatut = 'TERMINEE';
-      motifAttente = null;
-    } else if (tachesAvecCommande.length > 0) {
-      // Des commandes sont nécessaires → EN_ATTENTE
-      const tachesNonFaites = tachesUpdated.filter(t => !t.faite);
-      const justifications = tachesNonFaites.map(t => `Tâche ${t.numero}: ${t.justification}`).join('\n');
-      nouveauStatut = 'EN_ATTENTE';
-      motifAttente = justifications;
-    } else {
-      // Tâches non faites SANS commande nécessaire → TERMINEE avec échec partiel
-      nouveauStatut = 'TERMINEE';
-      motifAttente = null;
-    }
-
-    try {
-      const commandesACreer = selectedMission.taches
-        .filter(t => {
-          const etat = tachesEtat[t.numero];
-          return !etat?.faite && etat?.commandeNecessaire === true && commandesArticles[t.numero]?.length > 0;
-        })
-        .map(t => ({
-          mission_id: selectedMission.id,
-          type_intervention: selectedMission.type_intervention,
-          hebergement: selectedMission.numero_hebergement,
-          type_hebergement: selectedMission.type_hebergement,
-          service_demandeur: service,
-          agent: selectedMission.pris_en_charge_par,
-          tache_numero: t.numero,
-          tache_texte: t.texte,
-          articles: commandesArticles[t.numero],
-          statut: 'A_COMMANDER'
-        }));
-
-      if (commandesACreer.length > 0) {
-        await base44.entities.CommandeDirection.bulkCreate(commandesACreer);
-        toast.success(`📦 ${commandesACreer.length} commande(s) créée(s)`);
-      }
-    } catch (error) {
-      console.error('Erreur création commandes:', error);
-      toast.error('Erreur lors de la création des commandes');
-      return;
-    }
+    
+    // Calculer le résultat global
+    const actionsFaites = actionsPrevu.filter(a => a.effectuee).length;
+    const toutesReussies = actionsFaites === actionsPrevu.length;
+    const resultat = toutesReussies ? 'conforme' : actionsFaites > 0 ? 'partiel' : 'echoue';
+    
+    const tempsTotal = selectedMission.date_debut_reelle 
+      ? differenceInMinutes(new Date(), new Date(selectedMission.date_debut_reelle))
+      : 0;
+    
+    // Déterminer le statut final de la mission
+    const tousServicesTermines = selectedMission.services_intervenants?.every(s => 
+      s.resultat && ['conforme', 'partiel', 'echoue'].includes(s.resultat)
+    ) || false;
+    
+    const nouveauStatut = tousServicesTermines ? 'TERMINEE' : 'EN_COURS';
 
     finalisationMutation.mutate({
       id: selectedMission.id,
-      taches: tachesUpdated,
+      service,
       statut: nouveauStatut,
-      motifAttente
+      resultats: resultat,
+      tempsMinutes: tempsTotal
     });
   };
 
@@ -517,7 +452,7 @@ export default function MissionsDirectionService({ service }) {
 
   // Mode traitement - afficher UNIQUEMENT la page de traitement
   if (modeTraitement && selectedMission) {
-    const tachesRepondues = selectedMission.taches.filter(t => tachesEtat[t.numero]?.faite !== undefined).length;
+    const actionsTraitees = Object.keys(tachesEtat).length;
 
     return (
       <div className="space-y-4">
@@ -541,19 +476,22 @@ export default function MissionsDirectionService({ service }) {
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <Badge className={selectedMission.type_intervention === 'HIVERNAGE' ? 'bg-blue-500' : 'bg-yellow-500'}>
-                    {selectedMission.type_intervention === 'HIVERNAGE' ? '❄️ Hivernage' : '🌞 Déshivernage'}
+                  <Badge className={selectedMission.type_mission === 'HIVERNAGE' ? 'bg-blue-500' : 'bg-yellow-500'}>
+                    {selectedMission.type_mission === 'HIVERNAGE' ? '❄️ Hivernage' : '🌞 Déshivernage'}
                   </Badge>
-                  {selectedMission.priorite === 'URGENTE' && (
+                  {(selectedMission.priorite === 'URGENTE' || selectedMission.priorite === 'CRITIQUE') && (
                     <Badge className="bg-red-500">⚠️ URGENT</Badge>
                   )}
                 </div>
                 <h3 className="font-heading text-lg text-purple-900">
-                  {selectedMission.type_hebergement} - {selectedMission.numero_hebergement}
+                  {selectedMission.titre}
                 </h3>
+                <p className="text-sm text-purple-600">
+                  {selectedMission.zones?.map(z => `${z.categorie || z.type_zone} ${z.numero}`).join(', ')}
+                </p>
               </div>
               
-              {selectedMission.date_prise_en_charge && (
+              {selectedMission.date_debut_reelle && (
                 <div className="text-right">
                   <div className="flex items-center gap-2 text-purple-700 font-bold text-lg">
                     <Clock className="w-5 h-5 animate-pulse" />
@@ -564,23 +502,27 @@ export default function MissionsDirectionService({ service }) {
               )}
             </div>
 
-            {selectedMission.description && (
+            {selectedMission.objectif && (
               <p className="text-sm text-purple-700 italic border-t border-purple-200 pt-2">
-                {selectedMission.description}
+                🎯 {selectedMission.objectif}
               </p>
             )}
 
-            {selectedMission.pris_en_charge_par && (
-              <div className="flex items-center gap-2 text-sm border-t border-purple-200 pt-2">
-                <User className="w-4 h-4 text-purple-600" />
-                <span className="font-bold text-purple-900">{selectedMission.pris_en_charge_par}</span>
+            {selectedMission.services_intervenants && selectedMission.services_intervenants.length > 0 && (
+              <div className="flex flex-wrap gap-2 border-t border-purple-200 pt-2">
+                {selectedMission.services_intervenants.map((si, idx) => (
+                  <div key={idx} className="flex items-center gap-2 text-sm bg-purple-100 px-2 py-1 rounded">
+                    <User className="w-4 h-4 text-purple-600" />
+                    <span className="font-bold text-purple-900">{si.service}: {si.agent || 'Non assigné'}</span>
+                  </div>
+                ))}
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Prise en charge si pas encore fait */}
-        {!selectedMission.pris_en_charge_par && (
+        {/* Prise en charge si pas encore fait pour ce service */}
+        {!selectedMission.services_intervenants?.some(s => s.service === service && s.agent) && (
           <Card className="border-2 border-yellow-400 bg-yellow-50">
             <CardContent className="p-4 space-y-3">
               <h3 className="font-heading text-lg text-yellow-900">
@@ -612,186 +554,48 @@ export default function MissionsDirectionService({ service }) {
         {/* Progression */}
         <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
           <p className="text-sm font-bold text-blue-900">
-            📋 Progression: {tachesRepondues}/{selectedMission.taches.length} tâches traitées
+            📋 Progression: {Object.keys(tachesEtat).length}/{selectedMission.actions_prevues?.length || 0} actions traitées
           </p>
         </div>
 
-        {/* Liste des tâches */}
+        {/* Liste des actions */}
         <div className="space-y-4">
-          {selectedMission.taches.map(tache => {
-            const etat = tachesEtat[tache.numero];
-            const estRepondu = etat?.faite !== undefined;
-            const estFait = etat?.faite === true;
-            const estPasFait = etat?.faite === false;
+          {(selectedMission.actions_prevues || []).map((action, idx) => {
+            const etat = tachesEtat[idx];
+            const estEffectuee = etat?.effectuee === true;
 
             return (
-              <Card key={tache.numero} className={`border-2 ${
-                estRepondu ? (estFait ? 'border-green-400 bg-green-50' : 'border-orange-400 bg-orange-50') : 'border-gray-300 bg-white'
+              <Card key={idx} className={`border-2 ${
+                estEffectuee ? 'border-green-400 bg-green-50' : 'border-gray-300 bg-white'
               }`}>
                 <CardContent className="p-4 space-y-3">
-                  {/* En-tête tâche */}
                   <div className="flex items-start gap-3">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${
-                      estRepondu ? (estFait ? 'bg-green-600 text-white' : 'bg-orange-600 text-white') : 'bg-gray-300 text-gray-700'
+                      estEffectuee ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-700'
                     }`}>
-                      {tache.numero}
+                      {idx + 1}
                     </div>
                     <div className="flex-1">
-                      <p className="font-medium text-gray-900 text-lg">{tache.texte}</p>
-                      {!estRepondu && (
-                        <p className="text-sm text-red-600 font-bold mt-1">⚠️ À traiter</p>
-                      )}
+                      <p className="font-medium text-gray-900 text-lg">{action.action}</p>
                     </div>
                   </div>
 
-                  {/* Boutons Fait / Pas fait */}
                   <div className="flex gap-3">
                     <Button
-                      onClick={() => handleToggleTache(tache.numero, true)}
-                      variant={estFait ? 'default' : 'outline'}
-                      className={`flex-1 h-12 text-base ${estFait ? 'bg-green-600 hover:bg-green-700' : 'border-2 border-green-600 text-green-600 hover:bg-green-50'}`}
+                      onClick={() => handleToggleTache(idx, true)}
+                      variant={estEffectuee ? 'default' : 'outline'}
+                      className={`flex-1 h-12 text-base ${estEffectuee ? 'bg-green-600 hover:bg-green-700' : 'border-2 border-green-600 text-green-600 hover:bg-green-50'}`}
                     >
-                      ✔️ Fait
+                      ✔️ Effectuée
                     </Button>
                     <Button
-                      onClick={() => handleToggleTache(tache.numero, false)}
-                      variant={estPasFait ? 'default' : 'outline'}
-                      className={`flex-1 h-12 text-base ${estPasFait ? 'bg-red-600 hover:bg-red-700' : 'border-2 border-red-600 text-red-600 hover:bg-red-50'}`}
+                      onClick={() => handleToggleTache(idx, false)}
+                      variant={!estEffectuee && etat !== undefined ? 'default' : 'outline'}
+                      className={`flex-1 h-12 text-base ${!estEffectuee && etat !== undefined ? 'bg-red-600 hover:bg-red-700' : 'border-2 border-red-600 text-red-600 hover:bg-red-50'}`}
                     >
-                      ✖️ Pas fait
+                      ✖️ Non faite
                     </Button>
                   </div>
-
-                  {/* Section "Pas fait" */}
-                  {estPasFait && (
-                    <div className="space-y-3 pl-2 border-l-4 border-orange-400">
-                      {/* Justification */}
-                      <div className="pl-3">
-                        <label className="text-sm font-bold text-orange-700 mb-1 block">
-                          ✍️ Justification obligatoire *
-                        </label>
-                        <Textarea
-                          value={etat?.justification || ''}
-                          onChange={(e) => setTachesEtat({
-                            ...tachesEtat,
-                            [tache.numero]: {
-                              ...tachesEtat[tache.numero],
-                              justification: e.target.value
-                            }
-                          })}
-                          placeholder="Pourquoi cette tâche n'a pas été effectuée..."
-                          rows={2}
-                          className="bg-white border-2 border-orange-300"
-                        />
-                      </div>
-
-                      {/* Commande nécessaire */}
-                      <div className="pl-3 bg-purple-50 rounded-lg p-3 border-2 border-purple-300">
-                        <label className="text-sm font-bold text-purple-800 mb-2 block">
-                          🛒 Une commande est-elle nécessaire ? (optionnel)
-                        </label>
-                        <div className="flex gap-2 mb-3">
-                          <Button
-                            onClick={() => handleToggleCommande(tache.numero, false)}
-                            variant={etat?.commandeNecessaire === false ? 'default' : 'outline'}
-                            className={etat?.commandeNecessaire === false ? 'bg-gray-700 flex-1' : 'border-2 border-gray-600 text-gray-600 flex-1'}
-                            size="sm"
-                          >
-                            Non
-                          </Button>
-                          <Button
-                            onClick={() => handleToggleCommande(tache.numero, true)}
-                            variant={etat?.commandeNecessaire === true ? 'default' : 'outline'}
-                            className={etat?.commandeNecessaire === true ? 'bg-green-600 flex-1' : 'border-2 border-green-600 text-green-600 flex-1'}
-                            size="sm"
-                          >
-                            Oui
-                          </Button>
-                        </div>
-
-                        {/* Ajout articles */}
-                        {etat?.commandeNecessaire === true && (
-                          <div className="space-y-2">
-                            {commandesArticles[tache.numero]?.map((article, idx) => (
-                              <div key={idx} className="flex items-center gap-2 bg-white rounded-lg p-2 border-2 border-purple-200">
-                                <span className="flex-1 text-sm font-medium">{article}</span>
-                                <button
-                                  onClick={() => handleSupprimerArticle(tache.numero, idx)}
-                                  className="text-red-500 hover:text-red-700 p-1"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </div>
-                            ))}
-
-                            <div className="flex gap-2">
-                              <Input
-                                value={nouvelArticle[tache.numero] || ''}
-                                onChange={(e) => setNouvelArticle({ ...nouvelArticle, [tache.numero]: e.target.value })}
-                                placeholder="Nom de l'article..."
-                                className="flex-1 bg-white"
-                                onKeyPress={(e) => {
-                                  if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    handleAjouterArticle(tache.numero);
-                                  }
-                                }}
-                              />
-                              <Button
-                                onClick={() => handleAjouterArticle(tache.numero)}
-                                size="sm"
-                                className="bg-purple-600"
-                              >
-                                ➕
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Photo */}
-                  <div className="flex items-center gap-3">
-                    <label className="cursor-pointer">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handlePhotoUpload(tache.numero, file);
-                        }}
-                        disabled={uploadingPhoto === tache.numero}
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={uploadingPhoto === tache.numero}
-                        type="button"
-                        asChild
-                      >
-                        <span>
-                          {uploadingPhoto === tache.numero ? (
-                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                          ) : (
-                            <Camera className="w-4 h-4 mr-2" />
-                          )}
-                          Photo (facultatif)
-                        </span>
-                      </Button>
-                    </label>
-                    {etat?.photo_url && (
-                      <span className="text-xs text-green-600 flex items-center gap-1">
-                        <CheckCircle className="w-4 h-4" />
-                        Ajoutée
-                      </span>
-                    )}
-                  </div>
-
-                  {etat?.photo_url && (
-                    <img src={etat.photo_url} alt={`Tâche ${tache.numero}`} className="w-40 h-40 object-cover rounded-lg border-2 border-gray-300" />
-                  )}
                 </CardContent>
               </Card>
             );
@@ -803,7 +607,7 @@ export default function MissionsDirectionService({ service }) {
           <CardContent className="p-4">
             <Button 
               onClick={handleValiderTraitement}
-              disabled={finalisationMutation.isPending || !selectedMission.pris_en_charge_par}
+              disabled={finalisationMutation.isPending || !selectedMission.services_intervenants?.some(s => s.service === service && s.agent)}
               className="w-full bg-purple-600 hover:bg-purple-700 h-14 text-lg font-bold"
             >
               {finalisationMutation.isPending ? (
@@ -814,10 +618,10 @@ export default function MissionsDirectionService({ service }) {
               Valider la mission
             </Button>
             <p className="text-xs text-purple-700 text-center mt-2">
-              {tachesRepondues < selectedMission.taches.length ? (
-                `⚠️ ${selectedMission.taches.length - tachesRepondues} tâche(s) restante(s)`
+              {actionsTraitees < (selectedMission.actions_prevues?.length || 0) ? (
+                `⚠️ ${(selectedMission.actions_prevues?.length || 0) - actionsTraitees} action(s) restante(s)`
               ) : (
-                '✅ Toutes les tâches traitées'
+                '✅ Toutes les actions traitées'
               )}
             </p>
           </CardContent>
