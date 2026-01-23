@@ -83,6 +83,16 @@ export default function WorkItemsServiceView({ service }) {
         };
       });
       setTachesEtat(etat);
+      
+      // Notification: Mission prise en charge
+      base44.entities.Notification.create({
+        type: 'MISSION_CREATED',
+        titre: `🚀 Tâche ${data.hebergement} prise en charge`,
+        message: `${prenom} a pris en charge la tâche ${service} pour ${data.hebergement}`,
+        destinataire_role: 'DIRECTION',
+        priorite: data.priorite === 'URGENTE' || data.priorite === 'CRITIQUE' ? 'URGENTE' : 'NORMALE',
+        metadata: { workitem_id: data.id, service }
+      }).catch(err => console.error('Erreur notification:', err));
     }
   });
 
@@ -124,6 +134,21 @@ export default function WorkItemsServiceView({ service }) {
             statut: 'A_COMMANDER'
           }))
         );
+        
+        // Notification: Nouvelle commande nécessaire
+        await base44.entities.Notification.create({
+          type: 'STOCK_ALERTE',
+          titre: `📦 ${commandesACreer.length} nouvelle(s) commande(s)`,
+          message: `Commandes créées pour ${workItem.hebergement} par ${service} - ${commandesACreer.flatMap(c => c.articles).length} article(s)`,
+          destinataire_role: 'DIRECTION',
+          priorite: 'URGENTE',
+          metadata: { 
+            workitem_id: id,
+            mission_id: workItem.mission_direction_id,
+            nb_commandes: commandesACreer.length,
+            articles: commandesACreer.flatMap(c => c.articles)
+          }
+        }).catch(err => console.error('Erreur notification:', err));
       }
 
       return await base44.entities.WorkItem.update(id, updateData);
@@ -174,8 +199,34 @@ export default function WorkItemsServiceView({ service }) {
         } else {
           toast.success('✅ Mission terminée avec succès');
         }
+        
+        // Notification: Mission terminée
+        const workItem = workItems.find(w => w.id === variables.id);
+        base44.entities.Notification.create({
+          type: 'MISSION_COMPLETE',
+          titre: `✅ Tâche ${workItem?.hebergement} terminée`,
+          message: `Tâche ${service} terminée pour ${workItem?.hebergement} - Résultat: ${variables.metadata?.resultat || 'succès'}`,
+          destinataire_role: 'DIRECTION',
+          priorite: 'NORMALE',
+          metadata: { workitem_id: variables.id, service, resultat: variables.metadata?.resultat }
+        }).catch(err => console.error('Erreur notification:', err));
       } else if (variables.statut === 'EN_ATTENTE') {
         toast.success('⏸️ Mission en attente - Commande créée');
+        
+        // Notification: Mission en attente
+        const workItem = workItems.find(w => w.id === variables.id);
+        base44.entities.Notification.create({
+          type: 'MISSION_REACTIVATED',
+          titre: `⏸️ Tâche ${workItem?.hebergement} en attente`,
+          message: `Tâche ${service} mise en attente - ${variables.commandesACreer?.length || 0} commande(s) créée(s)`,
+          destinataire_role: 'DIRECTION',
+          priorite: 'URGENTE',
+          metadata: { 
+            workitem_id: variables.id, 
+            service,
+            nb_commandes: variables.commandesACreer?.length || 0
+          }
+        }).catch(err => console.error('Erreur notification:', err));
       }
     }
   });
