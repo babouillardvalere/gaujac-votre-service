@@ -700,7 +700,7 @@ export default function WorkItemsServiceView({ service }) {
             size="sm"
           >
             {s === 'tous' ? 'Toutes' : s.replace(/_/g, ' ')}
-            ({s === 'tous' ? workItems.length : counts[s]})
+            ({s === 'tous' ? allItems.length : counts[s]})
           </Button>
         ))}
       </div>
@@ -712,14 +712,31 @@ export default function WorkItemsServiceView({ service }) {
         </div>
       ) : (
         <div className="space-y-3">
-          {filteredWorkItems.map((workItem, idx) => {
-            const mission = missions.find(m => m.id === workItem.mission_direction_id);
-            const tachesCompletees = (workItem.taches || []).filter(t => t.faite).length;
-            const tachesTotal = (workItem.taches || []).length;
+          {filteredItems.map((item, idx) => {
+            const workItem = item.isWorkItem ? item : null;
+            const missionItem = item.isMission ? item : null;
+            
+            // Si c'est une mission brute, créer un workItem virtuel
+            const displayItem = workItem || {
+              id: missionItem.id,
+              hebergement: missionItem.zones?.[0]?.numero || 'Multi-zones',
+              type_hebergement: missionItem.zones?.[0]?.categorie || '',
+              titre: missionItem.titre,
+              statut: missionItem.statut,
+              priorite: missionItem.priorite,
+              collaborateur: missionItem.services_intervenants?.[0]?.agent || '',
+              taches: missionItem.actions_prevues?.map((a, i) => ({ numero: i+1, texte: a.action, faite: a.effectuee })) || [],
+              duree_minutes: missionItem.temps_reel_minutes || 0,
+              mission_direction_id: missionItem.id
+            };
+            
+            const mission = missions.find(m => m.id === displayItem.mission_direction_id);
+            const tachesCompletees = (displayItem.taches || []).filter(t => t.faite).length;
+            const tachesTotal = (displayItem.taches || []).length;
 
             return (
-              <Card key={workItem.id} className={`border-2 ${
-                workItem.priorite === 'URGENTE' || workItem.priorite === 'CRITIQUE' ? 'border-red-500 bg-red-50' : 'border-purple-300'
+              <Card key={displayItem.id} className={`border-2 ${
+                displayItem.priorite === 'URGENTE' || displayItem.priorite === 'CRITIQUE' ? 'border-red-500 bg-red-50' : 'border-purple-300'
               }`}>
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-3">
@@ -729,14 +746,14 @@ export default function WorkItemsServiceView({ service }) {
                           {mission?.type_mission || 'MISSION'}
                         </Badge>
                         <Badge className={
-                          workItem.statut === 'TERMINEE' ? 'bg-green-500' :
-                          workItem.statut === 'EN_COURS' ? 'bg-blue-500' :
-                          workItem.statut === 'EN_ATTENTE' ? 'bg-gray-500' :
+                          displayItem.statut === 'TERMINEE' ? 'bg-green-500' :
+                          displayItem.statut === 'EN_COURS' ? 'bg-blue-500' :
+                          displayItem.statut === 'EN_ATTENTE' ? 'bg-gray-500' :
                           'bg-orange-500'
                         }>
-                          {workItem.statut.replace(/_/g, ' ')}
+                          {displayItem.statut.replace(/_/g, ' ')}
                         </Badge>
-                        {(workItem.priorite === 'URGENTE' || workItem.priorite === 'CRITIQUE') && (
+                        {(displayItem.priorite === 'URGENTE' || displayItem.priorite === 'CRITIQUE') && (
                           <Badge className="bg-red-500">
                             <AlertTriangle className="w-3 h-3 mr-1" />
                             URGENT
@@ -745,9 +762,9 @@ export default function WorkItemsServiceView({ service }) {
                       </div>
                       
                       <h3 className="font-heading text-lg text-purple-700">
-                        🏠 {workItem.hebergement} - {workItem.type_hebergement}
+                        🏠 {displayItem.hebergement} - {displayItem.type_hebergement}
                       </h3>
-                      <p className="text-sm text-gray-600 mt-1">{workItem.titre}</p>
+                      <p className="text-sm text-gray-600 mt-1">{displayItem.titre}</p>
                       
                       {mission && (
                         <p className="text-xs text-purple-600 mt-2 italic">
@@ -757,31 +774,36 @@ export default function WorkItemsServiceView({ service }) {
 
                       <div className="flex items-center gap-3 text-xs text-gray-600 mt-2">
                         <span>📋 {tachesCompletees}/{tachesTotal} tâche(s)</span>
-                        {workItem.collaborateur && (
+                        {displayItem.collaborateur && (
                           <span className="flex items-center gap-1">
                             <User className="w-3 h-3" />
-                            {workItem.collaborateur}
+                            {displayItem.collaborateur}
                           </span>
                         )}
-                        {workItem.duree_minutes > 0 && (
+                        {displayItem.duree_minutes > 0 && (
                           <span className="flex items-center gap-1">
                             <Clock className="w-3 h-3" />
-                            {workItem.duree_minutes} min
+                            {displayItem.duree_minutes} min
                           </span>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  {workItem.statut !== 'TERMINEE' && (
+                  {displayItem.statut !== 'TERMINEE' && workItem && (
                     <Button
                       onClick={() => handlePrendreEnCharge(workItem)}
                       disabled={!getDescriptionOperationnelle(workItem)}
                       className="w-full bg-purple-600 h-12"
                       title={!getDescriptionOperationnelle(workItem) ? 'Description manquante' : ''}
                     >
-                      {workItem.statut === 'A_FAIRE' ? 'Prendre en charge' : 'Continuer'}
+                      {displayItem.statut === 'A_FAIRE' ? 'Prendre en charge' : 'Continuer'}
                     </Button>
+                  )}
+                  {displayItem.statut !== 'TERMINEE' && missionItem && (
+                    <div className="text-sm text-gray-600 bg-purple-50 p-3 rounded">
+                      ⚠️ Mission brute - Créez un WorkItem via la page Direction
+                    </div>
                   )}
                 </CardContent>
               </Card>
