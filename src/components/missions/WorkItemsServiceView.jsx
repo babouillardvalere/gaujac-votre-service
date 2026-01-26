@@ -306,11 +306,13 @@ export default function WorkItemsServiceView({ service }) {
     // Si c'est une MissionDirection, mettre à jour la mission
     if (selectedWorkItem.isMissionDirection) {
       const now = new Date().toISOString();
+      const serviceIntervenants = selectedWorkItem.services_intervenants || [];
+      
       base44.entities.MissionDirection.update(selectedWorkItem.id, {
         statut: 'EN_COURS',
         date_debut_reelle: now,
         services_intervenants: [
-          ...(selectedWorkItem.services_intervenants || []),
+          ...serviceIntervenants,
           {
             service: service,
             agent: prenomAgent.trim(),
@@ -319,9 +321,15 @@ export default function WorkItemsServiceView({ service }) {
         ]
       }).then(() => {
         queryClient.invalidateQueries({ queryKey: ['missions-direction-for-service'] });
-        const updated = { ...selectedWorkItem, collaborateur: prenomAgent.trim(), date_prise_en_charge: now };
+        
+        // Mettre à jour l'état local immédiatement
+        const updated = { 
+          ...selectedWorkItem, 
+          collaborateur: prenomAgent.trim(), 
+          date_prise_en_charge: now,
+          statut: 'EN_COURS'
+        };
         setSelectedWorkItem(updated);
-        setModeTraitement(true);
         setPrenomAgent('');
         toast.success('Mission prise en charge ⏱️');
         
