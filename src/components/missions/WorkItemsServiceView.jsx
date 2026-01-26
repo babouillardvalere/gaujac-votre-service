@@ -28,7 +28,31 @@ export default function WorkItemsServiceView({ service }) {
   const [filterStatut, setFilterStatut] = useState('A_FAIRE');
   const [compteRenduGlobal, setCompteRenduGlobal] = useState('');
 
-  const { data: workItems = [], isLoading } = useQuery({
+  const { data: missions = [], isLoading: missionsLoading } = useQuery({
+    queryKey: ['missions-direction-for-service', service],
+    queryFn: async () => {
+      const allMissions = await base44.entities.MissionDirection.filter({ 
+        mission_direction: true 
+      }, '-created_date', 100);
+      
+      console.log('[WorkItemsServiceView] Toutes missions:', allMissions.length);
+      
+      // Filtrer les missions qui concernent ce service OU qui n'ont pas encore de service assigné
+      const filtered = allMissions.filter(m => {
+        const services = m.services_intervenants || [];
+        // Si aucun service assigné, visible par tous
+        if (services.length === 0) return true;
+        // Si ce service est dans la liste
+        return services.some(s => s.service === service.toUpperCase());
+      });
+      
+      console.log('[WorkItemsServiceView]', service, '- Missions filtrées:', filtered.length);
+      return filtered;
+    },
+    refetchInterval: 30000
+  });
+
+  const { data: workItems = [], isLoading: workItemsLoading } = useQuery({
     queryKey: ['workitems-service', service],
     queryFn: async () => {
       const items = await base44.entities.WorkItem.filter({ 
@@ -40,11 +64,7 @@ export default function WorkItemsServiceView({ service }) {
     refetchInterval: 30000
   });
 
-  const { data: missions = [] } = useQuery({
-    queryKey: ['missions-direction-for-workitems'],
-    queryFn: () => base44.entities.MissionDirection.filter({ mission_direction: true }, '-created_date', 100),
-    refetchInterval: 60000
-  });
+  const isLoading = missionsLoading || workItemsLoading;
 
   // Timer
   useEffect(() => {
@@ -389,17 +409,25 @@ export default function WorkItemsServiceView({ service }) {
     });
   };
 
-  const filteredWorkItems = workItems.filter(w => {
+  // Combiner missions et workitems
+  const allItems = [
+    ...missions.map(m => ({ ...m, isMission: true })),
+    ...workItems.map(w => ({ ...w, isWorkItem: true }))
+  ];
+
+  const filteredItems = allItems.filter(item => {
     if (filterStatut === 'tous') return true;
-    return w.statut === filterStatut;
+    return item.statut === filterStatut;
   });
 
   const counts = {
-    A_FAIRE: workItems.filter(w => w.statut === 'A_FAIRE').length,
-    EN_COURS: workItems.filter(w => w.statut === 'EN_COURS').length,
-    EN_ATTENTE: workItems.filter(w => w.statut === 'EN_ATTENTE').length,
-    TERMINEE: workItems.filter(w => w.statut === 'TERMINEE').length
+    A_FAIRE: allItems.filter(w => w.statut === 'A_FAIRE').length,
+    EN_COURS: allItems.filter(w => w.statut === 'EN_COURS').length,
+    EN_ATTENTE: allItems.filter(w => w.statut === 'EN_ATTENTE').length,
+    TERMINEE: allItems.filter(w => w.statut === 'TERMINEE').length
   };
+
+  console.log('[WorkItemsServiceView] Tous items:', allItems.length, 'Filtrés:', filteredItems.length, 'Counts:', counts);
 
   if (isLoading) {
     return (
@@ -677,7 +705,7 @@ export default function WorkItemsServiceView({ service }) {
         ))}
       </div>
 
-      {filteredWorkItems.length === 0 ? (
+      {filteredItems.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-xl">
           <CheckCircle className="w-16 h-16 text-gray-400 mx-auto mb-3" />
           <p className="text-gray-600">Aucune tâche Direction</p>
