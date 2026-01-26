@@ -909,20 +909,26 @@ export default function WorkItemsServiceView({ service }) {
                     </div>
                   </div>
 
-                  {displayItem.statut !== 'TERMINEE' && (
-                    <>
-                      {item.isMission && displayItem.statut === 'A_FAIRE' && (
-                        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-3 mb-2 text-sm">
-                          ⚠️ Mission Direction - Cliquez pour traiter directement
+                  {/* Affichage des tâches */}
+                  {displayItem.taches && displayItem.taches.length > 0 && (
+                    <div className="mb-3 space-y-1">
+                      <p className="text-xs font-semibold text-purple-600 mb-2">📋 Tâches à réaliser:</p>
+                      {displayItem.taches.map((tache, idx) => (
+                        <div key={idx} className="flex items-start gap-2 bg-purple-50 p-2 rounded border-l-2 border-purple-400">
+                          <span className="text-purple-700 font-bold text-sm">{tache.numero}.</span>
+                          <p className="text-sm text-gray-700 flex-1">{tache.texte}</p>
                         </div>
-                      )}
-                      <Button
-                        onClick={() => handlePrendreEnCharge(item)}
-                        className="w-full bg-purple-600 h-12"
-                      >
-                        {displayItem.statut === 'A_FAIRE' ? 'Prendre en charge' : 'Continuer'}
-                      </Button>
-                    </>
+                      ))}
+                    </div>
+                  )}
+
+                  {displayItem.statut !== 'TERMINEE' && (
+                    <Button
+                      onClick={() => handlePrendreEnCharge(item)}
+                      className="w-full bg-purple-600 h-12"
+                    >
+                      {displayItem.statut === 'A_FAIRE' ? 'Prendre en charge' : 'Continuer'}
+                    </Button>
                   )}
                 </CardContent>
               </Card>
