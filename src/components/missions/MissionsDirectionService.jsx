@@ -33,7 +33,7 @@ export default function MissionsDirectionService({ service }) {
   const { data: missions = [], isLoading, error } = useQuery({
     queryKey: ['interventions-direction', service, filterStatut],
     queryFn: async () => {
-      // Récupérer toutes les MissionDirection qui concernent ce service
+      // Récupérer toutes les MissionDirection
       const allMissions = await base44.entities.MissionDirection.filter(
         { mission_direction: true },
         '-created_date',
@@ -41,9 +41,21 @@ export default function MissionsDirectionService({ service }) {
       );
       
       // Filtrer côté client pour garder uniquement celles qui ont ce service
-      const missionsFiltered = allMissions.filter(m => 
-        m.services_intervenants?.some(s => s.service === service)
-      );
+      // dans services_intervenants (nouveau système) OU dans logement_label (ancien système)
+      const missionsFiltered = allMissions.filter(m => {
+        // Nouveau système: vérifier services_intervenants
+        if (m.services_intervenants?.some(s => s.service === service.toUpperCase())) {
+          return true;
+        }
+        
+        // Ancien système: vérifier source (hivernage/deshivernage) - afficher TOUTES les missions
+        // pour ce type si aucun filtre service n'est appliqué dans services_intervenants
+        if (!m.services_intervenants || m.services_intervenants.length === 0) {
+          return true;  // Missions sans service assigné = visibles par tous
+        }
+        
+        return false;
+      });
       
       // Filtrer par statut si nécessaire
       if (filterStatut !== 'TERMINEE') {
