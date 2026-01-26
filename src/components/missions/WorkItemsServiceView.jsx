@@ -254,6 +254,13 @@ export default function WorkItemsServiceView({ service }) {
   });
 
   const handlePrendreEnCharge = (item) => {
+    console.log('[WorkItemsServiceView] Prise en charge:', { 
+      isMission: item.isMission, 
+      isWorkItem: item.isWorkItem,
+      id: item.id,
+      titre: item.titre 
+    });
+    
     // Convertir MissionDirection en format compatible avec WorkItem
     let workItemData;
     
@@ -271,14 +278,17 @@ export default function WorkItemsServiceView({ service }) {
         objectif: mission.objectif,
         statut: mission.statut,
         priorite: mission.priorite,
+        services_intervenants: mission.services_intervenants || [],
         taches: mission.actions_prevues?.map((a, i) => ({
           numero: i + 1,
           texte: a.action,
           faite: a.effectuee,
           justification: ''
         })) || [],
-        type_mission: mission.type_mission
+        type_mission: mission.type_mission,
+        date_prise_en_charge: mission.date_debut_reelle
       };
+      console.log('[WorkItemsServiceView] Mission convertie:', workItemData);
     } else {
       // C'est déjà un WorkItem
       workItemData = item;
