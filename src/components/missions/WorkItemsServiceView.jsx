@@ -822,24 +822,22 @@ export default function WorkItemsServiceView({ service }) {
       ) : (
         <div className="space-y-3">
           {filteredItems.map((item, idx) => {
-            const workItem = item.isWorkItem ? item : null;
-            const missionItem = item.isMission ? item : null;
-            
-            // Si c'est une mission brute, créer un workItem virtuel
-            const displayItem = workItem || {
-              id: missionItem.id,
-              hebergement: missionItem.zones?.[0]?.numero || 'Multi-zones',
-              type_hebergement: missionItem.zones?.[0]?.categorie || '',
-              titre: missionItem.titre,
-              statut: missionItem.statut,
-              priorite: missionItem.priorite,
-              collaborateur: missionItem.services_intervenants?.[0]?.agent || '',
-              taches: missionItem.actions_prevues?.map((a, i) => ({ numero: i+1, texte: a.action, faite: a.effectuee })) || [],
-              duree_minutes: missionItem.temps_reel_minutes || 0,
-              mission_direction_id: missionItem.id
+            // item peut être soit un WorkItem soit une MissionDirection
+            const displayItem = item.isWorkItem ? item : {
+              id: item.id,
+              hebergement: item.zones?.[0]?.numero || 'Multi-zones',
+              type_hebergement: item.zones?.[0]?.categorie || '',
+              titre: item.titre,
+              statut: item.statut,
+              priorite: item.priorite,
+              collaborateur: item.services_intervenants?.find(s => s.service === service)?.agent || '',
+              taches: item.actions_prevues?.map((a, i) => ({ numero: i+1, texte: a.action, faite: a.effectuee })) || [],
+              duree_minutes: item.temps_reel_minutes || 0,
+              mission_direction_id: item.id,
+              type_mission: item.type_mission
             };
             
-            const mission = missions.find(m => m.id === displayItem.mission_direction_id);
+            const mission = item.isMission ? item : missions.find(m => m.id === item.mission_direction_id);
             const tachesCompletees = (displayItem.taches || []).filter(t => t.faite).length;
             const tachesTotal = (displayItem.taches || []).length;
 
