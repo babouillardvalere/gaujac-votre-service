@@ -898,12 +898,19 @@ export default function WorkItemsServiceView({ service }) {
                   </div>
 
                   {displayItem.statut !== 'TERMINEE' && (
-                    <Button
-                      onClick={() => handlePrendreEnCharge(item)}
-                      className="w-full bg-purple-600 h-12"
-                    >
-                      {displayItem.statut === 'A_FAIRE' ? 'Prendre en charge' : 'Continuer'}
-                    </Button>
+                    <>
+                      {item.isMission && displayItem.statut === 'A_FAIRE' && (
+                        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-3 mb-2 text-sm">
+                          ⚠️ Mission Direction - Cliquez pour traiter directement
+                        </div>
+                      )}
+                      <Button
+                        onClick={() => handlePrendreEnCharge(item)}
+                        className="w-full bg-purple-600 h-12"
+                      >
+                        {displayItem.statut === 'A_FAIRE' ? 'Prendre en charge' : 'Continuer'}
+                      </Button>
+                    </>
                   )}
                 </CardContent>
               </Card>
