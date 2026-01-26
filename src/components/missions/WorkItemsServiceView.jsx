@@ -251,13 +251,43 @@ export default function WorkItemsServiceView({ service }) {
     }
   });
 
-  const handlePrendreEnCharge = (workItem) => {
-    setSelectedWorkItem(workItem);
+  const handlePrendreEnCharge = (item) => {
+    // Convertir MissionDirection en format compatible avec WorkItem
+    let workItemData;
+    
+    if (item.isMission) {
+      // C'est une MissionDirection brute - créer une structure compatible
+      const mission = item;
+      workItemData = {
+        id: mission.id,
+        isMissionDirection: true,
+        mission_direction_id: mission.id,
+        hebergement: mission.zones?.[0]?.numero || 'Multi-zones',
+        type_hebergement: mission.zones?.[0]?.categorie || '',
+        titre: mission.titre,
+        description: mission.description,
+        objectif: mission.objectif,
+        statut: mission.statut,
+        priorite: mission.priorite,
+        taches: mission.actions_prevues?.map((a, i) => ({
+          numero: i + 1,
+          texte: a.action,
+          faite: a.effectuee,
+          justification: ''
+        })) || [],
+        type_mission: mission.type_mission
+      };
+    } else {
+      // C'est déjà un WorkItem
+      workItemData = item;
+    }
+    
+    setSelectedWorkItem(workItemData);
     setModeTraitement(true);
-    setCompteRenduGlobal(getDescriptionOperationnelle(workItem) || '');
+    setCompteRenduGlobal(getDescriptionOperationnelle(workItemData) || workItemData.objectif || '');
     
     const etat = {};
-    (workItem.taches || []).forEach(t => {
+    (workItemData.taches || []).forEach(t => {
       etat[t.numero] = {
         faite: t.faite !== undefined ? t.faite : undefined,
         justification: t.justification || '',
@@ -272,6 +302,45 @@ export default function WorkItemsServiceView({ service }) {
       toast.error('Prénom obligatoire');
       return;
     }
+    
+    // Si c'est une MissionDirection, mettre à jour la mission
+    if (selectedWorkItem.isMissionDirection) {
+      const now = new Date().toISOString();
+      base44.entities.MissionDirection.update(selectedWorkItem.id, {
+        statut: 'EN_COURS',
+        date_debut_reelle: now,
+        services_intervenants: [
+          ...(selectedWorkItem.services_intervenants || []),
+          {
+            service: service,
+            agent: prenomAgent.trim(),
+            date_intervention: now
+          }
+        ]
+      }).then(() => {
+        queryClient.invalidateQueries({ queryKey: ['missions-direction-for-service'] });
+        const updated = { ...selectedWorkItem, collaborateur: prenomAgent.trim(), date_prise_en_charge: now };
+        setSelectedWorkItem(updated);
+        setModeTraitement(true);
+        setPrenomAgent('');
+        toast.success('Mission prise en charge ⏱️');
+        
+        // Notification
+        base44.entities.Notification.create({
+          type: 'MISSION_CREATED',
+          titre: `🚀 Mission ${updated.hebergement} prise en charge`,
+          message: `${prenomAgent.trim()} a pris en charge la mission ${service} pour ${updated.hebergement}`,
+          destinataire_role: 'DIRECTION',
+          priorite: updated.priorite === 'URGENTE' || updated.priorite === 'CRITIQUE' ? 'URGENTE' : 'NORMALE',
+          metadata: { mission_id: updated.id, service }
+        }).catch(err => console.error('Erreur notification:', err));
+      }).catch(err => {
+        toast.error('Erreur lors de la prise en charge');
+        console.error(err);
+      });
+      return;
+    }
+    
     priseEnChargeMutation.mutate({ id: selectedWorkItem.id, prenom: prenomAgent.trim() });
   };
 
@@ -330,6 +399,7 @@ export default function WorkItemsServiceView({ service }) {
       return {
         ...t,
         faite: etat?.faite,
+        effectuee: etat?.faite, // Pour MissionDirection
         statut: etat?.faite === true ? 'FAIT' : etat?.faite === false ? 'NON_FAIT' : undefined,
         justification: etat?.justification || '',
         photo_url: etat?.photo_url || ''
@@ -357,19 +427,15 @@ export default function WorkItemsServiceView({ service }) {
     let metadata = {};
 
     if (!validation.hasFailures) {
-      // Toutes les tâches sont FAIT
       nouveauStatut = 'TERMINEE';
       metadata.resultat = 'SUCCES_COMPLET';
     } else {
-      // Au moins une tâche est PAS FAIT
-      // Vérifier si des commandes sont nécessaires
       const tachesAvecCommande = tachesUpdated.filter(t => {
         const etat = tachesEtat[t.numero];
         return t.faite === false && etat?.commandeNecessaire === true;
       });
 
       if (tachesAvecCommande.length > 0) {
-        // Valider que toutes ont des articles
         const tachesSansArticles = tachesAvecCommande.filter(t => 
           !commandesArticles[t.numero] || commandesArticles[t.numero].length === 0
         );
@@ -388,7 +454,6 @@ export default function WorkItemsServiceView({ service }) {
         nouveauStatut = 'EN_ATTENTE';
         metadata.resultat = 'EN_ATTENTE_MATERIEL';
       } else {
-        // Tâches non faites SANS commande = mission terminée avec échec partiel
         nouveauStatut = 'TERMINEE';
         metadata.resultat = 'ECHEC_PARTIEL';
         metadata.taches_echouees = tachesUpdated.filter(t => !t.faite).map(t => ({
@@ -397,6 +462,42 @@ export default function WorkItemsServiceView({ service }) {
           justification: t.justification
         }));
       }
+    }
+
+    // Si MissionDirection, mettre à jour directement la mission
+    if (selectedWorkItem.isMissionDirection) {
+      const now = new Date().toISOString();
+      const actionsMAJ = tachesUpdated.map(t => ({
+        action: t.texte,
+        effectuee: t.faite || false
+      }));
+      
+      base44.entities.MissionDirection.update(selectedWorkItem.id, {
+        statut: nouveauStatut,
+        date_fin_reelle: nouveauStatut === 'TERMINEE' ? now : undefined,
+        actions_prevues: actionsMAJ,
+        commentaire_direction: compteRenduGlobal.trim()
+      }).then(() => {
+        queryClient.invalidateQueries({ queryKey: ['missions-direction-for-service'] });
+        setModeTraitement(false);
+        setSelectedWorkItem(null);
+        setTachesEtat({});
+        toast.success('✅ Mission terminée');
+        
+        // Notification
+        base44.entities.Notification.create({
+          type: 'MISSION_COMPLETE',
+          titre: `✅ Mission ${selectedWorkItem.hebergement} terminée`,
+          message: `Mission ${service} terminée - Résultat: ${metadata.resultat}`,
+          destinataire_role: 'DIRECTION',
+          priorite: 'NORMALE',
+          metadata: { mission_id: selectedWorkItem.id, service, resultat: metadata.resultat }
+        }).catch(err => console.error('Erreur notification:', err));
+      }).catch(err => {
+        toast.error('Erreur lors de la finalisation');
+        console.error(err);
+      });
+      return;
     }
 
     finalisationMutation.mutate({
@@ -790,20 +891,13 @@ export default function WorkItemsServiceView({ service }) {
                     </div>
                   </div>
 
-                  {displayItem.statut !== 'TERMINEE' && workItem && (
+                  {displayItem.statut !== 'TERMINEE' && (
                     <Button
-                      onClick={() => handlePrendreEnCharge(workItem)}
-                      disabled={!getDescriptionOperationnelle(workItem)}
+                      onClick={() => handlePrendreEnCharge(item)}
                       className="w-full bg-purple-600 h-12"
-                      title={!getDescriptionOperationnelle(workItem) ? 'Description manquante' : ''}
                     >
                       {displayItem.statut === 'A_FAIRE' ? 'Prendre en charge' : 'Continuer'}
                     </Button>
-                  )}
-                  {displayItem.statut !== 'TERMINEE' && missionItem && (
-                    <div className="text-sm text-gray-600 bg-purple-50 p-3 rounded">
-                      ⚠️ Mission brute - Créez un WorkItem via la page Direction
-                    </div>
                   )}
                 </CardContent>
               </Card>
