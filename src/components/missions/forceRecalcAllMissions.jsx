@@ -20,15 +20,15 @@ export async function forceRecalcAllMissions() {
     // 2. Pour chaque mission, forcer le recalcul
     for (const mission of allMissions) {
       try {
-        // Si has_blocking=true MAIS qu'il n'y a plus de WorkItems EN_ATTENTE, débloquer
-        if (mission.has_blocking === true || mission.is_blocked_logistique === true) {
-          const workItems = await base44.entities.WorkItem.filter({
-            mission_direction_id: mission.id,
-            type: 'MISSION_DIRECTION'
-          });
-          
-          // Si tous les WorkItems sont TERMINEE, débloquer
-          const allTerminee = workItems.length > 0 && workItems.every(w => w.statut === 'TERMINEE');
+        // Toujours recalculer même si has_blocking=true
+        const workItems = await base44.entities.WorkItem.filter({
+          mission_direction_id: mission.id,
+          type: 'MISSION_DIRECTION'
+        });
+        
+        // Si has_blocking=true MAIS tous les WorkItems sont TERMINEE, débloquer et passer TERMINEE
+        if ((mission.has_blocking === true || mission.is_blocked_logistique === true) && workItems.length > 0) {
+          const allTerminee = workItems.every(w => w.statut === 'TERMINEE');
           if (allTerminee) {
             console.log(`[ForceRecalc] 🔓 Déblocage mission ${mission.id} (${mission.zones?.[0]?.numero}) - tous WorkItems terminés`);
             await base44.entities.MissionDirection.update(mission.id, {

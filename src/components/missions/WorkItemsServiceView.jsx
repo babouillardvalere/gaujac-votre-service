@@ -122,11 +122,14 @@ export default function WorkItemsServiceView({ service }) {
       const workItem = workItems.find(w => w.id === variables.id);
       if (workItem?.mission_direction_id) {
         try {
+          console.log('[WorkItemsServiceView] 🔄 Recalcul mission après prise en charge:', workItem.mission_direction_id);
           await recalcMissionStatus(workItem.mission_direction_id);
           queryClient.invalidateQueries({ queryKey: ['missions-direction-list'] });
           queryClient.invalidateQueries({ queryKey: ['missions-direction-for-service', service] });
+          queryClient.invalidateQueries({ queryKey: ['suivi-deshivernage'] });
+          queryClient.invalidateQueries({ queryKey: ['suivi-hivernage'] });
         } catch (error) {
-          console.error('Erreur recalc statut mission:', error);
+          console.error('[WorkItemsServiceView] ❌ Erreur recalc statut mission:', error);
         }
       }
       
@@ -220,6 +223,7 @@ export default function WorkItemsServiceView({ service }) {
             console.log(`[WorkItemsServiceView] 🔒 Mission ${workItem.mission_direction_id} VERROUILLÉE EN_ATTENTE (motif: ${variables.motifAttente})`);
           } else if (variables.statut === 'TERMINEE') {
             // Recalculer le statut (peut passer TERMINEE si tous WorkItems terminés)
+            console.log(`[WorkItemsServiceView] 🔄 Recalcul après terminaison WorkItem ${variables.id} pour mission ${workItem.mission_direction_id}`);
             await recalcMissionStatus(workItem.mission_direction_id);
           }
 
@@ -228,7 +232,7 @@ export default function WorkItemsServiceView({ service }) {
           queryClient.invalidateQueries({ queryKey: ['suivi-deshivernage'] });
           queryClient.invalidateQueries({ queryKey: ['suivi-hivernage'] });
         } catch (error) {
-          console.error('[WorkItemsServiceView] Erreur mise à jour statut mission:', error);
+          console.error('[WorkItemsServiceView] ❌ Erreur mise à jour statut mission:', error);
         }
       }
       

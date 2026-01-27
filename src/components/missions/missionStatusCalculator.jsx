@@ -50,18 +50,21 @@ export async function recalcMissionStatus(missionId) {
       return 'A_FAIRE';
     }
     
-    console.log(`[MissionStatusCalculator] ${workItems.length} WorkItems analysés :`, 
-      workItems.map(w => `${w.service}: ${w.statut}`));
+    console.log(`[MissionStatusCalculator] ${workItems.length} WorkItems analysés pour mission ${missionId}:`);
+    workItems.forEach(w => console.log(`  - ${w.service}: ${w.statut} (ID: ${w.id})`));
     
     // 2. Appliquer la règle de priorité
     const hasEnCours = workItems.some(w => w.statut === 'EN_COURS');
     const allTerminee = workItems.every(w => w.statut === 'TERMINEE');
     const hasAFaire = workItems.some(w => w.statut === 'A_FAIRE');
+    const hasEnAttente = workItems.some(w => w.statut === 'EN_ATTENTE');
     
     let nouveauStatut;
     
     if (hasEnCours) {
       nouveauStatut = 'EN_COURS';
+    } else if (hasEnAttente) {
+      nouveauStatut = 'EN_ATTENTE';
     } else if (hasAFaire) {
       nouveauStatut = 'A_FAIRE';
     } else if (allTerminee) {
@@ -70,14 +73,28 @@ export async function recalcMissionStatus(missionId) {
       nouveauStatut = 'A_FAIRE';
     }
     
+    console.log(`[MissionStatusCalculator] 📊 Analyse: ${workItems.length} WorkItems`);
+    console.log(`[MissionStatusCalculator]   EN_COURS: ${workItems.filter(w => w.statut === 'EN_COURS').length}`);
+    console.log(`[MissionStatusCalculator]   EN_ATTENTE: ${workItems.filter(w => w.statut === 'EN_ATTENTE').length}`);
+    console.log(`[MissionStatusCalculator]   A_FAIRE: ${workItems.filter(w => w.statut === 'A_FAIRE').length}`);
+    console.log(`[MissionStatusCalculator]   TERMINEE: ${workItems.filter(w => w.statut === 'TERMINEE').length}`);
     console.log(`[MissionStatusCalculator] ✓ Statut calculé: ${nouveauStatut}`);
     
     // 3. Mettre à jour la MissionDirection
-    await base44.entities.MissionDirection.update(missionId, {
-      statut: nouveauStatut
-    });
+    const updateData = { statut: nouveauStatut };
     
-    console.log(`[MissionStatusCalculator] ✓ Mission ${missionId} mise à jour → ${nouveauStatut}`);
+    // Si passage à TERMINEE, débloquer complètement
+    if (nouveauStatut === 'TERMINEE') {
+      updateData.has_blocking = false;
+      updateData.is_blocked_logistique = false;
+      updateData.motif_attente = null;
+      updateData.wait_reason = null;
+      updateData.wait_comment = null;
+    }
+    
+    await base44.entities.MissionDirection.update(missionId, updateData);
+    
+    console.log(`[MissionStatusCalculator] ✅ Mission ${missionId} mise à jour → ${nouveauStatut}`);
     
     return nouveauStatut;
     
