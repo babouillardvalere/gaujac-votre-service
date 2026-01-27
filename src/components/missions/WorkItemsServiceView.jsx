@@ -31,19 +31,18 @@ export default function WorkItemsServiceView({ service }) {
   // Ne plus charger les MissionDirection directement - seulement les WorkItems
   const missions = [];
 
-  const { data: workItems = [], isLoading: workItemsLoading } = useQuery({
+  const { data: workItems = [], isLoading } = useQuery({
     queryKey: ['workitems-service', service],
     queryFn: async () => {
       const items = await base44.entities.WorkItem.filter({ 
         service,
         type: 'MISSION_DIRECTION'
       }, '-created_date', 250);
+      console.log(`[WorkItemsServiceView] WorkItems ${service}:`, items.length);
       return items;
     },
     refetchInterval: 30000
   });
-
-  const isLoading = missionsLoading || workItemsLoading;
 
   // Timer
   useEffect(() => {
