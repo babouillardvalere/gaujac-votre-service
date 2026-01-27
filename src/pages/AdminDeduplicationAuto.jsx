@@ -15,11 +15,11 @@ export default function AdminDeduplicationAuto() {
   const [confirmed, setConfirmed] = useState(false);
 
   useEffect(() => {
-    // Lancer automatiquement après confirmation
-    if (confirmed && !running && !resultat) {
+    // LANCER IMMÉDIATEMENT au chargement de la page
+    if (!running && !resultat) {
       executeDeduplication();
     }
-  }, [confirmed]);
+  }, []);
 
   const executeDeduplication = async () => {
     setRunning(true);
@@ -53,66 +53,7 @@ export default function AdminDeduplicationAuto() {
     }
   };
 
-  if (!confirmed) {
-    return (
-      <div className="min-h-screen px-4 py-6">
-        <div className="max-w-2xl mx-auto">
-          <Logo className="h-16 mb-4" />
-          
-          <h1 className="font-handwritten text-3xl text-[#0077A8] text-center mb-6">
-            🧹 Déduplication automatique
-          </h1>
-
-          <Card className="border-2 border-red-400 bg-red-50">
-            <CardContent className="p-6">
-              <div className="flex items-start gap-3 mb-4">
-                <AlertTriangle className="w-8 h-8 text-red-700 flex-shrink-0" />
-                <div>
-                  <h3 className="font-heading text-xl text-red-900 mb-3">
-                    ⚠️ OPÉRATION CRITIQUE
-                  </h3>
-                  <div className="space-y-2 text-sm text-red-800 mb-4">
-                    <p className="font-bold">Cette opération va :</p>
-                    <ul className="list-disc list-inside space-y-1 ml-4">
-                      <li>Identifier tous les doublons de missions</li>
-                      <li>Conserver 1 seule mission par groupe (type + hébergement + saison)</li>
-                      <li>Rattacher tous les WorkItems à la mission conservée</li>
-                      <li>Supprimer toutes les missions en double</li>
-                    </ul>
-                    
-                    <div className="bg-red-100 p-3 rounded-lg mt-4">
-                      <p className="font-bold text-red-900 mb-1">⚠️ PRÉREQUIS :</p>
-                      <ul className="list-disc list-inside space-y-1 ml-4">
-                        <li>Aucun utilisateur ne doit travailler en même temps</li>
-                        <li>Cette opération est IRRÉVERSIBLE</li>
-                        <li>À exécuter UNE SEULE FOIS</li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 mt-6">
-                    <Button
-                      onClick={() => navigate(createPageUrl('DirectionMenu'))}
-                      variant="outline"
-                      className="border-red-400 text-red-700"
-                    >
-                      ❌ Annuler
-                    </Button>
-                    <Button
-                      onClick={() => setConfirmed(true)}
-                      className="bg-red-600 hover:bg-red-700"
-                    >
-                      ✅ Confirmer et lancer
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
+  // Pas de confirmation - exécution automatique au chargement
 
   return (
     <div className="min-h-screen px-4 py-6">
