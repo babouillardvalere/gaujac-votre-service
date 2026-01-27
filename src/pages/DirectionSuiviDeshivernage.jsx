@@ -23,15 +23,21 @@ export default function DirectionSuiviDeshivernage() {
   
   const { data: missions = [], isLoading, refetch } = useQuery({
     queryKey: ['suivi-deshivernage'],
-    queryFn: () => base44.entities.MissionDirection.filter(
-      { type_mission: 'DESHIVERNAGE' },
-      '-created_date',
-      200
-    ),
+    queryFn: async () => {
+      // Récupérer TOUTES les missions (peu importe le type) pour diagnostiquer
+      const allMissions = await base44.entities.MissionDirection.list('-created_date', 200);
+      console.log('[Missions] Types trouvés:', allMissions.map(m => m.type_mission).join(', '));
+      console.log('[Missions] Total:', allMissions.length);
+      // Afficher les 10 premières
+      allMissions.slice(0, 10).forEach(m => {
+        console.log(`  - ${m.zones?.[0]?.numero}: ${m.type_mission}`);
+      });
+      return allMissions;
+    },
     refetchInterval: 2000,
     refetchOnWindowFocus: true,
     refetchOnMount: true,
-    staleTime: 0 // Force toujours le fetch
+    staleTime: 0
   });
 
   // 🔄 TEMPS RÉEL : Abonnement aux changements MissionDirection
