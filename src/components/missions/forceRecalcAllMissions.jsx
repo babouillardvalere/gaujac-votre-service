@@ -20,38 +20,62 @@ export async function forceRecalcAllMissions() {
     // 2. Pour chaque mission, forcer le recalcul
     for (const mission of allMissions) {
       try {
-        // Toujours recalculer même si has_blocking=true
+        // Récupérer WorkItems
         const workItems = await base44.entities.WorkItem.filter({
           mission_direction_id: mission.id,
           type: 'MISSION_DIRECTION'
         });
         
-        // Si has_blocking=true MAIS tous les WorkItems sont TERMINEE, débloquer et passer TERMINEE
-        if ((mission.has_blocking === true || mission.is_blocked_logistique === true) && workItems.length > 0) {
-          const allTerminee = workItems.every(w => w.statut === 'TERMINEE');
-          if (allTerminee) {
-            console.log(`[ForceRecalc] 🔓 Déblocage mission ${mission.id} (${mission.zones?.[0]?.numero}) - tous WorkItems terminés`);
-            await base44.entities.MissionDirection.update(mission.id, {
-              has_blocking: false,
-              is_blocked_logistique: false,
-              statut: 'TERMINEE',
-              motif_attente: null,
-              wait_reason: null,
-              wait_comment: null
-            });
-            updated++;
-            continue;
-          }
+        if (workItems.length === 0) {
+          console.log(`[ForceRecalc] ⏭️ Mission ${mission.id} sans WorkItems`);
+          skipped++;
+          continue;
         }
         
-        // Sinon, recalcul normal
-        const oldStatus = mission.statut;
-        const newStatus = await recalcMissionStatus(mission.id);
+        console.log(`[ForceRecalc] 📋 Mission ${mission.id} (${mission.zones?.[0]?.numero}): ${workItems.length} WorkItems`);
+        workItems.forEach(w => console.log(`  - ${w.service}: ${w.statut}`));
         
-        if (oldStatus !== newStatus) {
-          console.log(`[ForceRecalc] ✓ Mission ${mission.id} (${mission.zones?.[0]?.numero}): ${oldStatus} → ${newStatus}`);
+        // Analyser les WorkItems
+        const allTerminee = workItems.every(w => w.statut === 'TERMINEE');
+        const hasEnCours = workItems.some(w => w.statut === 'EN_COURS');
+        const hasEnAttente = workItems.some(w => w.statut === 'EN_ATTENTE');
+        const hasAFaire = workItems.some(w => w.statut === 'A_FAIRE');
+        
+        let nouveauStatut;
+        const updateData = {};
+        
+        // Déterminer le nouveau statut
+        if (hasEnCours) {
+          nouveauStatut = 'EN_COURS';
+        } else if (hasEnAttente) {
+          nouveauStatut = 'EN_ATTENTE';
+        } else if (hasAFaire) {
+          nouveauStatut = 'A_FAIRE';
+        } else if (allTerminee) {
+          nouveauStatut = 'TERMINEE';
+          // Débloquer si passage à TERMINEE
+          updateData.has_blocking = false;
+          updateData.is_blocked_logistique = false;
+          updateData.motif_attente = null;
+          updateData.wait_reason = null;
+          updateData.wait_comment = null;
+        } else {
+          nouveauStatut = 'A_FAIRE';
+        }
+        
+        const oldStatus = mission.statut;
+        
+        // Forcer la mise à jour si différent OU si bloqué alors que tous terminés
+        const needsUpdate = (oldStatus !== nouveauStatut) || 
+                           (allTerminee && (mission.has_blocking === true || mission.is_blocked_logistique === true));
+        
+        if (needsUpdate) {
+          updateData.statut = nouveauStatut;
+          await base44.entities.MissionDirection.update(mission.id, updateData);
+          console.log(`[ForceRecalc] ✅ Mission ${mission.id} (${mission.zones?.[0]?.numero}): ${oldStatus} → ${nouveauStatut}`);
           updated++;
         } else {
+          console.log(`[ForceRecalc] ⏭️ Mission ${mission.id} (${mission.zones?.[0]?.numero}): déjà ${nouveauStatut}`);
           skipped++;
         }
         
