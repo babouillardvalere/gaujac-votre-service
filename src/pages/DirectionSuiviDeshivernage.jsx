@@ -127,17 +127,29 @@ export default function DirectionSuiviDeshivernage() {
           <div className="flex justify-center gap-3 mt-4">
             <Button
               onClick={async () => {
-                console.log('[DIAGNOSTIC] 🔍 Lancement du diagnostic...');
-                toast.info('🔍 Diagnostic en cours...', { description: 'Ouvrez la console (F12)' });
-                const result = await diagnosticMissions();
-                if (result.success) {
-                  if (result.incoherences.length > 0) {
-                    toast.warning(`⚠️ ${result.incoherences.length} mission(s) désynchronisée(s)`, {
-                      description: 'Cliquez sur "Recalculer" pour corriger'
-                    });
+                console.clear();
+                console.log('═══════════════════════════════════════════════════════════════');
+                console.log('🔍 DIAGNOSTIC LANCÉ - Consultez cette console pour voir les détails');
+                console.log('═══════════════════════════════════════════════════════════════\n');
+                
+                try {
+                  const result = await diagnosticMissions();
+                  console.log('\n[PAGE] Résultat diagnostic:', result);
+                  
+                  if (result.success) {
+                    if (result.incoherences.length > 0) {
+                      toast.warning(`⚠️ ${result.incoherences.length} mission(s) désynchronisée(s)`, {
+                        description: 'Voir console pour détails. Cliquez "Recalculer"'
+                      });
+                    } else {
+                      toast.success('✅ Toutes les missions sont OK');
+                    }
                   } else {
-                    toast.success('✅ Toutes les missions sont synchronisées');
+                    toast.error('Erreur: ' + result.error);
                   }
+                } catch (error) {
+                  console.error('❌ ERREUR DIAGNOSTIC:', error);
+                  toast.error('❌ Erreur: ' + error.message);
                 }
               }}
               variant="outline"
