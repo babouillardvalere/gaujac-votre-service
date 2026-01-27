@@ -115,17 +115,22 @@ export async function forceRecalcAllMissions() {
         }
         }
 
-        console.log('\n[ForceRecalc] 📊 RÉSUMÉ DES CHANGEMENTS:');
-        missionsDETAILS.forEach(detail => console.log(`  - ${detail}`));
+    console.log('\n[ForceRecalc] 📊 RÉSUMÉ DES CHANGEMENTS:');
+    if (missionsDETAILS.length > 0) {
+      missionsDETAILS.forEach(detail => console.log(`  - ${detail}`));
+    } else {
+      console.log('  ℹ️ Aucun changement détecté');
+    }
     
-    console.log(`[ForceRecalc] ✅ Terminé: ${updated} mises à jour, ${skipped} inchangées, ${errors} erreurs`);
+    console.log(`\n[ForceRecalc] ✅ Terminé: ${updated} mises à jour, ${skipped} inchangées, ${errors} erreurs\n`);
     
     return {
       success: true,
       total: allMissions.length,
       updated,
       skipped,
-      errors
+      errors,
+      changes: missionsDETAILS
     };
     
   } catch (error) {
