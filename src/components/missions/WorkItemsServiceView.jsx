@@ -100,6 +100,9 @@ export default function WorkItemsServiceView({ service }) {
     },
     onSuccess: async (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['workitems-service', service] });
+      queryClient.invalidateQueries({ queryKey: ['suivi-deshivernage'] });
+      queryClient.invalidateQueries({ queryKey: ['suivi-hivernage'] });
+      
       toast.success('Tâche prise en charge ⏱️');
       setSelectedWorkItem(data);
       setModeTraitement(true);
@@ -114,6 +117,18 @@ export default function WorkItemsServiceView({ service }) {
         };
       });
       setTachesEtat(etat);
+      
+      // Recalcul statut mission
+      const workItem = workItems.find(w => w.id === variables.id);
+      if (workItem?.mission_direction_id) {
+        try {
+          await recalcMissionStatus(workItem.mission_direction_id);
+          queryClient.invalidateQueries({ queryKey: ['missions-direction-list'] });
+          queryClient.invalidateQueries({ queryKey: ['missions-direction-for-service', service] });
+        } catch (error) {
+          console.error('Erreur recalc statut mission:', error);
+        }
+      }
       
       // Notification: Mission prise en charge
       base44.entities.Notification.create({
@@ -905,6 +920,8 @@ export default function WorkItemsServiceView({ service }) {
                               queryClient.invalidateQueries({ queryKey: ['workitems-service', service] });
                               queryClient.invalidateQueries({ queryKey: ['missions-direction-for-service', service] });
                               queryClient.invalidateQueries({ queryKey: ['missions-direction-list'] });
+                              queryClient.invalidateQueries({ queryKey: ['suivi-deshivernage'] });
+                              queryClient.invalidateQueries({ queryKey: ['suivi-hivernage'] });
                               toast.success('✅ Mission reprise - vous pouvez continuer');
                               console.log(`[WorkItemsServiceView] 🔓 Mission ${item.mission_direction_id} DÉBLOQUÉE et reprise`);
                             } catch (error) {
