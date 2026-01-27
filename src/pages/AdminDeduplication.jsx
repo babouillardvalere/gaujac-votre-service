@@ -6,7 +6,7 @@ import { ArrowLeft, Trash2, Loader2, CheckCircle, AlertTriangle } from 'lucide-r
 import { toast } from 'sonner';
 import { createPageUrl } from '../utils';
 import Logo from '../components/Logo';
-import { deduplicateMissions } from '../components/missions/deduplicateMissions';
+import { cleanAllDuplicates } from '../components/missions/missionDirectionFactory';
 
 export default function AdminDeduplication() {
   const navigate = useNavigate();
@@ -22,7 +22,7 @@ export default function AdminDeduplication() {
     setResultat(null);
     
     try {
-      const result = await deduplicateMissions();
+      const result = await cleanAllDuplicates();
       setResultat(result);
       
       if (result.supprimees === 0) {

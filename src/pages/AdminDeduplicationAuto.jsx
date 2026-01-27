@@ -29,7 +29,7 @@ export default function AdminDeduplicationAuto() {
     console.log('='.repeat(80));
     
     try {
-      const result = await deduplicateMissions();
+      const result = await cleanAllDuplicates();
       setResultat(result);
       
       console.log('='.repeat(80));
