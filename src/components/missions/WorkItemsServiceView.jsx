@@ -881,14 +881,21 @@ export default function WorkItemsServiceView({ service }) {
                           onClick={async () => {
                             try {
                               // 🔓 DÉBLOCAGE EXPLICITE - SEULE ACTION AUTORISÉE POUR SORTIR DE EN_ATTENTE
-                              await base44.entities.MissionDirection.update(item.mission_direction_id, {
+                              const updateData = {
                                 statut: 'EN_COURS',
                                 has_blocking: false,
-                                motif_attente: null,
-                                is_blocked_logistique: false,
-                                wait_reason: null,
-                                wait_comment: null
-                              });
+                                is_blocked_logistique: false
+                              };
+                              
+                              // Nettoyer les champs d'attente seulement s'ils existent
+                              if (item.mission_direction_id) {
+                                const missionCurrent = missions.find(m => m.id === item.mission_direction_id);
+                                if (missionCurrent?.motif_attente) updateData.motif_attente = null;
+                                if (missionCurrent?.wait_reason) updateData.wait_reason = null;
+                                if (missionCurrent?.wait_comment) updateData.wait_comment = null;
+                              }
+                              
+                              await base44.entities.MissionDirection.update(item.mission_direction_id, updateData);
                               // Repasser le WorkItem en EN_COURS
                               await base44.entities.WorkItem.update(item.id, {
                                 statut: 'EN_COURS'

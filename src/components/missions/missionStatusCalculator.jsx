@@ -27,14 +27,9 @@ export async function recalcMissionStatus(missionId) {
     const missionData = mission[0];
     
     // 🔒 RÈGLE ABSOLUE : has_blocking = true → EN_ATTENTE (AUCUN RECALCUL)
-    if (missionData.has_blocking === true) {
-      console.warn(`[MissionStatusCalculator] 🔒 VERROU ACTIF - Mission ${missionId} EN_ATTENTE (motif: ${missionData.motif_attente || missionData.wait_reason})`);
-      return 'EN_ATTENTE';
-    }
-    
-    // Rétrocompatibilité is_blocked_logistique
-    if (missionData.is_blocked_logistique === true) {
-      console.warn(`[MissionStatusCalculator] 🔒 VERROU LEGACY - Mission ${missionId} EN_ATTENTE`);
+    // Protection contre undefined/null
+    if (missionData.has_blocking === true || missionData.is_blocked_logistique === true) {
+      console.warn(`[MissionStatusCalculator] 🔒 VERROU ACTIF - Mission ${missionId} EN_ATTENTE (motif: ${missionData.motif_attente || missionData.wait_reason || 'non spécifié'})`);
       return 'EN_ATTENTE';
     }
     
