@@ -15,17 +15,35 @@ export default function DirectionSuiviDeshivernage() {
   const [filterService, setFilterService] = useState('tous');
   const [filterStatut, setFilterStatut] = useState('tous');
 
-  const { data: missions = [], isLoading } = useQuery({
+  const { data: missions = [], isLoading, refetch } = useQuery({
     queryKey: ['suivi-deshivernage'],
     queryFn: () => base44.entities.MissionDirection.filter(
       { type_mission: 'DESHIVERNAGE' },
       '-created_date',
       200
     ),
-    refetchInterval: 5000,
+    refetchInterval: 3000,
     refetchOnWindowFocus: true,
     refetchOnMount: true
   });
+
+  // 🔄 TEMPS RÉEL : Abonnement aux changements MissionDirection
+  React.useEffect(() => {
+    const unsubscribe = base44.entities.MissionDirection.subscribe((event) => {
+      console.log('[DirectionSuiviDeshivernage] 🔄 MissionDirection changée:', event.type, event.id);
+      refetch();
+    });
+    return unsubscribe;
+  }, [refetch]);
+
+  // 🔄 TEMPS RÉEL : Abonnement aux changements WorkItem (impact indirect)
+  React.useEffect(() => {
+    const unsubscribe = base44.entities.WorkItem.subscribe((event) => {
+      console.log('[DirectionSuiviDeshivernage] 🔄 WorkItem changé:', event.type, event.id);
+      refetch();
+    });
+    return unsubscribe;
+  }, [refetch]);
 
   const filtered = missions.filter(m => {
     if (filterService !== 'tous' && !m.services_intervenants?.some(s => s.service === filterService)) return false;
@@ -39,8 +57,11 @@ export default function DirectionSuiviDeshivernage() {
     menage: missions.filter(m => m.services_intervenants?.some(s => s.service === 'MENAGE')).length,
     termine: missions.filter(m => m.statut === 'TERMINEE').length,
     enCours: missions.filter(m => m.statut === 'EN_COURS').length,
+    enAttente: missions.filter(m => m.statut === 'EN_ATTENTE' || m.has_blocking === true).length,
     aFaire: missions.filter(m => m.statut === 'A_FAIRE').length
   };
+
+  console.log('[DirectionSuiviDeshivernage] Stats:', stats, 'Missions:', missions.length);
 
   if (isLoading) {
     return (
@@ -74,8 +95,8 @@ export default function DirectionSuiviDeshivernage() {
           <p className="text-center text-gray-600 font-body">Vue supervision - Lecture seule</p>
         </motion.div>
 
-        {/* Stats identiques à Hivernage */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
           <Card className="bg-purple-50 border-purple-200">
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-purple-700">{stats.total}</p>
@@ -104,6 +125,12 @@ export default function DirectionSuiviDeshivernage() {
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-orange-700">{stats.enCours}</p>
               <p className="text-xs text-gray-600">⏱ En cours</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-amber-50 border-amber-200">
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-amber-700">{stats.enAttente}</p>
+              <p className="text-xs text-gray-600">⏸️ En attente</p>
             </CardContent>
           </Card>
         </div>
@@ -156,6 +183,13 @@ export default function DirectionSuiviDeshivernage() {
             En cours
           </Button>
           <Button
+            onClick={() => setFilterStatut('EN_ATTENTE')}
+            variant={filterStatut === 'EN_ATTENTE' ? 'default' : 'outline'}
+            size="sm"
+          >
+            En attente
+          </Button>
+          <Button
             onClick={() => setFilterStatut('TERMINEE')}
             variant={filterStatut === 'TERMINEE' ? 'default' : 'outline'}
             size="sm"
@@ -190,10 +224,14 @@ export default function DirectionSuiviDeshivernage() {
                     )}
                   </div>
                   
-                  <Badge variant={mission.statut === 'TERMINEE' ? 'default' : 'outline'}>
+                  <Badge variant={mission.statut === 'TERMINEE' ? 'default' : 'outline'} className={
+                    mission.statut === 'EN_ATTENTE' || mission.has_blocking ? 'bg-amber-500 text-white' :
+                    mission.statut === 'EN_COURS' ? 'bg-orange-500 text-white' :
+                    mission.statut === 'TERMINEE' ? 'bg-green-500 text-white' : ''
+                  }>
                     {mission.statut === 'A_FAIRE' ? 'À faire' :
-                     mission.statut === 'EN_COURS' ? 'En cours' :
-                     mission.statut === 'EN_ATTENTE' ? 'En attente' : '✔️ Terminée'}
+                     mission.statut === 'EN_COURS' ? '⏱ En cours' :
+                     mission.statut === 'EN_ATTENTE' || mission.has_blocking ? `⏸️ En attente${mission.motif_attente ? ' - ' + mission.motif_attente : ''}` : '✔️ Terminée'}
                   </Badge>
                 </div>
 
