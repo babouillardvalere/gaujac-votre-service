@@ -718,23 +718,28 @@ export default function WorkItemsServiceView({ service }) {
                      return;
                    }
 
+                   // Vérifier si un motif d'attente est sélectionné
+                   if (!selectedWorkItem.wait_reason) {
+                     toast.error('⚠️ Sélectionnez un motif d\'attente');
+                     return;
+                   }
+
+                   // Identifier les tâches avec commande nécessaire
                    const tachesAvecCommande = tachesUpdated.filter(t => {
                      const etat = tachesEtat[t.numero];
                      return t.faite === false && etat?.commandeNecessaire === true;
                    });
 
-                   if (tachesAvecCommande.length === 0) {
-                     toast.error('⚠️ Aucune commande sélectionnée. Si tout est terminé, utilisez "Terminer".');
-                     return;
-                   }
+                   // Validation des commandes UNIQUEMENT si des tâches nécessitent une commande
+                   if (tachesAvecCommande.length > 0) {
+                     const tachesSansArticles = tachesAvecCommande.filter(t => 
+                       !commandesArticles[t.numero] || commandesArticles[t.numero].length === 0
+                     );
 
-                   const tachesSansArticles = tachesAvecCommande.filter(t => 
-                     !commandesArticles[t.numero] || commandesArticles[t.numero].length === 0
-                   );
-
-                   if (tachesSansArticles.length > 0) {
-                     toast.error(`⚠️ Ajoutez des articles pour les tâches ${tachesSansArticles.map(t => `#${t.numero}`).join(', ')}`);
-                     return;
+                     if (tachesSansArticles.length > 0) {
+                       toast.error(`⚠️ Ajoutez des articles pour les tâches ${tachesSansArticles.map(t => `#${t.numero}`).join(', ')}`);
+                       return;
+                     }
                    }
 
                    const commandesACreer = tachesAvecCommande.map(t => ({
@@ -748,10 +753,13 @@ export default function WorkItemsServiceView({ service }) {
                      taches: tachesUpdated,
                      statut: 'EN_ATTENTE',
                      commandesACreer,
-                     metadata: { resultat: 'EN_ATTENTE_MATERIEL' },
+                     metadata: { 
+                       resultat: commandesACreer.length > 0 ? 'EN_ATTENTE_MATERIEL' : 'EN_ATTENTE_AUTRE',
+                       wait_reason: selectedWorkItem.wait_reason
+                     },
                      description_operationnelle: compteRenduGlobal.trim(),
                      blockLogistique: true,
-                     waitReason: selectedWorkItem.wait_reason || 'LOGISTIQUE_COMMANDE',
+                     waitReason: selectedWorkItem.wait_reason,
                      waitComment: compteRenduGlobal.trim()
                    });
                  }}
