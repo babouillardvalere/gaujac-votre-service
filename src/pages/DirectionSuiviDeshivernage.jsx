@@ -127,16 +127,27 @@ export default function DirectionSuiviDeshivernage() {
             <Button
               onClick={async () => {
                 setIsRecalculating(true);
+                console.log('[RECALCUL] Début du recalcul forcé...');
                 try {
                   const result = await forceRecalcAllMissions();
+                  console.log('[RECALCUL] Résultat:', result);
+                  
+                  // Attendre 500ms pour laisser la BDD se synchroniser
+                  await new Promise(resolve => setTimeout(resolve, 500));
+                  
+                  // Forcer le rechargement complet
+                  await refetch();
+                  
                   if (result.success) {
-                    toast.success(`✅ ${result.updated} missions recalculées`);
-                    refetch();
+                    toast.success(`✅ ${result.updated} missions mises à jour`);
+                    console.log('[RECALCUL] ✅ Terminé avec succès');
                   } else {
-                    toast.error('❌ Erreur recalcul');
+                    toast.error('❌ Erreur lors du recalcul');
+                    console.error('[RECALCUL] ❌ Échec');
                   }
                 } catch (error) {
-                  toast.error('❌ Erreur recalcul');
+                  console.error('[RECALCUL] ❌ Exception:', error);
+                  toast.error('❌ Erreur: ' + error.message);
                 } finally {
                   setIsRecalculating(false);
                 }
