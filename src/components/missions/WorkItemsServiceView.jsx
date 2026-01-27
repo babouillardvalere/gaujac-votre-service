@@ -411,7 +411,7 @@ export default function WorkItemsServiceView({ service }) {
 
   // Mode traitement
   if (modeTraitement && selectedWorkItem) {
-    const mission = missions.find(m => m.id === selectedWorkItem.mission_direction_id);
+    const mission = { type_mission: selectedWorkItem.type || 'MISSION_DIRECTION' };
     
     return (
       <div className="space-y-4">
