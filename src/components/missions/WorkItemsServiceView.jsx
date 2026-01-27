@@ -203,15 +203,19 @@ export default function WorkItemsServiceView({ service }) {
       return await base44.entities.WorkItem.update(id, updateData);
     },
     onSuccess: async (data, variables) => {
+      console.log('[WorkItemsServiceView] ✅ Finalisation réussie, invalidation queries...');
       queryClient.invalidateQueries({ queryKey: ['workitems-service', service] });
       queryClient.invalidateQueries({ queryKey: ['bureau-workitems'] });
       queryClient.invalidateQueries({ queryKey: ['suivi-deshivernage'] });
       queryClient.invalidateQueries({ queryKey: ['suivi-hivernage'] });
+      queryClient.invalidateQueries({ queryKey: ['workitems-deshivernage'] });
       
       // 🔒 VERROU STRICT: Mise à jour Mission selon règle métier
       const workItem = workItems.find(w => w.id === variables.id);
       if (workItem?.mission_direction_id) {
         try {
+          console.log(`[WorkItemsServiceView] 🔄 Traitement mission ${workItem.mission_direction_id}...`);
+          
           if (variables.blockLogistique === true) {
             // 🔒 ACTIVATION DU VERROU - Mission EN_ATTENTE STABLE
             await base44.entities.MissionDirection.update(workItem.mission_direction_id, {
@@ -220,17 +224,26 @@ export default function WorkItemsServiceView({ service }) {
               motif_attente: variables.motifAttente || 'AUTRE',
               wait_comment: variables.waitComment
             });
-            console.log(`[WorkItemsServiceView] 🔒 Mission ${workItem.mission_direction_id} VERROUILLÉE EN_ATTENTE (motif: ${variables.motifAttente})`);
+            console.log(`[WorkItemsServiceView] 🔒 Mission VERROUILLÉE EN_ATTENTE (motif: ${variables.motifAttente})`);
           } else if (variables.statut === 'TERMINEE') {
-            // Recalculer le statut (peut passer TERMINEE si tous WorkItems terminés)
-            console.log(`[WorkItemsServiceView] 🔄 Recalcul après terminaison WorkItem ${variables.id} pour mission ${workItem.mission_direction_id}`);
-            await recalcMissionStatus(workItem.mission_direction_id);
+            // FORCER le recalcul immédiat
+            console.log(`[WorkItemsServiceView] 🔄 RECALCUL IMMÉDIAT après terminaison WorkItem`);
+            
+            // Attendre 300ms pour que le WorkItem soit bien sauvegardé
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            const nouveauStatut = await recalcMissionStatus(workItem.mission_direction_id);
+            console.log(`[WorkItemsServiceView] ✅ Nouveau statut mission: ${nouveauStatut}`);
           }
 
+          // Forcer l'invalidation complète
           queryClient.invalidateQueries({ queryKey: ['missions-direction-list'] });
           queryClient.invalidateQueries({ queryKey: ['missions-direction-for-service', service] });
           queryClient.invalidateQueries({ queryKey: ['suivi-deshivernage'] });
           queryClient.invalidateQueries({ queryKey: ['suivi-hivernage'] });
+          queryClient.invalidateQueries({ queryKey: ['workitems-deshivernage'] });
+          
+          console.log('[WorkItemsServiceView] ✅ Toutes les queries invalidées');
         } catch (error) {
           console.error('[WorkItemsServiceView] ❌ Erreur mise à jour statut mission:', error);
         }
