@@ -52,11 +52,24 @@ export default function DirectionSuiviDeshivernage() {
     return unsubscribe;
   }, [refetch]);
 
-  // Récupérer tous les WorkItems pour savoir quels services sont concernés
+  // Récupérer tous les WorkItems LIÉS AUX MISSIONS
   const { data: allWorkItems = [] } = useQuery({
-    queryKey: ['workitems-deshivernage'],
-    queryFn: () => base44.entities.WorkItem.filter({ type: 'MISSION_DIRECTION' }, '-created_date', 1000),
-    refetchInterval: 3000
+    queryKey: ['workitems-deshivernage', missions.length],
+    queryFn: async () => {
+      const wis = [];
+      for (const mission of missions) {
+        const missionWIs = await base44.entities.WorkItem.filter(
+          { mission_direction_id: mission.id },
+          '-created_date',
+          100
+        );
+        wis.push(...missionWIs);
+      }
+      return wis;
+    },
+    enabled: missions.length > 0,
+    refetchInterval: 2000,
+    staleTime: 0
   });
 
   const filtered = missions.filter(m => {
@@ -88,10 +101,10 @@ export default function DirectionSuiviDeshivernage() {
       const missionWorkItems = allWorkItems.filter(wi => wi.mission_direction_id === m.id);
       return missionWorkItems.some(wi => wi.service === 'MENAGE');
     }).length,
-    termine: missions.filter(m => m.statut === 'TERMINEE').length,
-    enCours: missions.filter(m => m.statut === 'EN_COURS').length,
-    enAttente: missions.filter(m => m.statut === 'EN_ATTENTE' || m.has_blocking === true).length,
-    aFaire: missions.filter(m => m.statut === 'A_FAIRE').length
+    termine: missions.filter(m => m.statut === 'TERMINEE' && allWorkItems.filter(wi => wi.mission_direction_id === m.id).every(wi => wi.statut === 'TERMINEE')).length,
+    enCours: missions.filter(m => m.statut === 'EN_COURS' && allWorkItems.filter(wi => wi.mission_direction_id === m.id).some(wi => wi.statut === 'EN_COURS')).length,
+    enAttente: missions.filter(m => (m.statut === 'EN_ATTENTE' || m.has_blocking === true) && allWorkItems.filter(wi => wi.mission_direction_id === m.id).some(wi => wi.statut === 'EN_ATTENTE')).length,
+    aFaire: missions.filter(m => m.statut === 'A_FAIRE' && allWorkItems.filter(wi => wi.mission_direction_id === m.id).some(wi => wi.statut === 'A_FAIRE')).length
   };
 
   console.log('[DirectionSuiviDeshivernage] Stats:', stats, 'Missions:', missions.length);
