@@ -83,11 +83,17 @@ export default function DirectionCommandes() {
                 statut: 'EN_ATTENTE'
               });
               
+              // CRITIQUE: Ne JAMAIS modifier automatiquement le statut d'une mission bloquée
               if (autresWorkItemsEnAttente.length === 0) {
-                await base44.entities.MissionDirection.update(commande.mission_id, {
-                  statut: 'EN_COURS'
-                });
-                queryClient.invalidateQueries({ queryKey: ['missions-direction-list'] });
+                const mission = await base44.entities.MissionDirection.filter({ id: commande.mission_id });
+                if (mission?.[0]?.is_blocked_logistique !== true) {
+                  await base44.entities.MissionDirection.update(commande.mission_id, {
+                    statut: 'EN_COURS'
+                  });
+                  queryClient.invalidateQueries({ queryKey: ['missions-direction-list'] });
+                } else {
+                  console.warn('Mission bloquée logistique - recalcul ignoré', commande.mission_id);
+                }
               }
               
               toast.success(`🔁 ${workItemsEnAttente.length} tâche(s) débloquée(s) !`);

@@ -101,6 +101,12 @@ export default function MissionsDirectionService({ service }) {
         });
       }
       
+      // CRITIQUE: Ne pas modifier le statut si mission bloquée logistique
+      if (mission.is_blocked_logistique === true) {
+        console.warn('Mission bloquée logistique - prise en charge interdite', id);
+        throw new Error('Mission bloquée en attente - cliquez sur "Reprendre la mission"');
+      }
+      
       return await base44.entities.MissionDirection.update(id, {
         statut: 'EN_COURS',
         services_intervenants: servicesIntervenants,
@@ -167,6 +173,14 @@ export default function MissionsDirectionService({ service }) {
 
       if (statut === 'TERMINEE') {
         updateData.date_fin_reelle = now;
+      }
+      
+      // CRITIQUE: Ne pas modifier le statut si mission bloquée logistique
+      if (missionActuelle.is_blocked_logistique === true && statut !== 'EN_ATTENTE') {
+        console.warn('Mission bloquée logistique - modification statut ignorée', id);
+        // Ne pas mettre à jour le statut, uniquement les autres champs
+        const { statut: _, ...safeUpdateData } = updateData;
+        return await base44.entities.MissionDirection.update(id, safeUpdateData);
       }
 
       return await base44.entities.MissionDirection.update(id, updateData);
