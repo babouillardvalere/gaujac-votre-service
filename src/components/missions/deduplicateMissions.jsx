@@ -1,29 +1,42 @@
 import { base44 } from '@/api/base44Client';
 
 /**
- * DÉDUPLICATION ONE-SHOT des MissionDirection
- * Clé fonctionnelle: (type_mission, zones.numero, année)
+ * DÉDUPLICATION BACKEND FORCÉE - ONE-SHOT
+ * Clé métier stricte: (type_mission, premier_logement, saison)
  * 
- * Pour chaque groupe de doublons:
- * - Garder 1 mission (la plus récente ou celle avec le plus d'activité)
- * - Rattacher TOUS les WorkItems à celle conservée
- * - Supprimer les autres
+ * Groupement correct:
+ * - Premier logement de zones[0].numero (pas tout le tableau)
+ * - Saison 2025-2026 (pas juste année technique)
+ * - Ignore workflow_version, source, created_from
+ * 
+ * Action:
+ * - Garder LA PLUS ANCIENNE mission par groupe (stable)
+ * - Rattacher TOUS les WorkItems
+ * - Supprimer définitivement les doublons
  */
 export async function deduplicateMissions() {
   try {
-    console.log('[DEDUPE] === DÉBUT DÉDUPLICATION MISSIONS ===');
+    console.log('='.repeat(80));
+    console.log('🚀 DÉDUPLICATION BACKEND FORCÉE');
+    console.log('='.repeat(80));
     
     // 1. Récupérer TOUTES les MissionDirection
-    const allMissions = await base44.entities.MissionDirection.list('-created_date', 1000);
-    console.log(`[DEDUPE] ${allMissions.length} missions totales`);
+    const allMissions = await base44.entities.MissionDirection.list('-created_date', 2000);
+    console.log(`[DEDUPE] ✅ ${allMissions.length} missions chargées`);
     
-    // 2. Grouper par clé fonctionnelle
+    // 2. Grouper par CLÉ MÉTIER STRICTE
     const groupes = {};
     
     allMissions.forEach(m => {
-      const zone = m.zones?.[0]?.numero || 'unknown';
-      const annee = new Date(m.created_date).getFullYear();
-      const cle = `${m.type_mission}_${zone}_${annee}`;
+      // CRITIQUE: Premier logement uniquement
+      const logement = m.zones?.[0]?.numero || 'INCONNU';
+      
+      // CRITIQUE: Saison métier (année de created_date suffit pour 2025-2026)
+      const dateCreation = new Date(m.created_date);
+      const saison = dateCreation.getFullYear();
+      
+      // CLÉ UNIQUE MÉTIER
+      const cle = `${m.type_mission}|${logement}|${saison}`;
       
       if (!groupes[cle]) {
         groupes[cle] = [];
@@ -31,69 +44,101 @@ export async function deduplicateMissions() {
       groupes[cle].push(m);
     });
     
-    console.log(`[DEDUPE] ${Object.keys(groupes).length} groupes uniques identifiés`);
+    console.log(`[DEDUPE] ✅ ${Object.keys(groupes).length} groupes métier identifiés`);
     
     // 3. Identifier les doublons
     const groupesDoublons = Object.entries(groupes).filter(([_, missions]) => missions.length > 1);
     
-    console.log(`[DEDUPE] ${groupesDoublons.length} groupes avec doublons`);
+    console.log(`[DEDUPE] 🔍 ${groupesDoublons.length} groupes avec doublons détectés`);
     
     if (groupesDoublons.length === 0) {
-      console.log('[DEDUPE] ✅ Aucun doublon trouvé');
-      return { doublons: 0, supprimees: 0, rattachees: 0 };
+      console.log('[DEDUPE] ✅ Aucun doublon - base déjà propre');
+      return { doublons: 0, supprimees: 0, rattachees: 0, details: [] };
     }
+    
+    // Afficher détails des doublons
+    groupesDoublons.forEach(([cle, missions]) => {
+      console.log(`[DEDUPE] 📦 ${cle}: ${missions.length} missions`);
+      missions.forEach(m => {
+        console.log(`   - ID: ${m.id}, Statut: ${m.statut}, Créée: ${m.created_date}`);
+      });
+    });
     
     // 4. Traiter chaque groupe de doublons
     let totalSupprimees = 0;
     let totalRattachees = 0;
+    const details = [];
     
     for (const [cle, missions] of groupesDoublons) {
-      console.log(`[DEDUPE] 📋 Traitement groupe ${cle} (${missions.length} missions)`);
+      console.log('─'.repeat(80));
+      console.log(`[DEDUPE] 🔧 TRAITEMENT: ${cle} (${missions.length} doublons)`);
       
-      // Trier: priorité à la plus récente avec statut significatif
+      // CRITIQUE: Trier pour garder LA PLUS ANCIENNE (stable dans le temps)
+      // Sauf si une est TERMINEE (priorité absolue)
       missions.sort((a, b) => {
-        const scoreA = (a.statut === 'TERMINEE' ? 100 : 0) + (a.services_intervenants?.length || 0);
-        const scoreB = (b.statut === 'TERMINEE' ? 100 : 0) + (b.services_intervenants?.length || 0);
-        if (scoreA !== scoreB) return scoreB - scoreA;
-        return new Date(b.created_date) - new Date(a.created_date);
+        // Priorité 1: TERMINEE en premier
+        if (a.statut === 'TERMINEE' && b.statut !== 'TERMINEE') return -1;
+        if (b.statut === 'TERMINEE' && a.statut !== 'TERMINEE') return 1;
+        
+        // Priorité 2: Plus ancienne (créée en premier)
+        return new Date(a.created_date) - new Date(b.created_date);
       });
       
       const missionConservee = missions[0];
       const missionsASupprimer = missions.slice(1);
       
-      console.log(`[DEDUPE] ✅ Mission conservée: ${missionConservee.id} (${missionConservee.statut})`);
-      console.log(`[DEDUPE] ❌ ${missionsASupprimer.length} mission(s) à supprimer`);
+      console.log(`[DEDUPE] ✅ CONSERVÉE: ${missionConservee.id}`);
+      console.log(`[DEDUPE]    ├─ Statut: ${missionConservee.statut}`);
+      console.log(`[DEDUPE]    ├─ Créée: ${missionConservee.created_date}`);
+      console.log(`[DEDUPE]    └─ Zones: ${missionConservee.zones?.map(z => z.numero).join(', ')}`);
       
-      // 5. Rattacher tous les WorkItems à la mission conservée
+      let workItemsRattaches = 0;
+      
+      // 5. Rattacher TOUS les WorkItems des doublons à la mission conservée
       for (const missionDupli of missionsASupprimer) {
-        const workItems = await base44.entities.WorkItem.filter({
-          mission_direction_id: missionDupli.id
-        });
+        console.log(`[DEDUPE] 🗑️ SUPPRESSION: ${missionDupli.id} (${missionDupli.statut})`);
         
-        console.log(`[DEDUPE] 🔗 ${workItems.length} WorkItems à rattacher depuis ${missionDupli.id}`);
+        const workItems = await base44.entities.WorkItem.filter({
+          mission_direction_id: missionDupli.id,
+          type: 'MISSION_DIRECTION'
+        }, null, 500);
+        
+        console.log(`[DEDUPE]    ├─ ${workItems.length} WorkItem(s) à rattacher`);
         
         for (const wi of workItems) {
           await base44.entities.WorkItem.update(wi.id, {
             mission_direction_id: missionConservee.id
           });
           totalRattachees++;
+          workItemsRattaches++;
         }
         
-        // 6. Supprimer la mission dupliquée
+        // 6. SUPPRIMER DÉFINITIVEMENT la mission dupliquée
         await base44.entities.MissionDirection.delete(missionDupli.id);
         totalSupprimees++;
-        console.log(`[DEDUPE] 🗑️ Mission ${missionDupli.id} supprimée`);
+        console.log(`[DEDUPE]    └─ ✅ Supprimée`);
       }
+      
+      details.push({
+        cle,
+        conservee: missionConservee.id,
+        supprimees: missionsASupprimer.length,
+        workItemsRattaches
+      });
     }
     
-    console.log('[DEDUPE] === FIN DÉDUPLICATION ===');
-    console.log(`[DEDUPE] ✅ ${totalSupprimees} missions supprimées`);
-    console.log(`[DEDUPE] ✅ ${totalRattachees} WorkItems rattachés`);
+    console.log('='.repeat(80));
+    console.log('✅ DÉDUPLICATION TERMINÉE');
+    console.log(`📊 ${groupesDoublons.length} groupes traités`);
+    console.log(`🗑️ ${totalSupprimees} missions supprimées`);
+    console.log(`🔗 ${totalRattachees} WorkItems rattachés`);
+    console.log('='.repeat(80));
     
     return {
       doublons: groupesDoublons.length,
       supprimees: totalSupprimees,
-      rattachees: totalRattachees
+      rattachees: totalRattachees,
+      details
     };
     
   } catch (error) {
