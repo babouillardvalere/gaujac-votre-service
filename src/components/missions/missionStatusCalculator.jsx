@@ -1,21 +1,23 @@
 import { base44 } from '@/api/base44Client';
 
 /**
- * Calcule le statut agrégé d'une MissionDirection à partir de ses WorkItems
+ * 🔒 CALCUL DU STATUT GLOBAL - RÈGLE STRICTE NON NÉGOCIABLE
  * 
- * RÈGLE MÉTIER STRICTE :
- * - Si ≥ 1 WorkItem = EN_ATTENTE → Mission = EN_ATTENTE
- * - Sinon si ≥ 1 WorkItem = EN_COURS → Mission = EN_COURS
- * - Sinon si tous = A_FAIRE → Mission = A_FAIRE
- * - Sinon si tous = TERMINEE → Mission = TERMINEE
+ * VERROU ABSOLU : Si has_blocking = true → EN_ATTENTE (IMMUTABLE)
  * 
- * Priorité : EN_ATTENTE > EN_COURS > A_FAIRE > TERMINEE
+ * Priorité :
+ * 1. has_blocking = true → EN_ATTENTE
+ * 2. Au moins 1 WorkItem EN_COURS → EN_COURS
+ * 3. Au moins 1 WorkItem A_FAIRE → A_FAIRE
+ * 4. Tous TERMINEE → TERMINEE
+ * 
+ * ⚠️ INTERDICTION ABSOLUE DE SORTIR DE EN_ATTENTE SANS ACTION EXPLICITE SERVICE
  */
 export async function recalcMissionStatus(missionId) {
   try {
     console.log(`[MissionStatusCalculator] Recalcul statut mission ${missionId}`);
     
-    // 0. Récupérer la mission pour vérifier l'état
+    // 0. Récupérer la mission
     const mission = await base44.entities.MissionDirection.filter({ id: missionId });
     if (!mission || mission.length === 0) {
       console.warn(`[MissionStatusCalculator] Mission ${missionId} introuvable`);
@@ -24,16 +26,22 @@ export async function recalcMissionStatus(missionId) {
     
     const missionData = mission[0];
     
-    // RÈGLE ABSOLUE : Si EN_ATTENTE, NE RIEN RECALCULER - seul le service peut reprendre
-    if (missionData.statut === 'EN_ATTENTE') {
-      console.warn(`[MissionStatusCalculator] ⏸️ Mission EN_ATTENTE - recalcul ignoré (motif: ${missionData.wait_reason})`, missionId);
+    // 🔒 RÈGLE ABSOLUE : has_blocking = true → EN_ATTENTE (AUCUN RECALCUL)
+    if (missionData.has_blocking === true) {
+      console.warn(`[MissionStatusCalculator] 🔒 VERROU ACTIF - Mission ${missionId} EN_ATTENTE (motif: ${missionData.motif_attente || missionData.wait_reason})`);
       return 'EN_ATTENTE';
     }
     
-    // Rétrocompatibilité avec is_blocked_logistique
+    // Rétrocompatibilité is_blocked_logistique
     if (missionData.is_blocked_logistique === true) {
-      console.warn(`[MissionStatusCalculator] ⏸️ Mission bloquée logistiquement - recalcul ignoré`, missionId);
+      console.warn(`[MissionStatusCalculator] 🔒 VERROU LEGACY - Mission ${missionId} EN_ATTENTE`);
       return 'EN_ATTENTE';
+    }
+    
+    // Si la mission est TERMINEE, ne jamais recalculer
+    if (missionData.statut === 'TERMINEE') {
+      console.warn(`[MissionStatusCalculator] ✅ Mission TERMINEE - statut verrouillé`, missionId);
+      return 'TERMINEE';
     }
     
     // 1. Récupérer tous les WorkItems de cette mission
@@ -51,23 +59,20 @@ export async function recalcMissionStatus(missionId) {
       workItems.map(w => `${w.service}: ${w.statut}`));
     
     // 2. Appliquer la règle de priorité
-    const hasEnAttente = workItems.some(w => w.statut === 'EN_ATTENTE');
     const hasEnCours = workItems.some(w => w.statut === 'EN_COURS');
-    const allAFaire = workItems.every(w => w.statut === 'A_FAIRE');
     const allTerminee = workItems.every(w => w.statut === 'TERMINEE');
+    const hasAFaire = workItems.some(w => w.statut === 'A_FAIRE');
     
     let nouveauStatut;
     
-    if (hasEnAttente) {
-      nouveauStatut = 'EN_ATTENTE';
-    } else if (hasEnCours) {
+    if (hasEnCours) {
       nouveauStatut = 'EN_COURS';
-    } else if (allAFaire) {
+    } else if (hasAFaire) {
       nouveauStatut = 'A_FAIRE';
     } else if (allTerminee) {
       nouveauStatut = 'TERMINEE';
     } else {
-      nouveauStatut = 'EN_COURS';
+      nouveauStatut = 'A_FAIRE';
     }
     
     console.log(`[MissionStatusCalculator] ✓ Statut calculé: ${nouveauStatut}`);

@@ -128,7 +128,7 @@ export default function WorkItemsServiceView({ service }) {
   });
 
   const finalisationMutation = useMutation({
-   mutationFn: async ({ id, taches, statut, commandesACreer, metadata, description_operationnelle, blockLogistique, waitReason, waitComment }) => {
+   mutationFn: async ({ id, taches, statut, commandesACreer, metadata, description_operationnelle, blockLogistique, waitReason, waitComment, motifAttente }) => {
      const now = new Date().toISOString();
      const workItem = workItems.find(w => w.id === id);
      const dureeMinutes = workItem?.date_prise_en_charge 
@@ -188,18 +188,19 @@ export default function WorkItemsServiceView({ service }) {
       queryClient.invalidateQueries({ queryKey: ['workitems-service', service] });
       queryClient.invalidateQueries({ queryKey: ['bureau-workitems'] });
       
-      // CRITIQUE: Mettre à jour la mission avec le motif d'attente
+      // 🔒 VERROU STRICT: Mise à jour Mission selon règle métier
       const workItem = workItems.find(w => w.id === variables.id);
       if (workItem?.mission_direction_id) {
         try {
           if (variables.blockLogistique === true) {
-            // Activer le blocage avec motif d'attente
+            // 🔒 ACTIVATION DU VERROU - Mission EN_ATTENTE STABLE
             await base44.entities.MissionDirection.update(workItem.mission_direction_id, {
               statut: 'EN_ATTENTE',
-              is_blocked_logistique: true,
-              wait_reason: variables.waitReason,
+              has_blocking: true,
+              motif_attente: variables.motifAttente || 'AUTRE',
               wait_comment: variables.waitComment
             });
+            console.log(`[WorkItemsServiceView] 🔒 Mission ${workItem.mission_direction_id} VERROUILLÉE EN_ATTENTE (motif: ${variables.motifAttente})`);
           } else if (variables.statut === 'TERMINEE') {
             // Recalculer le statut (peut passer TERMINEE si tous WorkItems terminés)
             await recalcMissionStatus(workItem.mission_direction_id);
@@ -608,26 +609,26 @@ export default function WorkItemsServiceView({ service }) {
 
              {/* Sélection motif d'attente */}
              <div className="bg-yellow-50 rounded-lg p-3 border-2 border-yellow-300">
-               <label className="text-sm font-bold text-yellow-800 mb-2 block">
-                 ⏸️ Motif de mise en attente *
-               </label>
-               <select
-                 className="w-full p-2 border-2 border-yellow-400 rounded-lg bg-white"
-                 value={selectedWorkItem?.wait_reason || 'LOGISTIQUE_INTERNE'}
-                 onChange={(e) => setSelectedWorkItem({
-                   ...selectedWorkItem,
-                   wait_reason: e.target.value
-                 })}
-               >
-                 <option value="LOGISTIQUE_COMMANDE">Commande à passer</option>
-                 <option value="LOGISTIQUE_INTERNE">Matériel à récupérer (atelier)</option>
-                 <option value="VALIDATION_DIRECTION">Attente validation Direction</option>
-                 <option value="ATTENTE_COORDINATION">Coordination avec autre service</option>
-                 <option value="AUTRE">Autre</option>
-               </select>
-               <p className="text-xs text-yellow-700 mt-2">
-                 ℹ️ Ce motif permettra de suivre précisément les raisons d'attente
-               </p>
+              <label className="text-sm font-bold text-yellow-800 mb-2 block">
+                ⏸️ Motif de mise en attente * (OBLIGATOIRE)
+              </label>
+              <select
+                className="w-full p-2 border-2 border-yellow-400 rounded-lg bg-white"
+                value={selectedWorkItem?.wait_reason || 'LOGISTIQUE_INTERNE'}
+                onChange={(e) => setSelectedWorkItem({
+                  ...selectedWorkItem,
+                  wait_reason: e.target.value
+                })}
+              >
+                <option value="LOGISTIQUE_COMMANDE">Commande à passer</option>
+                <option value="LOGISTIQUE_INTERNE">Matériel à récupérer à l'atelier</option>
+                <option value="VALIDATION_DIRECTION">Attente validation Direction</option>
+                <option value="ATTENTE_COORDINATION">Coordination avec autre service</option>
+                <option value="AUTRE">Autre motif</option>
+              </select>
+              <p className="text-xs text-yellow-700 mt-2">
+                ⚠️ Ce motif bloquera la mission - seule la reprise explicite permettra de continuer
+              </p>
              </div>
 
              <div className="grid grid-cols-2 gap-3">
@@ -715,8 +716,16 @@ export default function WorkItemsServiceView({ service }) {
                      return;
                    }
 
-                   // Vérifier si un motif d'attente est sélectionné
-                   const motifAttente = selectedWorkItem.wait_reason || 'LOGISTIQUE_INTERNE';
+                   // Mapper wait_reason vers motif_attente
+                   const motifAttenteMapping = {
+                     'LOGISTIQUE_COMMANDE': 'COMMANDE',
+                     'LOGISTIQUE_INTERNE': 'ATELIER',
+                     'VALIDATION_DIRECTION': 'AUTRE',
+                     'ATTENTE_COORDINATION': 'INTERVENTION_PREALABLE',
+                     'AUTRE': 'AUTRE'
+                   };
+
+                   const motifAttente = motifAttenteMapping[selectedWorkItem.wait_reason] || 'ATELIER';
 
                    // Identifier les tâches avec commande nécessaire
                    const tachesAvecCommande = tachesUpdated.filter(t => {
@@ -749,12 +758,13 @@ export default function WorkItemsServiceView({ service }) {
                      commandesACreer,
                      metadata: { 
                        resultat: commandesACreer.length > 0 ? 'EN_ATTENTE_MATERIEL' : 'EN_ATTENTE_AUTRE',
-                       wait_reason: motifAttente
+                       wait_reason: selectedWorkItem.wait_reason || 'LOGISTIQUE_INTERNE'
                      },
                      description_operationnelle: compteRenduGlobal.trim(),
                      blockLogistique: true,
-                     waitReason: motifAttente,
-                     waitComment: compteRenduGlobal.trim()
+                     waitReason: selectedWorkItem.wait_reason || 'LOGISTIQUE_INTERNE',
+                     waitComment: compteRenduGlobal.trim(),
+                     motifAttente: motifAttente
                    });
                  }}
                  disabled={finalisationMutation.isPending || !selectedWorkItem.collaborateur || !compteRenduGlobal.trim()}
@@ -866,13 +876,15 @@ export default function WorkItemsServiceView({ service }) {
 
                   {item.statut !== 'TERMINEE' && (
                     <>
-                      {item.statut === 'EN_ATTENTE' && item.metadata?.resultat === 'EN_ATTENTE_MATERIEL' ? (
+                      {item.statut === 'EN_ATTENTE' ? (
                         <Button
                           onClick={async () => {
                             try {
-                              // Débloquer la mission (retirer wait_reason + is_blocked_logistique)
+                              // 🔓 DÉBLOCAGE EXPLICITE - SEULE ACTION AUTORISÉE POUR SORTIR DE EN_ATTENTE
                               await base44.entities.MissionDirection.update(item.mission_direction_id, {
                                 statut: 'EN_COURS',
+                                has_blocking: false,
+                                motif_attente: null,
                                 is_blocked_logistique: false,
                                 wait_reason: null,
                                 wait_comment: null
@@ -883,7 +895,9 @@ export default function WorkItemsServiceView({ service }) {
                               });
                               queryClient.invalidateQueries({ queryKey: ['workitems-service', service] });
                               queryClient.invalidateQueries({ queryKey: ['missions-direction-for-service', service] });
+                              queryClient.invalidateQueries({ queryKey: ['missions-direction-list'] });
                               toast.success('✅ Mission reprise - vous pouvez continuer');
+                              console.log(`[WorkItemsServiceView] 🔓 Mission ${item.mission_direction_id} DÉBLOQUÉE et reprise`);
                             } catch (error) {
                               console.error('Erreur reprise mission:', error);
                               toast.error('❌ Erreur lors de la reprise');
