@@ -7,16 +7,16 @@ import { recalcMissionStatus } from './missionStatusCalculator';
  */
 export async function forceRecalcAllMissions() {
   try {
-    console.log('[ForceRecalc] 🔄 Démarrage recalcul global...');
-    
+    console.log('[ForceRecalc] 🔄 DÉMARRAGE RECALCUL GLOBAL FORCÉ...');
+
     // 1. Récupérer toutes les missions
     const allMissions = await base44.entities.MissionDirection.list('-created_date', 500);
     console.log(`[ForceRecalc] 📊 ${allMissions.length} missions trouvées`);
-    
+
     // 2. Récupérer TOUS les WorkItems en une seule fois
     const allWorkItems = await base44.entities.WorkItem.filter({ type: 'MISSION_DIRECTION' }, '-created_date', 1000);
     console.log(`[ForceRecalc] 📊 ${allWorkItems.length} WorkItems trouvés`);
-    
+
     // 3. Grouper les WorkItems par mission_direction_id
     const workItemsByMission = {};
     allWorkItems.forEach(wi => {
@@ -27,79 +27,81 @@ export async function forceRecalcAllMissions() {
         workItemsByMission[wi.mission_direction_id].push(wi);
       }
     });
-    
+
     let updated = 0;
     let skipped = 0;
     let errors = 0;
-    
-    // 4. Pour chaque mission, forcer le recalcul
+
+    // 4. Pour chaque mission, forcer le recalcul IMMÉDIAT
     for (const mission of allMissions) {
       try {
         const workItems = workItemsByMission[mission.id] || [];
         const hebergement = mission.zones?.[0]?.numero || mission.id.substring(0, 8);
-        
+
         if (workItems.length === 0) {
           console.log(`[ForceRecalc] ⏭️ ${hebergement}: sans WorkItems`);
           skipped++;
           continue;
         }
-        
-        console.log(`[ForceRecalc] 📋 ${hebergement}: ${workItems.length} WorkItems`);
-        workItems.forEach(w => console.log(`     ${w.service}: ${w.statut}`));
-        
-        // Analyser les WorkItems
-        const statutsCount = {
-          TERMINEE: workItems.filter(w => w.statut === 'TERMINEE').length,
-          EN_COURS: workItems.filter(w => w.statut === 'EN_COURS').length,
-          EN_ATTENTE: workItems.filter(w => w.statut === 'EN_ATTENTE').length,
-          A_FAIRE: workItems.filter(w => w.statut === 'A_FAIRE').length
-        };
-        
-        const allTerminee = workItems.every(w => w.statut === 'TERMINEE');
-        
+
+        console.log(`\n[ForceRecalc] 🔍 ${hebergement} (mission ${mission.id.substring(0, 8)})`);
+        console.log(`  Statut actuel mission: ${mission.statut}`);
+        console.log(`  WorkItems (${workItems.length}):`);
+        workItems.forEach(w => {
+          console.log(`    - ${w.service}: ${w.statut} (${w.id.substring(0, 8)})`);
+        });
+
+        // CALCUL STRICT du nouveau statut
+        const nbTerminee = workItems.filter(w => w.statut === 'TERMINEE').length;
+        const nbEnCours = workItems.filter(w => w.statut === 'EN_COURS').length;
+        const nbEnAttente = workItems.filter(w => w.statut === 'EN_ATTENTE').length;
+        const nbAFaire = workItems.filter(w => w.statut === 'A_FAIRE').length;
+
+        console.log(`  Distribution: TERMINEE(${nbTerminee}) EN_COURS(${nbEnCours}) EN_ATTENTE(${nbEnAttente}) A_FAIRE(${nbAFaire})`);
+
         let nouveauStatut;
-        const updateData = {};
-        
-        // Déterminer le nouveau statut selon la règle de priorité
-        if (statutsCount.EN_COURS > 0) {
+
+        // RÈGLE STRICTE: priorité absolue
+        if (nbEnCours > 0) {
           nouveauStatut = 'EN_COURS';
-        } else if (statutsCount.EN_ATTENTE > 0) {
+          console.log(`  ➜ EN_COURS car ${nbEnCours} WorkItem(s) en cours`);
+        } else if (nbEnAttente > 0) {
           nouveauStatut = 'EN_ATTENTE';
-        } else if (statutsCount.A_FAIRE > 0) {
+          console.log(`  ➜ EN_ATTENTE car ${nbEnAttente} WorkItem(s) en attente`);
+        } else if (nbAFaire > 0) {
           nouveauStatut = 'A_FAIRE';
-        } else if (allTerminee) {
+          console.log(`  ➜ A_FAIRE car ${nbAFaire} WorkItem(s) à faire`);
+        } else if (nbTerminee === workItems.length && workItems.length > 0) {
           nouveauStatut = 'TERMINEE';
-          // Débloquer complètement si passage à TERMINEE
+          console.log(`  ➜ TERMINEE car tous (${nbTerminee}) terminés`);
+        } else {
+          nouveauStatut = 'A_FAIRE';
+          console.log(`  ➜ A_FAIRE par défaut`);
+        }
+
+        // Préparer la mise à jour FORCÉE
+        const updateData = { statut: nouveauStatut };
+
+        // Débloquer si terminé
+        if (nouveauStatut === 'TERMINEE') {
           updateData.has_blocking = false;
           updateData.is_blocked_logistique = false;
           updateData.motif_attente = null;
           updateData.wait_reason = null;
           updateData.wait_comment = null;
-        } else {
-          nouveauStatut = 'A_FAIRE';
         }
-        
-        const oldStatus = mission.statut;
-        
-        // Forcer la mise à jour
-        updateData.statut = nouveauStatut;
-        
-        if (oldStatus !== nouveauStatut) {
-          await base44.entities.MissionDirection.update(mission.id, updateData);
-          console.log(`[ForceRecalc] ✅ ${hebergement}: ${oldStatus} → ${nouveauStatut} (${JSON.stringify(statutsCount)})`);
+
+        // TOUJOURS METTRE À JOUR (même si identique) pour forcer la synchro
+        await base44.entities.MissionDirection.update(mission.id, updateData);
+
+        if (mission.statut !== nouveauStatut) {
+          console.log(`  ✅ CHANGEMENT: ${mission.statut} ➜ ${nouveauStatut}`);
           updated++;
         } else {
-          // Même si le statut est identique, débloquer si tous terminés
-          if (allTerminee && (mission.has_blocking === true || mission.is_blocked_logistique === true)) {
-            await base44.entities.MissionDirection.update(mission.id, updateData);
-            console.log(`[ForceRecalc] 🔓 ${hebergement}: déblocage (tous terminés)`);
-            updated++;
-          } else {
-            console.log(`[ForceRecalc] ⏭️ ${hebergement}: déjà ${nouveauStatut}`);
-            skipped++;
-          }
+          console.log(`  ♻️ CONFIRMÉ: ${nouveauStatut}`);
+          updated++;
         }
-        
+
       } catch (error) {
         console.error(`[ForceRecalc] ❌ Erreur mission ${mission.id}:`, error);
         errors++;
