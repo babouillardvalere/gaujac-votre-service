@@ -374,42 +374,6 @@ export default function WorkItemsServiceView({ service }) {
       }
     }
 
-    // Si MissionDirection, mettre à jour directement la mission
-    if (selectedWorkItem.isMissionDirection) {
-      const now = new Date().toISOString();
-      const actionsMAJ = tachesUpdated.map(t => ({
-        action: t.texte,
-        effectuee: t.faite || false
-      }));
-      
-      base44.entities.MissionDirection.update(selectedWorkItem.id, {
-        statut: nouveauStatut,
-        date_fin_reelle: nouveauStatut === 'TERMINEE' ? now : undefined,
-        actions_prevues: actionsMAJ,
-        commentaire_direction: compteRenduGlobal.trim()
-      }).then(() => {
-        queryClient.invalidateQueries({ queryKey: ['missions-direction-for-service'] });
-        setModeTraitement(false);
-        setSelectedWorkItem(null);
-        setTachesEtat({});
-        toast.success('✅ Mission terminée');
-        
-        // Notification
-        base44.entities.Notification.create({
-          type: 'MISSION_COMPLETE',
-          titre: `✅ Mission ${selectedWorkItem.hebergement} terminée`,
-          message: `Mission ${service} terminée - Résultat: ${metadata.resultat}`,
-          destinataire_role: 'DIRECTION',
-          priorite: 'NORMALE',
-          metadata: { mission_id: selectedWorkItem.id, service, resultat: metadata.resultat }
-        }).catch(err => console.error('Erreur notification:', err));
-      }).catch(err => {
-        toast.error('Erreur lors de la finalisation');
-        console.error(err);
-      });
-      return;
-    }
-
     finalisationMutation.mutate({
       id: selectedWorkItem.id,
       taches: tachesUpdated,
