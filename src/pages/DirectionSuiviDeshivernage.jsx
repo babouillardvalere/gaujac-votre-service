@@ -48,10 +48,23 @@ export default function DirectionSuiviDeshivernage() {
     return unsubscribe;
   }, [refetch]);
 
+  // Récupérer tous les WorkItems pour savoir quels services sont concernés
+  const { data: allWorkItems = [] } = useQuery({
+    queryKey: ['workitems-deshivernage'],
+    queryFn: () => base44.entities.WorkItem.filter({ type: 'MISSION_DIRECTION' }, '-created_date', 1000),
+    refetchInterval: 3000
+  });
+
   const filtered = missions.filter(m => {
-    if (filterService !== 'tous' && !m.services_intervenants?.some(s => s.service === filterService)) return false;
+    // Filtrer par service basé sur les WorkItems liés
+    if (filterService !== 'tous') {
+      const missionWorkItems = allWorkItems.filter(wi => wi.mission_direction_id === m.id);
+      const hasService = missionWorkItems.some(wi => wi.service === filterService);
+      if (!hasService) return false;
+    }
+    
+    // Filtrer par statut
     if (filterStatut !== 'tous') {
-      // Gérer le cas EN_ATTENTE qui peut correspondre à has_blocking=true aussi
       if (filterStatut === 'EN_ATTENTE') {
         if (m.statut !== 'EN_ATTENTE' && m.has_blocking !== true) return false;
       } else {
@@ -63,8 +76,14 @@ export default function DirectionSuiviDeshivernage() {
 
   const stats = {
     total: missions.length,
-    technique: missions.filter(m => m.services_intervenants?.some(s => s.service === 'TECHNIQUE')).length,
-    menage: missions.filter(m => m.services_intervenants?.some(s => s.service === 'MENAGE')).length,
+    technique: missions.filter(m => {
+      const missionWorkItems = allWorkItems.filter(wi => wi.mission_direction_id === m.id);
+      return missionWorkItems.some(wi => wi.service === 'TECHNIQUE');
+    }).length,
+    menage: missions.filter(m => {
+      const missionWorkItems = allWorkItems.filter(wi => wi.mission_direction_id === m.id);
+      return missionWorkItems.some(wi => wi.service === 'MENAGE');
+    }).length,
     termine: missions.filter(m => m.statut === 'TERMINEE').length,
     enCours: missions.filter(m => m.statut === 'EN_COURS').length,
     enAttente: missions.filter(m => m.statut === 'EN_ATTENTE' || m.has_blocking === true).length,
