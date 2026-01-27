@@ -15,6 +15,21 @@ export async function recalcMissionStatus(missionId) {
   try {
     console.log(`[MissionStatusCalculator] Recalcul statut mission ${missionId}`);
     
+    // 0. Récupérer la mission pour vérifier le flag de blocage
+    const mission = await base44.entities.MissionDirection.filter({ id: missionId });
+    if (!mission || mission.length === 0) {
+      console.warn(`[MissionStatusCalculator] Mission ${missionId} introuvable`);
+      return 'A_FAIRE';
+    }
+    
+    const missionData = mission[0];
+    
+    // RÈGLE CRITIQUE : Si is_blocked_logistique = true, la mission RESTE EN_ATTENTE
+    if (missionData.is_blocked_logistique === true) {
+      console.log(`[MissionStatusCalculator] ⏸️ Mission bloquée logistiquement - maintien EN_ATTENTE`);
+      return 'EN_ATTENTE';
+    }
+    
     // 1. Récupérer tous les WorkItems de cette mission
     const workItems = await base44.entities.WorkItem.filter({
       mission_direction_id: missionId,
@@ -23,7 +38,7 @@ export async function recalcMissionStatus(missionId) {
     
     if (!workItems || workItems.length === 0) {
       console.warn(`[MissionStatusCalculator] Aucun WorkItem trouvé pour mission ${missionId}`);
-      return 'A_FAIRE'; // Fallback par défaut
+      return 'A_FAIRE';
     }
     
     console.log(`[MissionStatusCalculator] ${workItems.length} WorkItems analysés :`, 
@@ -46,7 +61,6 @@ export async function recalcMissionStatus(missionId) {
     } else if (allTerminee) {
       nouveauStatut = 'TERMINEE';
     } else {
-      // État mixte (ex: certains A_FAIRE, d'autres TERMINEE) → considéré EN_COURS
       nouveauStatut = 'EN_COURS';
     }
     
@@ -87,5 +101,37 @@ export async function canCloseMission(missionId) {
   } catch (error) {
     console.error('[MissionStatusCalculator] Erreur canCloseMission:', error);
     return false;
+  }
+}
+
+/**
+ * Active le blocage logistique sur une mission (passage EN_ATTENTE persistant)
+ */
+export async function blockMissionLogistique(missionId) {
+  try {
+    await base44.entities.MissionDirection.update(missionId, {
+      is_blocked_logistique: true,
+      statut: 'EN_ATTENTE'
+    });
+    console.log(`[MissionStatusCalculator] ✓ Mission ${missionId} bloquée logistiquement`);
+  } catch (error) {
+    console.error('[MissionStatusCalculator] Erreur blockMissionLogistique:', error);
+    throw error;
+  }
+}
+
+/**
+ * Débloque une mission (autoriser reprise par le service)
+ */
+export async function unblockMissionLogistique(missionId) {
+  try {
+    await base44.entities.MissionDirection.update(missionId, {
+      is_blocked_logistique: false,
+      statut: 'EN_COURS'
+    });
+    console.log(`[MissionStatusCalculator] ✓ Mission ${missionId} débloquée - reprise autorisée`);
+  } catch (error) {
+    console.error('[MissionStatusCalculator] Erreur unblockMissionLogistique:', error);
+    throw error;
   }
 }
