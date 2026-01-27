@@ -10,7 +10,7 @@ import Logo from '../components/Logo';
 import { createPageUrl } from '../utils';
 import { motion } from 'framer-motion';
 import { forceRecalcAllMissions } from '../components/missions/forceRecalcAllMissions';
-import { diagnosticMissions } from '../components/missions/diagnosticMissions';
+import { deepDiagnostic } from '../components/missions/deepDiagnostic';
 import { toast } from 'sonner';
 
 export default function DirectionSuiviDeshivernage() {
@@ -130,28 +130,17 @@ export default function DirectionSuiviDeshivernage() {
           <div className="flex justify-center gap-3 mt-4">
             <Button
               onClick={async () => {
-                console.clear();
-                console.log('═══════════════════════════════════════════════════════════════');
-                console.log('🔍 DIAGNOSTIC LANCÉ - Consultez cette console pour voir les détails');
-                console.log('═══════════════════════════════════════════════════════════════\n');
-                
                 try {
-                  const result = await diagnosticMissions();
-                  console.log('\n[PAGE] Résultat diagnostic:', result);
-                  
+                  const result = await deepDiagnostic();
                   if (result.success) {
-                    if (result.incoherences.length > 0) {
-                      toast.warning(`⚠️ ${result.incoherences.length} mission(s) désynchronisée(s)`, {
-                        description: 'Voir console pour détails. Cliquez "Recalculer"'
-                      });
-                    } else {
-                      toast.success('✅ Toutes les missions sont OK');
-                    }
+                    toast.info(`📊 ${result.problemes} problème(s) - Voir console (F12)`, {
+                      description: result.problemes > 0 ? 'Cliquez "Recalculer"' : '✅ Tout OK'
+                    });
                   } else {
                     toast.error('Erreur: ' + result.error);
                   }
                 } catch (error) {
-                  console.error('❌ ERREUR DIAGNOSTIC:', error);
+                  console.error('❌ ERREUR:', error);
                   toast.error('❌ Erreur: ' + error.message);
                 }
               }}
