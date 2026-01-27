@@ -15,7 +15,7 @@ export async function recalcMissionStatus(missionId) {
   try {
     console.log(`[MissionStatusCalculator] Recalcul statut mission ${missionId}`);
     
-    // 0. Récupérer la mission pour vérifier le flag de blocage
+    // 0. Récupérer la mission pour vérifier l'état
     const mission = await base44.entities.MissionDirection.filter({ id: missionId });
     if (!mission || mission.length === 0) {
       console.warn(`[MissionStatusCalculator] Mission ${missionId} introuvable`);
@@ -24,9 +24,15 @@ export async function recalcMissionStatus(missionId) {
     
     const missionData = mission[0];
     
-    // RÈGLE CRITIQUE : Si is_blocked_logistique = true, la mission RESTE EN_ATTENTE
+    // RÈGLE ABSOLUE : Si EN_ATTENTE, NE RIEN RECALCULER - seul le service peut reprendre
+    if (missionData.statut === 'EN_ATTENTE') {
+      console.warn(`[MissionStatusCalculator] ⏸️ Mission EN_ATTENTE - recalcul ignoré (motif: ${missionData.wait_reason})`, missionId);
+      return 'EN_ATTENTE';
+    }
+    
+    // Rétrocompatibilité avec is_blocked_logistique
     if (missionData.is_blocked_logistique === true) {
-      console.log(`[MissionStatusCalculator] ⏸️ Mission bloquée logistiquement - maintien EN_ATTENTE`);
+      console.warn(`[MissionStatusCalculator] ⏸️ Mission bloquée logistiquement - recalcul ignoré`, missionId);
       return 'EN_ATTENTE';
     }
     

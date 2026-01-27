@@ -155,7 +155,7 @@ export default function WorkItemsServiceView({ service }) {
   });
 
   const finalisationMutation = useMutation({
-   mutationFn: async ({ id, taches, statut, commandesACreer, metadata, description_operationnelle, blockLogistique }) => {
+   mutationFn: async ({ id, taches, statut, commandesACreer, metadata, description_operationnelle, blockLogistique, waitReason, waitComment }) => {
      const now = new Date().toISOString();
      const workItem = workItems.find(w => w.id === id);
      const dureeMinutes = workItem?.date_prise_en_charge 
@@ -215,18 +215,23 @@ export default function WorkItemsServiceView({ service }) {
       queryClient.invalidateQueries({ queryKey: ['workitems-service', service] });
       queryClient.invalidateQueries({ queryKey: ['bureau-workitems'] });
       
-      // CRITIQUE: Bloquer/débloquer la mission selon l'action
+      // CRITIQUE: Mettre à jour la mission avec le motif d'attente
       const workItem = workItems.find(w => w.id === variables.id);
       if (workItem?.mission_direction_id) {
         try {
           if (variables.blockLogistique === true) {
-            // Activer le blocage logistique (EN_ATTENTE persistant)
-            await blockMissionLogistique(workItem.mission_direction_id);
+            // Activer le blocage avec motif d'attente
+            await base44.entities.MissionDirection.update(workItem.mission_direction_id, {
+              statut: 'EN_ATTENTE',
+              is_blocked_logistique: true,
+              wait_reason: variables.waitReason,
+              wait_comment: variables.waitComment
+            });
           } else if (variables.statut === 'TERMINEE') {
             // Recalculer le statut (peut passer TERMINEE si tous WorkItems terminés)
             await recalcMissionStatus(workItem.mission_direction_id);
           }
-          
+
           queryClient.invalidateQueries({ queryKey: ['missions-direction-list'] });
           queryClient.invalidateQueries({ queryKey: ['missions-direction-for-service', service] });
         } catch (error) {
@@ -745,7 +750,9 @@ export default function WorkItemsServiceView({ service }) {
                      commandesACreer,
                      metadata: { resultat: 'EN_ATTENTE_MATERIEL' },
                      description_operationnelle: compteRenduGlobal.trim(),
-                     blockLogistique: true
+                     blockLogistique: true,
+                     waitReason: selectedWorkItem.wait_reason || 'LOGISTIQUE_COMMANDE',
+                     waitComment: compteRenduGlobal.trim()
                    });
                  }}
                  disabled={finalisationMutation.isPending || !selectedWorkItem.collaborateur || !compteRenduGlobal.trim()}
