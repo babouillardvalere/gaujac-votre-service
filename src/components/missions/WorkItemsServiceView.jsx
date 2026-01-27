@@ -383,64 +383,9 @@ export default function WorkItemsServiceView({ service }) {
     }
 
     // Utiliser la fonction de validation centralisée
-    const validation = validateMissionClosure(tachesUpdated);
-    
-    if (!validation.valid) {
-      toast.error(`⚠️ ${validation.error}`);
-      return;
-    }
-
-    // Déterminer le statut final
-    let nouveauStatut;
-    let commandesACreer = [];
-    let metadata = {};
-
-    if (!validation.hasFailures) {
-      nouveauStatut = 'TERMINEE';
-      metadata.resultat = 'SUCCES_COMPLET';
-    } else {
-      const tachesAvecCommande = tachesUpdated.filter(t => {
-        const etat = tachesEtat[t.numero];
-        return t.faite === false && etat?.commandeNecessaire === true;
-      });
-
-      if (tachesAvecCommande.length > 0) {
-        const tachesSansArticles = tachesAvecCommande.filter(t => 
-          !commandesArticles[t.numero] || commandesArticles[t.numero].length === 0
-        );
-
-        if (tachesSansArticles.length > 0) {
-          toast.error(`⚠️ Ajoutez des articles pour les tâches nécessitant une commande (${tachesSansArticles.map(t => `#${t.numero}`).join(', ')})`);
-          return;
-        }
-
-        commandesACreer = tachesAvecCommande.map(t => ({
-          tache_numero: t.numero,
-          tache_texte: t.texte,
-          articles: commandesArticles[t.numero]
-        }));
-
-        nouveauStatut = 'EN_ATTENTE';
-        metadata.resultat = 'EN_ATTENTE_MATERIEL';
-      } else {
-        nouveauStatut = 'TERMINEE';
-        metadata.resultat = 'ECHEC_PARTIEL';
-        metadata.taches_echouees = tachesUpdated.filter(t => !t.faite).map(t => ({
-          numero: t.numero,
-          texte: t.texte,
-          justification: t.justification
-        }));
-      }
-    }
-
-    finalisationMutation.mutate({
-      id: selectedWorkItem.id,
-      taches: tachesUpdated,
-      statut: nouveauStatut,
-      commandesACreer,
-      metadata,
-      description_operationnelle: compteRenduGlobal.trim()
-    });
+    // Ne rien valider automatiquement - forcer le choix utilisateur
+    toast.error('⚠️ Choisissez "Terminer la mission" ou "Mettre en attente"');
+    return;
   };
 
   // Utiliser uniquement les workItems
