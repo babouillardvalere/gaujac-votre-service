@@ -230,52 +230,12 @@ export default function WorkItemsServiceView({ service }) {
   });
 
   const handlePrendreEnCharge = (item) => {
-    console.log('[WorkItemsServiceView] Prise en charge:', { 
-      isMission: item.isMission, 
-      isWorkItem: item.isWorkItem,
-      id: item.id,
-      titre: item.titre 
-    });
-    
-    // Convertir MissionDirection en format compatible avec WorkItem
-    let workItemData;
-    
-    if (item.isMission) {
-      // C'est une MissionDirection brute - créer une structure compatible
-      const mission = item;
-      workItemData = {
-        id: mission.id,
-        isMissionDirection: true,
-        mission_direction_id: mission.id,
-        hebergement: mission.zones?.[0]?.numero || 'Multi-zones',
-        type_hebergement: mission.zones?.[0]?.categorie || '',
-        titre: mission.titre,
-        description: mission.description,
-        objectif: mission.objectif,
-        statut: mission.statut,
-        priorite: mission.priorite,
-        services_intervenants: mission.services_intervenants || [],
-        taches: mission.actions_prevues?.map((a, i) => ({
-          numero: i + 1,
-          texte: a.action,
-          faite: a.effectuee,
-          justification: ''
-        })) || [],
-        type_mission: mission.type_mission,
-        date_prise_en_charge: mission.date_debut_reelle
-      };
-      console.log('[WorkItemsServiceView] Mission convertie:', workItemData);
-    } else {
-      // C'est déjà un WorkItem
-      workItemData = item;
-    }
-    
-    setSelectedWorkItem(workItemData);
+    setSelectedWorkItem(item);
     setModeTraitement(true);
-    setCompteRenduGlobal(getDescriptionOperationnelle(workItemData) || workItemData.objectif || '');
+    setCompteRenduGlobal(getDescriptionOperationnelle(item) || item.description || '');
     
     const etat = {};
-    (workItemData.taches || []).forEach(t => {
+    (item.taches || []).forEach(t => {
       etat[t.numero] = {
         faite: t.faite !== undefined ? t.faite : undefined,
         justification: t.justification || '',
