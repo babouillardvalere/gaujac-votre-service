@@ -719,10 +719,7 @@ export default function WorkItemsServiceView({ service }) {
                    }
 
                    // Vérifier si un motif d'attente est sélectionné
-                   if (!selectedWorkItem.wait_reason) {
-                     toast.error('⚠️ Sélectionnez un motif d\'attente');
-                     return;
-                   }
+                   const motifAttente = selectedWorkItem.wait_reason || 'LOGISTIQUE_INTERNE';
 
                    // Identifier les tâches avec commande nécessaire
                    const tachesAvecCommande = tachesUpdated.filter(t => {
@@ -730,7 +727,7 @@ export default function WorkItemsServiceView({ service }) {
                      return t.faite === false && etat?.commandeNecessaire === true;
                    });
 
-                   // Validation des commandes UNIQUEMENT si des tâches nécessitent une commande
+                   // Validation des commandes UNIQUEMENT si des tâches ont "Oui" pour commande nécessaire
                    if (tachesAvecCommande.length > 0) {
                      const tachesSansArticles = tachesAvecCommande.filter(t => 
                        !commandesArticles[t.numero] || commandesArticles[t.numero].length === 0
@@ -755,11 +752,11 @@ export default function WorkItemsServiceView({ service }) {
                      commandesACreer,
                      metadata: { 
                        resultat: commandesACreer.length > 0 ? 'EN_ATTENTE_MATERIEL' : 'EN_ATTENTE_AUTRE',
-                       wait_reason: selectedWorkItem.wait_reason
+                       wait_reason: motifAttente
                      },
                      description_operationnelle: compteRenduGlobal.trim(),
                      blockLogistique: true,
-                     waitReason: selectedWorkItem.wait_reason,
+                     waitReason: motifAttente,
                      waitComment: compteRenduGlobal.trim()
                    });
                  }}
