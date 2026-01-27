@@ -6,7 +6,7 @@ import { ArrowLeft, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { createPageUrl } from '../utils';
 import Logo from '../components/Logo';
-import { deduplicateMissions } from '../components/missions/deduplicateMissions';
+import { cleanAllDuplicates } from '../components/missions/missionDirectionFactory';
 
 export default function AdminDeduplicationAuto() {
   const navigate = useNavigate();

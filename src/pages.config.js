@@ -1,4 +1,5 @@
 import AdminDeduplication from './pages/AdminDeduplication';
+import AdminDeduplicationAuto from './pages/AdminDeduplicationAuto';
 import AdminLoadTest from './pages/AdminLoadTest';
 import Animations from './pages/Animations';
 import Attente from './pages/Attente';
@@ -99,12 +100,12 @@ import Statistiques from './pages/Statistiques';
 import SuiviIntervention from './pages/SuiviIntervention';
 import Taches from './pages/Taches';
 import Technique from './pages/Technique';
-import AdminDeduplicationAuto from './pages/AdminDeduplicationAuto';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AdminDeduplication": AdminDeduplication,
+    "AdminDeduplicationAuto": AdminDeduplicationAuto,
     "AdminLoadTest": AdminLoadTest,
     "Animations": Animations,
     "Attente": Attente,
@@ -205,7 +206,6 @@ export const PAGES = {
     "SuiviIntervention": SuiviIntervention,
     "Taches": Taches,
     "Technique": Technique,
-    "AdminDeduplicationAuto": AdminDeduplicationAuto,
 }
 
 export const pagesConfig = {
