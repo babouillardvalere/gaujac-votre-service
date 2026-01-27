@@ -69,8 +69,9 @@ export default function DirectionRecapIntervention() {
       console.log('[DIRECTION] Zones à traiter:', numerosHebergement);
       console.log('[DIRECTION] Type mission EXACT:', template.typeIntervention);
       
-      // Créer UNE MissionDirection par hébergement
+      // Créer UNE MissionDirection par hébergement + WorkItems automatiques
       const missionsCreated = [];
+      let totalWorkItemsCreated = 0;
       
       for (const numeroHebergement of numerosHebergement) {
         const missionData = {
@@ -106,7 +107,36 @@ export default function DirectionRecapIntervention() {
         missionsCreated.push(created);
         
         console.log(`[DIRECTION] ✅ MissionDirection créée ID=${created.id} type_mission=${created.type_mission}`);
-        console.log('[DIRECTION] Objet créé complet:', created);
+        
+        // CRITIQUE: Créer le WorkItem pour le service
+        const description_operationnelle = template.taches
+          .map((t, i) => `${i + 1}. ${t.texte}`)
+          .join('\n');
+        
+        const workItemData = {
+          type: 'MISSION_DIRECTION',
+          service: template.service,
+          titre: `${template.typeIntervention} - ${numeroHebergement}`,
+          description_operationnelle, // OBLIGATOIRE
+          description: template.description || '',
+          hebergement: numeroHebergement,
+          type_hebergement: template.typeHebergement,
+          mission_direction_id: created.id,
+          statut: 'A_FAIRE',
+          priorite: template.priorite || 'NORMALE',
+          taches: template.taches.map((t, idx) => ({
+            numero: t.numero,
+            texte: t.texte,
+            faite: false
+          }))
+        };
+        
+        console.log(`[DIRECTION] 🚀 Création WorkItem pour service=${template.service}:`, workItemData);
+        
+        await base44.entities.WorkItem.create(workItemData);
+        totalWorkItemsCreated++;
+        
+        console.log(`[DIRECTION] ✅ WorkItem créé pour mission=${created.id} service=${template.service}`);
       }
 
       console.log(`[DIRECTION] === 🎉 FIN CRÉATION RÉUSSIE - ${missionsCreated.length} mission(s) ===`);
