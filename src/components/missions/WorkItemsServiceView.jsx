@@ -49,7 +49,25 @@ export default function WorkItemsServiceView({ service }) {
         type: 'MISSION_DIRECTION'
       }, '-created_date', 250);
       console.log(`[WorkItemsServiceView] WorkItems ${service}:`, items.length);
-      return items;
+      
+      // 🧹 DÉDUPLICATION: si plusieurs WorkItems pointent vers la MÊME mission_direction_id, garder 1 seul
+      const uniqueItems = [];
+      const seenMissions = new Set();
+      
+      for (const wi of items) {
+        if (wi.mission_direction_id) {
+          const key = wi.mission_direction_id;
+          if (seenMissions.has(key)) {
+            console.log(`[DEDUP] ⏭️ Saut doublon WorkItem ${wi.id} (mission ${key} déjà affichée)`);
+            continue;
+          }
+          seenMissions.add(key);
+        }
+        uniqueItems.push(wi);
+      }
+      
+      console.log(`[DEDUP] ✅ ${items.length} WorkItems → ${uniqueItems.length} uniques (${items.length - uniqueItems.length} doublons masqués)`);
+      return uniqueItems;
     },
     refetchInterval: 30000
   });
