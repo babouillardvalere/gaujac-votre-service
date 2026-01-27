@@ -689,55 +689,49 @@ export default function WorkItemsServiceView({ service }) {
             const tachesTotal = (item.taches || []).length;
 
             return (
-              <Card key={displayItem.id} className={`border-2 ${
-                displayItem.priorite === 'URGENTE' || displayItem.priorite === 'CRITIQUE' ? 'border-red-500 bg-red-50' : 'border-purple-300'
+              <Card key={item.id} className={`border-2 ${
+                item.priorite === 'URGENTE' || item.priorite === 'CRITIQUE' ? 'border-red-500 bg-red-50' : 'border-purple-300'
               }`}>
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        <Badge className={mission?.type_mission === 'HIVERNAGE' ? 'bg-blue-500' : 'bg-yellow-500'}>
-                          {mission?.type_mission || 'MISSION'}
+                        <Badge className="bg-purple-500">
+                          MISSION DIRECTION
                         </Badge>
                         <Badge className={
-                          displayItem.statut === 'TERMINEE' ? 'bg-green-500' :
-                          displayItem.statut === 'EN_COURS' ? 'bg-blue-500' :
-                          displayItem.statut === 'EN_ATTENTE' ? 'bg-gray-500' :
+                          item.statut === 'TERMINEE' ? 'bg-green-500' :
+                          item.statut === 'EN_COURS' ? 'bg-blue-500' :
+                          item.statut === 'EN_ATTENTE' ? 'bg-gray-500' :
                           'bg-orange-500'
                         }>
-                          {displayItem.statut.replace(/_/g, ' ')}
+                          {item.statut.replace(/_/g, ' ')}
                         </Badge>
-                        {(displayItem.priorite === 'URGENTE' || displayItem.priorite === 'CRITIQUE') && (
+                        {(item.priorite === 'URGENTE' || item.priorite === 'CRITIQUE') && (
                           <Badge className="bg-red-500">
                             <AlertTriangle className="w-3 h-3 mr-1" />
                             URGENT
                           </Badge>
                         )}
                       </div>
-                      
+
                       <h3 className="font-heading text-lg text-purple-700">
-                        🏠 {displayItem.hebergement} - {displayItem.type_hebergement}
+                        🏠 {item.hebergement} - {item.type_hebergement}
                       </h3>
-                      <p className="text-sm text-gray-600 mt-1">{displayItem.titre}</p>
-                      
-                      {mission && (
-                        <p className="text-xs text-purple-600 mt-2 italic">
-                          📋 Mission: {mission.titre}
-                        </p>
-                      )}
+                      <p className="text-sm text-gray-600 mt-1">{item.titre}</p>
 
                       <div className="flex items-center gap-3 text-xs text-gray-600 mt-2">
                         <span>📋 {tachesCompletees}/{tachesTotal} tâche(s)</span>
-                        {displayItem.collaborateur && (
+                        {item.collaborateur && (
                           <span className="flex items-center gap-1">
                             <User className="w-3 h-3" />
-                            {displayItem.collaborateur}
+                            {item.collaborateur}
                           </span>
                         )}
-                        {displayItem.duree_minutes > 0 && (
+                        {item.duree_minutes > 0 && (
                           <span className="flex items-center gap-1">
                             <Clock className="w-3 h-3" />
-                            {displayItem.duree_minutes} min
+                            {item.duree_minutes} min
                           </span>
                         )}
                       </div>
@@ -745,10 +739,10 @@ export default function WorkItemsServiceView({ service }) {
                   </div>
 
                   {/* Affichage des tâches */}
-                  {displayItem.taches && displayItem.taches.length > 0 && (
+                  {item.taches && item.taches.length > 0 && (
                     <div className="mb-3 space-y-1">
                       <p className="text-xs font-semibold text-purple-600 mb-2">📋 Tâches à réaliser:</p>
-                      {displayItem.taches.map((tache, idx) => (
+                      {item.taches.map((tache, idx) => (
                         <div key={idx} className="flex items-start gap-2 bg-purple-50 p-2 rounded border-l-2 border-purple-400">
                           <span className="text-purple-700 font-bold text-sm">{tache.numero}.</span>
                           <p className="text-sm text-gray-700 flex-1">{tache.texte}</p>
@@ -757,18 +751,18 @@ export default function WorkItemsServiceView({ service }) {
                     </div>
                   )}
 
-                  {displayItem.statut !== 'TERMINEE' && (
+                  {item.statut !== 'TERMINEE' && (
                     <Button
                       onClick={() => handlePrendreEnCharge(item)}
                       className="w-full bg-purple-600 h-12"
                     >
-                      {displayItem.statut === 'A_FAIRE' ? 'Prendre en charge' : 'Continuer'}
+                      {item.statut === 'A_FAIRE' ? 'Prendre en charge' : 'Continuer'}
                     </Button>
                   )}
                 </CardContent>
               </Card>
             );
-          })}
+            })}
         </div>
       )}
     </div>
