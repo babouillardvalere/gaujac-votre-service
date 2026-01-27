@@ -384,11 +384,8 @@ export default function WorkItemsServiceView({ service }) {
     });
   };
 
-  // Combiner missions et workitems
-  const allItems = [
-    ...missions.map(m => ({ ...m, isMission: true })),
-    ...workItems.map(w => ({ ...w, isWorkItem: true }))
-  ];
+  // Utiliser uniquement les workItems
+  const allItems = workItems;
 
   const filteredItems = allItems.filter(item => {
     if (filterStatut === 'tous') return true;
