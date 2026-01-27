@@ -685,24 +685,8 @@ export default function WorkItemsServiceView({ service }) {
       ) : (
         <div className="space-y-3">
           {filteredItems.map((item, idx) => {
-            // item peut être soit un WorkItem soit une MissionDirection
-            const displayItem = item.isWorkItem ? item : {
-              id: item.id,
-              hebergement: item.zones?.[0]?.numero || 'Multi-zones',
-              type_hebergement: item.zones?.[0]?.categorie || '',
-              titre: item.titre,
-              statut: item.statut,
-              priorite: item.priorite,
-              collaborateur: item.services_intervenants?.find(s => s.service === service)?.agent || '',
-              taches: item.actions_prevues?.map((a, i) => ({ numero: i+1, texte: a.action, faite: a.effectuee })) || [],
-              duree_minutes: item.temps_reel_minutes || 0,
-              mission_direction_id: item.id,
-              type_mission: item.type_mission
-            };
-            
-            const mission = item.isMission ? item : missions.find(m => m.id === item.mission_direction_id);
-            const tachesCompletees = (displayItem.taches || []).filter(t => t.faite).length;
-            const tachesTotal = (displayItem.taches || []).length;
+            const tachesCompletees = (item.taches || []).filter(t => t.faite).length;
+            const tachesTotal = (item.taches || []).length;
 
             return (
               <Card key={displayItem.id} className={`border-2 ${
