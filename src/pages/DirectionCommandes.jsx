@@ -53,54 +53,30 @@ export default function DirectionCommandes() {
     onSuccess: async (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['commandes-direction'] });
       
-      // Si commande marquée comme reçue, débloquer les WorkItems liés
+      // CRITIQUE: La direction NE MODIFIE JAMAIS le statut d'une mission
+      // La commande est marquée comme reçue, mais c'est au SERVICE de décider quand reprendre
       if (variables.statut === 'RECUE') {
         try {
           const commande = commandes.find(c => c.id === variables.id);
           if (commande?.mission_id) {
-            // Récupérer tous les WorkItems de cette mission
-            const workItems = await base44.entities.WorkItem.filter({ 
-              mission_direction_id: commande.mission_id,
-              service: commande.service_demandeur
-            });
-            
-            // Débloquer les WorkItems EN_ATTENTE de cette mission
-            const workItemsEnAttente = workItems.filter(w => w.statut === 'EN_ATTENTE');
-            
-            if (workItemsEnAttente.length > 0) {
-              await Promise.all(
-                workItemsEnAttente.map(w => 
-                  base44.entities.WorkItem.update(w.id, { statut: 'A_FAIRE' })
-                )
-              );
-              
-              queryClient.invalidateQueries({ queryKey: ['workitems-service'] });
-              queryClient.invalidateQueries({ queryKey: ['bureau-workitems'] });
-              
-              // Vérifier si la mission peut repasser EN_COURS
-              const autresWorkItemsEnAttente = await base44.entities.WorkItem.filter({
-                mission_direction_id: commande.mission_id,
-                statut: 'EN_ATTENTE'
-              });
-              
-              // CRITIQUE: Ne JAMAIS modifier automatiquement le statut d'une mission bloquée
-              if (autresWorkItemsEnAttente.length === 0) {
-                const mission = await base44.entities.MissionDirection.filter({ id: commande.mission_id });
-                if (mission?.[0]?.is_blocked_logistique !== true) {
-                  await base44.entities.MissionDirection.update(commande.mission_id, {
-                    statut: 'EN_COURS'
-                  });
-                  queryClient.invalidateQueries({ queryKey: ['missions-direction-list'] });
-                } else {
-                  console.warn('Mission bloquée logistique - recalcul ignoré', commande.mission_id);
-                }
+            // Notifier le service que le matériel est disponible
+            await base44.entities.Notification.create({
+              type: 'MATERIEL_RECU',
+              titre: `📦 Matériel reçu - ${commande.hebergement}`,
+              message: `Commande reçue pour ${commande.hebergement}. Vous pouvez reprendre la mission.`,
+              destinataire_role: commande.service_demandeur,
+              priorite: 'URGENTE',
+              metadata: { 
+                mission_id: commande.mission_id,
+                commande_id: variables.id,
+                articles: commande.articles
               }
-              
-              toast.success(`🔁 ${workItemsEnAttente.length} tâche(s) débloquée(s) !`);
-            }
+            }).catch(err => console.error('Erreur notification:', err));
+            
+            toast.success('✅ Service notifié - ils peuvent reprendre la mission');
           }
         } catch (error) {
-          console.error('Erreur déblocage WorkItems:', error);
+          console.error('Erreur notification service:', error);
         }
       }
       

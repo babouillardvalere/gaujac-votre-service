@@ -868,8 +868,13 @@ export default function WorkItemsServiceView({ service }) {
                         <Button
                           onClick={async () => {
                             try {
-                              // Débloquer la mission
-                              await unblockMissionLogistique(item.mission_direction_id);
+                              // Débloquer la mission (retirer wait_reason + is_blocked_logistique)
+                              await base44.entities.MissionDirection.update(item.mission_direction_id, {
+                                statut: 'EN_COURS',
+                                is_blocked_logistique: false,
+                                wait_reason: null,
+                                wait_comment: null
+                              });
                               // Repasser le WorkItem en EN_COURS
                               await base44.entities.WorkItem.update(item.id, {
                                 statut: 'EN_COURS'
