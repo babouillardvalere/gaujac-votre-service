@@ -9,11 +9,14 @@ import { ArrowLeft, Clock, User, CheckCircle, Loader2 } from 'lucide-react';
 import Logo from '../components/Logo';
 import { createPageUrl } from '../utils';
 import { motion } from 'framer-motion';
+import { forceRecalcAllMissions } from '../components/missions/forceRecalcAllMissions';
+import { toast } from 'sonner';
 
 export default function DirectionSuiviDeshivernage() {
   const navigate = useNavigate();
   const [filterService, setFilterService] = useState('tous');
   const [filterStatut, setFilterStatut] = useState('tous');
+  const [isRecalculating, setIsRecalculating] = useState(false);
 
   const { data: missions = [], isLoading, refetch } = useQuery({
     queryKey: ['suivi-deshivernage'],
@@ -100,6 +103,39 @@ export default function DirectionSuiviDeshivernage() {
             🌞 Suivi Déshivernage
           </h1>
           <p className="text-center text-gray-600 font-body">Vue supervision - Lecture seule</p>
+          
+          <div className="flex justify-center mt-4">
+            <Button
+              onClick={async () => {
+                setIsRecalculating(true);
+                try {
+                  const result = await forceRecalcAllMissions();
+                  if (result.success) {
+                    toast.success(`✅ ${result.updated} missions recalculées`);
+                    refetch();
+                  } else {
+                    toast.error('❌ Erreur recalcul');
+                  }
+                } catch (error) {
+                  toast.error('❌ Erreur recalcul');
+                } finally {
+                  setIsRecalculating(false);
+                }
+              }}
+              disabled={isRecalculating}
+              className="bg-purple-600 hover:bg-purple-700"
+              size="sm"
+            >
+              {isRecalculating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Recalcul en cours...
+                </>
+              ) : (
+                '🔄 Recalculer tous les statuts'
+              )}
+            </Button>
+          </div>
         </motion.div>
 
         {/* Stats */}
