@@ -10,6 +10,7 @@ import Logo from '../components/Logo';
 import { createPageUrl } from '../utils';
 import { motion } from 'framer-motion';
 import { forceRecalcAllMissions } from '../components/missions/forceRecalcAllMissions';
+import { diagnosticMissions } from '../components/missions/diagnosticMissions';
 import { toast } from 'sonner';
 
 export default function DirectionSuiviDeshivernage() {
@@ -123,7 +124,27 @@ export default function DirectionSuiviDeshivernage() {
           </h1>
           <p className="text-center text-gray-600 font-body">Vue supervision - Lecture seule</p>
           
-          <div className="flex justify-center mt-4">
+          <div className="flex justify-center gap-3 mt-4">
+            <Button
+              onClick={async () => {
+                console.log('[DIAGNOSTIC] 🔍 Lancement du diagnostic...');
+                toast.info('🔍 Diagnostic en cours...', { description: 'Ouvrez la console (F12)' });
+                const result = await diagnosticMissions();
+                if (result.success) {
+                  if (result.incoherences.length > 0) {
+                    toast.warning(`⚠️ ${result.incoherences.length} mission(s) désynchronisée(s)`, {
+                      description: 'Cliquez sur "Recalculer" pour corriger'
+                    });
+                  } else {
+                    toast.success('✅ Toutes les missions sont synchronisées');
+                  }
+                }
+              }}
+              variant="outline"
+              size="sm"
+            >
+              🔍 Diagnostic
+            </Button>
             <Button
               onClick={async () => {
                 setIsRecalculating(true);
@@ -142,7 +163,10 @@ export default function DirectionSuiviDeshivernage() {
                   await refetch();
                   
                   if (result.success) {
-                    toast.success(`✅ ${result.updated} missions synchronisées`, {
+                    const msg = result.changes?.length > 0 
+                      ? `✅ ${result.changes.length} mission(s) corrigée(s)` 
+                      : '✅ Toutes les missions déjà à jour';
+                    toast.success(msg, {
                       description: 'Vérifiez la console (F12) pour les détails'
                     });
                     console.log('[RECALCUL] ✅ TERMINÉ AVEC SUCCÈS');
