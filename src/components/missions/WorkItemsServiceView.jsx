@@ -225,6 +225,8 @@ export default function WorkItemsServiceView({ service }) {
 
           queryClient.invalidateQueries({ queryKey: ['missions-direction-list'] });
           queryClient.invalidateQueries({ queryKey: ['missions-direction-for-service', service] });
+          queryClient.invalidateQueries({ queryKey: ['suivi-deshivernage'] });
+          queryClient.invalidateQueries({ queryKey: ['suivi-hivernage'] });
         } catch (error) {
           console.error('[WorkItemsServiceView] Erreur mise à jour statut mission:', error);
         }

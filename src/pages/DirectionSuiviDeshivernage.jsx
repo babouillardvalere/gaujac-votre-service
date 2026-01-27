@@ -47,7 +47,14 @@ export default function DirectionSuiviDeshivernage() {
 
   const filtered = missions.filter(m => {
     if (filterService !== 'tous' && !m.services_intervenants?.some(s => s.service === filterService)) return false;
-    if (filterStatut !== 'tous' && m.statut !== filterStatut) return false;
+    if (filterStatut !== 'tous') {
+      // Gérer le cas EN_ATTENTE qui peut correspondre à has_blocking=true aussi
+      if (filterStatut === 'EN_ATTENTE') {
+        if (m.statut !== 'EN_ATTENTE' && m.has_blocking !== true) return false;
+      } else {
+        if (m.statut !== filterStatut) return false;
+      }
+    }
     return true;
   });
 
@@ -197,6 +204,16 @@ export default function DirectionSuiviDeshivernage() {
             Terminées
           </Button>
         </div>
+
+        {/* Debug info */}
+        {filtered.length === 0 && (
+          <Card className="border-2 border-gray-200 bg-gray-50">
+            <CardContent className="p-6 text-center">
+              <p className="text-gray-600">Aucune mission pour les filtres sélectionnés</p>
+              <p className="text-xs text-gray-500 mt-2">Total chargé: {missions.length} missions</p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Liste */}
         <div className="space-y-3">

@@ -20,11 +20,31 @@ export default function MissionsDirection() {
   const [selectedMission, setSelectedMission] = useState(null);
   const [filterStatut, setFilterStatut] = useState('tous');
 
-  const { data: missions = [], isLoading } = useQuery({
+  const { data: missions = [], isLoading, refetch } = useQuery({
     queryKey: ['missions-direction-list'],
     queryFn: () => base44.entities.MissionDirection.filter({ mission_direction: true }, '-created_date', 250),
-    refetchInterval: 45000
+    refetchInterval: 3000,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
   });
+
+  // 🔄 TEMPS RÉEL : Abonnement aux changements MissionDirection
+  React.useEffect(() => {
+    const unsubscribe = base44.entities.MissionDirection.subscribe((event) => {
+      console.log('[MissionsDirection] 🔄 MissionDirection changée:', event.type, event.id);
+      refetch();
+    });
+    return unsubscribe;
+  }, [refetch]);
+
+  // 🔄 TEMPS RÉEL : Abonnement aux changements WorkItem
+  React.useEffect(() => {
+    const unsubscribe = base44.entities.WorkItem.subscribe((event) => {
+      console.log('[MissionsDirection] 🔄 WorkItem changé:', event.type, event.id);
+      refetch();
+    });
+    return unsubscribe;
+  }, [refetch]);
 
   const filteredMissions = missions.filter(m => {
     if (filterStatut === 'tous') return true;
