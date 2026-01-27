@@ -2,10 +2,12 @@ import { base44 } from '@/api/base44Client';
 
 /**
  * DIAGNOSTIC - Vérifie l'état de synchronisation des missions
- * Retourne un rapport détaillé des incohérences
+ * Retourne un rapport détaillé des incohérences avec WorkItems
  */
 export async function diagnosticMissions() {
-  console.log('\n[DIAGNOSTIC] 🔍 DÉMARRAGE ANALYSE...\n');
+  console.log('\n\n════════════════════════════════════════════════════════');
+  console.log('[DIAGNOSTIC] 🔍 ANALYSE COMPLÈTE SYNCHRONISATION');
+  console.log('════════════════════════════════════════════════════════\n');
   
   try {
     // Récupérer toutes les missions et WorkItems
@@ -28,18 +30,33 @@ export async function diagnosticMissions() {
     const incoherences = [];
     
     // Analyser chaque mission
+    console.log(`\n[DIAGNOSTIC] 📋 ANALYSE DES ${missions.length} MISSIONS:\n`);
+    
+    let idx = 1;
     for (const mission of missions) {
       const wis = workItemsByMission[mission.id] || [];
-      
-      if (wis.length === 0) continue;
-      
       const hebergement = mission.zones?.[0]?.numero || mission.id.substring(0, 8);
+      
+      // Afficher la mission même si pas de WorkItems
+      console.log(`${idx}. ${hebergement} - Statut: ${mission.statut}`);
+      
+      if (wis.length === 0) {
+        console.log(`   ⚠️  SANS WorkItems`);
+        idx++;
+        continue;
+      }
       
       // Calculer le statut attendu
       const nbTerminee = wis.filter(w => w.statut === 'TERMINEE').length;
       const nbEnCours = wis.filter(w => w.statut === 'EN_COURS').length;
       const nbEnAttente = wis.filter(w => w.statut === 'EN_ATTENTE').length;
       const nbAFaire = wis.filter(w => w.statut === 'A_FAIRE').length;
+      
+      console.log(`   WorkItems (${wis.length}):`);
+      wis.forEach(w => {
+        console.log(`     • ${w.service}: ${w.statut} ${w.statut === 'TERMINEE' ? '✅' : ''}`);
+      });
+      console.log(`   Distribution: TERMINEE(${nbTerminee}) EN_COURS(${nbEnCours}) EN_ATTENTE(${nbEnAttente}) A_FAIRE(${nbAFaire})`);
       
       let statutAttendu;
       if (nbEnCours > 0) {
@@ -56,6 +73,8 @@ export async function diagnosticMissions() {
       
       // Vérifier l'incohérence
       if (mission.statut !== statutAttendu) {
+        console.log(`   ❌ INCOHÉRENCE: ${mission.statut} ≠ ${statutAttendu}`);
+        
         const detail = {
           hebergement,
           missionId: mission.id,
@@ -66,24 +85,31 @@ export async function diagnosticMissions() {
         };
         
         incoherences.push(detail);
-        
-        console.log(`\n[DIAGNOSTIC] ❌ INCOHÉRENCE: ${hebergement}`);
-        console.log(`  Mission statut: ${mission.statut}`);
-        console.log(`  Statut attendu: ${statutAttendu}`);
-        console.log(`  WorkItems: ${JSON.stringify(detail.distribution)}`);
-        wis.forEach(w => console.log(`    - ${w.service}: ${w.statut}`));
+      } else {
+        console.log(`   ✅ OK: ${mission.statut}`);
       }
+      
+      idx++;
     }
     
-    console.log(`\n[DIAGNOSTIC] 📊 RÉSULTAT:`);
-    console.log(`  ✅ Missions cohérentes: ${missions.length - incoherences.length}`);
+    console.log('\n════════════════════════════════════════════════════════');
+    console.log('[DIAGNOSTIC] 📊 RÉSUMÉ:');
+    console.log(`  ✅ Missions cohérentes: ${missions.length - incoherences.length}/${missions.length}`);
     console.log(`  ❌ Missions incohérentes: ${incoherences.length}`);
     
     if (incoherences.length > 0) {
-      console.log('\n[DIAGNOSTIC] ⚠️ CORRECTION NÉCESSAIRE - Cliquez sur "Recalculer tous les statuts"');
+      console.log('\n[DIAGNOSTIC] ⚠️ ACTION: Cliquez sur "Recalculer tous les statuts"');
+      console.log('\n[DIAGNOSTIC] 🔧 PROBLÈMES DÉTECTÉS:\n');
+      incoherences.forEach((inc, i) => {
+        console.log(`  ${i+1}. ${inc.hebergement}`);
+        console.log(`     Statut Mission: ${inc.statutActuel}`);
+        console.log(`     Statut Attendu: ${inc.statutAttendu}`);
+        console.log(`     Raison: WorkItems sont ${JSON.stringify(inc.distribution)}`);
+      });
     } else {
-      console.log('\n[DIAGNOSTIC] ✅ Toutes les missions sont synchronisées');
+      console.log('\n[DIAGNOSTIC] ✅ Toutes les missions sont synchronisées!');
     }
+    console.log('\n════════════════════════════════════════════════════════\n');
     
     return {
       success: true,
