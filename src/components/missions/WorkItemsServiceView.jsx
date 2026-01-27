@@ -56,53 +56,8 @@ export default function WorkItemsServiceView({ service }) {
 
   const isLoading = missionsLoading || workItemsLoading;
 
-  // CRITIQUE: Créer automatiquement les WorkItems manquants
-  React.useEffect(() => {
-    const createMissingWorkItems = async () => {
-      if (!missions || missions.length === 0) return;
-      
-      for (const mission of missions) {
-        // Vérifier si un WorkItem existe déjà pour cette mission
-        const existingWorkItem = workItems.find(w => w.mission_direction_id === mission.id);
-        
-        if (!existingWorkItem) {
-          console.log(`[WorkItemsServiceView] Création WorkItem manquant pour mission ${mission.id}`);
-          
-          const description_operationnelle = mission.actions_prevues
-            ?.map((a, i) => `${i + 1}. ${a.action}`)
-            .join('\n') || mission.description || mission.titre;
-          
-          try {
-            await base44.entities.WorkItem.create({
-              type: 'MISSION_DIRECTION',
-              service,
-              titre: mission.titre,
-              description_operationnelle,
-              description: mission.description || '',
-              hebergement: mission.zones?.[0]?.numero || 'Multi-zones',
-              type_hebergement: mission.zones?.[0]?.categorie || '',
-              mission_direction_id: mission.id,
-              statut: mission.statut,
-              priorite: mission.priorite || 'NORMALE',
-              taches: mission.actions_prevues?.map((a, idx) => ({
-                numero: idx + 1,
-                texte: a.action,
-                faite: a.effectuee || false
-              })) || []
-            });
-            
-            queryClient.invalidateQueries({ queryKey: ['workitems-service', service] });
-          } catch (error) {
-            console.error('[WorkItemsServiceView] Erreur création WorkItem:', error);
-          }
-        }
-      }
-    };
-    
-    if (missions.length > 0 && workItems) {
-      createMissingWorkItems();
-    }
-  }, [missions, workItems, service, queryClient]);
+  // DÉSACTIVÉ : Ne plus créer automatiquement de WorkItems au chargement
+  // Les WorkItems doivent être créés UNIQUEMENT lors de la création de la MissionDirection
 
   // Timer
   useEffect(() => {
@@ -632,6 +587,30 @@ export default function WorkItemsServiceView({ service }) {
                  ⚠️ Remplissez le compte rendu (champ obligatoire) pour pouvoir valider
                </div>
              )}
+
+             {/* Sélection motif d'attente */}
+             <div className="bg-yellow-50 rounded-lg p-3 border-2 border-yellow-300">
+               <label className="text-sm font-bold text-yellow-800 mb-2 block">
+                 ⏸️ Motif de mise en attente *
+               </label>
+               <select
+                 className="w-full p-2 border-2 border-yellow-400 rounded-lg bg-white"
+                 value={selectedWorkItem?.wait_reason || 'LOGISTIQUE_INTERNE'}
+                 onChange={(e) => setSelectedWorkItem({
+                   ...selectedWorkItem,
+                   wait_reason: e.target.value
+                 })}
+               >
+                 <option value="LOGISTIQUE_COMMANDE">Commande à passer</option>
+                 <option value="LOGISTIQUE_INTERNE">Matériel à récupérer (atelier)</option>
+                 <option value="VALIDATION_DIRECTION">Attente validation Direction</option>
+                 <option value="ATTENTE_COORDINATION">Coordination avec autre service</option>
+                 <option value="AUTRE">Autre</option>
+               </select>
+               <p className="text-xs text-yellow-700 mt-2">
+                 ℹ️ Ce motif permettra de suivre précisément les raisons d'attente
+               </p>
+             </div>
 
              <div className="grid grid-cols-2 gap-3">
                <Button
