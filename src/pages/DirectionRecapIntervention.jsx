@@ -139,14 +139,16 @@ export default function DirectionRecapIntervention() {
         console.log(`[DIRECTION] ✅ WorkItem créé pour mission=${created.id} service=${template.service}`);
       }
 
-      console.log(`[DIRECTION] === 🎉 FIN CRÉATION RÉUSSIE - ${missionsCreated.length} mission(s) ===`);
+      console.log(`[DIRECTION] === 🎉 FIN CRÉATION RÉUSSIE - ${missionsCreated.length} mission(s) + ${totalWorkItemsCreated} WorkItem(s) ===`);
       console.log('[DIRECTION] IDs créés:', missionsCreated.map(m => m.id));
 
       queryClient.invalidateQueries({ queryKey: ['suivi-hivernage'] });
       queryClient.invalidateQueries({ queryKey: ['suivi-deshivernage'] });
       queryClient.invalidateQueries({ queryKey: ['interventions-direction'] });
+      queryClient.invalidateQueries({ queryKey: ['workitems-service'] });
+      queryClient.invalidateQueries({ queryKey: ['missions-direction-list'] });
       
-      toast.success(`✅ ${missionsCreated.length} mission(s) ${template.typeIntervention} créée(s) !`, { duration: 5000 });
+      toast.success(`✅ ${missionsCreated.length} mission(s) + ${totalWorkItemsCreated} tâche(s) opérationnelle(s) créées !`, { duration: 5000 });
       
       // Rediriger vers la page de suivi correspondante pour vérifier immédiatement
       if (template.typeIntervention === 'DESHIVERNAGE') {
