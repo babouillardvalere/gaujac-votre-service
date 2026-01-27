@@ -226,14 +226,48 @@ export default function WorkItemsServiceView({ service }) {
             });
             console.log(`[WorkItemsServiceView] 🔒 Mission VERROUILLÉE EN_ATTENTE (motif: ${variables.motifAttente})`);
           } else if (variables.statut === 'TERMINEE') {
-            // FORCER le recalcul immédiat
-            console.log(`[WorkItemsServiceView] 🔄 RECALCUL IMMÉDIAT après terminaison WorkItem`);
+            // FORCER le recalcul immédiat avec VRAIE mise à jour BDD
+            console.log(`[WorkItemsServiceView] 🔄 RECALCUL FORCÉ IMMÉDIAT après terminaison WorkItem`);
             
-            // Attendre 300ms pour que le WorkItem soit bien sauvegardé
-            await new Promise(resolve => setTimeout(resolve, 300));
+            // Attendre 500ms pour que le WorkItem soit bien sauvegardé
+            await new Promise(resolve => setTimeout(resolve, 500));
             
-            const nouveauStatut = await recalcMissionStatus(workItem.mission_direction_id);
-            console.log(`[WorkItemsServiceView] ✅ Nouveau statut mission: ${nouveauStatut}`);
+            // Récupérer TOUS les WorkItems de cette mission depuis la BDD
+            const allWI = await base44.entities.WorkItem.filter({ mission_direction_id: workItem.mission_direction_id }, '-created_date', 50);
+            console.log(`[WorkItemsServiceView] WorkItems trouvés:`, allWI.map(w => `${w.service}: ${w.statut}`));
+            
+            // Calcul STRICT
+            const nbTerminee = allWI.filter(w => w.statut === 'TERMINEE').length;
+            const nbEnCours = allWI.filter(w => w.statut === 'EN_COURS').length;
+            const nbEnAttente = allWI.filter(w => w.statut === 'EN_ATTENTE').length;
+            const nbAFaire = allWI.filter(w => w.statut === 'A_FAIRE').length;
+            
+            let nouveauStatut;
+            if (nbEnCours > 0) {
+              nouveauStatut = 'EN_COURS';
+            } else if (nbEnAttente > 0) {
+              nouveauStatut = 'EN_ATTENTE';
+            } else if (nbAFaire > 0) {
+              nouveauStatut = 'A_FAIRE';
+            } else if (nbTerminee === allWI.length && allWI.length > 0) {
+              nouveauStatut = 'TERMINEE';
+            } else {
+              nouveauStatut = 'A_FAIRE';
+            }
+            
+            console.log(`[WorkItemsServiceView] 📊 Distribution: TERMINEE(${nbTerminee}) EN_COURS(${nbEnCours}) EN_ATTENTE(${nbEnAttente}) A_FAIRE(${nbAFaire})`);
+            console.log(`[WorkItemsServiceView] ➜ Nouveau statut calculé: ${nouveauStatut}`);
+            
+            // FORCER la mise à jour dans la BDD
+            const updateData = { statut: nouveauStatut };
+            if (nouveauStatut === 'TERMINEE') {
+              updateData.has_blocking = false;
+              updateData.is_blocked_logistique = false;
+              updateData.motif_attente = null;
+            }
+            
+            await base44.entities.MissionDirection.update(workItem.mission_direction_id, updateData);
+            console.log(`[WorkItemsServiceView] ✅ Mission mise à jour: ${nouveauStatut}`);
           }
 
           // Forcer l'invalidation complète
