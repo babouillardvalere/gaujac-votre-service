@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,6 +19,8 @@ export default function DirectionSuiviDeshivernage() {
   const [filterStatut, setFilterStatut] = useState('tous');
   const [isRecalculating, setIsRecalculating] = useState(false);
 
+  const queryClient = useQueryClient();
+  
   const { data: missions = [], isLoading, refetch } = useQuery({
     queryKey: ['suivi-deshivernage'],
     queryFn: () => base44.entities.MissionDirection.filter(
@@ -26,9 +28,10 @@ export default function DirectionSuiviDeshivernage() {
       '-created_date',
       200
     ),
-    refetchInterval: 3000,
+    refetchInterval: 2000,
     refetchOnWindowFocus: true,
-    refetchOnMount: true
+    refetchOnMount: true,
+    staleTime: 0 // Force toujours le fetch
   });
 
   // 🔄 TEMPS RÉEL : Abonnement aux changements MissionDirection
@@ -170,8 +173,11 @@ export default function DirectionSuiviDeshivernage() {
                   console.log('[RECALCUL] ⏳ Attente synchronisation BDD...');
                   await new Promise(resolve => setTimeout(resolve, 1000));
                   
-                  // Forcer le rechargement TOTAL des données
-                  console.log('[RECALCUL] 🔄 Rechargement des données...');
+                  // Vider le cache et forcer un rechargement TOTAL
+                  console.log('[RECALCUL] 🔄 Vidage cache + rechargement...');
+                  queryClient.invalidateQueries({ queryKey: ['suivi-deshivernage'] });
+                  queryClient.invalidateQueries({ queryKey: ['workitems-deshivernage'] });
+                  await new Promise(resolve => setTimeout(resolve, 500));
                   await refetch();
                   
                   if (result.success) {
