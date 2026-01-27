@@ -24,14 +24,17 @@ export default function DirectionSuiviDeshivernage() {
   const { data: missions = [], isLoading, refetch } = useQuery({
     queryKey: ['suivi-deshivernage'],
     queryFn: async () => {
-      // Récupérer TOUTES les missions (peu importe le type) pour diagnostiquer
+      // Récupérer TOUTES les missions - peu importe le type
       const allMissions = await base44.entities.MissionDirection.list('-created_date', 200);
-      console.log('[Missions] Types trouvés:', allMissions.map(m => m.type_mission).join(', '));
-      console.log('[Missions] Total:', allMissions.length);
-      // Afficher les 10 premières
-      allMissions.slice(0, 10).forEach(m => {
-        console.log(`  - ${m.zones?.[0]?.numero}: ${m.type_mission}`);
+      console.log(`[DirectionSuiviDeshivernage] 📊 ${allMissions.length} missions chargées`);
+      
+      // Compter par type
+      const byType = {};
+      allMissions.forEach(m => {
+        byType[m.type_mission] = (byType[m.type_mission] || 0) + 1;
       });
+      console.log('[DirectionSuiviDeshivernage] Par type:', byType);
+      
       return allMissions;
     },
     refetchInterval: 2000,
