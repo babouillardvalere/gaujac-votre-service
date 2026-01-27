@@ -283,15 +283,40 @@ export default function DirectionSuiviDeshivernage() {
 
         {/* Liste */}
         <div className="space-y-3">
-          {filtered.map(mission => (
+          {filtered.map(mission => {
+            // CORRECTION: Utiliser les WorkItems pour afficher les services, pas services_intervenants
+            const missionWorkItems = allWorkItems.filter(wi => wi.mission_direction_id === mission.id);
+            const servicesBadges = [];
+            
+            // Technique
+            const techniqueWI = missionWorkItems.find(wi => wi.service === 'TECHNIQUE');
+            if (techniqueWI) {
+              servicesBadges.push({
+                service: 'TECHNIQUE',
+                agent: techniqueWI.collaborateur || 'Non assigné',
+                statut: techniqueWI.statut
+              });
+            }
+            
+            // Ménage
+            const menageWI = missionWorkItems.find(wi => wi.service === 'MENAGE');
+            if (menageWI) {
+              servicesBadges.push({
+                service: 'MENAGE',
+                agent: menageWI.collaborateur || 'Non assigné',
+                statut: menageWI.statut
+              });
+            }
+            
+            return (
             <Card key={mission.id} className="border-2 border-yellow-200">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      {mission.services_intervenants?.map((si, idx) => (
-                        <Badge key={idx} className={si.service === 'TECHNIQUE' ? 'bg-blue-500' : 'bg-yellow-500'}>
-                          {si.service === 'TECHNIQUE' ? '🧰 Technique' : '🧽 Ménage'} - {si.agent || 'Non assigné'}
+                      {servicesBadges.map((sb, idx) => (
+                        <Badge key={idx} className={sb.service === 'TECHNIQUE' ? 'bg-blue-500' : 'bg-yellow-500'}>
+                          {sb.service === 'TECHNIQUE' ? '🧰 Technique' : '🧽 Ménage'} - {sb.agent}
                         </Badge>
                       ))}
                       {(mission.priorite === 'URGENTE' || mission.priorite === 'CRITIQUE') && (
@@ -330,7 +355,8 @@ export default function DirectionSuiviDeshivernage() {
                 </div>
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
