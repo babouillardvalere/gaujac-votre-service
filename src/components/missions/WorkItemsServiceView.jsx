@@ -28,31 +28,8 @@ export default function WorkItemsServiceView({ service }) {
   const [filterStatut, setFilterStatut] = useState('A_FAIRE');
   const [compteRenduGlobal, setCompteRenduGlobal] = useState('');
 
-  const { data: missions = [], isLoading: missionsLoading } = useQuery({
-    queryKey: ['missions-direction-for-service', service],
-    queryFn: async () => {
-      const allMissions = await base44.entities.MissionDirection.filter({ 
-        mission_direction: true 
-      }, '-created_date', 100);
-      
-      console.log('[WorkItemsServiceView] Toutes missions:', allMissions.length);
-      
-      // Filtrer les missions qui concernent ce service OU qui n'ont pas encore de service assigné
-      const serviceUpper = typeof service === 'string' ? service.toUpperCase() : service;
-      const filtered = allMissions.filter(m => {
-        const services = m.services_intervenants || [];
-        // Si aucun service assigné, visible par tous pour prise en charge
-        if (services.length === 0) return true;
-        // Si ce service est dans la liste (comparaison insensible à la casse)
-        return services.some(s => s.service && s.service.toUpperCase() === serviceUpper);
-      });
-      
-      console.log('[WorkItemsServiceView]', service, '→', serviceUpper, '- Missions filtrées:', filtered.length);
-      filtered.forEach(m => console.log('  Mission:', m.titre, 'Services:', m.services_intervenants?.map(s => s.service).join(', ') || 'aucun'));
-      return filtered;
-    },
-    refetchInterval: 30000
-  });
+  // Ne plus charger les MissionDirection directement - seulement les WorkItems
+  const missions = [];
 
   const { data: workItems = [], isLoading: workItemsLoading } = useQuery({
     queryKey: ['workitems-service', service],
