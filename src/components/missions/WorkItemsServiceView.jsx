@@ -28,10 +28,19 @@ export default function WorkItemsServiceView({ service }) {
   const [filterStatut, setFilterStatut] = useState('A_FAIRE');
   const [compteRenduGlobal, setCompteRenduGlobal] = useState('');
 
-  // Ne plus charger les MissionDirection directement - seulement les WorkItems
-  const missions = [];
+  // Charger les MissionDirection + WorkItems
+  const { data: missions = [], isLoading: missionsLoading } = useQuery({
+    queryKey: ['missions-direction-for-service', service],
+    queryFn: async () => {
+      const allMissions = await base44.entities.MissionDirection.list('-created_date', 500);
+      return allMissions.filter(m => 
+        m.services_intervenants?.some(s => s.service === service)
+      );
+    },
+    refetchInterval: 30000
+  });
 
-  const { data: workItems = [], isLoading } = useQuery({
+  const { data: workItems = [], isLoading: workItemsLoading } = useQuery({
     queryKey: ['workitems-service', service],
     queryFn: async () => {
       const items = await base44.entities.WorkItem.filter({ 
@@ -43,6 +52,56 @@ export default function WorkItemsServiceView({ service }) {
     },
     refetchInterval: 30000
   });
+
+  const isLoading = missionsLoading || workItemsLoading;
+
+  // CRITIQUE: Créer automatiquement les WorkItems manquants
+  React.useEffect(() => {
+    const createMissingWorkItems = async () => {
+      if (!missions || missions.length === 0) return;
+      
+      for (const mission of missions) {
+        // Vérifier si un WorkItem existe déjà pour cette mission
+        const existingWorkItem = workItems.find(w => w.mission_direction_id === mission.id);
+        
+        if (!existingWorkItem) {
+          console.log(`[WorkItemsServiceView] Création WorkItem manquant pour mission ${mission.id}`);
+          
+          const description_operationnelle = mission.actions_prevues
+            ?.map((a, i) => `${i + 1}. ${a.action}`)
+            .join('\n') || mission.description || mission.titre;
+          
+          try {
+            await base44.entities.WorkItem.create({
+              type: 'MISSION_DIRECTION',
+              service,
+              titre: mission.titre,
+              description_operationnelle,
+              description: mission.description || '',
+              hebergement: mission.zones?.[0]?.numero || 'Multi-zones',
+              type_hebergement: mission.zones?.[0]?.categorie || '',
+              mission_direction_id: mission.id,
+              statut: mission.statut,
+              priorite: mission.priorite || 'NORMALE',
+              taches: mission.actions_prevues?.map((a, idx) => ({
+                numero: idx + 1,
+                texte: a.action,
+                faite: a.effectuee || false
+              })) || []
+            });
+            
+            queryClient.invalidateQueries({ queryKey: ['workitems-service', service] });
+          } catch (error) {
+            console.error('[WorkItemsServiceView] Erreur création WorkItem:', error);
+          }
+        }
+      }
+    };
+    
+    if (missions.length > 0 && workItems) {
+      createMissingWorkItems();
+    }
+  }, [missions, workItems, service, queryClient]);
 
   // Timer
   useEffect(() => {
