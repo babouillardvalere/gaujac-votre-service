@@ -22,7 +22,9 @@ export default function DirectionSuiviDeshivernage() {
       '-created_date',
       200
     ),
-    refetchInterval: 60000
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
   });
 
   const filtered = missions.filter(m => {

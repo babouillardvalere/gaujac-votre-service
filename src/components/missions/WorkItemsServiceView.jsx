@@ -187,6 +187,8 @@ export default function WorkItemsServiceView({ service }) {
     onSuccess: async (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['workitems-service', service] });
       queryClient.invalidateQueries({ queryKey: ['bureau-workitems'] });
+      queryClient.invalidateQueries({ queryKey: ['suivi-deshivernage'] });
+      queryClient.invalidateQueries({ queryKey: ['suivi-hivernage'] });
       
       // 🔒 VERROU STRICT: Mise à jour Mission selon règle métier
       const workItem = workItems.find(w => w.id === variables.id);
