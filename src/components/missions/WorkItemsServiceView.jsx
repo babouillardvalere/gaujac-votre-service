@@ -15,6 +15,7 @@ import {
   validateMissionClosure, 
   getWorkItemFinalStatus 
 } from '../descriptionOperationnelleUtils';
+import { recalcMissionStatus } from './missionStatusCalculator';
 
 export default function WorkItemsServiceView({ service }) {
   const queryClient = useQueryClient();
@@ -214,34 +215,15 @@ export default function WorkItemsServiceView({ service }) {
       queryClient.invalidateQueries({ queryKey: ['workitems-service', service] });
       queryClient.invalidateQueries({ queryKey: ['bureau-workitems'] });
       
-      // Vérifier si la mission parent doit changer de statut
+      // CRITIQUE: Recalculer automatiquement le statut de la mission
       const workItem = workItems.find(w => w.id === variables.id);
       if (workItem?.mission_direction_id) {
-        const autresWorkItems = workItems.filter(w => 
-          w.mission_direction_id === workItem.mission_direction_id && w.id !== variables.id
-        );
-        
-        const tousTermines = autresWorkItems.every(w => w.statut === 'TERMINEE') && variables.statut === 'TERMINEE';
-        const auMoinsUnEnAttente = autresWorkItems.some(w => w.statut === 'EN_ATTENTE') || variables.statut === 'EN_ATTENTE';
-        
-        let nouveauStatutMission = null;
-        if (tousTermines) {
-          nouveauStatutMission = 'TERMINEE';
-        } else if (auMoinsUnEnAttente) {
-          nouveauStatutMission = 'EN_ATTENTE';
-        } else if (variables.statut === 'EN_COURS') {
-          nouveauStatutMission = 'EN_COURS';
-        }
-        
-        if (nouveauStatutMission) {
-          try {
-            await base44.entities.MissionDirection.update(workItem.mission_direction_id, {
-              statut: nouveauStatutMission
-            });
-            queryClient.invalidateQueries({ queryKey: ['missions-direction-list'] });
-          } catch (error) {
-            console.error('Erreur MAJ statut mission:', error);
-          }
+        try {
+          await recalcMissionStatus(workItem.mission_direction_id);
+          queryClient.invalidateQueries({ queryKey: ['missions-direction-list'] });
+          queryClient.invalidateQueries({ queryKey: ['missions-direction-for-service', service] });
+        } catch (error) {
+          console.error('[WorkItemsServiceView] Erreur recalc statut mission:', error);
         }
       }
       
