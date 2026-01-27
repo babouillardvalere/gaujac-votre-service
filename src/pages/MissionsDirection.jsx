@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ArrowLeft, Home, Plus, AlertTriangle, CheckCircle, Clock, Loader2 } from 'lucide-react';
+import { ArrowLeft, Home, Plus, AlertTriangle, CheckCircle, Clock, Loader2, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { createPageUrl } from '../utils';
@@ -67,6 +67,44 @@ export default function MissionsDirection() {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-6">
+        {/* Bannière déduplication si doublons détectés */}
+        {missions.length > 0 && (() => {
+          const groupes = {};
+          missions.forEach(m => {
+            const zone = m.zones?.[0]?.numero || 'unknown';
+            const annee = new Date(m.created_date).getFullYear();
+            const cle = `${m.type_mission}_${zone}_${annee}`;
+            if (!groupes[cle]) groupes[cle] = [];
+            groupes[cle].push(m);
+          });
+          const doublons = Object.values(groupes).filter(g => g.length > 1).length;
+          
+          return doublons > 0 ? (
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
+              <Card className="border-2 border-red-500 bg-red-50">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0" />
+                      <div>
+                        <h3 className="font-heading text-red-800 text-lg">⚠️ {doublons} groupe(s) de missions en double détecté(s)</h3>
+                        <p className="text-sm text-red-700">Cliquez pour nettoyer automatiquement</p>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => navigate(createPageUrl('AdminDeduplication'))}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Nettoyer
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ) : null;
+        })()}
+
         {/* Filtres rapides */}
         <div className="flex gap-2 mb-6 overflow-x-auto">
           {['tous', 'A_FAIRE', 'EN_COURS', 'EN_ATTENTE', 'TERMINEE', 'ANNULEE'].map(s => (
