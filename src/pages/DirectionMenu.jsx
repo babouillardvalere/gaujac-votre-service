@@ -64,14 +64,14 @@ export default function DirectionMenu() {
       descriptionEn: 'QA: logs, tests, data integrity'
     },
     {
-      title: '🧹 Déduplication',
-      titleEn: '🧹 Deduplication',
+      title: '🧹 Déduplication AUTO',
+      titleEn: '🧹 Auto Deduplication',
       icon: Trash2,
-      href: 'AdminDeduplication',
-      color: 'bg-[#eab308]',
+      href: 'AdminDeduplicationAuto',
+      color: 'bg-[#dc2626]',
       textColor: 'text-white',
-      description: 'Nettoyer les doublons de missions',
-      descriptionEn: 'Clean duplicate missions'
+      description: '⚠️ LANCER MAINTENANT - Nettoyage automatique',
+      descriptionEn: '⚠️ RUN NOW - Automatic cleanup'
     }
   ];
 

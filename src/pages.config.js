@@ -1,3 +1,4 @@
+import AdminDeduplication from './pages/AdminDeduplication';
 import AdminLoadTest from './pages/AdminLoadTest';
 import Animations from './pages/Animations';
 import Attente from './pages/Attente';
@@ -90,19 +91,20 @@ import QASante from './pages/QASante';
 import QAValidation from './pages/QAValidation';
 import RapportsInterventions from './pages/RapportsInterventions';
 import Reception from './pages/Reception';
-import Taches from './pages/Taches';
 import Reservations from './pages/Reservations';
 import SatisfactionClient from './pages/SatisfactionClient';
 import Signalement from './pages/Signalement';
 import SignalementClient from './pages/SignalementClient';
 import Statistiques from './pages/Statistiques';
 import SuiviIntervention from './pages/SuiviIntervention';
+import Taches from './pages/Taches';
 import Technique from './pages/Technique';
-import AdminDeduplication from './pages/AdminDeduplication';
+import AdminDeduplicationAuto from './pages/AdminDeduplicationAuto';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "AdminDeduplication": AdminDeduplication,
     "AdminLoadTest": AdminLoadTest,
     "Animations": Animations,
     "Attente": Attente,
@@ -195,15 +197,15 @@ export const PAGES = {
     "QAValidation": QAValidation,
     "RapportsInterventions": RapportsInterventions,
     "Reception": Reception,
-    "Taches": Taches,
     "Reservations": Reservations,
     "SatisfactionClient": SatisfactionClient,
     "Signalement": Signalement,
     "SignalementClient": SignalementClient,
     "Statistiques": Statistiques,
     "SuiviIntervention": SuiviIntervention,
+    "Taches": Taches,
     "Technique": Technique,
-    "AdminDeduplication": AdminDeduplication,
+    "AdminDeduplicationAuto": AdminDeduplicationAuto,
 }
 
 export const pagesConfig = {
