@@ -9,6 +9,7 @@ import { createPageUrl } from '../utils';
 import Logo from '../components/Logo';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
+import { findOrCreateMission } from '../components/missions/missionDirectionFactory';
 
 
 export default function DirectionRecapIntervention() {
@@ -70,8 +71,6 @@ export default function DirectionRecapIntervention() {
       console.log('[DIRECTION] Type mission EXACT:', template.typeIntervention);
       
       // 🔒 VERROU D'UNICITÉ: Utiliser la factory centralisée
-      const { findOrCreateMission } = await import('../components/missions/missionDirectionFactory');
-      
       const missionsCreated = [];
       let totalWorkItemsCreated = 0;
       const saison = new Date().getFullYear();
