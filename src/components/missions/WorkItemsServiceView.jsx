@@ -15,7 +15,7 @@ import {
   validateMissionClosure, 
   getWorkItemFinalStatus 
 } from '../descriptionOperationnelleUtils';
-import { recalcMissionStatus } from './missionStatusCalculator';
+import { recalcMissionStatus, blockMissionLogistique, unblockMissionLogistique } from './missionStatusCalculator';
 
 export default function WorkItemsServiceView({ service }) {
   const queryClient = useQueryClient();
@@ -155,7 +155,7 @@ export default function WorkItemsServiceView({ service }) {
   });
 
   const finalisationMutation = useMutation({
-   mutationFn: async ({ id, taches, statut, commandesACreer, metadata, description_operationnelle }) => {
+   mutationFn: async ({ id, taches, statut, commandesACreer, metadata, description_operationnelle, blockLogistique }) => {
      const now = new Date().toISOString();
      const workItem = workItems.find(w => w.id === id);
      const dureeMinutes = workItem?.date_prise_en_charge 
@@ -215,15 +215,22 @@ export default function WorkItemsServiceView({ service }) {
       queryClient.invalidateQueries({ queryKey: ['workitems-service', service] });
       queryClient.invalidateQueries({ queryKey: ['bureau-workitems'] });
       
-      // CRITIQUE: Recalculer automatiquement le statut de la mission
+      // CRITIQUE: Bloquer/débloquer la mission selon l'action
       const workItem = workItems.find(w => w.id === variables.id);
       if (workItem?.mission_direction_id) {
         try {
-          await recalcMissionStatus(workItem.mission_direction_id);
+          if (variables.blockLogistique === true) {
+            // Activer le blocage logistique (EN_ATTENTE persistant)
+            await blockMissionLogistique(workItem.mission_direction_id);
+          } else if (variables.statut === 'TERMINEE') {
+            // Recalculer le statut (peut passer TERMINEE si tous WorkItems terminés)
+            await recalcMissionStatus(workItem.mission_direction_id);
+          }
+          
           queryClient.invalidateQueries({ queryKey: ['missions-direction-list'] });
           queryClient.invalidateQueries({ queryKey: ['missions-direction-for-service', service] });
         } catch (error) {
-          console.error('[WorkItemsServiceView] Erreur recalc statut mission:', error);
+          console.error('[WorkItemsServiceView] Erreur mise à jour statut mission:', error);
         }
       }
       
@@ -737,7 +744,8 @@ export default function WorkItemsServiceView({ service }) {
                      statut: 'EN_ATTENTE',
                      commandesACreer,
                      metadata: { resultat: 'EN_ATTENTE_MATERIEL' },
-                     description_operationnelle: compteRenduGlobal.trim()
+                     description_operationnelle: compteRenduGlobal.trim(),
+                     blockLogistique: true
                    });
                  }}
                  disabled={finalisationMutation.isPending || !selectedWorkItem.collaborateur || !compteRenduGlobal.trim()}
@@ -848,12 +856,38 @@ export default function WorkItemsServiceView({ service }) {
                   )}
 
                   {item.statut !== 'TERMINEE' && (
-                    <Button
-                      onClick={() => handlePrendreEnCharge(item)}
-                      className="w-full bg-purple-600 h-12"
-                    >
-                      {item.statut === 'A_FAIRE' ? 'Prendre en charge' : 'Continuer'}
-                    </Button>
+                    <>
+                      {item.statut === 'EN_ATTENTE' && item.metadata?.resultat === 'EN_ATTENTE_MATERIEL' ? (
+                        <Button
+                          onClick={async () => {
+                            try {
+                              // Débloquer la mission
+                              await unblockMissionLogistique(item.mission_direction_id);
+                              // Repasser le WorkItem en EN_COURS
+                              await base44.entities.WorkItem.update(item.id, {
+                                statut: 'EN_COURS'
+                              });
+                              queryClient.invalidateQueries({ queryKey: ['workitems-service', service] });
+                              queryClient.invalidateQueries({ queryKey: ['missions-direction-for-service', service] });
+                              toast.success('✅ Mission reprise - vous pouvez continuer');
+                            } catch (error) {
+                              console.error('Erreur reprise mission:', error);
+                              toast.error('❌ Erreur lors de la reprise');
+                            }
+                          }}
+                          className="w-full bg-green-600 h-12"
+                        >
+                          ▶️ Reprendre la mission
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={() => handlePrendreEnCharge(item)}
+                          className="w-full bg-purple-600 h-12"
+                        >
+                          {item.statut === 'A_FAIRE' ? 'Prendre en charge' : 'Continuer'}
+                        </Button>
+                      )}
+                    </>
                   )}
                 </CardContent>
               </Card>
