@@ -69,13 +69,33 @@ export default function DirectionRecapIntervention() {
       console.log('[DIRECTION] Zones à traiter:', numerosHebergement);
       console.log('[DIRECTION] Type mission EXACT:', template.typeIntervention);
       
-      // Créer UNE MissionDirection par hébergement + WorkItems automatiques
+      // CRITIQUE: Créer UNE MissionDirection par hébergement avec vérification d'unicité
       const missionsCreated = [];
       let totalWorkItemsCreated = 0;
+      const saison = new Date().getFullYear(); // Année actuelle
       
       for (const numeroHebergement of numerosHebergement) {
+        // VERROU D'UNICITÉ: Vérifier si une mission existe déjà
+        const existingMissions = await base44.entities.MissionDirection.filter({
+          type_mission: template.typeIntervention,
+          'zones.numero': numeroHebergement
+        });
+        
+        // Filtrer pour la saison actuelle et statut non terminé
+        const missionExistante = existingMissions.find(m => 
+          m.zones?.some(z => z.numero === numeroHebergement) &&
+          m.statut !== 'TERMINEE' &&
+          new Date(m.created_date).getFullYear() === saison
+        );
+        
+        if (missionExistante) {
+          console.warn(`[DIRECTION] ⚠️ Mission déjà existante pour ${template.typeIntervention} ${numeroHebergement} (ID: ${missionExistante.id}) - création ignorée`);
+          toast.error(`⚠️ Une mission ${template.typeIntervention} existe déjà pour ${numeroHebergement}`, { duration: 5000 });
+          continue;
+        }
+        
         const missionData = {
-          type_mission: template.typeIntervention, // CRITIQUE: doit être HIVERNAGE ou DESHIVERNAGE
+          type_mission: template.typeIntervention,
           titre: `${template.typeIntervention} - ${numeroHebergement}`,
           description: template.description || '',
           objectif: template.description || `Mission ${template.typeIntervention} pour ${numeroHebergement}`,
