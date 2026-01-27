@@ -7,7 +7,8 @@ import { recalcMissionStatus } from './missionStatusCalculator';
  */
 export async function forceRecalcAllMissions() {
   try {
-    console.log('[ForceRecalc] 🔄 DÉMARRAGE RECALCUL GLOBAL FORCÉ...');
+    console.log('[ForceRecalc] 🚀 DÉMARRAGE RECALCUL GLOBAL FORCÉ...');
+    console.log('[ForceRecalc] ⚠️ CE RECALCUL VA FORCER LA MISE À JOUR DE TOUTES LES MISSIONS');
 
     // 1. Récupérer toutes les missions
     const allMissions = await base44.entities.MissionDirection.list('-created_date', 500);
@@ -28,9 +29,12 @@ export async function forceRecalcAllMissions() {
       }
     });
 
+    console.log(`[ForceRecalc] 📋 Missions avec WorkItems: ${Object.keys(workItemsByMission).length}`);
+
     let updated = 0;
     let skipped = 0;
     let errors = 0;
+    let missionsDETAILS = [];
 
     // 4. Pour chaque mission, forcer le recalcul IMMÉDIAT
     for (const mission of allMissions) {
@@ -91,22 +95,28 @@ export async function forceRecalcAllMissions() {
           updateData.wait_comment = null;
         }
 
-        // TOUJOURS METTRE À JOUR (même si identique) pour forcer la synchro
+        // FORCER la mise à jour BDD avec timestamp pour déclencher les subscriptions
+        updateData._forceUpdate = new Date().toISOString();
+
         await base44.entities.MissionDirection.update(mission.id, updateData);
 
         if (mission.statut !== nouveauStatut) {
           console.log(`  ✅ CHANGEMENT: ${mission.statut} ➜ ${nouveauStatut}`);
+          missionsDETAILS.push(`${hebergement}: ${mission.statut} → ${nouveauStatut}`);
           updated++;
         } else {
           console.log(`  ♻️ CONFIRMÉ: ${nouveauStatut}`);
           updated++;
         }
 
-      } catch (error) {
+        } catch (error) {
         console.error(`[ForceRecalc] ❌ Erreur mission ${mission.id}:`, error);
         errors++;
-      }
-    }
+        }
+        }
+
+        console.log('\n[ForceRecalc] 📊 RÉSUMÉ DES CHANGEMENTS:');
+        missionsDETAILS.forEach(detail => console.log(`  - ${detail}`));
     
     console.log(`[ForceRecalc] ✅ Terminé: ${updated} mises à jour, ${skipped} inchangées, ${errors} erreurs`);
     

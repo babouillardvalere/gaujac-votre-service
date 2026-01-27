@@ -127,26 +127,31 @@ export default function DirectionSuiviDeshivernage() {
             <Button
               onClick={async () => {
                 setIsRecalculating(true);
-                console.log('[RECALCUL] Début du recalcul forcé...');
+                console.log('[RECALCUL] 🚀 Début du recalcul forcé GLOBAL...');
+                console.log('[RECALCUL] ⚠️ Ouvrez la console (F12) pour voir les détails');
                 try {
                   const result = await forceRecalcAllMissions();
-                  console.log('[RECALCUL] Résultat:', result);
+                  console.log('[RECALCUL] 📊 Résultat:', result);
                   
-                  // Attendre 500ms pour laisser la BDD se synchroniser
-                  await new Promise(resolve => setTimeout(resolve, 500));
+                  // Attendre 1 seconde pour laisser la BDD se synchroniser
+                  console.log('[RECALCUL] ⏳ Attente synchronisation BDD...');
+                  await new Promise(resolve => setTimeout(resolve, 1000));
                   
-                  // Forcer le rechargement complet
+                  // Forcer le rechargement TOTAL des données
+                  console.log('[RECALCUL] 🔄 Rechargement des données...');
                   await refetch();
                   
                   if (result.success) {
-                    toast.success(`✅ ${result.updated} missions mises à jour`);
-                    console.log('[RECALCUL] ✅ Terminé avec succès');
+                    toast.success(`✅ ${result.updated} missions synchronisées`, {
+                      description: 'Vérifiez la console (F12) pour les détails'
+                    });
+                    console.log('[RECALCUL] ✅ TERMINÉ AVEC SUCCÈS');
                   } else {
                     toast.error('❌ Erreur lors du recalcul');
-                    console.error('[RECALCUL] ❌ Échec');
+                    console.error('[RECALCUL] ❌ ÉCHEC');
                   }
                 } catch (error) {
-                  console.error('[RECALCUL] ❌ Exception:', error);
+                  console.error('[RECALCUL] ❌ EXCEPTION:', error);
                   toast.error('❌ Erreur: ' + error.message);
                 } finally {
                   setIsRecalculating(false);
