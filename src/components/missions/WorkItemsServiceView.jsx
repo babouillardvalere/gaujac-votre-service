@@ -638,23 +638,133 @@ export default function WorkItemsServiceView({ service }) {
                  ⚠️ Remplissez le compte rendu (champ obligatoire) pour pouvoir valider
                </div>
              )}
-             <Button
-               onClick={handleValider}
-               disabled={
-                 finalisationMutation.isPending || 
-                 !selectedWorkItem.collaborateur ||
-                 !compteRenduGlobal.trim()
-               }
-               className="w-full bg-purple-600 h-14 text-lg font-bold"
-               title={!compteRenduGlobal.trim() ? 'Remplissez le compte rendu' : ''}
-             >
-               {finalisationMutation.isPending ? (
-                 <Loader2 className="w-6 h-6 animate-spin mr-2" />
-               ) : (
-                 <CheckCircle className="w-6 h-6 mr-2" />
-               )}
-               Valider
-             </Button>
+
+             <div className="grid grid-cols-2 gap-3">
+               <Button
+                 onClick={() => {
+                   // VALIDATION CRITIQUE 1 : Compte rendu global obligatoire
+                   if (!compteRenduGlobal.trim()) {
+                     toast.error('⚠️ Compte rendu de l\'intervention obligatoire');
+                     return;
+                   }
+
+                   const tachesUpdated = (selectedWorkItem.taches || []).map(t => {
+                     const etat = tachesEtat[t.numero];
+                     return {
+                       ...t,
+                       faite: etat?.faite,
+                       effectuee: etat?.faite,
+                       statut: etat?.faite === true ? 'FAIT' : etat?.faite === false ? 'NON_FAIT' : undefined,
+                       justification: etat?.justification || '',
+                       photo_url: etat?.photo_url || ''
+                     };
+                   });
+
+                   const tachesSansStatut = tachesUpdated.filter(t => t.statut === undefined);
+                   if (tachesSansStatut.length > 0) {
+                     toast.error(`⚠️ ${tachesSansStatut.length} tâche(s) doivent être marquées Fait ou Pas fait`);
+                     return;
+                   }
+
+                   const validation = validateMissionClosure(tachesUpdated);
+
+                   if (!validation.valid) {
+                     toast.error(`⚠️ ${validation.error}`);
+                     return;
+                   }
+
+                   if (!validation.hasFailures) {
+                     finalisationMutation.mutate({
+                       id: selectedWorkItem.id,
+                       taches: tachesUpdated,
+                       statut: 'TERMINEE',
+                       commandesACreer: [],
+                       metadata: { resultat: 'SUCCES_COMPLET' },
+                       description_operationnelle: compteRenduGlobal.trim()
+                     });
+                   } else {
+                     toast.error('⚠️ Certaines tâches ne sont pas faites. Utilisez "Mettre en attente" si besoin de commande.');
+                   }
+                 }}
+                 disabled={finalisationMutation.isPending || !selectedWorkItem.collaborateur || !compteRenduGlobal.trim()}
+                 className="h-14 bg-green-600 hover:bg-green-700 font-bold"
+               >
+                 {finalisationMutation.isPending ? (
+                   <Loader2 className="w-5 h-5 animate-spin" />
+                 ) : (
+                   <>
+                     <CheckCircle className="w-5 h-5 mr-2" />
+                     Terminer
+                   </>
+                 )}
+               </Button>
+
+               <Button
+                 onClick={() => {
+                   if (!compteRenduGlobal.trim()) {
+                     toast.error('⚠️ Compte rendu obligatoire');
+                     return;
+                   }
+
+                   const tachesUpdated = (selectedWorkItem.taches || []).map(t => {
+                     const etat = tachesEtat[t.numero];
+                     return {
+                       ...t,
+                       faite: etat?.faite,
+                       effectuee: etat?.faite,
+                       statut: etat?.faite === true ? 'FAIT' : etat?.faite === false ? 'NON_FAIT' : undefined,
+                       justification: etat?.justification || '',
+                       photo_url: etat?.photo_url || ''
+                     };
+                   });
+
+                   const tachesSansStatut = tachesUpdated.filter(t => t.statut === undefined);
+                   if (tachesSansStatut.length > 0) {
+                     toast.error(`⚠️ Marquez toutes les tâches avant mise en attente`);
+                     return;
+                   }
+
+                   const tachesAvecCommande = tachesUpdated.filter(t => {
+                     const etat = tachesEtat[t.numero];
+                     return t.faite === false && etat?.commandeNecessaire === true;
+                   });
+
+                   if (tachesAvecCommande.length === 0) {
+                     toast.error('⚠️ Aucune commande sélectionnée. Si tout est terminé, utilisez "Terminer".');
+                     return;
+                   }
+
+                   const tachesSansArticles = tachesAvecCommande.filter(t => 
+                     !commandesArticles[t.numero] || commandesArticles[t.numero].length === 0
+                   );
+
+                   if (tachesSansArticles.length > 0) {
+                     toast.error(`⚠️ Ajoutez des articles pour les tâches ${tachesSansArticles.map(t => `#${t.numero}`).join(', ')}`);
+                     return;
+                   }
+
+                   const commandesACreer = tachesAvecCommande.map(t => ({
+                     tache_numero: t.numero,
+                     tache_texte: t.texte,
+                     articles: commandesArticles[t.numero]
+                   }));
+
+                   finalisationMutation.mutate({
+                     id: selectedWorkItem.id,
+                     taches: tachesUpdated,
+                     statut: 'EN_ATTENTE',
+                     commandesACreer,
+                     metadata: { resultat: 'EN_ATTENTE_MATERIEL' },
+                     description_operationnelle: compteRenduGlobal.trim()
+                   });
+                 }}
+                 disabled={finalisationMutation.isPending || !selectedWorkItem.collaborateur || !compteRenduGlobal.trim()}
+                 className="h-14 bg-orange-600 hover:bg-orange-700 font-bold"
+               >
+                 <ShoppingCart className="w-5 h-5 mr-2" />
+                 Mettre en attente
+               </Button>
+             </div>
            </CardContent>
          </Card>
           </>
