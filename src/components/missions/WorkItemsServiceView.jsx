@@ -251,52 +251,6 @@ export default function WorkItemsServiceView({ service }) {
       return;
     }
     
-    // Si c'est une MissionDirection, mettre à jour la mission
-    if (selectedWorkItem.isMissionDirection) {
-      const now = new Date().toISOString();
-      const serviceIntervenants = selectedWorkItem.services_intervenants || [];
-      
-      base44.entities.MissionDirection.update(selectedWorkItem.id, {
-        statut: 'EN_COURS',
-        date_debut_reelle: now,
-        services_intervenants: [
-          ...serviceIntervenants,
-          {
-            service: service,
-            agent: prenomAgent.trim(),
-            date_intervention: now
-          }
-        ]
-      }).then(() => {
-        queryClient.invalidateQueries({ queryKey: ['missions-direction-for-service'] });
-        
-        // Mettre à jour l'état local immédiatement
-        const updated = { 
-          ...selectedWorkItem, 
-          collaborateur: prenomAgent.trim(), 
-          date_prise_en_charge: now,
-          statut: 'EN_COURS'
-        };
-        setSelectedWorkItem(updated);
-        setPrenomAgent('');
-        toast.success('Mission prise en charge ⏱️');
-        
-        // Notification
-        base44.entities.Notification.create({
-          type: 'MISSION_CREATED',
-          titre: `🚀 Mission ${updated.hebergement} prise en charge`,
-          message: `${prenomAgent.trim()} a pris en charge la mission ${service} pour ${updated.hebergement}`,
-          destinataire_role: 'DIRECTION',
-          priorite: updated.priorite === 'URGENTE' || updated.priorite === 'CRITIQUE' ? 'URGENTE' : 'NORMALE',
-          metadata: { mission_id: updated.id, service }
-        }).catch(err => console.error('Erreur notification:', err));
-      }).catch(err => {
-        toast.error('Erreur lors de la prise en charge');
-        console.error(err);
-      });
-      return;
-    }
-    
     priseEnChargeMutation.mutate({ id: selectedWorkItem.id, prenom: prenomAgent.trim() });
   };
 
