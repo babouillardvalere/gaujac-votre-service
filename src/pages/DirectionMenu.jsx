@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from '../components/translations';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Sun, Snowflake, Wrench, ArrowLeft, ShoppingCart, Activity } from 'lucide-react';
+import { Sun, Snowflake, Wrench, ArrowLeft, ShoppingCart, Activity, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '../utils';
 import Logo from '../components/Logo';
@@ -62,6 +62,16 @@ export default function DirectionMenu() {
       textColor: 'text-white',
       description: 'QA: logs, tests, intégrité données',
       descriptionEn: 'QA: logs, tests, data integrity'
+    },
+    {
+      title: '🧹 Déduplication',
+      titleEn: '🧹 Deduplication',
+      icon: Trash2,
+      href: 'AdminDeduplication',
+      color: 'bg-[#eab308]',
+      textColor: 'text-white',
+      description: 'Nettoyer les doublons de missions',
+      descriptionEn: 'Clean duplicate missions'
     }
   ];
 
