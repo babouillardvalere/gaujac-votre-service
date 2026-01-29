@@ -21,31 +21,32 @@ export async function recomputeMissionRollup(missionId) {
   }
 
   const servicesSet = new Set();
-  let hasAttente = false;
-  let hasEnCours = false;
-  let hasAFaire = false;
+  let nbEnAttente = 0;
+  let nbEnCours = 0;
+  let nbAFaire = 0;
 
   for (const wi of workItems) {
     if (wi.service) servicesSet.add(wi.service);
 
     switch (wi.statut) {
       case 'EN_ATTENTE':
-        hasAttente = true;
+        nbEnAttente++;
         break;
       case 'EN_COURS':
-        hasEnCours = true;
+        nbEnCours++;
         break;
       case 'A_FAIRE':
-        hasAFaire = true;
+        nbAFaire++;
         break;
     }
   }
 
-  // ✅ PRIORITÉ MÉTIER CORRECTE (EN_ATTENTE > EN_COURS)
-  let status_rollup = 'TERMINEE';
-  if (hasAttente) status_rollup = 'EN_ATTENTE';
-  else if (hasEnCours) status_rollup = 'EN_COURS';
-  else if (hasAFaire) status_rollup = 'A_FAIRE';
+  // ✅ PRIORITÉ MÉTIER CORRECTE (EN_ATTENTE > EN_COURS > A_FAIRE > TERMINEE)
+  let status_rollup;
+  if (nbEnAttente > 0) status_rollup = 'EN_ATTENTE';
+  else if (nbEnCours > 0) status_rollup = 'EN_COURS';
+  else if (nbAFaire > 0) status_rollup = 'A_FAIRE';
+  else status_rollup = 'TERMINEE';
 
   await base44.entities.MissionDirection.update(missionId, {
     status_rollup,
