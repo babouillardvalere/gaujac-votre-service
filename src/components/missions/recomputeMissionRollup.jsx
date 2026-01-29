@@ -9,7 +9,7 @@ export async function recomputeMissionRollup(missionId) {
 
   const workItems = await base44.entities.WorkItem.filter({
     mission_direction_id: missionId
-  });
+  }, '-created_date', 100);
 
   if (!workItems || workItems.length === 0) {
     // Cas bord : aucune tâche → mission terminée
