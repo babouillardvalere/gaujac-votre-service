@@ -1,5 +1,6 @@
 import { base44 } from '@/api/base44Client';
 import { recalcMissionStatus } from './missionStatusCalculator';
+import { recomputeMissionRollup } from './recomputeMissionRollup';
 
 /**
  * Force le recalcul de TOUTES les missions Direction
@@ -63,51 +64,15 @@ export async function forceRecalcAllMissions() {
 
         console.log(`  Distribution: TERMINEE(${nbTerminee}) EN_COURS(${nbEnCours}) EN_ATTENTE(${nbEnAttente}) A_FAIRE(${nbAFaire})`);
 
-        let nouveauStatut;
-
-        // RÈGLE STRICTE: priorité absolue
-        if (nbEnCours > 0) {
-          nouveauStatut = 'EN_COURS';
-          console.log(`  ➜ EN_COURS car ${nbEnCours} WorkItem(s) en cours`);
-        } else if (nbEnAttente > 0) {
-          nouveauStatut = 'EN_ATTENTE';
-          console.log(`  ➜ EN_ATTENTE car ${nbEnAttente} WorkItem(s) en attente`);
-        } else if (nbAFaire > 0) {
-          nouveauStatut = 'A_FAIRE';
-          console.log(`  ➜ A_FAIRE car ${nbAFaire} WorkItem(s) à faire`);
-        } else if (nbTerminee === workItems.length && workItems.length > 0) {
-          nouveauStatut = 'TERMINEE';
-          console.log(`  ➜ TERMINEE car tous (${nbTerminee}) terminés`);
-        } else {
-          nouveauStatut = 'A_FAIRE';
-          console.log(`  ➜ A_FAIRE par défaut`);
-        }
-
-        // ⭐ CALCUL DES ROLLUPS (source de vérité pour l'affichage)
-        const servicesUniques = [...new Set(workItems.map(w => w.service))];
+        // ⭐ UTILISER LA FONCTION CENTRALISÉE
+        console.log(`  🔄 Appel recomputeMissionRollup...`);
+        await recomputeMissionRollup(mission.id);
         
-        // Préparer la mise à jour FORCÉE avec ROLLUPS
-        const updateData = { 
-          statut: nouveauStatut,
-          status_rollup: nouveauStatut,
-          services_rollup: servicesUniques
-        };
-
-        // Débloquer si terminé
-        if (nouveauStatut === 'TERMINEE') {
-          updateData.has_blocking = false;
-          updateData.is_blocked_logistique = false;
-          updateData.motif_attente = null;
-          updateData.wait_reason = null;
-          updateData.wait_comment = null;
-        }
-
-        // FORCER la mise à jour BDD avec timestamp pour déclencher les subscriptions
-        updateData._forceUpdate = new Date().toISOString();
-
-        await base44.entities.MissionDirection.update(mission.id, updateData);
+        // Récupérer la mission mise à jour pour afficher le résultat
+        const missionUpdated = await base44.entities.MissionDirection.filter({ id: mission.id });
+        const nouveauStatut = missionUpdated[0]?.status_rollup || 'A_FAIRE';
         
-        console.log(`  🔄 ROLLUP: status_rollup=${nouveauStatut}, services_rollup=[${servicesUniques.join(', ')}]`);
+        console.log(`  ✅ ROLLUP calculé: ${nouveauStatut}`);
 
         if (mission.statut !== nouveauStatut) {
           console.log(`  ✅ CHANGEMENT: ${mission.statut} ➜ ${nouveauStatut}`);
