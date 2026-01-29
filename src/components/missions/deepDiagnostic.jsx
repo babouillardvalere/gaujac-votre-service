@@ -56,6 +56,8 @@ export async function deepDiagnostic() {
       console.log(`\n【${idx + 1}】 ${hebergement.toUpperCase()}`);
       console.log(`    Mission ID: ${mission.id.substring(0, 12)}`);
       console.log(`    Statut BDD: ${mission.statut}`);
+      console.log(`    Status Rollup BDD: ${mission.status_rollup || '❌ NON DÉFINI'}`);
+      console.log(`    Services Rollup BDD: [${mission.services_rollup?.join(', ') || '❌ NON DÉFINI'}]`);
       console.log(`    Type: ${mission.type_mission}`);
       console.log(`    Zones: ${mission.zones?.length || 0}`);
       console.log(`    Has Blocking: ${mission.has_blocking}`);
@@ -98,11 +100,21 @@ export async function deepDiagnostic() {
           expectedStatus = 'A_FAIRE';
         }
 
+        // Vérifier synchronisation statut ET rollup
+        const rollupOK = mission.status_rollup === expectedStatus;
+        const servicesRollupOK = mission.services_rollup && mission.services_rollup.length > 0;
+        
         if (mission.statut !== expectedStatus) {
-          console.log(`    ❌ DÉSYNCHRONISÉ: ${mission.statut} ≠ ${expectedStatus}`);
+          console.log(`    ❌ DÉSYNCHRONISÉ statut: ${mission.statut} ≠ ${expectedStatus}`);
+          problemCount++;
+        } else if (!rollupOK) {
+          console.log(`    ⚠️  ROLLUP manquant/incorrect: status_rollup=${mission.status_rollup} ≠ ${expectedStatus}`);
+          problemCount++;
+        } else if (!servicesRollupOK) {
+          console.log(`    ⚠️  ROLLUP services manquant: services_rollup=${mission.services_rollup}`);
           problemCount++;
         } else {
-          console.log(`    ✅ OK: ${mission.statut}`);
+          console.log(`    ✅ OK: statut=${mission.statut}, rollup OK`);
         }
       }
     });

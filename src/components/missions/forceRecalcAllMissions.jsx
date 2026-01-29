@@ -83,8 +83,15 @@ export async function forceRecalcAllMissions() {
           console.log(`  ➜ A_FAIRE par défaut`);
         }
 
-        // Préparer la mise à jour FORCÉE
-        const updateData = { statut: nouveauStatut };
+        // ⭐ CALCUL DES ROLLUPS (source de vérité pour l'affichage)
+        const servicesUniques = [...new Set(workItems.map(w => w.service))];
+        
+        // Préparer la mise à jour FORCÉE avec ROLLUPS
+        const updateData = { 
+          statut: nouveauStatut,
+          status_rollup: nouveauStatut,
+          services_rollup: servicesUniques
+        };
 
         // Débloquer si terminé
         if (nouveauStatut === 'TERMINEE') {
@@ -99,6 +106,8 @@ export async function forceRecalcAllMissions() {
         updateData._forceUpdate = new Date().toISOString();
 
         await base44.entities.MissionDirection.update(mission.id, updateData);
+        
+        console.log(`  🔄 ROLLUP: status_rollup=${nouveauStatut}, services_rollup=[${servicesUniques.join(', ')}]`);
 
         if (mission.statut !== nouveauStatut) {
           console.log(`  ✅ CHANGEMENT: ${mission.statut} ➜ ${nouveauStatut}`);

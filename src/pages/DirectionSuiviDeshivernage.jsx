@@ -81,40 +81,32 @@ export default function DirectionSuiviDeshivernage() {
     staleTime: 0
   });
 
+  // ⭐ FILTRAGE BASÉ SUR LES ROLLUPS
   const filtered = missions.filter(m => {
-    // Filtrer par service basé sur les WorkItems liés
+    // Filtrer par service (depuis rollup)
     if (filterService !== 'tous') {
-      const missionWorkItems = allWorkItems.filter(wi => wi.mission_direction_id === m.id);
-      const hasService = missionWorkItems.some(wi => wi.service === filterService);
-      if (!hasService) return false;
+      if (!m.services_rollup?.includes(filterService)) return false;
     }
     
-    // Filtrer par statut
+    // Filtrer par statut (depuis rollup)
     if (filterStatut !== 'tous') {
-      if (filterStatut === 'EN_ATTENTE') {
-        if (m.statut !== 'EN_ATTENTE' && m.has_blocking !== true) return false;
-      } else {
-        if (m.statut !== filterStatut) return false;
-      }
+      if (m.status_rollup !== filterStatut) return false;
     }
     return true;
   });
 
+  // ⭐ STATS BASÉES SUR LES ROLLUPS (source de vérité persistée en BDD)
   const stats = {
     total: missions.length,
-    technique: missions.filter(m => {
-      const missionWorkItems = allWorkItems.filter(wi => wi.mission_direction_id === m.id);
-      return missionWorkItems.some(wi => wi.service === 'TECHNIQUE');
-    }).length,
-    menage: missions.filter(m => {
-      const missionWorkItems = allWorkItems.filter(wi => wi.mission_direction_id === m.id);
-      return missionWorkItems.some(wi => wi.service === 'MENAGE');
-    }).length,
-    termine: missions.filter(m => m.statut === 'TERMINEE' && allWorkItems.filter(wi => wi.mission_direction_id === m.id).every(wi => wi.statut === 'TERMINEE')).length,
-    enCours: missions.filter(m => m.statut === 'EN_COURS' && allWorkItems.filter(wi => wi.mission_direction_id === m.id).some(wi => wi.statut === 'EN_COURS')).length,
-    enAttente: missions.filter(m => (m.statut === 'EN_ATTENTE' || m.has_blocking === true) && allWorkItems.filter(wi => wi.mission_direction_id === m.id).some(wi => wi.statut === 'EN_ATTENTE')).length,
-    aFaire: missions.filter(m => m.statut === 'A_FAIRE' && allWorkItems.filter(wi => wi.mission_direction_id === m.id).some(wi => wi.statut === 'A_FAIRE')).length
+    technique: missions.filter(m => m.services_rollup?.includes('TECHNIQUE')).length,
+    menage: missions.filter(m => m.services_rollup?.includes('MENAGE')).length,
+    termine: missions.filter(m => m.status_rollup === 'TERMINEE').length,
+    enCours: missions.filter(m => m.status_rollup === 'EN_COURS').length,
+    enAttente: missions.filter(m => m.status_rollup === 'EN_ATTENTE').length,
+    aFaire: missions.filter(m => m.status_rollup === 'A_FAIRE').length
   };
+  
+  console.log('[Stats] 📊 Comptage depuis ROLLUPS:', stats);
 
   console.log('[DirectionSuiviDeshivernage] Stats:', stats, 'Missions:', missions.length);
 
@@ -390,14 +382,14 @@ export default function DirectionSuiviDeshivernage() {
                     )}
                   </div>
                   
-                  <Badge variant={mission.statut === 'TERMINEE' ? 'default' : 'outline'} className={
-                    mission.statut === 'EN_ATTENTE' || mission.has_blocking ? 'bg-amber-500 text-white' :
-                    mission.statut === 'EN_COURS' ? 'bg-orange-500 text-white' :
-                    mission.statut === 'TERMINEE' ? 'bg-green-500 text-white' : ''
+                  <Badge variant={mission.status_rollup === 'TERMINEE' ? 'default' : 'outline'} className={
+                    mission.status_rollup === 'EN_ATTENTE' ? 'bg-amber-500 text-white' :
+                    mission.status_rollup === 'EN_COURS' ? 'bg-orange-500 text-white' :
+                    mission.status_rollup === 'TERMINEE' ? 'bg-green-500 text-white' : ''
                   }>
-                    {mission.statut === 'A_FAIRE' ? 'À faire' :
-                     mission.statut === 'EN_COURS' ? '⏱ En cours' :
-                     mission.statut === 'EN_ATTENTE' || mission.has_blocking ? `⏸️ En attente${mission.motif_attente ? ' - ' + mission.motif_attente : ''}` : '✔️ Terminée'}
+                    {mission.status_rollup === 'A_FAIRE' ? 'À faire' :
+                     mission.status_rollup === 'EN_COURS' ? '⏱ En cours' :
+                     mission.status_rollup === 'EN_ATTENTE' ? `⏸️ En attente${mission.motif_attente ? ' - ' + mission.motif_attente : ''}` : '✔️ Terminée'}
                   </Badge>
                 </div>
 
