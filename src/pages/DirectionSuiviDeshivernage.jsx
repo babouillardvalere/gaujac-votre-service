@@ -27,14 +27,22 @@ export default function DirectionSuiviDeshivernage() {
       // Récupérer TOUTES les missions - peu importe le type
       const allMissions = await base44.entities.MissionDirection.list('-created_date', 200);
       console.log(`[DirectionSuiviDeshivernage] 📊 ${allMissions.length} missions chargées`);
-      
+
       // Compter par type
       const byType = {};
       allMissions.forEach(m => {
         byType[m.type_mission] = (byType[m.type_mission] || 0) + 1;
       });
       console.log('[DirectionSuiviDeshivernage] Par type:', byType);
-      
+
+      // Debug rollups
+      console.log('[DirectionSuiviDeshivernage] Rollups:', allMissions.map(m => ({
+        id: m.id.substring(0, 8),
+        hebergement: m.zones?.[0]?.numero || 'N/A',
+        status_rollup: m.status_rollup,
+        services_rollup: m.services_rollup
+      })));
+
       return allMissions;
     },
     refetchInterval: 2000,
