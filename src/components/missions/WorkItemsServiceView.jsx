@@ -16,6 +16,7 @@ import {
   getWorkItemFinalStatus 
 } from '../descriptionOperationnelleUtils';
 import { recalcMissionStatus, blockMissionLogistique, unblockMissionLogistique } from './missionStatusCalculator';
+import { recomputeMissionRollup } from './recomputeMissionRollup';
 
 export default function WorkItemsServiceView({ service }) {
   const queryClient = useQueryClient();
@@ -124,6 +125,7 @@ export default function WorkItemsServiceView({ service }) {
         try {
           console.log('[WorkItemsServiceView] 🔄 Recalcul mission après prise en charge:', workItem.mission_direction_id);
           await recalcMissionStatus(workItem.mission_direction_id);
+          await recomputeMissionRollup(workItem.mission_direction_id);
           queryClient.invalidateQueries({ queryKey: ['missions-direction-list'] });
           queryClient.invalidateQueries({ queryKey: ['missions-direction-for-service', service] });
           queryClient.invalidateQueries({ queryKey: ['suivi-deshivernage'] });
@@ -267,6 +269,7 @@ export default function WorkItemsServiceView({ service }) {
             }
             
             await base44.entities.MissionDirection.update(workItem.mission_direction_id, updateData);
+            await recomputeMissionRollup(workItem.mission_direction_id);
             console.log(`[WorkItemsServiceView] ✅ Mission mise à jour: ${nouveauStatut}`);
           }
 
