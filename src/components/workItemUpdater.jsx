@@ -1,10 +1,11 @@
 import { base44 } from '@/api/base44Client';
+import { recomputeMissionRollup } from './missions/recomputeMissionRollup';
 
 /**
  * 🔒 WRAPPER CENTRALISÉ - UPDATE WORKITEM AVEC HOOKS AUTOMATIQUES
  * 
  * Utiliser cette fonction au lieu de base44.entities.WorkItem.update()
- * pour garantir l'exécution des hooks de timeline
+ * pour garantir l'exécution des hooks de timeline + recalcul rollups
  */
 
 /**
@@ -29,6 +30,15 @@ export async function updateWorkItem(workItemId, updates) {
       await onWorkItemStatusChanged(updatedWorkItem, oldStatut, newStatut);
     } catch (error) {
       console.warn('⚠️ Hook SuiviEvent non exécuté:', error.message);
+    }
+  }
+  
+  // ⭐ HOOK AUTOMATIQUE: Recalculer les rollups de la mission liée
+  if (updatedWorkItem.mission_direction_id) {
+    try {
+      await recomputeMissionRollup(updatedWorkItem.mission_direction_id);
+    } catch (error) {
+      console.warn('⚠️ Recalcul rollup mission échoué:', error.message);
     }
   }
   

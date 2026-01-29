@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, subDays } from 'date-fns';
+import { recomputeMissionRollup } from '../missions/recomputeMissionRollup';
 
 export default function WorkItemManager({ lang }) {
   const queryClient = useQueryClient();
@@ -38,7 +39,13 @@ export default function WorkItemManager({ lang }) {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.WorkItem.update(id, data),
+    mutationFn: async ({ id, data }) => {
+      const updated = await base44.entities.WorkItem.update(id, data);
+      if (updated?.mission_direction_id) {
+        await recomputeMissionRollup(updated.mission_direction_id);
+      }
+      return updated;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['work-items']);
       toast.success(lang === 'fr' ? 'Mis à jour' : 'Updated');
@@ -95,10 +102,14 @@ export default function WorkItemManager({ lang }) {
     const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
     const targetItem = activeItems[targetIndex];
     
-    await Promise.all([
+    const [updated1, updated2] = await Promise.all([
       base44.entities.WorkItem.update(item.id, { rank: targetItem.rank }),
       base44.entities.WorkItem.update(targetItem.id, { rank: item.rank })
     ]);
+    
+    // Recalculer rollups si missions liées
+    if (updated1?.mission_direction_id) await recomputeMissionRollup(updated1.mission_direction_id);
+    if (updated2?.mission_direction_id) await recomputeMissionRollup(updated2.mission_direction_id);
     
     queryClient.invalidateQueries(['work-items']);
   };
