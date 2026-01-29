@@ -17,6 +17,7 @@ import {
 } from '../descriptionOperationnelleUtils';
 import { recalcMissionStatus, blockMissionLogistique, unblockMissionLogistique } from './missionStatusCalculator';
 import { recomputeMissionRollup } from './recomputeMissionRollup';
+import { updateWorkItem } from '../workItemUpdater';
 
 export default function WorkItemsServiceView({ service }) {
   const queryClient = useQueryClient();
@@ -93,7 +94,7 @@ export default function WorkItemsServiceView({ service }) {
 
   const priseEnChargeMutation = useMutation({
     mutationFn: async ({ id, prenom }) => {
-      return await base44.entities.WorkItem.update(id, {
+      return await updateWorkItem(id, {
         statut: 'EN_COURS',
         collaborateur: prenom,
         date_prise_en_charge: new Date().toISOString()
@@ -202,7 +203,7 @@ export default function WorkItemsServiceView({ service }) {
         }).catch(err => console.error('Erreur notification:', err));
       }
 
-      return await base44.entities.WorkItem.update(id, updateData);
+      return await updateWorkItem(id, updateData);
     },
     onSuccess: async (data, variables) => {
       console.log('[WorkItemsServiceView] ✅ Finalisation réussie, invalidation queries...');
@@ -970,7 +971,7 @@ export default function WorkItemsServiceView({ service }) {
                               
                               await base44.entities.MissionDirection.update(item.mission_direction_id, updateData);
                               // Repasser le WorkItem en EN_COURS
-                              await base44.entities.WorkItem.update(item.id, {
+                              await updateWorkItem(item.id, {
                                 statut: 'EN_COURS'
                               });
                               queryClient.invalidateQueries({ queryKey: ['workitems-service', service] });

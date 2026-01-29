@@ -15,6 +15,7 @@ import {
 import { toast } from 'sonner';
 import { format, subDays } from 'date-fns';
 import { recomputeMissionRollup } from '../missions/recomputeMissionRollup';
+import { updateWorkItem } from '../workItemUpdater';
 
 export default function WorkItemManager({ lang }) {
   const queryClient = useQueryClient();
@@ -71,7 +72,7 @@ export default function WorkItemManager({ lang }) {
           metadata: { workitem_id: id }
         });
       }
-      return base44.entities.WorkItem.update(id, {
+      return updateWorkItem(id, {
         statut: 'ANNULEE',
         motif_annulation: motif,
         annulee_par: user,
@@ -102,14 +103,10 @@ export default function WorkItemManager({ lang }) {
     const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
     const targetItem = activeItems[targetIndex];
     
-    const [updated1, updated2] = await Promise.all([
-      base44.entities.WorkItem.update(item.id, { rank: targetItem.rank }),
-      base44.entities.WorkItem.update(targetItem.id, { rank: item.rank })
+    await Promise.all([
+      updateWorkItem(item.id, { rank: targetItem.rank }),
+      updateWorkItem(targetItem.id, { rank: item.rank })
     ]);
-    
-    // Recalculer rollups si missions liées
-    if (updated1?.mission_direction_id) await recomputeMissionRollup(updated1.mission_direction_id);
-    if (updated2?.mission_direction_id) await recomputeMissionRollup(updated2.mission_direction_id);
     
     queryClient.invalidateQueries(['work-items']);
   };
