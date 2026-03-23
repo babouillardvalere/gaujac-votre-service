@@ -165,3 +165,6 @@ export {
   INCIDENT_TO_WORKITEM,
   WORKITEM_TO_INCIDENT
 };
+
+// Réexports nommés pour compatibilité ascendante
+export { UI_TO_BACKEND, BACKEND_TO_UI, toUIStatus, toBackendStatus } from './workItemStatusMapping';
