@@ -34,6 +34,7 @@ import { fr } from 'date-fns/locale';
 import { getWorkItemDescription } from '../components/workItemUtils';
 import { canTakeOverIntervention, assertInterventionActionnable } from '../components/interventionValidation';
 import { filterActive } from '../components/interventionDeletion';
+import { toUIStatus, UI_TO_BACKEND } from '../components/workItemStatusMapping';
 
 // Fonction centrale de récupération de description opérationnelle
 function getDescriptionOperationnelle(item) {
@@ -140,13 +141,7 @@ export default function Menage() {
       if (isWorkItem) {
         const workItemData = {};
         if (data.statut) {
-          const mapping = {
-            'en_attente': 'A_FAIRE',
-            'en_cours': 'EN_COURS',
-            'en_attente_materiel': 'EN_ATTENTE',
-            'resolu': 'TERMINEE'
-          };
-          workItemData.statut = mapping[data.statut] || 'A_FAIRE';
+          workItemData.statut = UI_TO_BACKEND[data.statut] || 'A_FAIRE';
         }
         if (data.pris_par) workItemData.collaborateur = data.pris_par;
         if (data.date_debut) workItemData.date_prise_en_charge = data.date_debut;
@@ -854,23 +849,11 @@ export default function Menage() {
     wi.statut !== 'ANNULEE'
   );
 
-  // Conversion des WorkItems en format compatible Incident
-  const convertedWorkItems = safeWorkItemsMenage
-    .filter(wi => {
-      const statutMapping = {
-        'A_FAIRE': 'en_attente',
-        'EN_COURS': 'en_cours',
-        'EN_ATTENTE': 'en_attente_materiel',
-        'TERMINEE': 'resolu'
-      };
-      const mappedStatut = statutMapping[wi.statut] || 'en_attente';
-      if (filter !== 'tous' && mappedStatut !== filter) return false;
-      return true;
-    })
-    .map(wi => {
-      const descOp = wi.description_operationnelle || getWorkItemDescription(wi);
-      console.log('[MENAGE_CONVERT] WorkItem', wi.hebergement, 'description_operationnelle:', descOp?.substring(0, 50));
-      return {
+  // Conversion des WorkItems en format compatible Incident (TOUS les statuts — le filtre UI s'applique après)
+  const convertedWorkItems = safeWorkItemsMenage.map(wi => {
+    const descOp = wi.description_operationnelle || getWorkItemDescription(wi);
+    console.log('[MENAGE_CONVERT] WorkItem', wi.hebergement, 'statut:', wi.statut, '→', toUIStatus(wi.statut));
+    return {
       id: wi.id,
       type: 'menage',
       categorie: 'materiel_menage',
@@ -887,9 +870,7 @@ export default function Menage() {
       pris_par: wi.collaborateur,
       date_debut: wi.date_prise_en_charge,
       date_resolution: wi.date_terminee,
-      statut: wi.statut === 'A_FAIRE' ? 'en_attente' : 
-              wi.statut === 'EN_COURS' ? 'en_cours' :
-              wi.statut === 'EN_ATTENTE' ? 'en_attente_materiel' : 'resolu',
+      statut: toUIStatus(wi.statut),   // ← source unique de mapping
       autorisation_acces: wi.autorisation_acces,
       plage_horaire_client: wi.plages_horaires?.join(', '),
       commentaire_interne: '',
@@ -903,7 +884,7 @@ export default function Menage() {
       type_hebergement: wi.type_hebergement,
       deleted_at: wi.deleted_at || null
     };
-    });
+  });
 
   // Regrouper visuellement les WorkItems
   const groupedWorkItems = groupWorkItems(convertedWorkItems);
