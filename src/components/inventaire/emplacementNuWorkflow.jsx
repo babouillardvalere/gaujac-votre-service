@@ -54,6 +54,7 @@ export async function createEmplacementNuMissions({
   appreciationEtat,
   commentaire,
   autorisationAcces,
+  plagesHoraires = [],
   lang,
   base44
 }) {
@@ -151,7 +152,7 @@ ${commentaire ? `💬 Remarques client: ${commentaire}\n` : ''}
       date_arrivee: dateArrivee,
       date_depart: dateDepart,
       autorisation_acces: autorisationAcces,
-      plages_horaires: [],
+      plages_horaires: autorisationAcces === 'non' ? plagesHoraires : [],
       taches,
       stay_id: stayId
     });
