@@ -32,6 +32,7 @@ import { toast } from 'sonner';
 import { format, differenceInMinutes } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { getWorkItemDescription } from '../components/workItemUtils';
+import { toUIStatus, UI_TO_BACKEND } from '../components/workItemStatusMapping';
 import { filterActive } from '../components/interventionDeletion';
 import { canTransition, getAvailableActions, createCleanEvent, areAllTasksResolved } from '../components/workflowStateService';
 import { groupByLogement, getGroupServices } from '../components/missions/LogementGrouper';
