@@ -27,6 +27,8 @@ export default function ControlePlacementNu({
   onSubmitSuccess
 }) {
   const [autorisationAcces, setAutorisationAcces] = useState('');
+  const [plagesHoraires, setPlagesHoraires] = useState([]);
+  const [nouvellePlage, setNouvellePlage] = useState('');
   const [problemes, setProblemes] = useState({});
   const [urgences, setUrgences] = useState({});
   const [appreciationEtat, setAppreciationEtat] = useState('');

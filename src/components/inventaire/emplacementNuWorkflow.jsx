@@ -12,8 +12,8 @@ const PROBLEME_SERVICE_MAP = {
   'technique_divers': 'TECHNIQUE',
   'probleme_structurel': 'TECHNIQUE',
   
-  // Environnement / Espaces verts
-  'espace_vert': 'ESPACES_VERTS',
+  // Environnement / Espaces verts → assigné à TECHNIQUE (seul service valide pour ce type)
+  'espace_vert': 'TECHNIQUE',
   
   // Mobilier / Matériel
   'mobilier_casse': 'TECHNIQUE',
