@@ -165,8 +165,9 @@ ${commentaire ? `💬 Remarques client: ${commentaire}\n` : ''}
     });
 
     // Notification immédiate au service
-    const serviceLabel = service === 'TECHNIQUE' ? '🔧 Technique' 
-                        : service === 'ESPACES_VERTS' ? '🌿 Espaces verts'
+    const serviceLabel = service === 'TECHNIQUE' ? '🔧 Technique'
+                        : service === 'MENAGE' ? '🧹 Ménage'
+                        : service === 'RECEPTION' ? '🏠 Réception'
                         : service;
 
     await base44.entities.Notification.create({
