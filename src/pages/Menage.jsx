@@ -35,6 +35,7 @@ import { getWorkItemDescription } from '../components/workItemUtils';
 import { canTakeOverIntervention, assertInterventionActionnable } from '../components/interventionValidation';
 import { filterActive } from '../components/interventionDeletion';
 import { toUIStatus, UI_TO_BACKEND } from '../components/workItemStatusMapping';
+import { filterVisibleWorkItems, normalizeBackendStatus } from '@/lib/workItems';
 
 // Fonction centrale de récupération de description opérationnelle
 function getDescriptionOperationnelle(item) {
@@ -110,24 +111,39 @@ export default function Menage() {
     staleTime: 30000
   });
 
-  const { data: workItemsMenage = [] } = useQuery({
-    queryKey: ['workitems-menage', filter],
-    queryFn: async () => {
-      console.log('🔍 FETCH WorkItems MENAGE, filtre:', filter);
-      const result = await base44.entities.WorkItem.filter({ 
-        service: 'MENAGE'
-      }, '-created_date', 250);
-      // FIX #3: FILTRE deleted_at + ANNULEE
-      const filtered = filterActive(result).filter(wi => wi.statut !== 'ANNULEE');
-      console.log('✅ WorkItems MENAGE actifs:', filtered.length, '/', result.length, 'workitem(s)');
-      filtered.forEach(wi => {
-        console.log(`  - ID: ${wi.id}, Statut: ${wi.statut}, Type: ${wi.type}, Hébergement: ${wi.hebergement}`);
-      });
-      return filtered;
-    },
-    refetchInterval: 30000,
-    staleTime: 15000
-  });
+  const [workItems, setWorkItems] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
+
+  const loadWorkItems = async () => {
+    try {
+      setLoading(true);
+      const items = await base44.entities.WorkItem.filter({ service: 'MENAGE' }, '-created_date', 100);
+
+      const normalized = (items || []).map(item => ({
+        ...item,
+        statut: normalizeBackendStatus(item.statut),
+      }));
+
+      setWorkItems(normalized);
+    } catch (error) {
+      console.error('Erreur chargement MENAGE:', error);
+      setWorkItems([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    loadWorkItems();
+    const interval = setInterval(loadWorkItems, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const getFilteredItems = (statut) => {
+    return filterVisibleWorkItems(workItems, 'MENAGE', statut, searchQuery);
+  };
+
+  const workItemsMenage = workItems;
 
   const { data: missions = [] } = useQuery({
     queryKey: ['missions-internes', 'MENAGE'],
