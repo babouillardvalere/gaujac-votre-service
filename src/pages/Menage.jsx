@@ -111,8 +111,8 @@ export default function Menage() {
     staleTime: 30000
   });
 
-  const [workItems, setWorkItems] = React.useState([]);
-  const [loading, setLoading] = React.useState(false);
+  const [workItems, setWorkItems] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const loadWorkItems = async () => {
     try {
@@ -133,7 +133,7 @@ export default function Menage() {
     }
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     loadWorkItems();
     const interval = setInterval(loadWorkItems, 30000);
     return () => clearInterval(interval);
