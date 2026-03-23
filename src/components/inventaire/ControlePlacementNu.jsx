@@ -273,6 +273,62 @@ export default function ControlePlacementNu({
         </CardContent>
       </Card>
 
+      {/* PLAGES HORAIRES si accès non autorisé */}
+      {autorisationAcces === 'non' && (
+        <Card className="mb-6 border-2 border-orange-400 bg-orange-50">
+          <CardContent className="p-6">
+            <h3 className="font-semibold text-orange-900 mb-3 flex items-center gap-2">
+              ⏰ {lang === 'fr' ? 'Créneaux d\'accès *' : 'Access time slots *'}
+            </h3>
+            <p className="text-sm text-orange-700 mb-4">
+              {lang === 'fr'
+                ? 'Indiquez les créneaux horaires auxquels notre intervenant peut accéder à votre emplacement.'
+                : 'Indicate the time slots during which our staff can access your pitch.'}
+            </p>
+            <div className="flex gap-2 mb-3">
+              <input
+                type="text"
+                value={nouvellePlage}
+                onChange={(e) => setNouvellePlage(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && nouvellePlage.trim()) {
+                    setPlagesHoraires(prev => [...prev, nouvellePlage.trim()]);
+                    setNouvellePlage('');
+                  }
+                }}
+                placeholder={lang === 'fr' ? 'Ex: 9h-12h, 14h-17h...' : 'E.g. 9am-12pm, 2pm-5pm...'}
+                className="flex-1 border-2 border-orange-300 rounded-lg px-3 py-2 text-sm bg-white"
+              />
+              <Button
+                type="button"
+                onClick={() => {
+                  if (nouvellePlage.trim()) {
+                    setPlagesHoraires(prev => [...prev, nouvellePlage.trim()]);
+                    setNouvellePlage('');
+                  }
+                }}
+                className="bg-orange-500 hover:bg-orange-600 text-white px-4"
+              >
+                +
+              </Button>
+            </div>
+            {plagesHoraires.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {plagesHoraires.map((plage, idx) => (
+                  <Badge
+                    key={idx}
+                    className="bg-orange-200 text-orange-900 flex items-center gap-1 cursor-pointer hover:bg-red-200"
+                    onClick={() => setPlagesHoraires(prev => prev.filter((_, i) => i !== idx))}
+                  >
+                    ⏰ {plage} ✕
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* SIGNALEMENT DES PROBLÈMES */}
       <Card className="mb-6">
         <CardHeader>
