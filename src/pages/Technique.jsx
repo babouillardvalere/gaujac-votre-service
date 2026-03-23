@@ -160,13 +160,7 @@ export default function Technique() {
       if (isWorkItem) {
         const workItemData = {};
         if (data.statut) {
-          const mapping = {
-            'en_attente': 'A_FAIRE',
-            'en_cours': 'EN_COURS',
-            'en_attente_materiel': 'EN_ATTENTE',
-            'resolu': 'TERMINEE'
-          };
-          workItemData.statut = mapping[data.statut] || 'A_FAIRE';
+          workItemData.statut = UI_TO_BACKEND[data.statut] || 'A_FAIRE';
         }
         if (data.pris_par) workItemData.collaborateur = data.pris_par;
         if (data.date_debut) workItemData.date_prise_en_charge = data.date_debut;
@@ -815,9 +809,7 @@ export default function Technique() {
           pris_par: wi.collaborateur,
           date_debut: wi.date_prise_en_charge,
           date_resolution: wi.date_terminee,
-          statut: wi.statut === 'A_FAIRE' ? 'en_attente' : 
-                  wi.statut === 'EN_COURS' ? 'en_cours' :
-                  wi.statut === 'EN_ATTENTE' ? 'en_attente_materiel' : 'resolu',
+          statut: toUIStatus(wi.statut),
           autorisation_acces: wi.autorisation_acces,
           plage_horaire_client: wi.plages_horaires?.join(', '),
           commentaire_interne: '',
