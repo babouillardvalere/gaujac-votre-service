@@ -149,6 +149,7 @@ export default function ControlePlacementNu({
           appreciationEtat,
           commentaire,
           autorisationAcces,
+          plagesHoraires,
           lang,
           base44
         });
