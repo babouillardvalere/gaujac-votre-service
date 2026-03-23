@@ -91,8 +91,13 @@ export default function ControlePlacementNu({
     const willCreateMissions = shouldCreateMissions(problemes, appreciationEtat);
 
     if (willCreateMissions && appreciationEtat === '') {
-      toast.error(lang === 'fr' ? 'Veuillez évaluer l\'état global de l\'emplacement' : 'Please rate overall pitch condition');
-      return;
+    toast.error(lang === 'fr' ? 'Veuillez évaluer l\'état global de l\'emplacement' : 'Please rate overall pitch condition');
+    return;
+    }
+
+    if (autorisationAcces === 'non' && plagesHoraires.length === 0) {
+    toast.error(lang === 'fr' ? 'Veuillez indiquer au moins une plage horaire d\'accès' : 'Please add at least one access time slot');
+    return;
     }
 
     setSubmitting(true);
