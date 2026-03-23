@@ -776,12 +776,12 @@ export default function Menage() {
   const collaborateurs = [...new Set(incidents.map(i => i.pris_par).filter(Boolean))];
 
   // Fonction de regroupement VISUEL des WorkItems avec PRIORISATION
+  // La clé N'INCLUT PLUS le statut → items du même logement/séjour toujours fusionnés
   const groupWorkItems = (items) => {
     const groups = {};
     
     items.forEach(item => {
-      // Clé de regroupement: service + logement + date + client + statut
-      const dateKey = item.date_saisie ? new Date(item.date_saisie).toISOString().split('T')[0] : 'no-date';
+      const dateKey = item.date_arrivee || (item.date_saisie ? new Date(item.date_saisie).toISOString().split('T')[0] : 'no-date');
       const groupKey = `${item.type}_${item.logement || item.emplacement}_${dateKey}_${item.client_nom}_${item.client_prenom}`;
       
       if (!groups[groupKey]) {
@@ -795,7 +795,7 @@ export default function Menage() {
           date_saisie: item.date_saisie,
           date_arrivee: item.date_arrivee,
           date_depart: item.date_depart,
-          statut: item.statut,
+          statut: item.statut,  // recalculé après
           urgent: false,
           autorisation_acces: item.autorisation_acces,
           plage_horaire_client: item.plage_horaire_client,
@@ -810,23 +810,16 @@ export default function Menage() {
         };
       }
       
-      // Ajouter au groupe
       groups[groupKey].workItems.push(item);
       
-      // Propager l'urgence si au moins 1 urgent
       if (item.urgent) groups[groupKey].urgent = true;
       
-      // Prendre la date de début la plus ancienne
       if (item.date_debut && (!groups[groupKey].date_debut || item.date_debut < groups[groupKey].date_debut)) {
         groups[groupKey].date_debut = item.date_debut;
       }
-      
-      // Prendre le collaborateur du premier item
       if (!groups[groupKey].pris_par && item.pris_par) {
         groups[groupKey].pris_par = item.pris_par;
       }
-      
-      // Conserver fiche_arrivee_id et type_hebergement
       if (!groups[groupKey].fiche_arrivee_id && item.fiche_arrivee_id) {
         groups[groupKey].fiche_arrivee_id = item.fiche_arrivee_id;
       }
@@ -835,7 +828,20 @@ export default function Menage() {
       }
     });
     
-    // PRIORISATION : urgent d'abord, puis date la plus ancienne
+    // Recalculer le statut du groupe (le plus grave) après fusion complète
+    Object.values(groups).forEach(group => {
+      const statuts = group.workItems.map(w => w.statut);
+      if (statuts.every(s => s === 'resolu')) {
+        group.statut = 'resolu';
+      } else if (statuts.some(s => s === 'en_cours')) {
+        group.statut = 'en_cours';
+      } else if (statuts.some(s => s === 'en_attente_materiel')) {
+        group.statut = 'en_attente_materiel';
+      } else {
+        group.statut = 'en_attente';
+      }
+    });
+    
     return Object.values(groups).sort((a, b) => {
       if (a.urgent && !b.urgent) return -1;
       if (!a.urgent && b.urgent) return 1;
