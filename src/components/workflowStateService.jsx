@@ -12,20 +12,8 @@ const STATES = {
   ANNULEE: 'ANNULEE'
 };
 
-// Conversion statuts Incident/WorkItem
-const INCIDENT_TO_WORKITEM = {
-  'en_attente': 'A_FAIRE',
-  'en_cours': 'EN_COURS',
-  'en_attente_materiel': 'EN_ATTENTE',
-  'resolu': 'TERMINEE'
-};
-
-const WORKITEM_TO_INCIDENT = {
-  'A_FAIRE': 'en_attente',
-  'EN_COURS': 'en_cours',
-  'EN_ATTENTE': 'en_attente_materiel',
-  'TERMINEE': 'resolu'
-};
+// Conversion statuts Incident/WorkItem — source unique dans workItemStatusMapping.js
+import { UI_TO_BACKEND as INCIDENT_TO_WORKITEM, BACKEND_TO_UI as WORKITEM_TO_INCIDENT } from './workItemStatusMapping';
 
 /**
  * Règles de transition strictes

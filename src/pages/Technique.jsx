@@ -855,10 +855,7 @@ export default function Technique() {
       pris_par: m.services_intervenants?.find(s => s.service === 'TECHNIQUE')?.agent || '',
       date_debut: m.date_debut_reelle,
       date_resolution: m.date_fin_reelle,
-      statut: m.statut === 'A_FAIRE' ? 'en_attente' :
-              m.statut === 'EN_COURS' ? 'en_cours' :
-              m.statut === 'EN_ATTENTE' ? 'en_attente_materiel' :
-              m.statut === 'TERMINEE' ? 'resolu' : 'en_attente',
+      statut: toUIStatus(m.statut),
       autorisation_acces: 'oui',
       plage_horaire_client: null,
       commentaire_interne: m.commentaire_direction || '',
