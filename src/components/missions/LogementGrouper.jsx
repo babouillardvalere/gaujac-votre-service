@@ -2,7 +2,12 @@
  * Regroupement par logement/séjour
  * Fusionne TOUS les WorkItems (Technique + Ménage) du même logement dans une seule entité
  * 1 logement = 1 carte unifiée contenant les deux services
+ *
+ * ⚠️ Ce module travaille EXCLUSIVEMENT avec les statuts UI :
+ *   en_attente | en_cours | en_attente_materiel | resolu
+ * Les WorkItems doivent être convertis AVANT d'être passés à groupByLogement().
  */
+import { UI_STATUS_PRIORITY } from '../workItemStatusMapping';
 
 /**
  * Regroupe les WorkItems par logement + séjour
@@ -85,36 +90,34 @@ export function groupByLogement(workItems = []) {
   return Object.values(groups).sort((a, b) => {
     if (a.urgent && !b.urgent) return -1;
     if (!a.urgent && b.urgent) return 1;
-    
-    // Priorité d'état : A_FAIRE > EN_COURS > EN_ATTENTE > TERMINEE
-    const statePriority = { 'A_FAIRE': 0, 'EN_COURS': 1, 'EN_ATTENTE': 2, 'TERMINEE': 3 };
-    return (statePriority[a.statut] || 99) - (statePriority[b.statut] || 99);
+    // Priorité d'état (statuts UI) : en_attente(0) > en_cours(1) > en_attente_materiel(2) > resolu(3)
+    return (UI_STATUS_PRIORITY[a.statut] ?? 99) - (UI_STATUS_PRIORITY[b.statut] ?? 99);
   });
 }
 
 /**
- * Détermine l'état du groupe basé sur ses WorkItems
- * - Si tous TERMINEE → TERMINEE
- * - Si au moins 1 EN_COURS → EN_COURS
- * - Si au moins 1 EN_ATTENTE → EN_ATTENTE
- * - Sinon → A_FAIRE
+ * Détermine l'état du groupe basé sur ses WorkItems (statuts UI).
+ * - Si tous resolu         → resolu
+ * - Si au moins 1 en_cours → en_cours
+ * - Si au moins 1 en_attente_materiel → en_attente_materiel
+ * - Sinon                  → en_attente
  */
 function getGroupStatus(workItems = []) {
-  if (workItems.length === 0) return 'A_FAIRE';
-  
+  if (workItems.length === 0) return 'en_attente';
+
   const statuts = workItems.map(w => w.statut);
-  
-  // Si tous terminés
-  if (statuts.every(s => s === 'TERMINEE')) return 'TERMINEE';
-  
+
+  // Si tous résolus
+  if (statuts.every(s => s === 'resolu')) return 'resolu';
+
   // Si au moins un en cours
-  if (statuts.some(s => s === 'EN_COURS')) return 'EN_COURS';
-  
-  // Si au moins un en attente
-  if (statuts.some(s => s === 'EN_ATTENTE')) return 'EN_ATTENTE';
-  
-  // Sinon à faire
-  return 'A_FAIRE';
+  if (statuts.some(s => s === 'en_cours')) return 'en_cours';
+
+  // Si au moins un en attente matériel
+  if (statuts.some(s => s === 'en_attente_materiel')) return 'en_attente_materiel';
+
+  // Sinon en attente (A_FAIRE côté backend)
+  return 'en_attente';
 }
 
 /**
