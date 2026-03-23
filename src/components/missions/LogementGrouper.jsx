@@ -46,7 +46,7 @@ export function groupByLogement(workItems = []) {
         // Propriétés d'urgence
         urgent: false,
         autorisation_acces: item.autorisation_acces,
-        plage_horaire_client: item.plages_horaires?.join(', '),
+        plage_horaire_client: item.plage_horaire_client || item.plages_horaires?.join(', '),
         
         // Intervenant
         pris_par: item.collaborateur || '',

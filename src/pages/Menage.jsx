@@ -782,7 +782,7 @@ export default function Menage() {
     items.forEach(item => {
       // Clé de regroupement: service + logement + date + client + statut
       const dateKey = item.date_saisie ? new Date(item.date_saisie).toISOString().split('T')[0] : 'no-date';
-      const groupKey = `${item.type}_${item.logement || item.emplacement}_${dateKey}_${item.client_nom}_${item.client_prenom}_${item.statut}`;
+      const groupKey = `${item.type}_${item.logement || item.emplacement}_${dateKey}_${item.client_nom}_${item.client_prenom}`;
       
       if (!groups[groupKey]) {
         groups[groupKey] = {
