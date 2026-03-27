@@ -1092,13 +1092,13 @@ export default function Technique() {
               const priorityType = getPriorityType(incident);
               const isGrouped = incident.isGrouped && incident.workItems?.length > 1;
 
-              const isInvalid = !incident.is_audit_ou_test && !hasValidDescription(incident) && incident.statut === 'en_attente';
+              const needsDescription = !incident.is_audit_ou_test && !hasValidDescription(incident);
               return (
                 <motion.div key={incident.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                   <Card
                     className={`border-2 rounded-xl cursor-pointer hover:shadow-lg transition-all ${
-                      isInvalid ? 'border-red-400 bg-red-50 opacity-75' :
-                      priorityType === 'urgent' ? 'border-red-500 bg-red-50' : 'border-gray-200'
+                      priorityType === 'urgent' ? 'border-red-500 bg-red-50' :
+                      needsDescription ? 'border-orange-300 bg-orange-50' : 'border-gray-200'
                     }`}
                     onClick={() => setSelectedIncident(incident)}
                   >
@@ -1121,8 +1121,8 @@ export default function Technique() {
                               )}
                             </div>
                             {!isGrouped && <p className="text-sm font-body text-gray-600">{catInfo.label}</p>}
-                            {isInvalid && (
-                              <span className="text-xs font-semibold text-red-600 bg-red-100 px-2 py-0.5 rounded">⛔ Intervention invalide — description manquante</span>
+                            {needsDescription && (
+                              <span className="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded">📝 Description à préciser</span>
                             )}
                           </div>
                         </div>
@@ -1372,9 +1372,9 @@ export default function Technique() {
                 return (
                 <div className="space-y-3 pt-4 border-t">
                   {!descValide && (
-                    <div className="bg-red-50 border border-red-300 rounded-lg p-3">
-                      <p className="text-red-700 font-semibold text-sm">⛔ Prise en charge impossible</p>
-                      <p className="text-red-600 text-xs mt-1">Cette intervention n'a pas de description exploitable. Renseignez-en une ci-dessus pour débloquer la prise en charge.</p>
+                    <div className="bg-orange-50 border border-orange-300 rounded-lg p-3">
+                      <p className="text-orange-700 font-semibold text-sm">📝 Description requise</p>
+                      <p className="text-orange-600 text-xs mt-1">Renseignez une description ci-dessus pour pouvoir prendre en charge cette intervention.</p>
                     </div>
                   )}
                   <Input
