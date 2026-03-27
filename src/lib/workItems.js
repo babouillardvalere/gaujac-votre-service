@@ -13,6 +13,31 @@ export function normalizeBackendStatus(statut) {
 }
 
 /**
+ * Récupère la meilleure description disponible pour un WorkItem/Incident
+ * Priorité : description_operationnelle > description_probleme > description > tâches
+ * @param {Object} item
+ * @returns {string|null}
+ */
+export function getBestDescription(item) {
+  if (!item) return null;
+  if (item.description_operationnelle?.trim()) return item.description_operationnelle.trim();
+  if (item.description_probleme?.trim()) return item.description_probleme.trim();
+  if (item.description?.trim()) return item.description.trim();
+  // Construire depuis tâches
+  if (item.taches?.length > 0) {
+    return item.taches.map((t, i) => `${i + 1}. ${t.texte || t.label || 'Tâche'}`).join('\n');
+  }
+  return null;
+}
+
+/**
+ * Indique si un item a une description exploitable
+ */
+export function hasValidDescription(item) {
+  return !!getBestDescription(item);
+}
+
+/**
  * Filtre les WorkItems visibles pour un service donné
  * @param {Array} workItems - liste déjà normalisée (statuts UI)
  * @param {string} service - 'MENAGE' | 'TECHNIQUE' | etc.

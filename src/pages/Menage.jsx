@@ -35,16 +35,11 @@ import { getWorkItemDescription } from '../components/workItemUtils';
 import { canTakeOverIntervention, assertInterventionActionnable } from '../components/interventionValidation';
 import { filterActive } from '../components/interventionDeletion';
 import { toUIStatus, UI_TO_BACKEND } from '../components/workItemStatusMapping';
-import { filterVisibleWorkItems, normalizeBackendStatus } from '@/lib/workItems';
+import { filterVisibleWorkItems, normalizeBackendStatus, getBestDescription, hasValidDescription } from '@/lib/workItems';
 
 // Fonction centrale de récupération de description opérationnelle
 function getDescriptionOperationnelle(item) {
-  return (
-    item?.description_operationnelle ||
-    item?.description_probleme ||
-    item?.description ||
-    null
-  );
+  return getBestDescription(item);
 }
 
 const categoryIcons = {
@@ -1135,10 +1130,12 @@ export default function Menage() {
               const priorityType = getPriorityType(incident);
               const isGrouped = incident.isGrouped && incident.workItems?.length > 1;
 
+              const isInvalid = !incident.is_audit_ou_test && !hasValidDescription(incident) && incident.statut === 'en_attente';
               return (
                 <motion.div key={incident.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                   <Card
                     className={`border-2 rounded-xl cursor-pointer hover:shadow-lg transition-all ${
+                      isInvalid ? 'border-red-400 bg-red-50 opacity-75' :
                       priorityType === 'urgent' ? 'border-red-500 bg-red-50' : 'border-gray-200'
                     }`}
                     onClick={() => setSelectedIncident(incident)}
@@ -1162,6 +1159,9 @@ export default function Menage() {
                               )}
                             </div>
                             {!isGrouped && <p className="text-sm font-body text-gray-600">{catInfo.label}</p>}
+                            {isInvalid && (
+                              <span className="text-xs font-semibold text-red-600 bg-red-100 px-2 py-0.5 rounded">⛔ Intervention invalide — description manquante</span>
+                            )}
                           </div>
                         </div>
                         {getStatusBadge(incident.statut)}
@@ -1400,8 +1400,16 @@ export default function Menage() {
                </>
                )}
 
-              {selectedIncident.statut === 'en_attente' && (
+              {selectedIncident.statut === 'en_attente' && (() => {
+                const descValide = selectedIncident.is_audit_ou_test || hasValidDescription(selectedIncident) || descriptionOpSaisie.trim();
+                return (
                 <div className="space-y-3 pt-4 border-t">
+                  {!descValide && (
+                    <div className="bg-red-50 border border-red-300 rounded-lg p-3">
+                      <p className="text-red-700 font-semibold text-sm">⛔ Prise en charge impossible</p>
+                      <p className="text-red-600 text-xs mt-1">Cette intervention n'a pas de description exploitable. Renseignez-en une ci-dessus pour débloquer la prise en charge.</p>
+                    </div>
+                  )}
                   <Input
                     value={collaborateurNom}
                     onChange={(e) => setCollaborateurNom(e.target.value)}
@@ -1413,20 +1421,16 @@ export default function Menage() {
                    disabled={
                      !collaborateurNom.trim() ||
                      updateMutation.isPending ||
-                     (!selectedIncident?.is_audit_ou_test && !getDescriptionOperationnelle(selectedIncident) && !descriptionOpSaisie.trim())
+                     !descValide
                    }
-                   className="w-full bg-[#FFD700] hover:bg-[#FFA500] text-[#0077A8] rounded-xl"
+                   className="w-full bg-[#FFD700] hover:bg-[#FFA500] text-[#0077A8] rounded-xl disabled:opacity-50"
                   >
                    <Play className="w-4 h-4 mr-2" />
                    {t('prendre_en_charge')}
                   </Button>
-                  {!getDescriptionOperationnelle(selectedIncident) && (
-                    <p className="text-xs text-yellow-600 mt-2">
-                      ℹ️ Vous pourrez ajouter des détails lors de la clôture
-                    </p>
-                  )}
                 </div>
-              )}
+                );
+              })()}
 
               {selectedIncident.statut === 'en_cours' && (
                 <div className="space-y-3 pt-4 border-t">
