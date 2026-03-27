@@ -816,9 +816,19 @@ export default function Menage() {
           fiche_arrivee_id: item.fiche_arrivee_id,
           type_hebergement: item.type_hebergement,
           description_operationnelle: item.description_operationnelle,
+          taches: item.taches || [],
           isGrouped: true,
           workItems: []
         };
+      }
+      
+      // Propager la description_operationnelle si le groupe n'en a pas encore
+      if (!groups[groupKey].description_operationnelle && item.description_operationnelle) {
+        groups[groupKey].description_operationnelle = item.description_operationnelle;
+      }
+      // Propager les taches si le groupe n'en a pas encore
+      if ((!groups[groupKey].taches || groups[groupKey].taches.length === 0) && item.taches?.length > 0) {
+        groups[groupKey].taches = item.taches;
       }
       
       groups[groupKey].workItems.push(item);
