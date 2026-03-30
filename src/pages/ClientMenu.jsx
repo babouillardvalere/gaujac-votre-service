@@ -54,17 +54,6 @@ export default function ClientMenu() {
       textColor: 'text-white',
       disabled: false
     },
-    {
-      title: '🚗 Départ',
-      titleEn: '🚗 Departure',
-      description: 'Conditions de départ',
-      descriptionEn: 'Departure conditions',
-      href: 'ClientDepartIdentification',
-      color: 'bg-[#FFA500]',
-      textColor: 'text-white',
-      disabled: false,
-      comingSoon: false
-    }
   ];
 
   const menuItems = ficheArriveeId 
@@ -81,7 +70,7 @@ export default function ClientMenu() {
           disabled: false,
           comingSoon: false
         },
-        ...baseMenuItems.slice(1)
+        baseMenuItems[1]
       ]
     : baseMenuItems;
 
