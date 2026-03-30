@@ -33,6 +33,7 @@ import BureauDemographie from '../components/bureau/BureauDemographie';
 import BureauFichesPDF from '../components/bureau/BureauFichesPDF';
 import WorkItemManager from '../components/bureau/WorkItemManager';
 import BureauAvis from '../components/bureau/BureauAvis';
+import BureauInterventionDetailDialog from '../components/bureau/BureauInterventionDetailDialog';
 
 import Statistiques from './Statistiques';
 import { format, differenceInHours, differenceInMinutes, isToday, parseISO } from 'date-fns';
@@ -393,11 +394,12 @@ export default function Bureau() {
     const existingInterventionIds = new Set((interventionsClients ?? []).map(ic => ic.id));
     
     // Filtrer les WorkItems orphelins (dont l'InterventionClient n'existe plus)
+    // IMPORTANT: Les WorkItems sans intervention_client_id (emplacements nus, signalements directs) sont TOUJOURS valides
     const validWorkItems = (workItemsBureau ?? []).filter(wi => {
-      if (!wi.intervention_client_id) return true; // WorkItem sans lien = OK
+      if (!wi.intervention_client_id) return true; // WorkItem direct (emplacement nu, etc.) = TOUJOURS valide
       const exists = existingInterventionIds.has(wi.intervention_client_id);
       if (!exists) {
-        console.warn('[BUREAU] WorkItem orphelin détecté:', wi.id, 'réf:', wi.intervention_client_id);
+        console.warn('[BUREAU] WorkItem orphelin ignoré:', wi.id, 'réf InterventionClient manquante:', wi.intervention_client_id);
       }
       return exists;
     });
@@ -1761,265 +1763,11 @@ export default function Bureau() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog détail */}
-      <Dialog open={!!selectedIncident} onOpenChange={() => setSelectedIncident(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby="intervention-detail-description">
-          <DialogHeader>
-            <DialogTitle className="font-heading text-[#0077A8] flex items-center gap-2">
-              <span className="text-xl">{selectedIncident && categoryEmojis[selectedIncident.categorie]}</span>
-              {lang === 'fr' ? 'Fiche intervention' : 'Intervention details'} #{selectedIncident?.hebergement || selectedIncident?.numero_hebergement}
-            </DialogTitle>
-          </DialogHeader>
-          <div id="intervention-detail-description" className="sr-only">
-            {lang === 'fr' ? 'Détails complets de l\'intervention' : 'Complete intervention details'}
-          </div>
-          {selectedIncident && (
-            <div className="space-y-4">
-              {/* Client */}
-              <div className="bg-[#e6f7ff] rounded-xl p-4">
-                <h4 className="font-heading text-[#0077A8] mb-2">👤 {t('client_label')}</h4>
-                <div className="grid grid-cols-2 gap-2 text-sm font-body">
-                  <div><span className="text-gray-500">{t('nom')}:</span> {selectedIncident.client_prenom} {selectedIncident.client_nom}</div>
-                  <div><span className="text-gray-500">{lang === 'fr' ? 'Séjour' : 'Stay'}:</span> {selectedIncident.date_arrivee && format(new Date(selectedIncident.date_arrivee), 'dd/MM/yyyy')} → {selectedIncident.date_depart && format(new Date(selectedIncident.date_depart), 'dd/MM/yyyy')}</div>
-                </div>
-              </div>
-
-              {/* Hébergement */}
-              <div className="bg-gray-50 rounded-xl p-4">
-                <h4 className="font-heading text-[#0077A8] mb-2">🏠 {t('hebergement')}</h4>
-                <div className="grid grid-cols-2 gap-2 text-sm font-body">
-                  <div><span className="text-gray-500">{lang === 'fr' ? 'Type' : 'Type'}:</span> {selectedIncident.logement ? (lang === 'fr' ? 'Mobil-home' : 'Mobile home') : (lang === 'fr' ? 'Emplacement' : 'Pitch')}</div>
-                  <div><span className="text-gray-500">{lang === 'fr' ? 'Numéro' : 'Number'}:</span> <strong>{selectedIncident.logement || selectedIncident.emplacement || selectedIncident.hebergement || selectedIncident.numero_hebergement}</strong></div>
-                </div>
-              </div>
-
-              {/* Chronologie */}
-              <div className="bg-gray-50 rounded-xl p-4">
-                <h4 className="font-heading text-[#0077A8] mb-3">📋 {lang === 'fr' ? 'Chronologie détaillée' : 'Detailed timeline'}</h4>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[#00AEEF] flex items-center justify-center flex-shrink-0">
-                      <span className="text-white text-xs">1</span>
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-heading text-sm text-[#0077A8]">Demande créée</p>
-                      <p className="text-xs text-gray-500">{selectedIncident.date_saisie && format(new Date(selectedIncident.date_saisie), 'dd/MM/yyyy à HH:mm')}</p>
-                      {selectedIncident.urgent && <Badge className="bg-red-500 text-white text-xs mt-1">URGENT</Badge>}
-                    </div>
-                  </div>
-
-                  {selectedIncident.date_debut && (
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-[#FFA500] flex items-center justify-center flex-shrink-0">
-                        <span className="text-white text-xs">2</span>
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-heading text-sm text-[#0077A8]">Prise en charge</p>
-                        <p className="text-xs text-gray-500">{format(new Date(selectedIncident.date_debut), 'dd/MM/yyyy à HH:mm')}</p>
-                        {selectedIncident.pris_par && <p className="text-xs text-gray-600">par {selectedIncident.pris_par}</p>}
-                        {selectedIncident.temps_prise_en_charge && (
-                          <p className="text-xs text-[#FFA500]">Temps d'attente: {formatDuration(selectedIncident.temps_prise_en_charge)}</p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedIncident.attente_date && (
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center flex-shrink-0">
-                        <span className="text-white text-xs">⏳</span>
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-heading text-sm text-gray-600">Mise en attente</p>
-                        <p className="text-xs text-gray-500">{format(new Date(selectedIncident.attente_date), 'dd/MM/yyyy à HH:mm')}</p>
-                        {selectedIncident.motif_attente && <p className="text-xs text-gray-600">Motif: {selectedIncident.motif_attente}</p>}
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedIncident.date_resolution && (
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
-                        <span className="text-white text-xs">✓</span>
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-heading text-sm text-green-600">Résolu</p>
-                        <p className="text-xs text-gray-500">{format(new Date(selectedIncident.date_resolution), 'dd/MM/yyyy à HH:mm')}</p>
-                        {selectedIncident.temps_total_intervention && (
-                          <p className="text-xs text-green-600">Temps d'intervention: {formatDuration(selectedIncident.temps_total_intervention)}</p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Intervention */}
-              <div className="bg-gray-50 rounded-xl p-4">
-                <h4 className="font-heading text-[#0077A8] mb-2">🛠 {lang === 'fr' ? 'Intervention' : 'Intervention'}</h4>
-                <div className="space-y-2 text-sm font-body">
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-500">Catégorie:</span>
-                    <Badge className={selectedIncident.type === 'technique' ? 'bg-[#00AEEF]' : 'bg-[#FFD700] text-[#0077A8]'}>
-                      {categoryLabels[selectedIncident.categorie]}
-                    </Badge>
-                    {selectedIncident.urgent && <Badge className="bg-red-500 text-white">URGENT</Badge>}
-                  </div>
-                  {selectedIncident.sous_categorie && (
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-gray-500">Icônes:</span>
-                      {selectedIncident.sous_categorie.split(', ').map(cat => (
-                        <span key={cat} className="text-xl" title={cat}>{categoryEmojis[cat]}</span>
-                      ))}
-                    </div>
-                  )}
-                  <div><span className="text-gray-500">Description:</span></div>
-                  <p className="bg-white p-3 rounded-lg border whitespace-pre-wrap">
-                    {selectedIncident.description_operationnelle || selectedIncident.description || '—'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Timing */}
-              <div className="bg-gray-50 rounded-xl p-4">
-                <h4 className="font-heading text-[#0077A8] mb-2">⏱ Timing</h4>
-                <div className="grid grid-cols-2 gap-2 text-sm font-body">
-                  <div><span className="text-gray-500">Signalé:</span> {selectedIncident.date_saisie && format(new Date(selectedIncident.date_saisie), 'dd/MM/yyyy HH:mm')}</div>
-                  <div><span className="text-gray-500">Pris en charge:</span> {selectedIncident.date_debut ? format(new Date(selectedIncident.date_debut), 'HH:mm') : '-'}</div>
-                  <div><span className="text-gray-500">Résolu:</span> {selectedIncident.date_resolution ? format(new Date(selectedIncident.date_resolution), 'dd/MM/yyyy HH:mm') : '-'}</div>
-                  <div>
-                    <span className="text-gray-500">Durée:</span>{' '}
-                    {selectedIncident.date_resolution && selectedIncident.date_saisie
-                      ? formatDuration(differenceInMinutes(new Date(selectedIncident.date_resolution), new Date(selectedIncident.date_saisie)))
-                      : '-'}
-                  </div>
-                </div>
-              </div>
-
-              {/* Motif d'attente */}
-              {selectedIncident.statut === 'en_attente_materiel' && selectedIncident.motif_attente && (
-                <div className="bg-[#FFA500]/10 rounded-xl p-4 border border-[#FFA500]/30">
-                  <h4 className="font-heading text-[#FFA500] mb-2">⏳ Intervention en attente</h4>
-                  <p className="font-body text-gray-700"><strong>Motif :</strong> {selectedIncident.motif_attente}</p>
-                  {selectedIncident.attente_materiel_detail && (
-                    <p className="font-body text-gray-600 text-sm mt-1">Matériel nécessaire : {selectedIncident.attente_materiel_detail}</p>
-                  )}
-                  {selectedIncident.attente_delai && (
-                    <p className="font-body text-gray-500 text-xs mt-1">Délai estimé : {selectedIncident.attente_delai}</p>
-                  )}
-                  {selectedIncident.attente_date && (
-                    <p className="font-body text-gray-400 text-xs mt-1">Mis en attente le : {format(new Date(selectedIncident.attente_date), 'dd/MM/yyyy HH:mm')}</p>
-                  )}
-                </div>
-              )}
-
-              {/* Collaborateur */}
-              {selectedIncident.pris_par && (
-                <div className="bg-[#00AEEF]/10 rounded-xl p-4">
-                  <h4 className="font-heading text-[#0077A8] mb-2">👷 Intervenant</h4>
-                  <p className="font-heading text-[#0077A8]">{selectedIncident.pris_par}</p>
-                  {selectedIncident.commentaire_interne && (
-                    <p className="text-sm font-body text-gray-600 mt-2">Note: {selectedIncident.commentaire_interne}</p>
-                  )}
-                </div>
-              )}
-
-              {/* Preuves visuelles (photos avant/après) */}
-              {(selectedIncident.photo_avant_url || selectedIncident.photo_apres_url || selectedIncident.photo_url) && (
-                <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
-                  <h4 className="font-heading text-[#0077A8] mb-3 flex items-center gap-2">
-                    📷 Preuves visuelles
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Photo client */}
-                    {selectedIncident.photo_url && (
-                      <div className="space-y-2">
-                        <p className="text-xs font-heading text-gray-600">📸 Photo client (signalement)</p>
-                        <img
-                          src={selectedIncident.photo_url}
-                          alt="Photo signalement"
-                          className="w-full h-32 object-cover rounded-lg border-2 border-gray-300"
-                        />
-                      </div>
-                    )}
-
-                    {/* Photo AVANT */}
-                    {selectedIncident.photo_avant_url && (
-                      <div className="space-y-2">
-                        <p className="text-xs font-heading text-orange-600">📷 Photo AVANT intervention</p>
-                        <img
-                          src={selectedIncident.photo_avant_url}
-                          alt="Photo avant"
-                          className="w-full h-32 object-cover rounded-lg border-2 border-orange-300"
-                        />
-                        {selectedIncident.photo_avant_timestamp && (
-                          <p className="text-xs text-gray-500">
-                            {format(new Date(selectedIncident.photo_avant_timestamp), 'dd/MM/yyyy HH:mm:ss')}
-                          </p>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Photo APRÈS */}
-                    {selectedIncident.photo_apres_url && (
-                      <div className="space-y-2">
-                        <p className="text-xs font-heading text-green-600">📷 Photo APRÈS intervention</p>
-                        <img
-                          src={selectedIncident.photo_apres_url}
-                          alt="Photo après"
-                          className="w-full h-32 object-cover rounded-lg border-2 border-green-300"
-                        />
-                        {selectedIncident.photo_apres_timestamp && (
-                          <p className="text-xs text-gray-500">
-                            {format(new Date(selectedIncident.photo_apres_timestamp), 'dd/MM/yyyy HH:mm:ss')}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Garanties juridiques */}
-                  {(selectedIncident.photo_avant_hash || selectedIncident.photo_apres_hash) && (
-                    <div className="mt-4 p-3 bg-white rounded-lg border border-blue-200">
-                      <p className="text-xs font-heading text-[#0077A8] mb-2">🔐 Garanties juridiques</p>
-                      <ul className="text-xs text-gray-600 space-y-1">
-                        <li>✓ Filigrane intégré (date, ID, collaborateur)</li>
-                        <li>✓ Hash SHA-256 enregistré</li>
-                        {selectedIncident.photo_avant_hash && (
-                          <li className="font-mono text-xs text-gray-400 truncate">
-                            Avant: {selectedIncident.photo_avant_hash.substring(0, 24)}...
-                          </li>
-                        )}
-                        {selectedIncident.photo_apres_hash && (
-                          <li className="font-mono text-xs text-gray-400 truncate">
-                            Après: {selectedIncident.photo_apres_hash.substring(0, 24)}...
-                          </li>
-                        )}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Avis client */}
-              {selectedIncident.note_client && (
-                <div className="bg-[#FFD700]/20 rounded-xl p-4">
-                  <h4 className="font-heading text-[#0077A8] mb-2">⭐ {lang === 'fr' ? 'Avis client' : 'Guest review'}</h4>
-                  <div className="flex items-center gap-1 mb-2">
-                    {[1, 2, 3, 4, 5].map(s => (
-                      <Star key={s} className={`w-5 h-5 ${s <= selectedIncident.note_client ? 'text-[#FFD700] fill-[#FFD700]' : 'text-gray-300'}`} />
-                    ))}
-                    <span className="ml-2 font-heading text-[#0077A8]">{selectedIncident.note_client}/5</span>
-                  </div>
-                  {selectedIncident.commentaire_client && (
-                    <p className="font-body text-gray-700 bg-white p-3 rounded-lg">"{selectedIncident.commentaire_client}"</p>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <BureauInterventionDetailDialog
+        selectedIncident={selectedIncident}
+        onClose={() => setSelectedIncident(null)}
+        lang={lang}
+      />
     </div>
   );
 }
