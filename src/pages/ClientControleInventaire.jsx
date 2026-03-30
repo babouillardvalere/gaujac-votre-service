@@ -305,7 +305,8 @@ ${detailsItems}
       destinataire_role: service,
       statut: 'non_lu',
       priorite: hasUrgent ? 'URGENTE' : 'NORMALE',
-      intervention_client_id: interventionClient.id
+      intervention_client_id: interventionClient.id,
+      metadata: { workitem_id: workItem.id }
     };
 
     console.log(`[NOTIFICATION_CREATE] Création pour ${service}:`, notificationPayload);
