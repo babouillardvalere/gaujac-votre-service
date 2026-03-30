@@ -10,7 +10,7 @@ import { getInventaireParCategorie } from "../components/categoryCodeMapping";
 import InventaireItemRow from "../components/InventaireItemRow";
 import InventaireAffichageCategories from "../components/inventaire/InventaireAffichageCategories";
 import ControlePlacementNu from "../components/inventaire/ControlePlacementNu";
-import { ConfigurationLiterie, isLiterieTechnique } from "../components/literieConfig";
+import { ConfigurationLiterie, isLiterieTechnique, isCouchageMenage } from "../components/literieConfig";
 import { emplacements } from "../components/accommodationData";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
@@ -120,15 +120,19 @@ export default function ClientControleInventaire() {
         };
 
         // Logique d'orientation automatique
-        // PRIORITÉ 1: Literie = toujours TECHNIQUE
+        // PRIORITÉ 1: Structure de lit = toujours TECHNIQUE (lit_*, lits_*, sommier, matelas)
         if (isLiterieTechnique(item.id)) {
           technique.push(obj);
         }
-        // PRIORITÉ 2: Articles techniques
+        // PRIORITÉ 2: Couettes/oreillers/cintres = toujours MÉNAGE
+        else if (isCouchageMenage(item.id)) {
+          menage.push(obj);
+        }
+        // PRIORITÉ 3: Articles techniques
         else if (ARTICLES_TECHNIQUES.includes(item.id)) {
           technique.push(obj);
         } 
-        // PRIORITÉ 3: Articles réception
+        // PRIORITÉ 4: Articles réception
         else if (ARTICLES_RECEPTION.includes(item.id)) {
           reception.push(obj);
         } 

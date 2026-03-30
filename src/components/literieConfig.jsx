@@ -87,21 +87,33 @@ export function ConfigurationLiterie({ categorie, lang = 'fr' }) {
 }
 
 // Fonction pour vérifier si un problème de literie doit être routé vers TECHNIQUE
+// Règle : tout ce qui est STRUCTURE DE LIT = TECHNIQUE
+// Règle : couettes, oreillers, cintres = MÉNAGE
 export function isLiterieTechnique(itemId) {
-  const literieItems = [
-    'lit_double',
-    'lit_double_chambre_1',
-    'lit_double_chambre_2',
-    'lit_simple', 
-    'lit_simple_chambre_3a',
-    'lit_simple_chambre_3b',
-    'lit_simple_chambre_4a',
-    'lit_simple_chambre_4b',
-    'lit_superpose',
-    'sommier',
-    'matelas'
-  ];
-  return literieItems.includes(itemId);
+  if (!itemId) return false;
+  const id = itemId.toLowerCase();
+  // Pattern dynamique : tout ID contenant 'lit_' ou 'lits_' ou 'sommier' ou 'matelas' ou 'superpose'
+  return (
+    id.startsWith('lit_') ||
+    id.startsWith('lits_') ||
+    id === 'lit_superpose' ||
+    id === 'lits_superposes' ||
+    id === 'sommier' ||
+    id === 'matelas'
+  );
+}
+
+// Fonction pour vérifier si un item de couchage doit aller en MÉNAGE
+// Règle : couettes, oreillers, cintres = MÉNAGE
+export function isCouchageMenage(itemId) {
+  if (!itemId) return false;
+  const id = itemId.toLowerCase();
+  return (
+    id.startsWith('couette') ||
+    id.startsWith('couettes') ||
+    id === 'oreillers' ||
+    id === 'cintres'
+  );
 }
 
 // Labels pour les problèmes de literie (toujours TECHNIQUE)
