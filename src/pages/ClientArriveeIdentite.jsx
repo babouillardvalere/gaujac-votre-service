@@ -168,22 +168,52 @@ export default function ClientArriveeIdentite() {
         });
         sessionStorage.setItem('arrivee_dossier_id', dossier.id);
       } else {
-        await base44.entities.DossierArrivee.update(dossierId, {
-          client_nom: formData.nom,
-          client_prenom: formData.prenom,
-          date_arrivee: formData.date_arrivee,
-          date_depart: formData.date_depart,
-          nombre_adultes: formData.nb_adultes,
-          nombre_adolescents: formData.nb_adolescents,
-          nombre_enfants: formData.nb_enfants,
-          nombre_bebes: formData.nb_bebes,
-          nombre_animaux: totalAnimaux,
-          nombre_chiens: formData.nombre_chiens,
-          nombre_chats: formData.nombre_chats,
-          etape_1_terminee: true,
-          etape_2_terminee: true,
-          etape_actuelle: 3
-        });
+        try {
+          await base44.entities.DossierArrivee.update(dossierId, {
+            client_nom: formData.nom,
+            client_prenom: formData.prenom,
+            date_arrivee: formData.date_arrivee,
+            date_depart: formData.date_depart,
+            nombre_adultes: formData.nb_adultes,
+            nombre_adolescents: formData.nb_adolescents,
+            nombre_enfants: formData.nb_enfants,
+            nombre_bebes: formData.nb_bebes,
+            nombre_animaux: totalAnimaux,
+            nombre_chiens: formData.nombre_chiens,
+            nombre_chats: formData.nombre_chats,
+            etape_1_terminee: true,
+            etape_2_terminee: true,
+            etape_actuelle: 3
+          });
+        } catch (updateError) {
+          // Dossier supprimé ou introuvable → nettoyer le sessionStorage et créer un nouveau
+          if (updateError?.status === 404) {
+            sessionStorage.removeItem('arrivee_dossier_id');
+            setDossierId(null);
+            const dossier = await base44.entities.DossierArrivee.create({
+              code_dossier: `ARR-${formData.nom.toUpperCase()}-${Date.now()}`,
+              client_nom: formData.nom,
+              client_prenom: formData.prenom,
+              date_arrivee: formData.date_arrivee,
+              date_depart: formData.date_depart,
+              nombre_adultes: formData.nb_adultes,
+              nombre_adolescents: formData.nb_adolescents,
+              nombre_enfants: formData.nb_enfants,
+              nombre_bebes: formData.nb_bebes,
+              nombre_animaux: totalAnimaux,
+              nombre_chiens: formData.nombre_chiens,
+              nombre_chats: formData.nombre_chats,
+              etape_1_terminee: true,
+              etape_2_terminee: true,
+              etape_actuelle: 3,
+              statut: 'en_cours',
+              horodatage_creation: new Date().toISOString()
+            });
+            sessionStorage.setItem('arrivee_dossier_id', dossier.id);
+          } else {
+            throw updateError;
+          }
+        }
       }
 
       toast.success(lang === 'fr' ? 'Informations enregistrées ✅' : 'Information saved ✅');
