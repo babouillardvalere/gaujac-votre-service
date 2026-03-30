@@ -14,12 +14,12 @@ export const useRealtimeNotifications = () => {
   return context;
 };
 
-// Intervals de polling par priorité
+// Intervals de polling par priorité (ralentis pour éviter le rate limit 429)
 const POLLING_INTERVALS = {
-  CRITICAL: 5000,    // 5 secondes - incidents urgents, alertes critiques
-  HIGH: 10000,       // 10 secondes - nouveaux incidents, inventaires
-  MEDIUM: 30000,     // 30 secondes - avis, tâches
-  LOW: 60000         // 1 minute - statistiques, rapports
+  CRITICAL: 60000,   // 1 minute - incidents urgents
+  HIGH: 90000,       // 1.5 minutes - nouveaux incidents, inventaires
+  MEDIUM: 120000,    // 2 minutes - avis, tâches
+  LOW: 180000        // 3 minutes - statistiques, rapports
 };
 
 export default function RealtimeNotificationProvider({ children, userRole = 'client' }) {
