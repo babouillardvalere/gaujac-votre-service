@@ -202,6 +202,11 @@ export default function ControlePlacementNu({
 
       if (onSubmitSuccess) {
         onSubmitSuccess();
+      } else {
+        // Redirection vers Home par défaut
+        setTimeout(() => {
+          window.location.replace('/');
+        }, 1000);
       }
     } catch (err) {
       console.error('[EMP_NU_SUBMIT] ERROR:', err);
