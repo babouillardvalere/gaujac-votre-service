@@ -19,9 +19,42 @@ export default function NotificationsPanelCollab({ service }) {
     queryFn: async () => {
       const query = { destinataire_role: service };
       if (filter !== 'tous') query.statut = filter;
-      return base44.entities.Notification.filter(query, '-created_date', 50);
+      const notifs = await base44.entities.Notification.filter(query, '-created_date', 100);
+
+      // Filtrer les notifications dont le WorkItem source n'existe plus
+      const notifsWithWorkItem = notifs.filter(n => n.metadata?.workitem_id);
+      const notifsWithoutWorkItem = notifs.filter(n => !n.metadata?.workitem_id);
+
+      if (notifsWithWorkItem.length === 0) return notifsWithoutWorkItem;
+
+      // Vérifier quels WorkItems existent encore
+      const workItemIds = [...new Set(notifsWithWorkItem.map(n => n.metadata.workitem_id))];
+      const existingIds = new Set();
+
+      await Promise.all(
+        workItemIds.map(async (wiId) => {
+          try {
+            const wi = await base44.entities.WorkItem.filter({ id: wiId }, '-created_date', 1);
+            if (wi && wi.length > 0 && !wi[0].deleted_at) {
+              existingIds.add(wiId);
+            } else {
+              // Supprimer silencieusement la notification orpheline
+              const orphans = notifsWithWorkItem.filter(n => n.metadata?.workitem_id === wiId);
+              await Promise.all(orphans.map(n => base44.entities.Notification.delete(n.id).catch(() => {})));
+            }
+          } catch {
+            // En cas d'erreur, garder la notification
+            existingIds.add(wiId);
+          }
+        })
+      );
+
+      const validNotifs = notifsWithWorkItem.filter(n => existingIds.has(n.metadata.workitem_id));
+      return [...notifsWithoutWorkItem, ...validNotifs].sort(
+        (a, b) => new Date(b.created_date) - new Date(a.created_date)
+      );
     },
-    refetchInterval: 15000
+    refetchInterval: 30000
   });
 
   const markAsReadMutation = useMutation({
