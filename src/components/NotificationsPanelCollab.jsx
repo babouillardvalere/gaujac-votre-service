@@ -19,40 +19,52 @@ export default function NotificationsPanelCollab({ service }) {
     queryFn: async () => {
       const query = { destinataire_role: service };
       if (filter !== 'tous') query.statut = filter;
-      const notifs = await base44.entities.Notification.filter(query, '-created_date', 100);
+      const notifs = await base44.entities.Notification.filter(query, '-created_date', 200);
 
-      // Filtrer les notifications dont le WorkItem source n'existe plus
-      const notifsWithWorkItem = notifs.filter(n => n.metadata?.workitem_id);
-      const notifsWithoutWorkItem = notifs.filter(n => !n.metadata?.workitem_id);
+      // Supprimer silencieusement toutes les notifications sans WorkItem valide
+      const toDelete = [];
+      const toKeep = [];
 
-      if (notifsWithWorkItem.length === 0) return notifsWithoutWorkItem;
+      for (const notif of notifs) {
+        const wiId = notif.metadata?.workitem_id;
+        if (!wiId) {
+          // Pas de WorkItem associé → supprimer
+          toDelete.push(notif);
+        } else {
+          toKeep.push({ notif, wiId });
+        }
+      }
 
-      // Vérifier quels WorkItems existent encore
-      const workItemIds = [...new Set(notifsWithWorkItem.map(n => n.metadata.workitem_id))];
+      // Vérifier les WorkItems référencés
+      const uniqueIds = [...new Set(toKeep.map(x => x.wiId))];
       const existingIds = new Set();
 
       await Promise.all(
-        workItemIds.map(async (wiId) => {
+        uniqueIds.map(async (wiId) => {
           try {
             const wi = await base44.entities.WorkItem.filter({ id: wiId }, '-created_date', 1);
             if (wi && wi.length > 0 && !wi[0].deleted_at) {
               existingIds.add(wiId);
-            } else {
-              // Supprimer silencieusement la notification orpheline
-              const orphans = notifsWithWorkItem.filter(n => n.metadata?.workitem_id === wiId);
-              await Promise.all(orphans.map(n => base44.entities.Notification.delete(n.id).catch(() => {})));
             }
-          } catch {
-            // En cas d'erreur, garder la notification
-            existingIds.add(wiId);
-          }
+          } catch { /* garder en cas d'erreur réseau */ existingIds.add(wiId); }
         })
       );
 
-      const validNotifs = notifsWithWorkItem.filter(n => existingIds.has(n.metadata.workitem_id));
-      return [...notifsWithoutWorkItem, ...validNotifs].sort(
-        (a, b) => new Date(b.created_date) - new Date(a.created_date)
-      );
+      // Notifs avec workitem_id inexistant → supprimer aussi
+      for (const { notif, wiId } of toKeep) {
+        if (!existingIds.has(wiId)) toDelete.push(notif);
+      }
+
+      // Supprimer toutes les orphelines silencieusement
+      if (toDelete.length > 0) {
+        await Promise.all(toDelete.map(n => base44.entities.Notification.delete(n.id).catch(() => {})));
+      }
+
+      // Retourner uniquement les notifs valides
+      return toKeep
+        .filter(({ wiId }) => existingIds.has(wiId))
+        .map(({ notif }) => notif)
+        .sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     },
     refetchInterval: 30000
   });
@@ -80,6 +92,16 @@ export default function NotificationsPanelCollab({ service }) {
     onSuccess: () => {
       queryClient.invalidateQueries(['notifications-collab']);
       toast.success(lang === 'fr' ? 'Notification supprimée' : 'Notification deleted');
+    }
+  });
+
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+      await Promise.all(notifications.map(n => base44.entities.Notification.delete(n.id).catch(() => {})));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['notifications-collab']);
+      toast.success(lang === 'fr' ? 'Toutes les notifications supprimées' : 'All notifications deleted');
     }
   });
 
@@ -119,17 +141,31 @@ export default function NotificationsPanelCollab({ service }) {
               <Badge className="bg-red-500 text-white">{unreadCount}</Badge>
             )}
           </CardTitle>
-          {unreadCount > 0 && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => markAllAsReadMutation.mutate()}
-              disabled={markAllAsReadMutation.isPending}
-            >
-              <CheckCheck className="w-4 h-4 mr-2" />
-              {lang === 'fr' ? 'Tout marquer lu' : 'Mark all read'}
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {unreadCount > 0 && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => markAllAsReadMutation.mutate()}
+                disabled={markAllAsReadMutation.isPending}
+              >
+                <CheckCheck className="w-4 h-4 mr-2" />
+                {lang === 'fr' ? 'Tout marquer lu' : 'Mark all read'}
+              </Button>
+            )}
+            {notifications.length > 0 && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-red-300 text-red-500 hover:bg-red-50"
+                onClick={() => deleteAllMutation.mutate()}
+                disabled={deleteAllMutation.isPending}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                {lang === 'fr' ? 'Tout supprimer' : 'Delete all'}
+              </Button>
+            )}
+          </div>
         </div>
         <div className="flex gap-2 mt-3">
           <Button
