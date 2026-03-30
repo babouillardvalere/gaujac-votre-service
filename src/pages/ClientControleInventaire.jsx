@@ -244,13 +244,7 @@ export default function ClientControleInventaire() {
     const stayIdForWorkItem = sessionStorage.getItem('stay_id');
     
     // CRITIQUE: description_operationnelle ENRICHIE pour visibilité claire
-    const descriptionOperationnelle = `📋 Contrôle inventaire ${categorie} ${numero}
-    👤 ${prenom} ${nom}
-    📅 Séjour: ${dateArrivee} → ${dateDepart}
-    ⚠️ ${items.length} anomalie(s) - Service ${service}
-
-    📋 TÂCHES À RÉALISER:
-    ${taches.map((t, idx) => `${idx + 1}. ${t.texte}`).join('\n')}`;
+    const descriptionOperationnelle = `📋 Contrôle inventaire ${categorie} ${numero}\n👤 ${prenom} ${nom}\n📅 Séjour: ${dateArrivee} → ${dateDepart}\n⚠️ ${items.length} anomalie(s) - Service ${service}\n\n📋 TÂCHES À RÉALISER:\n${taches.map((t, idx) => `${idx + 1}. ${t.texte}`).join('\n')}`;
     
     // FIX #4: Utiliser createWorkItem via factory (déclenche SuiviEvent automatiquement)
     const { createWorkItem } = await import('../components/workItemCreator');
