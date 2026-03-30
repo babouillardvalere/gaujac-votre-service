@@ -1090,7 +1090,7 @@ export default function Technique() {
             {filteredIncidents.map((incident) => {
               const catInfo = getCategoryInfo(incident.categorie);
               const priorityType = getPriorityType(incident);
-              const isGrouped = incident.isGrouped && incident.workItems?.length > 1;
+              const isGrouped = incident.workItems?.length > 1;
 
               const needsDescription = !incident.is_audit_ou_test && !hasValidDescription(incident);
               return (

@@ -28,6 +28,7 @@ export function groupByLogement(workItems = []) {
     if (!groups[groupKey]) {
       groups[groupKey] = {
         // Identifiants
+        id: item.id,
         groupId: groupKey,
         logement,
         stay_id: item.stay_id,
@@ -39,25 +40,36 @@ export function groupByLogement(workItems = []) {
         // Dates
         date_arrivee: item.date_arrivee,
         date_depart: item.date_depart,
+        date_saisie: item.date_saisie,
         
         // État du groupe (le plus grave)
         statut: item.statut,
         
         // Propriétés d'urgence
-        urgent: false,
+        urgent: item.urgent || false,
         autorisation_acces: item.autorisation_acces,
         plage_horaire_client: item.plage_horaire_client || item.plages_horaires?.join(', '),
         
         // Intervenant
-        pris_par: item.collaborateur || '',
-        date_debut: item.date_prise_en_charge,
-        date_resolution: item.date_terminee,
+        pris_par: item.pris_par || item.collaborateur || '',
+        date_debut: item.date_debut || item.date_prise_en_charge,
+        date_resolution: item.date_resolution || item.date_terminee,
         
         // Type d'hébergement
         type_hebergement: item.type_hebergement,
+        categorie: item.categorie,
         
         // Métadonnées
         fiche_arrivee_id: item.fiche_arrivee_id,
+        
+        // Description opérationnelle et tâches (propagées depuis le premier item)
+        description_operationnelle: item.description_operationnelle,
+        taches: item.taches || [],
+        
+        // Flags WorkItem
+        isWorkItem: item.isWorkItem,
+        workItemId: item.workItemId || item.id,
+        isGrouped: true,
         
         // WorkItems dans ce groupe - TOUS les services fusionnés
         workItems: [],
@@ -70,6 +82,14 @@ export function groupByLogement(workItems = []) {
 
     const group = groups[groupKey];
     
+    // Propager description_operationnelle et taches si le groupe n'en a pas encore
+    if (!group.description_operationnelle && item.description_operationnelle) {
+      group.description_operationnelle = item.description_operationnelle;
+    }
+    if ((!group.taches || group.taches.length === 0) && item.taches?.length > 0) {
+      group.taches = item.taches;
+    }
+    
     // Ajouter le WorkItem au groupe (Technique + Ménage ensemble)
     group.workItems.push(item);
     
@@ -78,7 +98,7 @@ export function groupByLogement(workItems = []) {
     if (item.service === 'MENAGE') group.hasMenage = true;
     
     // Propager l'urgence
-    if (item.priorite === 'URGENTE') {
+    if (item.urgent || item.priorite === 'URGENTE') {
       group.urgent = true;
     }
     
