@@ -1,0 +1,9 @@
+{
+  "name": "\u2b50 Gaujac \u00e0 votre service",
+  "site": {
+    "installCommand": "npm install",
+    "buildCommand": "npm run build",
+    "serveCommand": "npm run dev",
+    "outputDirectory": "./dist"
+  }
+}
