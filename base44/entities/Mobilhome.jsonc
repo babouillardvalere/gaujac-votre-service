@@ -1,0 +1,73 @@
+{
+  "name": "Mobilhome",
+  "type": "object",
+  "properties": {
+    "numero": {
+      "type": "string",
+      "description": "Identifiant unique du logement (ex: MH12, C1, H05)"
+    },
+    "categorie": {
+      "type": "string",
+      "enum": [
+        "Chalet Eco",
+        "Chalet Classique",
+        "Mobil-home Eco",
+        "Mobil-home Eco Clim",
+        "Mobil-home Classique",
+        "Mobil-home Classique Clim",
+        "Mobil-home Classique 3ch",
+        "Confort+ 2ch",
+        "Confort+ 3ch",
+        "Premium 2ch",
+        "Premium 3ch",
+        "Premium Twins",
+        "Cottage Premium",
+        "Emplacement 6A",
+        "Emplacement 10A",
+        "Emplacement Eau+10A"
+      ],
+      "description": "Cat\u00e9gorie du logement"
+    },
+    "capacite": {
+      "type": "number",
+      "description": "Nombre de personnes max"
+    },
+    "surface": {
+      "type": "number",
+      "description": "Surface en m\u00b2"
+    },
+    "annee": {
+      "type": "number",
+      "description": "Ann\u00e9e de mise en service"
+    },
+    "nb_chambres": {
+      "type": "number",
+      "description": "Nombre de chambres"
+    },
+    "equipements": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Liste des \u00e9quipements (TV, Clim, Lave-vaisselle, etc.)"
+    },
+    "terrasse": {
+      "type": "string",
+      "enum": [
+        "non",
+        "ouverte",
+        "semi-couverte",
+        "couverte"
+      ],
+      "description": "Type de terrasse"
+    },
+    "localisation": {
+      "type": "string",
+      "description": "Zone dans le camping"
+    }
+  },
+  "required": [
+    "numero",
+    "categorie"
+  ]
+}

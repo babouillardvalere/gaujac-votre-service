@@ -1,0 +1,80 @@
+{
+  "name": "Avis",
+  "type": "object",
+  "properties": {
+    "incident_id": {
+      "type": "string",
+      "description": "ID de l'incident associ\u00e9 (optionnel)"
+    },
+    "client_nom": {
+      "type": "string",
+      "description": "Nom du client"
+    },
+    "client_prenom": {
+      "type": "string",
+      "description": "Pr\u00e9nom du client"
+    },
+    "logement_ou_emplacement": {
+      "type": "string",
+      "description": "Num\u00e9ro d'h\u00e9bergement ou d'emplacement"
+    },
+    "date_arrivee": {
+      "type": "string",
+      "format": "date",
+      "description": "Date d'arriv\u00e9e du client"
+    },
+    "date_depart": {
+      "type": "string",
+      "format": "date",
+      "description": "Date de d\u00e9part du client"
+    },
+    "note_reactivite": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Note r\u00e9activit\u00e9 (1-5)"
+    },
+    "note_amabilite": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Note amabilit\u00e9 (1-5)"
+    },
+    "note_intervention": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Note qualit\u00e9 intervention (1-5)"
+    },
+    "note_globale": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Note globale (moyenne automatique)"
+    },
+    "commentaire": {
+      "type": "string",
+      "description": "Commentaire du client"
+    },
+    "mis_en_avant": {
+      "type": "boolean",
+      "default": false,
+      "description": "Avis mis en avant par le bureau"
+    },
+    "visible": {
+      "type": "boolean",
+      "default": true,
+      "description": "Avis visible publiquement"
+    }
+  },
+  "required": [
+    "client_nom",
+    "client_prenom",
+    "logement_ou_emplacement",
+    "date_arrivee",
+    "date_depart",
+    "note_reactivite",
+    "note_amabilite",
+    "note_intervention"
+  ]
+}

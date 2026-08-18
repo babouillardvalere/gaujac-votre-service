@@ -1,0 +1,86 @@
+{
+  "name": "CommandeDirection",
+  "type": "object",
+  "properties": {
+    "mission_id": {
+      "type": "string",
+      "description": "ID de la mission Direction li\u00e9e"
+    },
+    "type_intervention": {
+      "type": "string",
+      "enum": [
+        "HIVERNAGE",
+        "DESHIVERNAGE",
+        "INTERVENTION"
+      ],
+      "description": "Type d'intervention"
+    },
+    "hebergement": {
+      "type": "string",
+      "description": "Num\u00e9ro de l'h\u00e9bergement"
+    },
+    "type_hebergement": {
+      "type": "string",
+      "description": "Type d'h\u00e9bergement (ex: MH Premium 2ch)"
+    },
+    "service_demandeur": {
+      "type": "string",
+      "enum": [
+        "TECHNIQUE",
+        "MENAGE"
+      ],
+      "description": "Service qui a demand\u00e9 la commande"
+    },
+    "agent": {
+      "type": "string",
+      "description": "Nom de l'agent demandeur"
+    },
+    "tache_numero": {
+      "type": "number",
+      "description": "Num\u00e9ro de la t\u00e2che concern\u00e9e"
+    },
+    "tache_texte": {
+      "type": "string",
+      "description": "Texte de la t\u00e2che"
+    },
+    "articles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Liste des articles \u00e0 commander"
+    },
+    "statut": {
+      "type": "string",
+      "enum": [
+        "A_COMMANDER",
+        "COMMANDEE",
+        "RECUE"
+      ],
+      "default": "A_COMMANDER",
+      "description": "Statut de la commande"
+    },
+    "date_commande": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date de passage de la commande"
+    },
+    "date_reception": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date de r\u00e9ception"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notes de la Direction"
+    }
+  },
+  "required": [
+    "mission_id",
+    "type_intervention",
+    "hebergement",
+    "service_demandeur",
+    "agent",
+    "articles"
+  ]
+}

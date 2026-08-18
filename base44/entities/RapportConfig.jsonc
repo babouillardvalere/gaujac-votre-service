@@ -1,0 +1,76 @@
+{
+  "name": "RapportConfig",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "quotidien",
+        "hebdomadaire",
+        "mensuel"
+      ],
+      "description": "Fr\u00e9quence du rapport"
+    },
+    "actif": {
+      "type": "boolean",
+      "default": true,
+      "description": "Rapport actif ou non"
+    },
+    "destinataires": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Liste des emails destinataires"
+    },
+    "categories_destinataires": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "direction",
+          "bureau",
+          "maintenance",
+          "menage"
+        ]
+      },
+      "description": "Cat\u00e9gories de destinataires"
+    },
+    "format": {
+      "type": "string",
+      "enum": [
+        "pdf",
+        "csv",
+        "both"
+      ],
+      "default": "pdf",
+      "description": "Format d'export"
+    },
+    "heure_envoi": {
+      "type": "string",
+      "default": "08:00",
+      "description": "Heure d'envoi programm\u00e9e"
+    },
+    "jour_envoi": {
+      "type": "number",
+      "description": "Jour d'envoi (1-7 pour hebdo, 1-28 pour mensuel)"
+    },
+    "derniere_generation": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date de derni\u00e8re g\u00e9n\u00e9ration"
+    },
+    "langue": {
+      "type": "string",
+      "enum": [
+        "fr",
+        "en"
+      ],
+      "default": "fr"
+    }
+  },
+  "required": [
+    "type",
+    "destinataires"
+  ]
+}

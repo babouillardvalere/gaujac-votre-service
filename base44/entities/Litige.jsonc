@@ -1,0 +1,117 @@
+{
+  "name": "Litige",
+  "type": "object",
+  "properties": {
+    "stay_id": {
+      "type": "string",
+      "description": "Identifiant unique du s\u00e9jour"
+    },
+    "intervention_id": {
+      "type": "string",
+      "description": "ID de l'intervention concern\u00e9e"
+    },
+    "workitem_id": {
+      "type": "string",
+      "description": "ID du WorkItem concern\u00e9"
+    },
+    "client_nom": {
+      "type": "string",
+      "description": "Nom du client"
+    },
+    "client_prenom": {
+      "type": "string",
+      "description": "Pr\u00e9nom du client"
+    },
+    "client_email": {
+      "type": "string",
+      "description": "Email du client pour contact"
+    },
+    "hebergement": {
+      "type": "string",
+      "description": "Num\u00e9ro h\u00e9bergement/emplacement"
+    },
+    "type_hebergement": {
+      "type": "string",
+      "description": "Cat\u00e9gorie h\u00e9bergement"
+    },
+    "service_concerne": {
+      "type": "string",
+      "enum": [
+        "TECHNIQUE",
+        "MENAGE",
+        "RECEPTION"
+      ],
+      "description": "Service concern\u00e9 par le litige"
+    },
+    "motif": {
+      "type": "string",
+      "enum": [
+        "intervention_non_realisee",
+        "qualite_insuffisante",
+        "delai_non_respecte",
+        "desaccord_facturation",
+        "comportement_personnel",
+        "degats_non_signales",
+        "autre"
+      ],
+      "description": "Motif du litige"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description d\u00e9taill\u00e9e du litige"
+    },
+    "commentaire_client": {
+      "type": "string",
+      "description": "Commentaire du client"
+    },
+    "statut": {
+      "type": "string",
+      "enum": [
+        "OUVERT",
+        "EN_TRAITEMENT",
+        "CLOS"
+      ],
+      "default": "OUVERT",
+      "description": "Statut du litige"
+    },
+    "date_creation": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date de cr\u00e9ation du litige"
+    },
+    "date_cloture": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date de cl\u00f4ture"
+    },
+    "traite_par": {
+      "type": "string",
+      "description": "Collaborateur ayant trait\u00e9 le litige"
+    },
+    "resolution": {
+      "type": "string",
+      "description": "Description de la r\u00e9solution"
+    },
+    "commentaire_interne": {
+      "type": "string",
+      "description": "Commentaire interne Direction/Bureau"
+    },
+    "priorite": {
+      "type": "string",
+      "enum": [
+        "NORMALE",
+        "URGENTE"
+      ],
+      "default": "NORMALE",
+      "description": "Niveau de priorit\u00e9"
+    }
+  },
+  "required": [
+    "client_nom",
+    "client_prenom",
+    "hebergement",
+    "service_concerne",
+    "motif",
+    "description"
+  ]
+}

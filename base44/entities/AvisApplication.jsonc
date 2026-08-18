@@ -1,0 +1,40 @@
+{
+  "name": "AvisApplication",
+  "type": "object",
+  "properties": {
+    "client_nom": {
+      "type": "string",
+      "description": "Nom du client"
+    },
+    "client_prenom": {
+      "type": "string",
+      "description": "Pr\u00e9nom du client"
+    },
+    "note_intuitivite": {
+      "type": "string",
+      "enum": [
+        "mauvaise",
+        "moyenne",
+        "tres_intuitive"
+      ],
+      "description": "Note sur l'intuitivit\u00e9 de l'application"
+    },
+    "ameliorations": {
+      "type": "string",
+      "description": "Suggestions d'am\u00e9lioration (champ libre)"
+    },
+    "aide_pendant_sejour": {
+      "type": "string",
+      "enum": [
+        "oui",
+        "non",
+        "un_peu"
+      ],
+      "description": "L'application a-t-elle aid\u00e9 pendant le s\u00e9jour"
+    }
+  },
+  "required": [
+    "note_intuitivite",
+    "aide_pendant_sejour"
+  ]
+}

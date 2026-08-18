@@ -1,0 +1,138 @@
+{
+  "name": "Reservation",
+  "type": "object",
+  "properties": {
+    "numero_reservation": {
+      "type": "string",
+      "description": "Num\u00e9ro unique de r\u00e9servation"
+    },
+    "client_nom": {
+      "type": "string",
+      "description": "Nom du client"
+    },
+    "client_prenom": {
+      "type": "string",
+      "description": "Pr\u00e9nom du client"
+    },
+    "client_email": {
+      "type": "string",
+      "format": "email",
+      "description": "Email du client"
+    },
+    "client_telephone": {
+      "type": "string",
+      "description": "T\u00e9l\u00e9phone du client"
+    },
+    "date_arrivee": {
+      "type": "string",
+      "format": "date",
+      "description": "Date d'arriv\u00e9e"
+    },
+    "date_depart": {
+      "type": "string",
+      "format": "date",
+      "description": "Date de d\u00e9part"
+    },
+    "type_logement": {
+      "type": "string",
+      "enum": [
+        "emplacement",
+        "mobilhome"
+      ],
+      "description": "Type de logement"
+    },
+    "categorie_logement": {
+      "type": "string",
+      "description": "Cat\u00e9gorie du logement"
+    },
+    "numero_logement": {
+      "type": "string",
+      "description": "Num\u00e9ro du logement attribu\u00e9"
+    },
+    "nombre_adultes": {
+      "type": "number",
+      "default": 0
+    },
+    "nombre_adolescents": {
+      "type": "number",
+      "default": 0
+    },
+    "nombre_enfants": {
+      "type": "number",
+      "default": 0
+    },
+    "nombre_bebes": {
+      "type": "number",
+      "default": 0
+    },
+    "nombre_animaux": {
+      "type": "number",
+      "default": 0
+    },
+    "nombre_chiens": {
+      "type": "number",
+      "default": 0
+    },
+    "nombre_chats": {
+      "type": "number",
+      "default": 0
+    },
+    "prix_total": {
+      "type": "number",
+      "description": "Prix total TTC"
+    },
+    "acompte_montant": {
+      "type": "number",
+      "description": "Montant de l'acompte"
+    },
+    "acompte_paye": {
+      "type": "boolean",
+      "default": false,
+      "description": "Acompte pay\u00e9"
+    },
+    "acompte_date_paiement": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date du paiement de l'acompte"
+    },
+    "stripe_payment_intent": {
+      "type": "string",
+      "description": "ID du PaymentIntent Stripe"
+    },
+    "statut": {
+      "type": "string",
+      "enum": [
+        "en_attente_paiement",
+        "confirmee",
+        "annulee",
+        "terminee"
+      ],
+      "default": "en_attente_paiement",
+      "description": "Statut de la r\u00e9servation"
+    },
+    "dossier_arrivee_id": {
+      "type": "string",
+      "description": "ID du dossier d'arriv\u00e9e li\u00e9"
+    },
+    "commentaires": {
+      "type": "string",
+      "description": "Commentaires ou demandes sp\u00e9ciales"
+    },
+    "conditions_acceptees": {
+      "type": "boolean",
+      "default": false
+    },
+    "date_annulation": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "client_nom",
+    "client_prenom",
+    "client_email",
+    "date_arrivee",
+    "date_depart",
+    "type_logement"
+  ]
+}

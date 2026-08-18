@@ -1,0 +1,38 @@
+{
+  "name": "Stock",
+  "type": "object",
+  "properties": {
+    "nom_article": {
+      "type": "string",
+      "description": "Nom de l'article"
+    },
+    "categorie": {
+      "type": "string",
+      "enum": [
+        "technique",
+        "menage",
+        "literie",
+        "vaisselle",
+        "divers"
+      ],
+      "description": "Cat\u00e9gorie de l'article"
+    },
+    "quantite": {
+      "type": "number",
+      "description": "Quantit\u00e9 en stock"
+    },
+    "seuil_alerte": {
+      "type": "number",
+      "default": 5,
+      "description": "Seuil d'alerte bas"
+    },
+    "unite": {
+      "type": "string",
+      "description": "Unit\u00e9 de mesure"
+    }
+  },
+  "required": [
+    "nom_article",
+    "quantite"
+  ]
+}

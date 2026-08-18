@@ -1,0 +1,129 @@
+{
+  "name": "DossierDepart",
+  "type": "object",
+  "properties": {
+    "code_dossier": {
+      "type": "string",
+      "description": "Code unique du dossier"
+    },
+    "client_nom": {
+      "type": "string",
+      "description": "Nom du client"
+    },
+    "client_prenom": {
+      "type": "string",
+      "description": "Pr\u00e9nom du client"
+    },
+    "date_arrivee": {
+      "type": "string",
+      "format": "date",
+      "description": "Date d'arriv\u00e9e"
+    },
+    "date_depart": {
+      "type": "string",
+      "format": "date",
+      "description": "Date de d\u00e9part"
+    },
+    "etape_actuelle": {
+      "type": "number",
+      "default": 1,
+      "description": "\u00c9tape actuelle du processus"
+    },
+    "etape_1_terminee": {
+      "type": "boolean",
+      "default": false,
+      "description": "Identit\u00e9 valid\u00e9e"
+    },
+    "etape_2_terminee": {
+      "type": "boolean",
+      "default": false,
+      "description": "H\u00e9bergement s\u00e9lectionn\u00e9"
+    },
+    "etape_3_terminee": {
+      "type": "boolean",
+      "default": false,
+      "description": "Checklist compl\u00e9t\u00e9e"
+    },
+    "etape_4_terminee": {
+      "type": "boolean",
+      "default": false,
+      "description": "Photos et signature"
+    },
+    "type_logement": {
+      "type": "string",
+      "enum": [
+        "emplacement",
+        "mobilhome"
+      ],
+      "description": "Type de logement"
+    },
+    "categorie_logement": {
+      "type": "string",
+      "description": "Cat\u00e9gorie du logement"
+    },
+    "numero_logement": {
+      "type": "string",
+      "description": "Num\u00e9ro du logement"
+    },
+    "inventaire_json": {
+      "type": "object",
+      "description": "\u00c9tat de l'inventaire au d\u00e9part"
+    },
+    "photos": {
+      "type": "object",
+      "description": "Photos upload\u00e9es"
+    },
+    "evaluation_proprete": {
+      "type": "string",
+      "enum": [
+        "pas_satisfaisant",
+        "correct",
+        "tres_propre"
+      ],
+      "description": "\u00c9valuation propret\u00e9 au d\u00e9part"
+    },
+    "remarques": {
+      "type": "string",
+      "description": "Remarques"
+    },
+    "signature": {
+      "type": "string",
+      "description": "URL de la signature"
+    },
+    "checklist_termine": {
+      "type": "boolean",
+      "default": false
+    },
+    "photos_termine": {
+      "type": "boolean",
+      "default": false
+    },
+    "degats_signales": {
+      "type": "boolean",
+      "default": false,
+      "description": "D\u00e9g\u00e2ts signal\u00e9s"
+    },
+    "statut": {
+      "type": "string",
+      "enum": [
+        "en_cours",
+        "termine",
+        "annule"
+      ],
+      "default": "en_cours",
+      "description": "Statut du dossier"
+    },
+    "horodatage_creation": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date et heure de cr\u00e9ation"
+    }
+  },
+  "required": [
+    "code_dossier",
+    "client_nom",
+    "client_prenom",
+    "date_arrivee",
+    "date_depart"
+  ]
+}

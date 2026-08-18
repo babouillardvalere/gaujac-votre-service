@@ -1,0 +1,149 @@
+{
+  "name": "FicheArrivee",
+  "type": "object",
+  "properties": {
+    "client_nom": {
+      "type": "string",
+      "description": "Nom du client"
+    },
+    "client_prenom": {
+      "type": "string",
+      "description": "Pr\u00e9nom du client"
+    },
+    "date_arrivee": {
+      "type": "string",
+      "format": "date",
+      "description": "Date d'arriv\u00e9e"
+    },
+    "date_depart": {
+      "type": "string",
+      "format": "date",
+      "description": "Date de d\u00e9part"
+    },
+    "numero_logement": {
+      "type": "string",
+      "description": "Num\u00e9ro du locatif"
+    },
+    "categorie_logement": {
+      "type": "string",
+      "description": "Cat\u00e9gorie du logement"
+    },
+    "type_logement": {
+      "type": "string",
+      "enum": [
+        "emplacement",
+        "mobilhome"
+      ],
+      "description": "Type de logement"
+    },
+    "nombre_adultes": {
+      "type": "number",
+      "default": 0
+    },
+    "nombre_adolescents": {
+      "type": "number",
+      "default": 0
+    },
+    "nombre_enfants": {
+      "type": "number",
+      "default": 0
+    },
+    "nombre_bebes": {
+      "type": "number",
+      "default": 0
+    },
+    "nombre_animaux": {
+      "type": "number",
+      "default": 0
+    },
+    "inventaire_objets_valides": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Liste des objets valid\u00e9s"
+    },
+    "inventaire_objets_manquants": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Objets manquants ou cass\u00e9s"
+    },
+    "evaluation_proprete": {
+      "type": "string",
+      "enum": [
+        "pas_satisfaisant",
+        "correct",
+        "tres_propre"
+      ],
+      "description": "\u00c9valuation de la propret\u00e9"
+    },
+    "commentaire_proprete": {
+      "type": "string",
+      "description": "Commentaire sur la propret\u00e9"
+    },
+    "photos_pieces": {
+      "type": "object",
+      "description": "Photos des diff\u00e9rentes pi\u00e8ces"
+    },
+    "remarques_client": {
+      "type": "string",
+      "description": "Remarques du client"
+    },
+    "signature_url": {
+      "type": "string",
+      "description": "URL de la signature"
+    },
+    "autorisation_acces": {
+      "type": "string",
+      "description": "Autorisation d'acc\u00e8s (oui/non)"
+    },
+    "plage_horaire_client": {
+      "type": "string",
+      "description": "Plages horaires si acc\u00e8s refus\u00e9"
+    },
+    "pdf_url": {
+      "type": "string",
+      "description": "URL du PDF g\u00e9n\u00e9r\u00e9"
+    },
+    "pdf_status": {
+      "type": "string",
+      "enum": [
+        "en_attente",
+        "en_cours",
+        "termine",
+        "erreur"
+      ],
+      "default": "en_attente",
+      "description": "Statut de g\u00e9n\u00e9ration du PDF"
+    },
+    "pdf_status_updated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date derni\u00e8re MAJ statut PDF"
+    },
+    "pdf_error": {
+      "type": "string",
+      "description": "Message d'erreur si \u00e9chec g\u00e9n\u00e9ration PDF"
+    },
+    "email_envoye": {
+      "type": "boolean",
+      "default": false,
+      "description": "Email envoy\u00e9"
+    },
+    "date_validation": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date de validation"
+    }
+  },
+  "required": [
+    "client_nom",
+    "client_prenom",
+    "date_arrivee",
+    "date_depart",
+    "numero_logement",
+    "evaluation_proprete"
+  ]
+}

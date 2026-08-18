@@ -1,0 +1,37 @@
+{
+  "name": "Satisfaction",
+  "type": "object",
+  "properties": {
+    "incident_id": {
+      "type": "string",
+      "description": "ID de l'incident associ\u00e9"
+    },
+    "mobilhome_id": {
+      "type": "string"
+    },
+    "note": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "commentaire": {
+      "type": "string"
+    },
+    "technicien": {
+      "type": "string"
+    },
+    "type_intervention": {
+      "type": "string"
+    },
+    "client_nom": {
+      "type": "string"
+    },
+    "client_prenom": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "incident_id",
+    "note"
+  ]
+}

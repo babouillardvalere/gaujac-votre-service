@@ -1,0 +1,87 @@
+{
+  "name": "ModeleIntervention",
+  "type": "object",
+  "properties": {
+    "nom": {
+      "type": "string",
+      "description": "Nom du mod\u00e8le"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description du mod\u00e8le"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "technique",
+        "menage"
+      ],
+      "description": "Type d'intervention"
+    },
+    "categorie": {
+      "type": "string",
+      "enum": [
+        "gaz",
+        "eau",
+        "electricite",
+        "plomberie",
+        "espace_vert",
+        "divers_technique",
+        "mobilier",
+        "structurel",
+        "souris",
+        "guepes",
+        "frelons",
+        "fourmis",
+        "moustiques",
+        "literie",
+        "vaisselle",
+        "nettoyage",
+        "materiel_menage",
+        "poubelle",
+        "produit_manquant",
+        "autre"
+      ],
+      "description": "Cat\u00e9gorie pr\u00e9d\u00e9finie"
+    },
+    "description_probleme": {
+      "type": "string",
+      "description": "Description type du probl\u00e8me"
+    },
+    "instructions": {
+      "type": "string",
+      "description": "Instructions pour l'intervention"
+    },
+    "materiel_requis": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Mat\u00e9riel n\u00e9cessaire"
+    },
+    "duree_estimee": {
+      "type": "number",
+      "description": "Dur\u00e9e estim\u00e9e en minutes"
+    },
+    "urgent": {
+      "type": "boolean",
+      "default": false,
+      "description": "Marquer comme urgent par d\u00e9faut"
+    },
+    "utilise_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Nombre d'utilisations"
+    },
+    "actif": {
+      "type": "boolean",
+      "default": true,
+      "description": "Mod\u00e8le actif"
+    }
+  },
+  "required": [
+    "nom",
+    "type",
+    "categorie"
+  ]
+}

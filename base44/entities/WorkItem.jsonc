@@ -1,0 +1,217 @@
+{
+  "name": "WorkItem",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "INTERVENTION_CLIENT",
+        "MISSION_DIRECTION",
+        "INCIDENT_SIGNALEMENT",
+        "TACHE_SERVICE"
+      ],
+      "description": "Type de demande"
+    },
+    "service": {
+      "type": "string",
+      "enum": [
+        "TECHNIQUE",
+        "MENAGE",
+        "RECEPTION",
+        "DIRECTION"
+      ],
+      "description": "Service assign\u00e9"
+    },
+    "statut": {
+      "type": "string",
+      "enum": [
+        "A_FAIRE",
+        "EN_COURS",
+        "EN_ATTENTE",
+        "TERMINEE",
+        "ANNULEE"
+      ],
+      "default": "A_FAIRE",
+      "description": "Statut actuel"
+    },
+    "priorite": {
+      "type": "string",
+      "enum": [
+        "NORMALE",
+        "URGENTE",
+        "CRITIQUE"
+      ],
+      "default": "NORMALE",
+      "description": "Niveau de priorit\u00e9"
+    },
+    "rank": {
+      "type": "number",
+      "default": 0,
+      "description": "Ordre d'ex\u00e9cution (plus petit = plus prioritaire)"
+    },
+    "description_operationnelle": {
+      "type": "string",
+      "description": "DESCRIPTION UNIQUE - Source de v\u00e9rit\u00e9 pour tous les services et le suivi client"
+    },
+    "titre": {
+      "type": "string",
+      "description": "Titre de la demande"
+    },
+    "description": {
+      "type": "string",
+      "description": "\u26a0\ufe0f D\u00c9PR\u00c9CI\u00c9 - Utiliser description_operationnelle. Conserv\u00e9 pour compatibilit\u00e9 legacy uniquement."
+    },
+    "hebergement": {
+      "type": "string",
+      "description": "Num\u00e9ro h\u00e9bergement/emplacement"
+    },
+    "type_hebergement": {
+      "type": "string",
+      "description": "Cat\u00e9gorie h\u00e9bergement"
+    },
+    "client_nom": {
+      "type": "string",
+      "description": "Nom du client"
+    },
+    "client_prenom": {
+      "type": "string",
+      "description": "Pr\u00e9nom du client"
+    },
+    "date_arrivee": {
+      "type": "string",
+      "format": "date",
+      "description": "Date d'arriv\u00e9e"
+    },
+    "date_depart": {
+      "type": "string",
+      "format": "date",
+      "description": "Date de d\u00e9part"
+    },
+    "collaborateur": {
+      "type": "string",
+      "description": "Collaborateur assign\u00e9"
+    },
+    "date_prise_en_charge": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date de prise en charge"
+    },
+    "date_terminee": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date de fin"
+    },
+    "duree_minutes": {
+      "type": "number",
+      "description": "Dur\u00e9e totale en minutes"
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "photo",
+              "pdf",
+              "signature"
+            ]
+          },
+          "url": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Photos, PDFs, signatures"
+    },
+    "motif_annulation": {
+      "type": "string",
+      "description": "Motif si annul\u00e9e"
+    },
+    "annulee_par": {
+      "type": "string",
+      "description": "Qui a annul\u00e9"
+    },
+    "date_annulation": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date annulation"
+    },
+    "deleted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Soft delete timestamp (null = actif)"
+    },
+    "intervention_client_id": {
+      "type": "string",
+      "description": "ID InterventionClient source"
+    },
+    "mission_direction_id": {
+      "type": "string",
+      "description": "ID InterventionDirection source"
+    },
+    "incident_id": {
+      "type": "string",
+      "description": "ID Incident source"
+    },
+    "fiche_arrivee_id": {
+      "type": "string",
+      "description": "ID FicheArrivee source"
+    },
+    "stay_id": {
+      "type": "string",
+      "description": "Identifiant unique du s\u00e9jour"
+    },
+    "autorisation_acces": {
+      "type": "string",
+      "enum": [
+        "oui",
+        "non"
+      ],
+      "description": "Autorisation d'acc\u00e8s"
+    },
+    "plages_horaires": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Cr\u00e9neaux horaires si acc\u00e8s refus\u00e9"
+    },
+    "taches": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Liste des t\u00e2ches"
+    },
+    "is_audit_ou_test": {
+      "type": "boolean",
+      "default": false,
+      "description": "Vrai si audit/test, faux si intervention r\u00e9elle"
+    },
+    "type_source": {
+      "type": "string",
+      "enum": [
+        "INTERVENTION_REELLE",
+        "AUDIT",
+        "TEST"
+      ],
+      "default": "INTERVENTION_REELLE",
+      "description": "Source/contexte de l'intervention"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "M\u00e9tadonn\u00e9es suppl\u00e9mentaires (attente, etc.)"
+    }
+  },
+  "required": [
+    "type",
+    "service",
+    "description_operationnelle",
+    "hebergement"
+  ]
+}

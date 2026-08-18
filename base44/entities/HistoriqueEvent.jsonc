@@ -1,0 +1,91 @@
+{
+  "name": "HistoriqueEvent",
+  "type": "object",
+  "properties": {
+    "type_event": {
+      "type": "string",
+      "enum": [
+        "CONTROLE_INVENTAIRE_VALIDE",
+        "INTERVENTION_CLIENT_CREEE",
+        "MISSION_DIRECTION_CREEE",
+        "MISSION_DIRECTION_PRISE_EN_CHARGE",
+        "MISSION_DIRECTION_VALIDEE",
+        "TACHE_VALIDEE",
+        "INTERVENTION_PRISE_EN_CHARGE",
+        "INTERVENTION_MISE_EN_ATTENTE",
+        "INTERVENTION_REPRISE",
+        "INTERVENTION_CLOTUREE",
+        "PDF_GENERE"
+      ],
+      "description": "Type d'\u00e9v\u00e9nement"
+    },
+    "titre": {
+      "type": "string",
+      "description": "Titre de l'\u00e9v\u00e9nement"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description d\u00e9taill\u00e9e"
+    },
+    "service": {
+      "type": "string",
+      "enum": [
+        "TECHNIQUE",
+        "MENAGE",
+        "RECEPTION",
+        "DIRECTION"
+      ],
+      "description": "Service concern\u00e9"
+    },
+    "hebergement": {
+      "type": "string",
+      "description": "Num\u00e9ro h\u00e9bergement/emplacement"
+    },
+    "type_hebergement": {
+      "type": "string",
+      "description": "Cat\u00e9gorie h\u00e9bergement"
+    },
+    "client_nom": {
+      "type": "string",
+      "description": "Nom du client"
+    },
+    "client_prenom": {
+      "type": "string",
+      "description": "Pr\u00e9nom du client"
+    },
+    "collaborateur": {
+      "type": "string",
+      "description": "Nom du collaborateur"
+    },
+    "urgent": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u00c9v\u00e9nement urgent"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Donn\u00e9es suppl\u00e9mentaires (IDs, compteurs, etc.)"
+    },
+    "fiche_arrivee_id": {
+      "type": "string",
+      "description": "ID fiche arriv\u00e9e li\u00e9e"
+    },
+    "intervention_client_id": {
+      "type": "string",
+      "description": "ID intervention client li\u00e9e"
+    },
+    "mission_direction_id": {
+      "type": "string",
+      "description": "ID mission direction li\u00e9e"
+    },
+    "incident_id": {
+      "type": "string",
+      "description": "ID incident li\u00e9"
+    }
+  },
+  "required": [
+    "type_event",
+    "titre",
+    "service"
+  ]
+}

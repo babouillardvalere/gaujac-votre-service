@@ -1,0 +1,42 @@
+{
+  "name": "Piscine",
+  "type": "object",
+  "properties": {
+    "date_mesure": {
+      "type": "string",
+      "format": "date"
+    },
+    "heure": {
+      "type": "string"
+    },
+    "chlore": {
+      "type": "number",
+      "description": "Taux de chlore en mg/L"
+    },
+    "ph": {
+      "type": "number",
+      "description": "Niveau de pH"
+    },
+    "temperature": {
+      "type": "number",
+      "description": "Temp\u00e9rature en \u00b0C"
+    },
+    "observation": {
+      "type": "string"
+    },
+    "alerte": {
+      "type": "boolean",
+      "default": false,
+      "description": "Valeurs anormales d\u00e9tect\u00e9es"
+    },
+    "technicien": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "date_mesure",
+    "chlore",
+    "ph",
+    "temperature"
+  ]
+}

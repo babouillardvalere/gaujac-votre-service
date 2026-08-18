@@ -1,0 +1,191 @@
+{
+  "name": "SuiviInventaire",
+  "type": "object",
+  "properties": {
+    "client_nom": {
+      "type": "string",
+      "description": "Nom du client"
+    },
+    "client_prenom": {
+      "type": "string",
+      "description": "Pr\u00e9nom du client"
+    },
+    "client_email": {
+      "type": "string",
+      "description": "Email du client pour filtrage strict"
+    },
+    "logement": {
+      "type": "string",
+      "description": "Num\u00e9ro du logement"
+    },
+    "categorie_logement": {
+      "type": "string",
+      "description": "Cat\u00e9gorie du logement"
+    },
+    "type_inventaire": {
+      "type": "string",
+      "enum": [
+        "ARRIVEE",
+        "DEPART"
+      ],
+      "description": "Type d'inventaire"
+    },
+    "date_arrivee": {
+      "type": "string",
+      "format": "date",
+      "description": "Date d'arriv\u00e9e"
+    },
+    "date_depart": {
+      "type": "string",
+      "format": "date",
+      "description": "Date de d\u00e9part"
+    },
+    "items_menage": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "motif": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Objets m\u00e9nage signal\u00e9s"
+    },
+    "items_technique": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "motif": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Objets technique signal\u00e9s"
+    },
+    "statut_menage": {
+      "type": "string",
+      "enum": [
+        "en_attente",
+        "en_cours",
+        "en_attente_materiel",
+        "reprise",
+        "termine",
+        "non_requis"
+      ],
+      "default": "non_requis",
+      "description": "Statut du suivi m\u00e9nage"
+    },
+    "statut_technique": {
+      "type": "string",
+      "enum": [
+        "en_attente",
+        "en_cours",
+        "en_attente_materiel",
+        "reprise",
+        "termine",
+        "non_requis"
+      ],
+      "default": "non_requis",
+      "description": "Statut du suivi technique"
+    },
+    "timeline_menage": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "utilisateur": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Timeline chronologique m\u00e9nage"
+    },
+    "timeline_technique": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "utilisateur": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Timeline chronologique technique"
+    },
+    "tache_menage_id": {
+      "type": "string",
+      "description": "ID de la t\u00e2che m\u00e9nage associ\u00e9e"
+    },
+    "tache_technique_id": {
+      "type": "string",
+      "description": "ID de la t\u00e2che technique associ\u00e9e"
+    },
+    "message_client": {
+      "type": "string",
+      "description": "Message visible par le client"
+    },
+    "commentaire_interne": {
+      "type": "string",
+      "description": "Commentaire interne (invisible client)"
+    },
+    "date_derniere_maj": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date derni\u00e8re mise \u00e0 jour"
+    },
+    "fiche_arrivee_id": {
+      "type": "string",
+      "description": "ID de la fiche d'arriv\u00e9e li\u00e9e"
+    },
+    "fiche_depart_id": {
+      "type": "string",
+      "description": "ID de la fiche de d\u00e9part li\u00e9e"
+    }
+  },
+  "required": [
+    "client_nom",
+    "client_prenom",
+    "logement",
+    "type_inventaire",
+    "date_arrivee",
+    "date_depart"
+  ]
+}

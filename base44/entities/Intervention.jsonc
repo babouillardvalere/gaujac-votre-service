@@ -1,0 +1,79 @@
+{
+  "name": "Intervention",
+  "type": "object",
+  "properties": {
+    "sejour_id": {
+      "type": "string",
+      "description": "UUID du s\u00e9jour (cl\u00e9 de confidentialit\u00e9)"
+    },
+    "date_arrivee": {
+      "type": "string",
+      "format": "date",
+      "description": "Date d'arriv\u00e9e du s\u00e9jour"
+    },
+    "date_depart": {
+      "type": "string",
+      "format": "date",
+      "description": "Date de d\u00e9part du s\u00e9jour"
+    },
+    "client_nom": {
+      "type": "string",
+      "description": "Nom du client"
+    },
+    "client_prenom": {
+      "type": "string",
+      "description": "Pr\u00e9nom du client"
+    },
+    "logement_numero": {
+      "type": "string",
+      "description": "Num\u00e9ro du logement (ex: M03, P04)"
+    },
+    "categorie_logement": {
+      "type": "string",
+      "description": "Cat\u00e9gorie du logement"
+    },
+    "contexte": {
+      "type": "string",
+      "enum": [
+        "ARRIVEE",
+        "SEJOUR",
+        "DEPART"
+      ],
+      "description": "Contexte de l'intervention"
+    },
+    "urgent": {
+      "type": "boolean",
+      "default": false,
+      "description": "Intervention urgente"
+    },
+    "menage_statut": {
+      "type": "string",
+      "enum": [
+        "OUVERTE",
+        "EN_COURS",
+        "EN_ATTENTE",
+        "TERMINEE"
+      ],
+      "default": "OUVERTE",
+      "description": "Statut global m\u00e9nage"
+    },
+    "technique_statut": {
+      "type": "string",
+      "enum": [
+        "OUVERTE",
+        "EN_COURS",
+        "EN_ATTENTE",
+        "TERMINEE"
+      ],
+      "default": "OUVERTE",
+      "description": "Statut global technique"
+    }
+  },
+  "required": [
+    "sejour_id",
+    "client_nom",
+    "client_prenom",
+    "logement_numero",
+    "contexte"
+  ]
+}

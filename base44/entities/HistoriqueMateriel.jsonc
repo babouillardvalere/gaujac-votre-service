@@ -1,0 +1,35 @@
+{
+  "name": "HistoriqueMateriel",
+  "type": "object",
+  "properties": {
+    "incident_id": {
+      "type": "string",
+      "description": "ID de l'incident"
+    },
+    "article": {
+      "type": "string",
+      "description": "Nom de l'article utilis\u00e9"
+    },
+    "quantite": {
+      "type": "number",
+      "description": "Quantit\u00e9 utilis\u00e9e"
+    },
+    "collaborateur": {
+      "type": "string",
+      "description": "Nom du collaborateur"
+    },
+    "hebergement": {
+      "type": "string",
+      "description": "Num\u00e9ro d'h\u00e9bergement"
+    },
+    "date_utilisation": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "incident_id",
+    "article",
+    "quantite"
+  ]
+}

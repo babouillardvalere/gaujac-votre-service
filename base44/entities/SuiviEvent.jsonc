@@ -1,0 +1,73 @@
+{
+  "name": "SuiviEvent",
+  "type": "object",
+  "properties": {
+    "workitem_id": {
+      "type": "string",
+      "description": "ID du WorkItem concern\u00e9"
+    },
+    "origine": {
+      "type": "string",
+      "enum": [
+        "INVENTAIRE_ARRIVEE",
+        "INVENTAIRE_DEPART",
+        "SEJOUR",
+        "MISSION_DIRECTION"
+      ],
+      "description": "Contexte d'origine de l'intervention"
+    },
+    "reference_id": {
+      "type": "string",
+      "description": "stay_id, fiche_arrivee_id, ou mission_direction_id"
+    },
+    "service": {
+      "type": "string",
+      "enum": [
+        "MENAGE",
+        "TECHNIQUE",
+        "RECEPTION",
+        "DIRECTION",
+        "SYSTEM"
+      ],
+      "description": "Service ayant d\u00e9clench\u00e9 l'action"
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "CREATION",
+        "PRISE_EN_CHARGE",
+        "ARRIVEE_SUR_SITE",
+        "EN_COURS",
+        "MISE_EN_ATTENTE",
+        "REPRISE",
+        "TERMINEE",
+        "ANNULEE"
+      ],
+      "description": "Type d'action effectu\u00e9e"
+    },
+    "message": {
+      "type": "string",
+      "description": "Message lisible pour l'utilisateur (g\u00e9n\u00e9r\u00e9 automatiquement)"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Horodatage pr\u00e9cis (ISO 8601)"
+    },
+    "collaborateur": {
+      "type": "string",
+      "description": "Nom du collaborateur (si action humaine)"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Donn\u00e9es contextuelles (raison attente, dur\u00e9e, etc.)"
+    }
+  },
+  "required": [
+    "workitem_id",
+    "service",
+    "action",
+    "message",
+    "timestamp"
+  ]
+}

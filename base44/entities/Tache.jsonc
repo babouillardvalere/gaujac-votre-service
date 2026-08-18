@@ -1,0 +1,91 @@
+{
+  "name": "Tache",
+  "type": "object",
+  "properties": {
+    "titre": {
+      "type": "string",
+      "description": "Titre de la t\u00e2che"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description d\u00e9taill\u00e9e"
+    },
+    "incident_id": {
+      "type": "string",
+      "description": "ID de l'incident li\u00e9 (optionnel)"
+    },
+    "rapport_id": {
+      "type": "string",
+      "description": "ID du rapport li\u00e9 (optionnel)"
+    },
+    "assignee": {
+      "type": "string",
+      "description": "Collaborateur assign\u00e9"
+    },
+    "assignee_email": {
+      "type": "string",
+      "description": "Email du collaborateur assign\u00e9"
+    },
+    "priorite": {
+      "type": "string",
+      "enum": [
+        "basse",
+        "normale",
+        "haute",
+        "urgente"
+      ],
+      "default": "normale"
+    },
+    "statut": {
+      "type": "string",
+      "enum": [
+        "a_faire",
+        "en_cours",
+        "en_attente",
+        "terminee",
+        "annulee"
+      ],
+      "default": "a_faire"
+    },
+    "categorie": {
+      "type": "string",
+      "enum": [
+        "technique",
+        "menage",
+        "administratif",
+        "achat",
+        "autre"
+      ],
+      "default": "autre"
+    },
+    "date_echeance": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date limite"
+    },
+    "date_debut": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "date_fin": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "rappel_envoye": {
+      "type": "boolean",
+      "default": false
+    },
+    "commentaires": {
+      "type": "string"
+    },
+    "hebergement": {
+      "type": "string",
+      "description": "H\u00e9bergement concern\u00e9"
+    }
+  },
+  "required": [
+    "titre",
+    "assignee",
+    "date_echeance"
+  ]
+}

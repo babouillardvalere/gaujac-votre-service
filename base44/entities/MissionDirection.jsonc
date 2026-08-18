@@ -1,0 +1,304 @@
+{
+  "name": "MissionDirection",
+  "type": "object",
+  "properties": {
+    "type_mission": {
+      "type": "string",
+      "enum": [
+        "HIVERNAGE",
+        "DESHIVERNAGE",
+        "INTERVENTION"
+      ],
+      "description": "Type de mission"
+    },
+    "titre": {
+      "type": "string",
+      "description": "Titre de la mission"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description d\u00e9taill\u00e9e"
+    },
+    "objectif": {
+      "type": "string",
+      "description": "Objectif de la mission (POURQUOI)"
+    },
+    "commentaire_direction": {
+      "type": "string",
+      "description": "Commentaire du directeur"
+    },
+    "zones": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type_zone": {
+            "type": "string",
+            "enum": [
+              "hebergement",
+              "emplacement",
+              "secteur"
+            ]
+          },
+          "numero": {
+            "type": "string"
+          },
+          "categorie": {
+            "type": "string"
+          },
+          "etat_avant": {
+            "type": "string",
+            "enum": [
+              "fonctionnel",
+              "partiellement_fonctionnel",
+              "non_fonctionnel",
+              "hors_service"
+            ],
+            "description": "\u00c9tat AVANT mission"
+          },
+          "etat_apres": {
+            "type": "string",
+            "enum": [
+              "fonctionnel",
+              "fonctionnel_avec_reserve",
+              "non_fonctionnel",
+              "hors_service"
+            ],
+            "description": "\u00c9tat APR\u00c8S mission"
+          }
+        }
+      },
+      "description": "Liste des zones concern\u00e9es"
+    },
+    "services_intervenants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "service": {
+            "type": "string",
+            "enum": [
+              "TECHNIQUE",
+              "MENAGE",
+              "POLYVALENT",
+              "AUTRE"
+            ]
+          },
+          "agent": {
+            "type": "string"
+          },
+          "zone_perimetre": {
+            "type": "string"
+          },
+          "action_realisee": {
+            "type": "string"
+          },
+          "resultat": {
+            "type": "string",
+            "enum": [
+              "conforme",
+              "partiel",
+              "echoue",
+              "reporte"
+            ]
+          },
+          "temps_minutes": {
+            "type": "number"
+          },
+          "date_intervention": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "description": "Services intervenants et leurs actions"
+    },
+    "actions_prevues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "effectuee": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "description": "Liste des actions pr\u00e9vues (checklist)"
+    },
+    "statut": {
+      "type": "string",
+      "enum": [
+        "A_FAIRE",
+        "EN_COURS",
+        "EN_ATTENTE",
+        "TERMINEE",
+        "ANNULEE"
+      ],
+      "default": "A_FAIRE",
+      "description": "Statut de la mission"
+    },
+    "status_rollup": {
+      "type": "string",
+      "enum": [
+        "A_FAIRE",
+        "EN_COURS",
+        "EN_ATTENTE",
+        "TERMINEE",
+        "ANNULEE"
+      ],
+      "description": "\ud83d\udd04 ROLLUP automatique calcul\u00e9 depuis WorkItems (source de v\u00e9rit\u00e9 pour affichage)",
+      "index": true
+    },
+    "services_rollup": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "TECHNIQUE",
+          "MENAGE"
+        ]
+      },
+      "description": "\ud83d\udd04 ROLLUP liste des services concern\u00e9s (depuis WorkItems)",
+      "index": true
+    },
+    "has_blocking": {
+      "type": "boolean",
+      "default": false,
+      "description": "\ud83d\udd12 VERROU: Mission bloqu\u00e9e par le service"
+    },
+    "has_blocking_wait": {
+      "type": "boolean",
+      "default": false,
+      "description": "\ud83d\udd12 Mission en attente de d\u00e9blocage",
+      "index": true
+    },
+    "motif_attente": {
+      "type": "string",
+      "enum": [
+        "COMMANDE",
+        "ATELIER",
+        "INTERVENTION_PREALABLE",
+        "AUTRE"
+      ],
+      "description": "Motif de mise en attente (OBLIGATOIRE si has_blocking=true)"
+    },
+    "wait_reason": {
+      "type": "string",
+      "enum": [
+        "LOGISTIQUE_COMMANDE",
+        "LOGISTIQUE_INTERNE",
+        "VALIDATION_DIRECTION",
+        "ATTENTE_COORDINATION",
+        "AUTRE"
+      ],
+      "description": "Motif d'attente (DEPRECATED - utiliser motif_attente)"
+    },
+    "wait_comment": {
+      "type": "string",
+      "description": "Commentaire libre sur l'attente"
+    },
+    "priorite": {
+      "type": "string",
+      "enum": [
+        "NORMALE",
+        "URGENTE",
+        "CRITIQUE"
+      ],
+      "default": "NORMALE"
+    },
+    "is_blocked_logistique": {
+      "type": "boolean",
+      "default": false,
+      "description": "DEPRECATED - Utiliser has_blocking \u00e0 la place"
+    },
+    "date_creation": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date de cr\u00e9ation"
+    },
+    "date_planifiee": {
+      "type": "string",
+      "format": "date",
+      "description": "Date planifi\u00e9e"
+    },
+    "date_debut_reelle": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date r\u00e9elle de d\u00e9but"
+    },
+    "date_fin_reelle": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date r\u00e9elle de fin"
+    },
+    "temps_estime_minutes": {
+      "type": "number",
+      "description": "Temps estim\u00e9 en minutes"
+    },
+    "temps_reel_minutes": {
+      "type": "number",
+      "description": "Temps r\u00e9el pass\u00e9 en minutes"
+    },
+    "procedure_suivie": {
+      "type": "string",
+      "description": "Proc\u00e9dure suivie (COMMENT)"
+    },
+    "outils_moyens": {
+      "type": "string",
+      "description": "Outils et moyens utilis\u00e9s"
+    },
+    "problemes_rencontres": {
+      "type": "boolean",
+      "default": false,
+      "description": "Y a-t-il eu des probl\u00e8mes ?"
+    },
+    "problemes_description": {
+      "type": "string",
+      "description": "Description des probl\u00e8mes"
+    },
+    "createur": {
+      "type": "string",
+      "description": "Directeur cr\u00e9ateur"
+    },
+    "intervenants_assignes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Liste des intervenants assign\u00e9s"
+    },
+    "mission_direction": {
+      "type": "boolean",
+      "default": true,
+      "description": "Marquer comme mission Direction"
+    },
+    "validation_cloture": {
+      "type": "object",
+      "properties": {
+        "etats_apres_renseignes": {
+          "type": "boolean",
+          "default": false
+        },
+        "resultats_services_renseignes": {
+          "type": "boolean",
+          "default": false
+        },
+        "cloture_autorisee": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "description": "Validation des conditions de cl\u00f4ture"
+    }
+  },
+  "required": [
+    "type_mission",
+    "titre",
+    "zones",
+    "statut"
+  ]
+}

@@ -1,0 +1,268 @@
+{
+  "name": "Incident",
+  "type": "object",
+  "properties": {
+    "stay_id": {
+      "type": "string",
+      "description": "Identifiant unique du s\u00e9jour (ARR-logement-YYYYMMDD-random)"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "technique",
+        "menage"
+      ],
+      "description": "Type d'intervention"
+    },
+    "categorie": {
+      "type": "string",
+      "enum": [
+        "gaz",
+        "eau",
+        "electricite",
+        "plomberie",
+        "espace_vert",
+        "divers_technique",
+        "mobilier",
+        "structurel",
+        "souris",
+        "guepes",
+        "frelons",
+        "fourmis",
+        "moustiques",
+        "literie",
+        "vaisselle",
+        "nettoyage",
+        "materiel_menage",
+        "poubelle",
+        "produit_manquant",
+        "autre"
+      ],
+      "description": "Cat\u00e9gorie du probl\u00e8me"
+    },
+    "sous_categorie": {
+      "type": "string",
+      "description": "Sous-cat\u00e9gorie optionnelle"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description du probl\u00e8me"
+    },
+    "description_operationnelle": {
+      "type": "string",
+      "description": "Description exploitable (source de v\u00e9rit\u00e9 pour prise en charge)"
+    },
+    "urgent": {
+      "type": "boolean",
+      "default": false
+    },
+    "autorisation_acces": {
+      "type": "string",
+      "enum": [
+        "oui",
+        "non"
+      ],
+      "description": "Autorisation d'acc\u00e8s \u00e0 l'h\u00e9bergement"
+    },
+    "plage_horaire_client": {
+      "type": "string",
+      "description": "Plage horaire demand\u00e9e par le client si acc\u00e8s refus\u00e9"
+    },
+    "clause_autorisation_acceptee": {
+      "type": "boolean",
+      "default": false,
+      "description": "Clause d'autorisation d'acc\u00e8s accept\u00e9e par le client"
+    },
+    "is_audit_ou_test": {
+      "type": "boolean",
+      "default": false,
+      "description": "Vrai si audit/test, faux si intervention r\u00e9elle"
+    },
+    "type_source": {
+      "type": "string",
+      "enum": [
+        "INTERVENTION_REELLE",
+        "AUDIT",
+        "TEST"
+      ],
+      "default": "INTERVENTION_REELLE",
+      "description": "Source/contexte de l'intervention"
+    },
+    "deleted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Soft delete timestamp (null = actif)"
+    },
+    "client_nom": {
+      "type": "string"
+    },
+    "client_prenom": {
+      "type": "string"
+    },
+    "date_arrivee": {
+      "type": "string",
+      "format": "date"
+    },
+    "date_depart": {
+      "type": "string",
+      "format": "date"
+    },
+    "logement": {
+      "type": "string",
+      "description": "Num\u00e9ro du logement"
+    },
+    "emplacement": {
+      "type": "string",
+      "description": "Num\u00e9ro d'emplacement"
+    },
+    "photo_url": {
+      "type": "string"
+    },
+    "date_saisie": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "pris_par": {
+      "type": "string",
+      "description": "Nom du collaborateur"
+    },
+    "date_debut": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "date_resolution": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "statut": {
+      "type": "string",
+      "enum": [
+        "en_attente",
+        "en_cours",
+        "en_attente_materiel",
+        "resolu"
+      ],
+      "default": "en_attente"
+    },
+    "commentaire_interne": {
+      "type": "string"
+    },
+    "note_client": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "commentaire_client": {
+      "type": "string"
+    },
+    "attente_raison": {
+      "type": "string",
+      "description": "Raison de la mise en attente"
+    },
+    "motif_attente": {
+      "type": "string",
+      "description": "Motif d\u00e9taill\u00e9 de la mise en attente"
+    },
+    "attente_materiel": {
+      "type": "boolean",
+      "default": false,
+      "description": "Mat\u00e9riel manquant"
+    },
+    "attente_materiel_detail": {
+      "type": "string",
+      "description": "D\u00e9tail du mat\u00e9riel manquant"
+    },
+    "attente_delai": {
+      "type": "string",
+      "description": "D\u00e9lai estim\u00e9 de r\u00e9solution"
+    },
+    "attente_commentaire": {
+      "type": "string",
+      "description": "Commentaire interne attente"
+    },
+    "attente_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "materiel_utilise": {
+      "type": "string",
+      "description": "Mat\u00e9riel utilis\u00e9 pour l'intervention"
+    },
+    "materiel_quantite": {
+      "type": "string",
+      "description": "Quantit\u00e9 de mat\u00e9riel utilis\u00e9"
+    },
+    "priorite_bureau": {
+      "type": "number",
+      "default": 0,
+      "description": "Priorit\u00e9 manuelle d\u00e9finie par le bureau"
+    },
+    "priorite_ordre": {
+      "type": "number",
+      "description": "Ordre de priorit\u00e9 calcul\u00e9"
+    },
+    "temps_prise_en_charge": {
+      "type": "number",
+      "description": "Temps en minutes entre demande et prise en charge"
+    },
+    "temps_total_intervention": {
+      "type": "number",
+      "description": "Temps total en minutes de l'intervention"
+    },
+    "photo_avant_url": {
+      "type": "string",
+      "description": "URL photo AVANT intervention (avec filigrane)"
+    },
+    "photo_avant_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date/heure de la photo AVANT"
+    },
+    "photo_avant_hash": {
+      "type": "string",
+      "description": "Hash SHA-256 de la photo AVANT"
+    },
+    "photo_apres_url": {
+      "type": "string",
+      "description": "URL photo APR\u00c8S intervention (avec filigrane)"
+    },
+    "photo_apres_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date/heure de la photo APR\u00c8S"
+    },
+    "photo_apres_hash": {
+      "type": "string",
+      "description": "Hash SHA-256 de la photo APR\u00c8S"
+    },
+    "origine": {
+      "type": "string",
+      "enum": [
+        "signalement",
+        "arrivee",
+        "depart"
+      ],
+      "default": "signalement",
+      "description": "Origine de l'intervention"
+    },
+    "fiche_arrivee_id": {
+      "type": "string",
+      "description": "ID de la fiche d'arriv\u00e9e li\u00e9e"
+    },
+    "fiche_depart_id": {
+      "type": "string",
+      "description": "ID de la fiche de d\u00e9part li\u00e9e"
+    },
+    "dossier_arrivee_id": {
+      "type": "string",
+      "description": "ID du dossier d'arriv\u00e9e li\u00e9"
+    }
+  },
+  "required": [
+    "type",
+    "categorie",
+    "description",
+    "client_nom",
+    "client_prenom"
+  ]
+}

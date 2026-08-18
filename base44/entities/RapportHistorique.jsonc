@@ -1,0 +1,66 @@
+{
+  "name": "RapportHistorique",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "quotidien",
+        "hebdomadaire",
+        "mensuel"
+      ],
+      "description": "Type de rapport"
+    },
+    "date_debut": {
+      "type": "string",
+      "format": "date",
+      "description": "Date de d\u00e9but de p\u00e9riode"
+    },
+    "date_fin": {
+      "type": "string",
+      "format": "date",
+      "description": "Date de fin de p\u00e9riode"
+    },
+    "date_generation": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date de g\u00e9n\u00e9ration"
+    },
+    "pdf_url": {
+      "type": "string",
+      "description": "URL du fichier PDF"
+    },
+    "csv_url": {
+      "type": "string",
+      "description": "URL du fichier CSV"
+    },
+    "destinataires_envoyes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Emails des destinataires"
+    },
+    "envoi_reussi": {
+      "type": "boolean",
+      "default": false
+    },
+    "metriques": {
+      "type": "object",
+      "description": "M\u00e9triques du rapport"
+    },
+    "langue": {
+      "type": "string",
+      "enum": [
+        "fr",
+        "en"
+      ],
+      "default": "fr"
+    }
+  },
+  "required": [
+    "type",
+    "date_debut",
+    "date_fin"
+  ]
+}

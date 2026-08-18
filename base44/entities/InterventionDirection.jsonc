@@ -1,0 +1,106 @@
+{
+  "name": "InterventionDirection",
+  "type": "object",
+  "properties": {
+    "type_intervention": {
+      "type": "string",
+      "enum": [
+        "HIVERNAGE",
+        "DESHIVERNAGE"
+      ],
+      "description": "Type d'intervention"
+    },
+    "type_hebergement": {
+      "type": "string",
+      "description": "Type d'h\u00e9bergement (ex: Cottage Premium)"
+    },
+    "numero_hebergement": {
+      "type": "string",
+      "description": "Num\u00e9ro de l'h\u00e9bergement (ex: J04)"
+    },
+    "service": {
+      "type": "string",
+      "enum": [
+        "TECHNIQUE",
+        "MENAGE"
+      ],
+      "description": "Service assign\u00e9"
+    },
+    "priorite": {
+      "type": "string",
+      "enum": [
+        "NORMALE",
+        "URGENTE"
+      ],
+      "default": "NORMALE",
+      "description": "Priorit\u00e9"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description d\u00e9taill\u00e9e"
+    },
+    "taches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "numero": {
+            "type": "number"
+          },
+          "texte": {
+            "type": "string"
+          },
+          "faite": {
+            "type": "boolean",
+            "default": false
+          },
+          "justification": {
+            "type": "string"
+          },
+          "photo_url": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Liste des t\u00e2ches num\u00e9rot\u00e9es"
+    },
+    "statut": {
+      "type": "string",
+      "enum": [
+        "A_FAIRE",
+        "EN_COURS",
+        "EN_ATTENTE",
+        "TERMINEE"
+      ],
+      "default": "A_FAIRE",
+      "description": "Statut de l'intervention"
+    },
+    "pris_en_charge_par": {
+      "type": "string",
+      "description": "Nom de l'agent"
+    },
+    "date_prise_en_charge": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "temps_ecoule_minutes": {
+      "type": "number",
+      "default": 0
+    },
+    "date_terminee": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "pdf_url": {
+      "type": "string",
+      "description": "URL du PDF r\u00e9capitulatif"
+    }
+  },
+  "required": [
+    "type_intervention",
+    "type_hebergement",
+    "numero_hebergement",
+    "service",
+    "taches"
+  ]
+}

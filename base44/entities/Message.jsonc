@@ -1,0 +1,36 @@
+{
+  "name": "Message",
+  "type": "object",
+  "properties": {
+    "incident_id": {
+      "type": "string",
+      "description": "ID de l'intervention associ\u00e9e"
+    },
+    "expediteur_type": {
+      "type": "string",
+      "enum": [
+        "client",
+        "collaborateur"
+      ],
+      "description": "Type d'exp\u00e9diteur"
+    },
+    "expediteur_nom": {
+      "type": "string",
+      "description": "Nom de l'exp\u00e9diteur"
+    },
+    "contenu": {
+      "type": "string",
+      "description": "Contenu du message"
+    },
+    "lu": {
+      "type": "boolean",
+      "default": false,
+      "description": "Message lu par le destinataire"
+    }
+  },
+  "required": [
+    "incident_id",
+    "expediteur_type",
+    "contenu"
+  ]
+}

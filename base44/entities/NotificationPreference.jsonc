@@ -1,0 +1,103 @@
+{
+  "name": "NotificationPreference",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email de l'utilisateur"
+    },
+    "interventions_urgentes": {
+      "type": "boolean",
+      "default": true,
+      "description": "Notifier lors d'interventions urgentes"
+    },
+    "interventions_nouvelles": {
+      "type": "boolean",
+      "default": true,
+      "description": "Notifier lors de nouvelles interventions"
+    },
+    "interventions_assignees": {
+      "type": "boolean",
+      "default": false,
+      "description": "Notifier lors d'assignations"
+    },
+    "missions_creation": {
+      "type": "boolean",
+      "default": true,
+      "description": "Notifier lors de la cr\u00e9ation d'une mission"
+    },
+    "missions_reactivation": {
+      "type": "boolean",
+      "default": true,
+      "description": "Notifier lors de la r\u00e9activation d'une mission"
+    },
+    "missions_complete": {
+      "type": "boolean",
+      "default": true,
+      "description": "Notifier lors de la cl\u00f4ture d'une mission"
+    },
+    "litiges_signales": {
+      "type": "boolean",
+      "default": true,
+      "description": "Notifier lors de signalement de litiges"
+    },
+    "stock_alerte": {
+      "type": "boolean",
+      "default": true,
+      "description": "Notifier lors d'alertes stock"
+    },
+    "commandes_recues": {
+      "type": "boolean",
+      "default": true,
+      "description": "Notifier lors de r\u00e9ception de commandes"
+    },
+    "avis_clients": {
+      "type": "boolean",
+      "default": false,
+      "description": "Notifier lors de nouveaux avis clients"
+    },
+    "email_notifications": {
+      "type": "boolean",
+      "default": false,
+      "description": "Recevoir aussi les notifications par email"
+    },
+    "sound_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Activer les sons de notification"
+    },
+    "browser_notifications": {
+      "type": "boolean",
+      "default": true,
+      "description": "Activer les notifications navigateur"
+    },
+    "seuil_stock_critique": {
+      "type": "number",
+      "default": 3,
+      "description": "Seuil d'alerte stock critique"
+    },
+    "seuil_intervention_retard": {
+      "type": "number",
+      "default": 120,
+      "description": "Seuil d'alerte intervention en retard (minutes)"
+    },
+    "services_surveilles": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "TECHNIQUE",
+          "MENAGE",
+          "TOUS"
+        ]
+      },
+      "default": [
+        "TOUS"
+      ],
+      "description": "Services \u00e0 surveiller"
+    }
+  },
+  "required": [
+    "user_email"
+  ]
+}

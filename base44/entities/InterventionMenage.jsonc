@@ -1,0 +1,81 @@
+{
+  "name": "InterventionMenage",
+  "type": "object",
+  "properties": {
+    "hebergement_numero": {
+      "type": "string",
+      "description": "Num\u00e9ro de l'h\u00e9bergement"
+    },
+    "type_intervention": {
+      "type": "string",
+      "enum": [
+        "nettoyage_complet",
+        "literie",
+        "vaisselle",
+        "terrasse",
+        "autre"
+      ],
+      "description": "Type d'intervention m\u00e9nage"
+    },
+    "checklist": {
+      "type": "object",
+      "properties": {
+        "sols": {
+          "type": "boolean"
+        },
+        "sanitaires": {
+          "type": "boolean"
+        },
+        "cuisine": {
+          "type": "boolean"
+        },
+        "chambres": {
+          "type": "boolean"
+        },
+        "terrasse": {
+          "type": "boolean"
+        },
+        "poubelles": {
+          "type": "boolean"
+        }
+      },
+      "description": "Checklist de nettoyage"
+    },
+    "commentaire": {
+      "type": "string",
+      "description": "Commentaire"
+    },
+    "photos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Photos de l'intervention"
+    },
+    "collaborateur": {
+      "type": "string",
+      "description": "Collaborateur assign\u00e9"
+    },
+    "statut": {
+      "type": "string",
+      "enum": [
+        "a_faire",
+        "en_cours",
+        "termine"
+      ],
+      "default": "a_faire"
+    },
+    "date_debut": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "date_fin": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "hebergement_numero",
+    "type_intervention"
+  ]
+}

@@ -1,0 +1,129 @@
+{
+  "name": "ServiceReport",
+  "type": "object",
+  "properties": {
+    "service": {
+      "type": "string",
+      "enum": [
+        "TECHNIQUE",
+        "MENAGE"
+      ],
+      "description": "Service ayant r\u00e9alis\u00e9 la mission"
+    },
+    "logement": {
+      "type": "string",
+      "description": "Num\u00e9ro du logement/emplacement"
+    },
+    "type_hebergement": {
+      "type": "string",
+      "description": "Cat\u00e9gorie d'h\u00e9bergement"
+    },
+    "client_nom": {
+      "type": "string",
+      "description": "Nom du client"
+    },
+    "client_prenom": {
+      "type": "string",
+      "description": "Pr\u00e9nom du client"
+    },
+    "stay_id": {
+      "type": "string",
+      "description": "Identifiant du s\u00e9jour"
+    },
+    "fiche_arrivee_id": {
+      "type": "string",
+      "description": "ID de la fiche d'arriv\u00e9e li\u00e9e"
+    },
+    "date_intervention": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date et heure du passage"
+    },
+    "intervenant": {
+      "type": "string",
+      "description": "Nom du collaborateur intervenant"
+    },
+    "workitems_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Liste des IDs des WorkItems trait\u00e9s"
+    },
+    "interventions_detail": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "workitem_id": {
+            "type": "string"
+          },
+          "categorie": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "urgent": {
+            "type": "boolean"
+          },
+          "emoji": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "D\u00e9tail des interventions r\u00e9alis\u00e9es"
+    },
+    "mission_urgente": {
+      "type": "boolean",
+      "default": false,
+      "description": "Au moins une intervention urgente"
+    },
+    "duree_totale_minutes": {
+      "type": "number",
+      "description": "Dur\u00e9e totale de la mission"
+    },
+    "commentaire_intervenant": {
+      "type": "string",
+      "description": "Commentaire du collaborateur"
+    },
+    "signature_url": {
+      "type": "string",
+      "description": "URL de la signature (optionnel)"
+    },
+    "pdf_url": {
+      "type": "string",
+      "description": "URL du rapport PDF g\u00e9n\u00e9r\u00e9"
+    },
+    "statut": {
+      "type": "string",
+      "enum": [
+        "GENERE",
+        "ENVOYE",
+        "ARCHIVE"
+      ],
+      "default": "GENERE",
+      "description": "Statut du rapport"
+    },
+    "visible_client": {
+      "type": "boolean",
+      "default": true,
+      "description": "Rapport visible par le client"
+    },
+    "visible_bureau": {
+      "type": "boolean",
+      "default": true,
+      "description": "Rapport visible par le bureau"
+    }
+  },
+  "required": [
+    "service",
+    "logement",
+    "client_nom",
+    "client_prenom",
+    "date_intervention",
+    "intervenant",
+    "workitems_ids",
+    "interventions_detail"
+  ]
+}

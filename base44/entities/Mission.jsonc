@@ -1,0 +1,62 @@
+{
+  "name": "Mission",
+  "type": "object",
+  "properties": {
+    "titre": {
+      "type": "string",
+      "description": "Titre de la mission"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description d\u00e9taill\u00e9e"
+    },
+    "date_debut": {
+      "type": "string",
+      "format": "date",
+      "description": "Date de d\u00e9but"
+    },
+    "date_fin": {
+      "type": "string",
+      "format": "date",
+      "description": "Date de fin"
+    },
+    "services": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "MENAGE",
+          "TECHNIQUE",
+          "ACCUEIL",
+          "ANIMATION"
+        ]
+      },
+      "description": "Services assign\u00e9s"
+    },
+    "statut": {
+      "type": "string",
+      "enum": [
+        "A_FAIRE",
+        "EN_COURS",
+        "TERMINE"
+      ],
+      "default": "A_FAIRE",
+      "description": "Statut de la mission"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "DESHIVERNAGE",
+        "HIVERNAGE",
+        "SAISON"
+      ],
+      "description": "Type de mission"
+    }
+  },
+  "required": [
+    "titre",
+    "date_debut",
+    "date_fin",
+    "type"
+  ]
+}

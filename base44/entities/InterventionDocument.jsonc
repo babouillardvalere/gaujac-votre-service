@@ -1,0 +1,56 @@
+{
+  "name": "InterventionDocument",
+  "type": "object",
+  "properties": {
+    "incident_id": {
+      "type": "string",
+      "description": "ID de l'intervention li\u00e9e"
+    },
+    "mission_id": {
+      "type": "string",
+      "description": "ID de la mission li\u00e9e (optionnel)"
+    },
+    "nom_fichier": {
+      "type": "string",
+      "description": "Nom du fichier"
+    },
+    "type_fichier": {
+      "type": "string",
+      "enum": [
+        "pdf",
+        "image",
+        "rapport",
+        "devis",
+        "facture",
+        "autre"
+      ],
+      "description": "Type de document"
+    },
+    "url_fichier": {
+      "type": "string",
+      "description": "URL du fichier"
+    },
+    "taille": {
+      "type": "number",
+      "description": "Taille en octets"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description du document"
+    },
+    "ajoute_par": {
+      "type": "string",
+      "description": "Email de l'utilisateur"
+    },
+    "visible_client": {
+      "type": "boolean",
+      "default": false,
+      "description": "Document visible par le client"
+    }
+  },
+  "required": [
+    "nom_fichier",
+    "url_fichier",
+    "type_fichier"
+  ]
+}

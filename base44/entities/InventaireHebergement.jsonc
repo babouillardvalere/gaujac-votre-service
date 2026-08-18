@@ -1,0 +1,35 @@
+{
+  "name": "InventaireHebergement",
+  "type": "object",
+  "properties": {
+    "code_categorie": {
+      "type": "string",
+      "description": "Code unique de la cat\u00e9gorie d'h\u00e9bergement"
+    },
+    "titre_fr": {
+      "type": "string",
+      "description": "Titre de l'inventaire en fran\u00e7ais"
+    },
+    "titre_en": {
+      "type": "string",
+      "description": "Titre de l'inventaire en anglais"
+    },
+    "contenu_fr": {
+      "type": "string",
+      "description": "Contenu d\u00e9taill\u00e9 de l'inventaire en fran\u00e7ais"
+    },
+    "contenu_en": {
+      "type": "string",
+      "description": "Contenu d\u00e9taill\u00e9 de l'inventaire en anglais"
+    },
+    "capacite": {
+      "type": "number",
+      "description": "Nombre de personnes"
+    }
+  },
+  "required": [
+    "code_categorie",
+    "titre_fr",
+    "titre_en"
+  ]
+}

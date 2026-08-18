@@ -1,0 +1,83 @@
+{
+  "name": "ArchiveFicheDepart",
+  "type": "object",
+  "properties": {
+    "client_nom": {
+      "type": "string",
+      "description": "Nom du client"
+    },
+    "client_prenom": {
+      "type": "string",
+      "description": "Pr\u00e9nom du client"
+    },
+    "date_arrivee": {
+      "type": "string",
+      "format": "date",
+      "description": "Date d'arriv\u00e9e"
+    },
+    "date_depart": {
+      "type": "string",
+      "format": "date",
+      "description": "Date de d\u00e9part"
+    },
+    "numero_logement": {
+      "type": "string",
+      "description": "Num\u00e9ro du locatif"
+    },
+    "categorie_logement": {
+      "type": "string",
+      "description": "Cat\u00e9gorie du logement"
+    },
+    "type_logement": {
+      "type": "string",
+      "enum": [
+        "emplacement",
+        "mobilhome"
+      ],
+      "description": "Type de logement"
+    },
+    "evaluation_proprete": {
+      "type": "string",
+      "enum": [
+        "pas_satisfaisant",
+        "correct",
+        "tres_propre"
+      ],
+      "description": "\u00c9valuation propret\u00e9 au d\u00e9part"
+    },
+    "degats_signales": {
+      "type": "boolean",
+      "default": false,
+      "description": "D\u00e9g\u00e2ts signal\u00e9s"
+    },
+    "pdf_url": {
+      "type": "string",
+      "description": "URL du PDF archiv\u00e9 (stockage externe)"
+    },
+    "date_validation": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date de validation"
+    },
+    "date_archivage": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date d'archivage automatique"
+    },
+    "fiche_originale_id": {
+      "type": "string",
+      "description": "ID de la fiche de d\u00e9part originale"
+    },
+    "donnees_compressees": {
+      "type": "object",
+      "description": "Donn\u00e9es JSON compress\u00e9es (inventaire, remarques)"
+    }
+  },
+  "required": [
+    "client_nom",
+    "client_prenom",
+    "date_arrivee",
+    "date_depart",
+    "numero_logement"
+  ]
+}

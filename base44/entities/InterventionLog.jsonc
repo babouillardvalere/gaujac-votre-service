@@ -1,0 +1,76 @@
+{
+  "name": "InterventionLog",
+  "type": "object",
+  "properties": {
+    "incident_id": {
+      "type": "string",
+      "description": "ID de l'intervention"
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "creation",
+        "prise_en_charge",
+        "photo_avant_ajoutee",
+        "en_cours",
+        "attente",
+        "photo_apres_ajoutee",
+        "resolu",
+        "avis_client_ajoute",
+        "document_ajoute",
+        "commentaire_ajoute",
+        "statut_change",
+        "priorite_modifiee",
+        "assignation_modifiee"
+      ],
+      "description": "Type d'action"
+    },
+    "horodatage": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date et heure de l'action"
+    },
+    "utilisateur": {
+      "type": "string",
+      "description": "Nom de l'utilisateur"
+    },
+    "utilisateur_email": {
+      "type": "string",
+      "description": "Email de l'utilisateur"
+    },
+    "utilisateur_role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "user",
+        "client"
+      ],
+      "description": "R\u00f4le de l'utilisateur"
+    },
+    "ip_client": {
+      "type": "string",
+      "description": "Adresse IP du client"
+    },
+    "commentaire": {
+      "type": "string",
+      "description": "Commentaire ou d\u00e9tails de l'action"
+    },
+    "ancienne_valeur": {
+      "type": "string",
+      "description": "Ancienne valeur (pour modifications)"
+    },
+    "nouvelle_valeur": {
+      "type": "string",
+      "description": "Nouvelle valeur (pour modifications)"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Donn\u00e9es suppl\u00e9mentaires (fichiers, photos, etc.)"
+    }
+  },
+  "required": [
+    "incident_id",
+    "action",
+    "horodatage"
+  ]
+}

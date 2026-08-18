@@ -1,0 +1,78 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "NOUVEAU_INCIDENT",
+        "INCIDENT_URGENT",
+        "INCIDENT_PRIS_EN_CHARGE",
+        "INCIDENT_RESOLU",
+        "MATERIEL_RECU",
+        "STOCK_ALERTE",
+        "MISSION_CREATED",
+        "MISSION_REACTIVATED",
+        "AVIS_CLIENT"
+      ],
+      "description": "Type de notification"
+    },
+    "titre": {
+      "type": "string",
+      "description": "Titre de la notification"
+    },
+    "message": {
+      "type": "string",
+      "description": "Message d\u00e9taill\u00e9"
+    },
+    "destinataire_role": {
+      "type": "string",
+      "enum": [
+        "TECHNIQUE",
+        "MENAGE",
+        "RECEPTION",
+        "DIRECTION",
+        "TOUS"
+      ],
+      "description": "Service destinataire"
+    },
+    "intervention_client_id": {
+      "type": "string",
+      "description": "ID InterventionClient li\u00e9"
+    },
+    "incident_id": {
+      "type": "string",
+      "description": "ID Incident li\u00e9"
+    },
+    "statut": {
+      "type": "string",
+      "enum": [
+        "non_lu",
+        "lu",
+        "archive"
+      ],
+      "default": "non_lu",
+      "description": "Statut de lecture"
+    },
+    "priorite": {
+      "type": "string",
+      "enum": [
+        "NORMALE",
+        "URGENTE",
+        "CRITIQUE"
+      ],
+      "default": "NORMALE",
+      "description": "Niveau de priorit\u00e9"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Donn\u00e9es suppl\u00e9mentaires"
+    }
+  },
+  "required": [
+    "type",
+    "titre",
+    "message",
+    "destinataire_role"
+  ]
+}
