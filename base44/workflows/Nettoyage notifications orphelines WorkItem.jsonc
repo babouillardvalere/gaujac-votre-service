@@ -1,0 +1,38 @@
+{
+  "name": "Nettoyage notifications orphelines WorkItem",
+  "description": "",
+  "trigger": {
+    "condition": "${ (.trigger.data.deleted_at != null) }",
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "delete",
+        "update"
+      ],
+      "entity_name": "WorkItem"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "nettoyage_notifications_orphelines_workitem",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "cleanupOrphanNotifications",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  },
+  "x-base44-migrated-from-automation": {
+    "legacy_payload_function": "cleanupOrphanNotifications"
+  }
+}
